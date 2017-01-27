@@ -40,7 +40,7 @@ func main() {
 }
 ```
 
-Check more [examples](https://github.com/gen2brain/raylib-go/examples) organized by raylib modules.
+Check more [examples](https://github.com/gen2brain/raylib-go/tree/master/examples) organized by raylib modules.
 
 
 ### License
