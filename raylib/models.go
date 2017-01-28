@@ -107,87 +107,6 @@ func NewModelFromPointer(ptr unsafe.Pointer) Model {
 	return *(*Model)(ptr)
 }
 
-// Light type
-type Light struct {
-	// Light unique id
-	Id uint32
-	// Light enabled
-	Enabled uint32
-	// Light type: LIGHT_POINT, LIGHT_DIRECTIONAL, LIGHT_SPOT
-	Type int32
-	// Light position
-	Position Vector3
-	// Light direction: LIGHT_DIRECTIONAL and LIGHT_SPOT (cone direction target)
-	Target Vector3
-	// Light attenuation radius light intensity reduced with distance (world distance)
-	Radius float32
-	// Light diffuse color
-	Diffuse Color
-	// Light intensity level
-	Intensity float32
-	// Light cone max angle: LIGHT_SPOT
-	ConeAngle float32
-}
-
-func (l *Light) cptr() *C.Light {
-	return (*C.Light)(unsafe.Pointer(l))
-}
-
-// Returns new Light
-func NewLight(id uint32, enabled uint32, _type int32, position, target Vector3, radius float32, diffuse Color, intensity, coneAngle float32) Light {
-	return Light{id, enabled, _type, position, target, radius, diffuse, intensity, coneAngle}
-}
-
-// Returns new Light from pointer
-func NewLightFromPointer(ptr unsafe.Pointer) Light {
-	return *(*Light)(ptr)
-}
-
-type LightType int32
-
-// Light types
-const (
-	LightPoint       LightType = C.LIGHT_POINT
-	LightDirectional LightType = C.LIGHT_DIRECTIONAL
-	LightSpot        LightType = C.LIGHT_SPOT
-)
-
-// LightData type
-type LightData struct {
-	// Light unique id
-	Id uint32
-	// Light enabled
-	Enabled uint32
-	// Light type: LIGHT_POINT, LIGHT_DIRECTIONAL, LIGHT_SPOT
-	Type int32
-	// Light position
-	Position Vector3
-	// Light direction: LIGHT_DIRECTIONAL and LIGHT_SPOT (cone direction target)
-	Target Vector3
-	// Light attenuation radius light intensity reduced with distance (world distance)
-	Radius float32
-	// Light diffuse color
-	Diffuse Color
-	// Light intensity level
-	Intensity float32
-	// Light cone max angle: LIGHT_SPOT
-	ConeAngle float32
-}
-
-func (l *LightData) cptr() *C.LightData {
-	return (*C.LightData)(unsafe.Pointer(l))
-}
-
-// Returns new LightData
-func NewLightData(l Light) LightData {
-	return LightData{l.Id, l.Enabled, l.Type, l.Position, l.Target, l.Radius, l.Diffuse, l.Intensity, l.ConeAngle}
-}
-
-// Returns new Light from pointer
-func NewLightDataFromPointer(ptr unsafe.Pointer) LightData {
-	return *(*LightData)(ptr)
-}
-
 // Ray type (useful for raycast)
 type Ray struct {
 	// Ray position (origin)
@@ -345,40 +264,11 @@ func DrawGizmo(position Vector3) {
 	C.DrawGizmo(*cposition)
 }
 
-// Draw light in 3D world
-func DrawLight(light Light) {
-	clightdata := NewLightData(light)
-	C.DrawLight(clightdata.cptr())
-}
-
 // Load a 3d model (.OBJ)
 func LoadModel(fileName string) Model {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	ret := C.LoadModel(cfileName)
-	v := NewModelFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// Load a 3d model (from mesh data)
-func LoadModelEx(data Mesh, dynamic bool) Model {
-	d := 0
-	if dynamic {
-		d = 1
-	}
-	cdata := data.cptr()
-	cdynamic := (C.bool)(d)
-	ret := C.LoadModelEx(*cdata, cdynamic)
-	v := NewModelFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// Load a 3d model from rRES file (raylib Resource)
-func LoadModelFromRES(rresName string, resId int32) Model {
-	crresName := C.CString(rresName)
-	defer C.free(unsafe.Pointer(crresName))
-	cresId := (C.int)(resId)
-	ret := C.LoadModelFromRES(crresName, cresId)
 	v := NewModelFromPointer(unsafe.Pointer(&ret))
 	return v
 }
@@ -418,13 +308,6 @@ func LoadMaterial(fileName string) Material {
 // Load default material (uses default models shader)
 func LoadDefaultMaterial() Material {
 	ret := C.LoadDefaultMaterial()
-	v := NewMaterialFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// Load standard material (uses material attributes and lighting shader)
-func LoadStandardMaterial() Material {
-	ret := C.LoadStandardMaterial()
 	v := NewMaterialFromPointer(unsafe.Pointer(&ret))
 	return v
 }

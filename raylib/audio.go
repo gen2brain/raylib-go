@@ -122,13 +122,12 @@ func LoadWave(fileName string) Wave {
 }
 
 // Load wave data from float array data (32bit)
-func LoadWaveEx(data []float32, sampleCount int32, sampleRate int32, sampleSize int32, channels int32) Wave {
-	cdata := (*C.float)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&data)).Data))
+func LoadWaveEx(data unsafe.Pointer, sampleCount int32, sampleRate int32, sampleSize int32, channels int32) Wave {
 	csampleCount := (C.int)(sampleCount)
 	csampleRate := (C.int)(sampleRate)
 	csampleSize := (C.int)(sampleSize)
 	cchannels := (C.int)(channels)
-	ret := C.LoadWaveEx(cdata, csampleCount, csampleRate, csampleSize, cchannels)
+	ret := C.LoadWaveEx(data, csampleCount, csampleRate, csampleSize, cchannels)
 	v := NewWaveFromPointer(unsafe.Pointer(&ret))
 	return v
 }
@@ -146,16 +145,6 @@ func LoadSound(fileName string) Sound {
 func LoadSoundFromWave(wave Wave) Sound {
 	cwave := wave.cptr()
 	ret := C.LoadSoundFromWave(*cwave)
-	v := NewSoundFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// Load sound to memory from rRES file (raylib Resource)
-func LoadSoundFromRES(rresName string, resId int32) Sound {
-	crresName := C.CString(rresName)
-	defer C.free(unsafe.Pointer(crresName))
-	cresId := (C.int)(resId)
-	ret := C.LoadSoundFromRES(crresName, cresId)
 	v := NewSoundFromPointer(unsafe.Pointer(&ret))
 	return v
 }

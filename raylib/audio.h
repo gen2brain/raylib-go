@@ -1,0 +1,159 @@
+/**********************************************************************************************
+*
+*   raylib.audio
+*
+*   This module provides basic functionality to work with audio:
+*       Manage audio device (init/close)
+*       Load and Unload audio files (WAV, OGG, FLAC, XM, MOD)
+*       Play/Stop/Pause/Resume loaded audio
+*       Manage mixing channels
+*       Manage raw audio context
+*
+*   External libs:
+*       OpenAL Soft - Audio device management (http://kcat.strangesoft.net/openal.html)
+*       stb_vorbis  - OGG audio files loading (http://www.nothings.org/stb_vorbis/)
+*       jar_xm      - XM module file loading
+*       jar_mod     - MOD audio file loading
+*       dr_flac     - FLAC audio file loading
+*
+*   Many thanks to Joshua Reisenauer (github: @kd7tck) for the following additions:
+*       XM audio module support (jar_xm)
+*       MOD audio module support (jar_mod)
+*       Mixing channels support
+*       Raw audio context support
+*
+*
+*   Copyright (c) 2014-2016 Ramon Santamaria (@raysan5)
+*
+*   This software is provided "as-is", without any express or implied warranty. In no event
+*   will the authors be held liable for any damages arising from the use of this software.
+*
+*   Permission is granted to anyone to use this software for any purpose, including commercial
+*   applications, and to alter it and redistribute it freely, subject to the following restrictions:
+*
+*     1. The origin of this software must not be misrepresented; you must not claim that you
+*     wrote the original software. If you use this software in a product, an acknowledgment
+*     in the product documentation would be appreciated but is not required.
+*
+*     2. Altered source versions must be plainly marked as such, and must not be misrepresented
+*     as being the original software.
+*
+*     3. This notice may not be removed or altered from any source distribution.
+*
+**********************************************************************************************/
+
+#ifndef AUDIO_H
+#define AUDIO_H
+
+//----------------------------------------------------------------------------------
+// Defines and Macros
+//----------------------------------------------------------------------------------
+//...
+
+//----------------------------------------------------------------------------------
+// Types and Structures Definition
+// NOTE: Below types are required for CAMERA_STANDALONE usage
+//----------------------------------------------------------------------------------
+#ifndef __cplusplus
+// Boolean type
+    #if !defined(_STDBOOL_H)
+        typedef enum { false, true } bool;
+        #define _STDBOOL_H
+    #endif
+#endif
+
+// Wave type, defines audio wave data
+typedef struct Wave {
+    unsigned int sampleCount;   // Number of samples
+    unsigned int sampleRate;    // Frequency (samples per second)
+    unsigned int sampleSize;    // Bit depth (bits per sample): 8, 16, 32 (24 not supported)
+    unsigned int channels;      // Number of channels (1-mono, 2-stereo)
+    void *data;                 // Buffer data pointer
+} Wave;
+
+// Sound source type
+typedef struct Sound {
+    unsigned int source;        // OpenAL audio source id
+    unsigned int buffer;        // OpenAL audio buffer id
+    int format;                 // OpenAL audio format specifier
+} Sound;
+
+// Music type (file streaming from memory)
+// NOTE: Anything longer than ~10 seconds should be streamed
+typedef struct MusicData *Music;
+
+// Audio stream type
+// NOTE: Useful to create custom audio streams not bound to a specific file
+typedef struct AudioStream {
+    unsigned int sampleRate;    // Frequency (samples per second)
+    unsigned int sampleSize;    // Bit depth (bits per sample): 8, 16, 32 (24 not supported)
+    unsigned int channels;      // Number of channels (1-mono, 2-stereo)
+
+    int format;                 // OpenAL audio format specifier
+    unsigned int source;        // OpenAL audio source id
+    unsigned int buffers[2];    // OpenAL audio buffers (double buffering)
+} AudioStream;
+
+#ifdef __cplusplus
+extern "C" {            // Prevents name mangling of functions
+#endif
+
+//----------------------------------------------------------------------------------
+// Global Variables Definition
+//----------------------------------------------------------------------------------
+//...
+
+//----------------------------------------------------------------------------------
+// Module Functions Declaration
+//----------------------------------------------------------------------------------
+void InitAudioDevice(void);                                     // Initialize audio device and context
+void CloseAudioDevice(void);                                    // Close the audio device and context
+bool IsAudioDeviceReady(void);                                  // Check if audio device has been initialized successfully
+
+Wave LoadWave(const char *fileName);                            // Load wave data from file
+Wave LoadWaveEx(void *data, int sampleCount, int sampleRate, int sampleSize, int channels); // Load wave data from raw array data
+Sound LoadSound(const char *fileName);                          // Load sound from file
+Sound LoadSoundFromWave(Wave wave);                             // Load sound from wave data
+void UpdateSound(Sound sound, const void *data, int numSamples);// Update sound buffer with new data
+void UnloadWave(Wave wave);                                     // Unload wave data
+void UnloadSound(Sound sound);                                  // Unload sound
+void PlaySound(Sound sound);                                    // Play a sound
+void PauseSound(Sound sound);                                   // Pause a sound
+void ResumeSound(Sound sound);                                  // Resume a paused sound
+void StopSound(Sound sound);                                    // Stop playing a sound
+bool IsSoundPlaying(Sound sound);                               // Check if a sound is currently playing
+void SetSoundVolume(Sound sound, float volume);                 // Set volume for a sound (1.0 is max level)
+void SetSoundPitch(Sound sound, float pitch);                   // Set pitch for a sound (1.0 is base level)
+void WaveFormat(Wave *wave, int sampleRate, int sampleSize, int channels);  // Convert wave data to desired format
+Wave WaveCopy(Wave wave);                                       // Copy a wave to a new wave
+void WaveCrop(Wave *wave, int initSample, int finalSample);     // Crop a wave to defined samples range
+float *GetWaveData(Wave wave);                                  // Get samples data from wave as a floats array
+Music LoadMusicStream(const char *fileName);                    // Load music stream from file
+void UnloadMusicStream(Music music);                            // Unload music stream
+void PlayMusicStream(Music music);                              // Start music playing
+void UpdateMusicStream(Music music);                            // Updates buffers for music streaming
+void StopMusicStream(Music music);                              // Stop music playing
+void PauseMusicStream(Music music);                             // Pause music playing
+void ResumeMusicStream(Music music);                            // Resume playing paused music
+bool IsMusicPlaying(Music music);                               // Check if music is playing
+void SetMusicVolume(Music music, float volume);                 // Set volume for music (1.0 is max level)
+void SetMusicPitch(Music music, float pitch);                   // Set pitch for a music (1.0 is base level)
+float GetMusicTimeLength(Music music);                          // Get music time length (in seconds)
+float GetMusicTimePlayed(Music music);                          // Get current music time played (in seconds)
+
+AudioStream InitAudioStream(unsigned int sampleRate,
+                                  unsigned int sampleSize,
+                                  unsigned int channels);       // Init audio stream (to stream raw audio pcm data)
+void UpdateAudioStream(AudioStream stream, void *data, int numSamples); // Update audio stream buffers with data
+void CloseAudioStream(AudioStream stream);                      // Close audio stream and free memory
+bool IsAudioBufferProcessed(AudioStream stream);                // Check if any audio stream buffers requires refill
+void PlayAudioStream(AudioStream stream);                       // Play audio stream
+void PauseAudioStream(AudioStream stream);                      // Pause audio stream
+void ResumeAudioStream(AudioStream stream);                     // Resume audio stream
+void StopAudioStream(AudioStream stream);                       // Stop audio stream
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // AUDIO_H

@@ -193,42 +193,11 @@ func LoadImageRaw(fileName string, width int32, height int32, format TextureForm
 	return v
 }
 
-// Load an image from rRES file (raylib Resource)
-func LoadImageFromRES(rresName string, resId int32) *Image {
-	crresName := C.CString(rresName)
-	defer C.free(unsafe.Pointer(crresName))
-	cresId := (C.int)(resId)
-	ret := C.LoadImageFromRES(crresName, cresId)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // Load an image as texture into GPU memory
 func LoadTexture(fileName string) Texture2D {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	ret := C.LoadTexture(cfileName)
-	v := NewTexture2DFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// Load a texture from raw data into GPU memory
-func LoadTextureEx(data unsafe.Pointer, width int32, height int32, textureFormat TextureFormat) Texture2D {
-	cdata := (unsafe.Pointer)(unsafe.Pointer(data))
-	cwidth := (C.int)(width)
-	cheight := (C.int)(height)
-	ctextureFormat := (C.int)(textureFormat)
-	ret := C.LoadTextureEx(cdata, cwidth, cheight, ctextureFormat)
-	v := NewTexture2DFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// Load an image as texture from rRES file (raylib Resource)
-func LoadTextureFromRES(rresName string, resId int32) Texture2D {
-	crresName := C.CString(rresName)
-	defer C.free(unsafe.Pointer(crresName))
-	cresId := (C.int)(resId)
-	ret := C.LoadTextureFromRES(crresName, cresId)
 	v := NewTexture2DFromPointer(unsafe.Pointer(&ret))
 	return v
 }

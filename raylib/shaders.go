@@ -103,13 +103,6 @@ func GetDefaultShader() Shader {
 	return v
 }
 
-// Get standard shader
-func GetStandardShader() Shader {
-	ret := C.GetStandardShader()
-	v := NewShaderFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // Get default texture
 func GetDefaultTexture() *Texture2D {
 	ret := C.GetDefaultTexture()
@@ -185,22 +178,6 @@ func BeginBlendMode(mode BlendMode) {
 // End blending mode (reset to default: alpha blending)
 func EndBlendMode() {
 	C.EndBlendMode()
-}
-
-// Create a new light, initialize it and add to pool
-func CreateLight(_type LightType, position Vector3, diffuse Color) Light {
-	c_type := (C.int)(_type)
-	cposition := position.cptr()
-	cdiffuse := diffuse.cptr()
-	ret := C.CreateLight(c_type, *cposition, *cdiffuse)
-	v := NewLightFromPointer(unsafe.Pointer(ret))
-	return v
-}
-
-// Destroy a light and take it out of the list
-func DestroyLight(light Light) {
-	clightdata := NewLightData(light)
-	C.DestroyLight(clightdata.cptr())
 }
 
 // Init VR device

@@ -6,7 +6,6 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
 ### Requirements
 
-* [raylib](http://www.raylib.com/)
 * [GLFW3](http://www.glfw.org/) (desktop platform only, not needed on Android and RPi)
 * [OpenAL Soft](http://kcat.strangesoft.net/openal.html)
 
