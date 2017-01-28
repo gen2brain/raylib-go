@@ -24,6 +24,10 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
     brew install glfw3
     brew install openal-soft
 
+##### Android
+
+[Android example](https://github.com/gen2brain/raylib-go/tree/master/examples/android/example).
+
 ### Installation
 
     go get -v github.com/gen2brain/raylib-go
