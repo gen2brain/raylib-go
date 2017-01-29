@@ -18,7 +18,7 @@ func VectorAdd(v1, v2 raylib.Vector3) raylib.Vector3 {
 	return result
 }
 
-// Substract two vectors
+// Subtract two vectors
 func VectorSubtract(v1, v2 raylib.Vector3) raylib.Vector3 {
 	result := raylib.Vector3{}
 
@@ -66,7 +66,7 @@ func VectorDotProduct(v1, v2 raylib.Vector3) float32 {
 	return v1.X*v2.X + v1.Y*v2.Y + v1.Z*v2.Z
 }
 
-// Calculate vector lenght
+// Calculate vector length
 func VectorLength(v raylib.Vector3) float32 {
 	return float32(math.Sqrt(float64(v.X*v.X + v.Y*v.Y + v.Z*v.Z)))
 }
@@ -353,8 +353,8 @@ func MatrixAdd(left, right raylib.Matrix) raylib.Matrix {
 	return result
 }
 
-// Substract two matrices (left - right)
-func MatrixSubstract(left, right raylib.Matrix) raylib.Matrix {
+// Subtract two matrices (left - right)
+func MatrixSubtract(left, right raylib.Matrix) raylib.Matrix {
 	result := MatrixIdentity()
 
 	result.M0 = left.M0 - right.M0
