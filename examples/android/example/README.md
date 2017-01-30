@@ -22,7 +22,7 @@ After build is complete point GOROOT to new Go installation in /usr/local, and a
 And compile shared library:
 
     CGO_CFLAGS="-I/usr/local/android-arm7/include" CGO_LDFLAGS="-L/usr/local/android-arm7/lib" CC=arm-linux-androideabi-gcc CGO_ENABLED=1 GOOS=android GOARCH=arm \
-    ${GOROOT}/bin/go build -work -v -x -buildmode=c-shared -ldflags="-s -w -extldflags=-Wl,-soname,libexample.so" -o=android/libs/armeabi-v7a/libexample.so
+    ${GOROOT}/bin/go build -v -x -buildmode=c-shared -ldflags="-s -w -extldflags=-Wl,-soname,libexample.so" -o=android/libs/armeabi-v7a/libexample.so
 
 To build apk export path to Android SDK, point to location where you unpacked archive:
 
