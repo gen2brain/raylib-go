@@ -30,7 +30,7 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
 ### Installation
 
-    go get -v github.com/gen2brain/raylib-go
+    go get -v github.com/gen2brain/raylib-go/raylib
 
 ### Example
 
