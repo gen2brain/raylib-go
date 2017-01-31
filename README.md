@@ -9,19 +9,17 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 * [GLFW3](http://www.glfw.org/) (desktop platform only, not needed on Android and RPi)
 * [OpenAL Soft](http://kcat.strangesoft.net/openal.html) (on OS X system framework is used)
 
+GLFW version 3.2 is required.
+
 ##### Ubuntu
 
-GLFW3 version 3.2 is required.
-
-    apt-get install libglfw3-dev libopenal-dev
+    apt-get install libglfw3-dev libopenal-dev libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev
     
-You might also need:
-    
-    apt-get install libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev
+On older Ubuntu releases you will need to compile GLFW, instructions are in [travis file](https://github.com/gen2brain/raylib-go/blob/master/.travis.yml).
 
 ##### Fedora
     
-    dnf install glfw-devel openal-soft-devel
+    dnf install glfw-devel openal-soft-devel mesa-libGL-devel libXi-devel
 
 ##### OS X
 
