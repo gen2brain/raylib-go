@@ -7,7 +7,7 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 ### Requirements
 
 * [GLFW3](http://www.glfw.org/) (desktop platform only, not needed on Android and RPi)
-* [OpenAL Soft](http://kcat.strangesoft.net/openal.html)
+* [OpenAL Soft](http://kcat.strangesoft.net/openal.html) (on OS X system framework is used)
 
 ##### Ubuntu
 
@@ -22,7 +22,6 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 ##### OS X
 
     brew install glfw3
-    brew install openal-soft
 
 ##### Android
 
