@@ -1,0 +1,18 @@
+language: go
+
+go:
+  - 1.6
+  - 1.7
+  - tip
+
+before_install:
+  - sudo apt-get -qq update
+
+install:
+  - sudo apt-get install libopenal-dev -y
+
+  - curl -s -L https://github.com/glfw/glfw/archive/3.2.1.tar.gz | tar -xz
+  - cd glfw-3.2.1
+  - mkdir -p build && cd build && cmake -DBUILD_SHARED_LIBS=ON -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF -DCMAKE_INSTALL_PREFIX=/usr ..
+  - make
+  - sudo make install
