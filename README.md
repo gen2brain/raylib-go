@@ -11,8 +11,14 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
 ##### Ubuntu
 
+GLFW3 version 3.2 is required.
+
     apt-get install libglfw3-dev
     apt-get install libopenal-dev
+    
+You might also need:
+    
+    apt-get install libxi-dev libxinerama-dev libxcursor-dev
 
 ##### Fedora
     
