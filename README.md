@@ -1,4 +1,4 @@
-## raylib-go [![GoDoc](https://godoc.org/github.com/gen2brain/raylib-go/raylib?status.svg)](https://godoc.org/github.com/gen2brain/raylib-go/raylib)
+## raylib-go [![Build Status](https://travis-ci.org/gen2brain/raylib-go.svg?branch=master)](https://travis-ci.org/gen2brain/raylib-go) [![GoDoc](https://godoc.org/github.com/gen2brain/raylib-go/raylib?status.svg)](https://godoc.org/github.com/gen2brain/raylib-go/raylib)
 
 Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use library to learn videogames programming.
 
@@ -17,7 +17,7 @@ GLFW3 version 3.2 is required.
     
 You might also need:
     
-    apt-get install libxi-dev libxinerama-dev libxcursor-dev
+    apt-get install libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev
 
 ##### Fedora
     
