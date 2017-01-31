@@ -12,7 +12,7 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 ##### Ubuntu
 
     apt-get install libglfw3-dev
-    apt-get install openal-dev
+    apt-get install libopenal-dev
 
 ##### Fedora
     
