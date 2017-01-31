@@ -11,7 +11,7 @@ before_install:
   - sudo apt-get -qq update
 
 install:
-  - sudo apt-get install cmake -y
+  - sudo apt-get upgrade -y
   - sudo apt-get install libopenal-dev -y
 
   - curl -s -L https://github.com/glfw/glfw/archive/3.2.1.tar.gz | tar -xz
