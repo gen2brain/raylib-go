@@ -13,8 +13,7 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
 GLFW3 version 3.2 is required.
 
-    apt-get install libglfw3-dev
-    apt-get install libopenal-dev
+    apt-get install libglfw3-dev libopenal-dev
     
 You might also need:
     
@@ -22,8 +21,7 @@ You might also need:
 
 ##### Fedora
     
-    dnf install glfw-devel
-    dnf install openal-soft-devel
+    dnf install glfw-devel openal-soft-devel
 
 ##### OS X
 
