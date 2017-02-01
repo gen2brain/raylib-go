@@ -57,7 +57,7 @@ func GetDroppedFiles(count *int32) []string {
 	ccount := (*C.int)(unsafe.Pointer(count))
 	ret := C.GetDroppedFiles(ccount)
 
-	tmpslice := (*[1 << 30]*C.char)(unsafe.Pointer(ret))[:*count:*count]
+	tmpslice := (*[1 << 24]*C.char)(unsafe.Pointer(ret))[:*count:*count]
 	gostrings := make([]string, *count)
 	for i, s := range tmpslice {
 		gostrings[i] = C.GoString(s)
