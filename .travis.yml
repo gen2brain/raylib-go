@@ -7,7 +7,7 @@ go:
 install:
   - sudo apt-get install libopenal-dev libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev -y
 
-  - curl -s -L wget http://www.cmake.org/files/v3.7/cmake-3.7.2.tar.gz | tar xz
+  - curl -s -L http://www.cmake.org/files/v3.7/cmake-3.7.2.tar.gz | tar xz
   - cd cmake-3.7.2
   - ./configure
   - make
