@@ -25,6 +25,10 @@ On older Ubuntu releases you will need to compile GLFW, instructions are in [tra
 
     brew install glfw3
 
+##### Windows ([MSYS2](https://msys2.github.io/))
+
+    pacman -S mingw-w64-x86_64-openal mingw-w64-x86_64-glfw mingw-w64-x86_64-gcc mingw-w64-x86_64-go git 
+
 ##### Android
 
 [Android example](https://github.com/gen2brain/raylib-go/tree/master/examples/android/example).
