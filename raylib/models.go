@@ -28,9 +28,9 @@ type Mesh struct {
 	// Vertex indices (in case vertex data comes indexed)
 	Indices *uint16
 	// OpenGL Vertex Array Object id
-	VaoId uint32
+	VaoID uint32
 	// OpenGL Vertex Buffer Objects id (7 types of vertex data)
-	VboId [7]uint32
+	VboID [7]uint32
 }
 
 func (m *Mesh) cptr() *C.Mesh {
@@ -38,8 +38,8 @@ func (m *Mesh) cptr() *C.Mesh {
 }
 
 // Returns new Mesh
-func NewMesh(vertexCount, triangleCount int32, vertices, texcoords, texcoords2, normals, tangents *float32, colors *uint8, indices *uint16, vaoId uint32, vboId [7]uint32) Mesh {
-	return Mesh{vertexCount, triangleCount, vertices, texcoords, texcoords2, normals, tangents, colors, indices, vaoId, vboId}
+func NewMesh(vertexCount, triangleCount int32, vertices, texcoords, texcoords2, normals, tangents *float32, colors *uint8, indices *uint16, vaoID uint32, vboID [7]uint32) Mesh {
+	return Mesh{vertexCount, triangleCount, vertices, texcoords, texcoords2, normals, tangents, colors, indices, vaoID, vboID}
 }
 
 // Returns new Mesh from pointer

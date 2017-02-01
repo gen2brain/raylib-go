@@ -119,7 +119,6 @@ const (
 )
 
 // GUI elements states
-
 const (
 	ButtonDefault = iota
 	ButtonHover
@@ -127,6 +126,7 @@ const (
 	ButtonClicked
 )
 
+// GUI elements states
 const (
 	ToggleUnactive = iota
 	ToggleHover
@@ -134,6 +134,7 @@ const (
 	ToggleActive
 )
 
+// GUI elements states
 const (
 	ComboboxUnactive = iota
 	ComboboxHover
@@ -141,18 +142,21 @@ const (
 	ComboboxActive
 )
 
+// GUI elements states
 const (
 	SpinnerDefault = iota
 	SpinnerHover
 	SpinnerPressed
 )
 
+// GUI elements states
 const (
 	CheckboxStatus = iota
 	CheckboxHover
 	CheckboxPressed
 )
 
+// GUI elements states
 const (
 	SliderDefault = iota
 	SliderHover
@@ -160,7 +164,7 @@ const (
 )
 
 // Current GUI style (default light)
-var style []int = []int{
+var style = []int{
 	0xf5f5f5ff, // GLOBAL_BASE_COLOR
 	0xf5f5f5ff, // GLOBAL_BORDER_COLOR
 	0xf5f5f5ff, // GLOBAL_TEXT_COLOR
@@ -263,7 +267,7 @@ var style []int = []int{
 }
 
 // GUI property names (to read/write style text files)
-var propertyName []string = []string{
+var propertyName = []string{
 	"GLOBAL_BASE_COLOR",
 	"GLOBAL_BORDER_COLOR",
 	"GLOBAL_TEXT_COLOR",
@@ -457,9 +461,9 @@ func Button(bounds raylib.Rectangle, text string) bool {
 
 	if buttonState == ButtonClicked {
 		return true
-	} else {
-		return false
 	}
+
+	return false
 }
 
 // Toggle Button element, returns true when active
@@ -624,7 +628,7 @@ func ComboBox(bounds raylib.Rectangle, comboText []string, comboActive int) int 
 
 	if raylib.CheckCollisionPointRec(raylib.GetMousePosition(), bounds) || raylib.CheckCollisionPointRec(raylib.GetMousePosition(), click) {
 		if raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
-			comboActive += 1
+			comboActive++
 			if comboActive >= comboNum {
 				comboActive = 0
 			}
@@ -852,8 +856,8 @@ func Spinner(bounds raylib.Rectangle, value, minValue, maxValue int) int {
 
 	buttonSide := 0
 
-	framesCounter := 0
-	valueSpeed := false
+	var framesCounter int
+	var valueSpeed bool
 
 	// Update control
 	if raylib.CheckCollisionPointRec(mousePoint, leftButtonBound) || raylib.CheckCollisionPointRec(mousePoint, rightButtonBound) || raylib.CheckCollisionPointRec(mousePoint, labelBoxBound) {
@@ -862,14 +866,14 @@ func Spinner(bounds raylib.Rectangle, value, minValue, maxValue int) int {
 			buttonSide = 1
 
 			if value > minValue {
-				value -= 1
+				value--
 			}
 		} else if raylib.IsKeyDown(raylib.KeyRight) {
 			spinnerState = SpinnerPressed
 			buttonSide = 2
 
 			if value < maxValue {
-				value += 1
+				value++
 			}
 		}
 	}
@@ -892,7 +896,7 @@ func Spinner(bounds raylib.Rectangle, value, minValue, maxValue int) int {
 
 			if value > minValue {
 				if framesCounter >= 30 {
-					value -= 1
+					value--
 				}
 			}
 		}
@@ -914,7 +918,7 @@ func Spinner(bounds raylib.Rectangle, value, minValue, maxValue int) int {
 
 			if value < maxValue {
 				if framesCounter >= 30 {
-					value += 1
+					value++
 				}
 			}
 		}

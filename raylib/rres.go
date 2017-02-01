@@ -12,7 +12,7 @@ import (
 // rRES file header (8 byte)
 type RRESFileHeader struct {
 	// File identifier: rRES (4 byte)
-	Id [4]int8
+	ID [4]int8
 	// File version and subversion (2 byte)
 	Version uint16
 	// Number of resources in this file (2 byte)
@@ -22,7 +22,7 @@ type RRESFileHeader struct {
 // rRES info header, every resource includes this header (16 byte + 16 byte)
 type RRESInfoHeader struct {
 	// Resource unique identifier (4 byte)
-	Id uint32
+	ID uint32
 	// Resource data type (1 byte)
 	DataType uint8
 	// Resource data compression type (1 byte)
@@ -71,6 +71,7 @@ const (
 	RRESCompBrotli
 )
 
+// Image formats
 const (
 	// 8 bit per pixel (no alpha)
 	RRESImUncompGrayscale = iota + 1
@@ -110,6 +111,7 @@ const (
 	RRESImCompAstc8x8Rgba
 )
 
+// RRESVert
 const (
 	RRESVertPosition = iota
 	RRESVertTexcoord1
@@ -122,6 +124,7 @@ const (
 	RRESVertIndex
 )
 
+// RRESVert
 const (
 	RRESVertByte = iota
 	RRESVertShort
@@ -133,12 +136,12 @@ const (
 // Load resource from file (only one)
 // NOTE: Returns uncompressed data with parameters, only first resource found
 func LoadResource(fileName string) []byte {
-	return LoadResourceById(fileName, 0)
+	return LoadResourceByID(fileName, 0)
 }
 
 // Load resource from file by id
 // NOTE: Returns uncompressed data with parameters, search resource by id
-func LoadResourceById(fileName string, rresId int) (data []byte) {
+func LoadResourceByID(fileName string, rresID int) (data []byte) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		TraceLog(LogWarning, "[%s] rRES raylib resource file could not be opened", fileName)
@@ -159,7 +162,7 @@ func LoadResourceById(fileName string, rresId int) (data []byte) {
 	//fmt.Printf("%+v\n", fileHeader)
 
 	// Verify "rRES" identifier
-	id := fmt.Sprintf("%c", fileHeader.Id)
+	id := fmt.Sprintf("%c", fileHeader.ID)
 	if id != "[r R E S]" {
 		TraceLog(LogWarning, "[%s] This is not a valid raylib resource file", fileName)
 		return
@@ -179,7 +182,7 @@ func LoadResourceById(fileName string, rresId int) (data []byte) {
 
 		file.Seek(int64(unsafe.Sizeof(infoHeader)), os.SEEK_CUR)
 
-		if int(infoHeader.Id) == rresId {
+		if int(infoHeader.ID) == rresID {
 			// Read resource data block
 			data = make([]byte, infoHeader.DataSize)
 			file.Read(data)
@@ -194,7 +197,7 @@ func LoadResourceById(fileName string, rresId int) (data []byte) {
 			}
 
 			if len(data) > 0 {
-				TraceLog(LogInfo, "[%s][ID %d] Resource data loaded successfully", fileName, infoHeader.Id)
+				TraceLog(LogInfo, "[%s][ID %d] Resource data loaded successfully", fileName, infoHeader.ID)
 			}
 		} else {
 			// Skip required data to read next resource infoHeader
@@ -203,7 +206,7 @@ func LoadResourceById(fileName string, rresId int) (data []byte) {
 	}
 
 	if len(data) == 0 {
-		TraceLog(LogInfo, "[%s][ID %d] Requested resource could not be found", fileName, rresId)
+		TraceLog(LogInfo, "[%s][ID %d] Requested resource could not be found", fileName, rresID)
 	}
 
 	return

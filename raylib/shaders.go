@@ -8,6 +8,7 @@ import "C"
 import "unsafe"
 import "reflect"
 
+// Vr device
 type VrDevice int32
 
 // Head Mounted Display devices
@@ -23,6 +24,7 @@ const (
 	HmdFoveVr            VrDevice = C.HMD_FOVE_VR
 )
 
+// Blend mode
 type BlendMode int32
 
 // Color blending modes (pre-defined)
@@ -35,7 +37,7 @@ const (
 // Shader type (generic shader)
 type Shader struct {
 	// Shader program id
-	Id uint32
+	ID uint32
 	// Vertex attribute location point (default-location = 0)
 	VertexLoc int32
 	// Texcoord attribute location point (default-location = 1)

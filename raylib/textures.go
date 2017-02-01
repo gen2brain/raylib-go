@@ -7,6 +7,7 @@ package raylib
 import "C"
 import "unsafe"
 
+// Texture format
 type TextureFormat int32
 
 // Texture formats
@@ -50,6 +51,7 @@ const (
 	CompressedAstc8x8Rgba TextureFormat = C.COMPRESSED_ASTC_8x8_RGBA
 )
 
+// Texture filter mode
 type TextureFilterMode int32
 
 // Texture parameters: filter mode
@@ -70,6 +72,7 @@ const (
 	FilterAnisotropic16x TextureFilterMode = C.FILTER_ANISOTROPIC_16X
 )
 
+// Texture wrap mode
 type TextureWrapMode int32
 
 // Texture parameters: wrap mode
@@ -112,7 +115,7 @@ func NewImageFromPointer(ptr unsafe.Pointer) *Image {
 // NOTE: Data stored in GPU memory
 type Texture2D struct {
 	// OpenGL texture id
-	Id uint32
+	ID uint32
 	// Texture base width
 	Width int32
 	// Texture base height
@@ -140,7 +143,7 @@ func NewTexture2DFromPointer(ptr unsafe.Pointer) Texture2D {
 // RenderTexture2D type, for texture rendering
 type RenderTexture2D struct {
 	// Render texture (fbo) id
-	Id uint32
+	ID uint32
 	// Color buffer attachment texture
 	Texture Texture2D
 	// Depth buffer attachment texture

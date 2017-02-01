@@ -17,6 +17,7 @@ const (
 
 var traceDebugMsgs = false
 
+// Trace log
 func TraceLog(msgType int, text string, v ...interface{}) {
 	switch msgType {
 	case LogInfo:
@@ -33,6 +34,7 @@ func TraceLog(msgType int, text string, v ...interface{}) {
 	}
 }
 
+// Set debug messages
 func SetDebug(enabled bool) {
 	traceDebugMsgs = enabled
 }

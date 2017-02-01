@@ -8,8 +8,8 @@ import "C"
 import "unsafe"
 import "reflect"
 
+// Some basic Defines
 const (
-	// Some basic Defines
 	Pi      = 3.1415927
 	Deg2rad = 0.017453292
 	Rad2deg = 57.295776
@@ -168,6 +168,7 @@ const (
 	GamepadXboxAxisRt = 5
 )
 
+// Gestures
 type Gestures int32
 
 // Gestures type
@@ -186,6 +187,7 @@ const (
 	GesturePinchOut   Gestures = C.GESTURE_PINCH_OUT
 )
 
+// Camera mode
 type CameraMode int32
 
 // Camera system modes
@@ -201,57 +203,57 @@ const (
 // NOTE: Custom raylib color palette for amazing visuals on WHITE background
 var (
 	// Light Gray
-	LightGray Color = NewColor(200, 200, 200, 255)
+	LightGray = NewColor(200, 200, 200, 255)
 	// Gray
-	Gray Color = NewColor(130, 130, 130, 255)
+	Gray = NewColor(130, 130, 130, 255)
 	// Dark Gray
-	DarkGray Color = NewColor(80, 80, 80, 255)
+	DarkGray = NewColor(80, 80, 80, 255)
 	// Yellow
-	Yellow Color = NewColor(253, 249, 0, 255)
+	Yellow = NewColor(253, 249, 0, 255)
 	// Gold
-	Gold Color = NewColor(255, 203, 0, 255)
+	Gold = NewColor(255, 203, 0, 255)
 	// Orange
-	Orange Color = NewColor(255, 161, 0, 255)
+	Orange = NewColor(255, 161, 0, 255)
 	// Pink
-	Pink Color = NewColor(255, 109, 194, 255)
+	Pink = NewColor(255, 109, 194, 255)
 	// Red
-	Red Color = NewColor(230, 41, 55, 255)
+	Red = NewColor(230, 41, 55, 255)
 	// Maroon
-	Maroon Color = NewColor(190, 33, 55, 255)
+	Maroon = NewColor(190, 33, 55, 255)
 	// Green
-	Green Color = NewColor(0, 228, 48, 255)
+	Green = NewColor(0, 228, 48, 255)
 	// Lime
-	Lime Color = NewColor(0, 158, 47, 255)
+	Lime = NewColor(0, 158, 47, 255)
 	// Dark Green
-	DarkGreen Color = NewColor(0, 117, 44, 255)
+	DarkGreen = NewColor(0, 117, 44, 255)
 	// Sky Blue
-	SkyBlue Color = NewColor(102, 191, 255, 255)
+	SkyBlue = NewColor(102, 191, 255, 255)
 	// Blue
-	Blue Color = NewColor(0, 121, 241, 255)
+	Blue = NewColor(0, 121, 241, 255)
 	// Dark Blue
-	DarkBlue Color = NewColor(0, 82, 172, 255)
+	DarkBlue = NewColor(0, 82, 172, 255)
 	// Purple
-	Purple Color = NewColor(200, 122, 255, 255)
+	Purple = NewColor(200, 122, 255, 255)
 	// Violet
-	Violet Color = NewColor(135, 60, 190, 255)
+	Violet = NewColor(135, 60, 190, 255)
 	// Dark Purple
-	DarkPurple Color = NewColor(112, 31, 126, 255)
+	DarkPurple = NewColor(112, 31, 126, 255)
 	// Beige
-	Beige Color = NewColor(211, 176, 131, 255)
+	Beige = NewColor(211, 176, 131, 255)
 	// Brown
-	Brown Color = NewColor(127, 106, 79, 255)
+	Brown = NewColor(127, 106, 79, 255)
 	// Dark Brown
-	DarkBrown Color = NewColor(76, 63, 47, 255)
+	DarkBrown = NewColor(76, 63, 47, 255)
 	// White
-	White Color = NewColor(255, 255, 255, 255)
+	White = NewColor(255, 255, 255, 255)
 	// Black
-	Black Color = NewColor(0, 0, 0, 255)
+	Black = NewColor(0, 0, 0, 255)
 	// Blank (Transparent)
-	Blank Color = NewColor(0, 0, 0, 0)
+	Blank = NewColor(0, 0, 0, 0)
 	// Magenta
-	Magenta Color = NewColor(255, 0, 255, 255)
+	Magenta = NewColor(255, 0, 255, 255)
 	// Ray White (RayLib Logo White)
-	RayWhite Color = NewColor(245, 245, 245, 255)
+	RayWhite = NewColor(245, 245, 245, 255)
 )
 
 // Vector2 type
