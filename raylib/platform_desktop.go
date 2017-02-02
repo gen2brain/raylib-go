@@ -9,7 +9,6 @@ package raylib
 import "C"
 
 import (
-	"io"
 	"os"
 	"unsafe"
 )
@@ -86,7 +85,7 @@ func ClearDroppedFiles() {
 }
 
 // Open asset
-func OpenAsset(name string) (io.ReadCloser, error) {
+func OpenAsset(name string) (Asset, error) {
 	f, err := os.Open(name)
 	if err != nil {
 		return nil, err

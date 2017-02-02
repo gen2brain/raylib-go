@@ -142,7 +142,7 @@ func LoadResource(fileName string) []byte {
 // Load resource from file by id
 // NOTE: Returns uncompressed data with parameters, search resource by id
 func LoadResourceByID(fileName string, rresID int) (data []byte) {
-	file, err := os.Open(fileName)
+	file, err := OpenAsset(fileName)
 	if err != nil {
 		TraceLog(LogWarning, "[%s] rRES raylib resource file could not be opened", fileName)
 		return
@@ -164,7 +164,7 @@ func LoadResourceByID(fileName string, rresID int) (data []byte) {
 	// Verify "rRES" identifier
 	id := fmt.Sprintf("%c", fileHeader.ID)
 	if id != "[r R E S]" {
-		TraceLog(LogWarning, "[%s] This is not a valid raylib resource file", fileName)
+		TraceLog(LogWarning, "[%s] is not a valid raylib resource file", fileName)
 		return
 	}
 

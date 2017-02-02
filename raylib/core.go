@@ -5,8 +5,12 @@ package raylib
 #include <stdlib.h>
 */
 import "C"
-import "unsafe"
-import "reflect"
+
+import (
+	"io"
+	"reflect"
+	"unsafe"
+)
 
 // Some basic Defines
 const (
@@ -448,6 +452,12 @@ func NewBoundingBox(min, max Vector3) BoundingBox {
 // Returns new BoundingBox from pointer
 func NewBoundingBoxFromPointer(ptr unsafe.Pointer) BoundingBox {
 	return *(*BoundingBox)(ptr)
+}
+
+// Asset file
+type Asset interface {
+	io.ReadSeeker
+	io.Closer
 }
 
 // Close Window and Terminate Context

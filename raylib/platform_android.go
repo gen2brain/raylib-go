@@ -16,6 +16,7 @@ import "C"
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"unsafe"
 )
@@ -47,7 +48,7 @@ func androidMain(app *C.struct_android_app) {
 }
 
 // Open asset
-func OpenAsset(name string) (io.ReadCloser, error) {
+func OpenAsset(name string) (Asset, error) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
@@ -70,6 +71,14 @@ func (a *asset) Read(p []byte) (n int, err error) {
 		return 0, io.EOF
 	}
 	return n, nil
+}
+
+func (a *asset) Seek(offset int64, whence int) (int64, error) {
+	off := C.AAsset_seek(a.ptr, C.off_t(offset), C.int(whence))
+	if off == -1 {
+		return 0, errors.New(fmt.Sprintf("bad result for offset=%d, whence=%d", offset, whence))
+	}
+	return int64(off), nil
 }
 
 func (a *asset) Close() error {
