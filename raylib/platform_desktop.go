@@ -15,12 +15,21 @@ import (
 )
 
 // Initialize Window and OpenGL Graphics
-func InitWindow(width int32, height int32, title string) {
+func InitWindow(width int32, height int32, t interface{}) {
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
-	ctitle := C.CString(title)
-	defer C.free(unsafe.Pointer(ctitle))
-	C.InitWindow(cwidth, cheight, ctitle)
+
+	title, ok := t.(string)
+	if ok {
+		ctitle := C.CString(title)
+		defer C.free(unsafe.Pointer(ctitle))
+		C.InitWindow(cwidth, cheight, ctitle)
+	}
+}
+
+// Sets callback function
+func SetCallbackFunc(func(unsafe.Pointer)) {
+	return
 }
 
 // Shows cursor

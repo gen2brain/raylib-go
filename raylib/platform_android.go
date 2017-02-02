@@ -23,11 +23,15 @@ import (
 var callbackHolder func(unsafe.Pointer)
 
 // Initialize Window and OpenGL Graphics
-func InitWindow(width int32, height int32, app unsafe.Pointer) {
+func InitWindow(width int32, height int32, t interface{}) {
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
-	C.InitWindow(cwidth, cheight, app)
-	C.init_asset_manager(app)
+
+	app, ok := t.(unsafe.Pointer)
+	if ok {
+		C.InitWindow(cwidth, cheight, app)
+		C.init_asset_manager(app)
+	}
 }
 
 // Sets callback function
