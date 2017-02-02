@@ -17,6 +17,11 @@ const (
 
 var traceDebugMsgs = false
 
+// Set debug messages
+func SetDebug(enabled bool) {
+	traceDebugMsgs = enabled
+}
+
 // Trace log
 func TraceLog(msgType int, text string, v ...interface{}) {
 	switch msgType {
@@ -32,9 +37,4 @@ func TraceLog(msgType int, text string, v ...interface{}) {
 			fmt.Printf("DEBUG: "+text+"\n", v...)
 		}
 	}
-}
-
-// Set debug messages
-func SetDebug(enabled bool) {
-	traceDebugMsgs = enabled
 }

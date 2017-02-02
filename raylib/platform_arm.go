@@ -44,3 +44,12 @@ func EnableCursor() {
 func DisableCursor() {
 	C.DisableCursor()
 }
+
+// Open asset
+func OpenAsset(name string) (io.ReadCloser, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
+}

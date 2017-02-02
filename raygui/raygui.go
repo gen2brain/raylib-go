@@ -5,7 +5,6 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strconv"
 	"strings"
 
@@ -164,7 +163,7 @@ const (
 )
 
 // Current GUI style (default light)
-var style = []int{
+var style = []int64{
 	0xf5f5f5ff, // GLOBAL_BASE_COLOR
 	0xf5f5f5ff, // GLOBAL_BORDER_COLOR
 	0xf5f5f5ff, // GLOBAL_TEXT_COLOR
@@ -423,7 +422,7 @@ func Button(bounds raylib.Rectangle, text string) bool {
 	if raylib.CheckCollisionPointRec(mousePoint, bounds) {
 		if raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
 			buttonState = ButtonPressed
-		} else if raylib.IsMouseButtonReleased(raylib.MouseLeftButton) {
+		} else if raylib.IsMouseButtonReleased(raylib.MouseLeftButton) || raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
 			buttonState = ButtonClicked
 		} else {
 			buttonState = ButtonHover
@@ -492,7 +491,7 @@ func ToggleButton(bounds raylib.Rectangle, text string, toggle bool) bool {
 	if raylib.CheckCollisionPointRec(mousePoint, toggleButton) {
 		if raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
 			toggleState = TogglePressed
-		} else if raylib.IsMouseButtonReleased(raylib.MouseLeftButton) {
+		} else if raylib.IsMouseButtonReleased(raylib.MouseLeftButton) || raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
 			if toggle {
 				toggle = false
 				toggleState = ToggleUnactive
@@ -574,7 +573,7 @@ func ComboBox(bounds raylib.Rectangle, comboText []string, comboActive int) int 
 			if raylib.CheckCollisionPointRec(mousePoint, comboBoxButton) || raylib.CheckCollisionPointRec(mousePoint, click) {
 				if raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
 					comboBoxState = ComboboxPressed
-				} else if raylib.IsMouseButtonReleased(raylib.MouseLeftButton) {
+				} else if raylib.IsMouseButtonReleased(raylib.MouseLeftButton) || raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
 					comboBoxState = ComboboxActive
 				} else {
 					comboBoxState = ComboboxHover
@@ -647,7 +646,7 @@ func CheckBox(bounds raylib.Rectangle, text string, checked bool) bool {
 	if raylib.CheckCollisionPointRec(mousePoint, bounds) {
 		if raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
 			checkBoxState = CheckboxPressed
-		} else if raylib.IsMouseButtonReleased(raylib.MouseLeftButton) {
+		} else if raylib.IsMouseButtonReleased(raylib.MouseLeftButton) || raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
 			checkBoxState = CheckboxStatus
 			checked = !checked
 		} else {
@@ -1069,8 +1068,9 @@ func SaveGuiStyle(fileName string) {
 
 // Load GUI style file
 func LoadGuiStyle(fileName string) {
-	file, err := os.Open(fileName)
+	file, err := raylib.OpenAsset(fileName)
 	if err != nil {
+		raylib.TraceLog(raylib.LogWarning, "[%s] GUI style file could not be opened", fileName)
 		return
 	}
 	defer file.Close()
@@ -1098,7 +1098,7 @@ func LoadGuiStyle(fileName string) {
 
 				v, err := strconv.ParseInt(value, 16, 64)
 				if err == nil {
-					style[i] = int(v)
+					style[i] = int64(v)
 				}
 			}
 		}
@@ -1106,7 +1106,7 @@ func LoadGuiStyle(fileName string) {
 }
 
 // Set one style property
-func SetStyleProperty(guiProperty Property, value int) {
+func SetStyleProperty(guiProperty Property, value int64) {
 	numColorSamples := 10
 
 	if guiProperty == GlobalBaseColor {
@@ -1118,37 +1118,37 @@ func SetStyleProperty(guiProperty Property, value int) {
 		}
 
 		style[GlobalBaseColor] = value
-		style[GlobalBackgroundColor] = int(raylib.GetHexValue(fadeColor[3]))
-		style[ButtonDefaultInsideColor] = int(raylib.GetHexValue(fadeColor[4]))
-		style[ButtonHoverInsideColor] = int(raylib.GetHexValue(fadeColor[4]))
-		style[ButtonPressedInsideColor] = int(raylib.GetHexValue(fadeColor[5]))
-		style[ToggleDefaultInsideColor] = int(raylib.GetHexValue(fadeColor[4]))
-		style[ToggleHoverInsideColor] = int(raylib.GetHexValue(fadeColor[4]))
-		style[TogglePressedInsideColor] = int(raylib.GetHexValue(fadeColor[5]))
-		style[ToggleActiveInsideColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[SliderInsideColor] = int(raylib.GetHexValue(fadeColor[4]))
-		style[SliderDefaultColor] = int(raylib.GetHexValue(fadeColor[6]))
-		style[SliderHoverColor] = int(raylib.GetHexValue(fadeColor[7]))
-		style[SliderActiveColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[SliderbarInsideColor] = int(raylib.GetHexValue(fadeColor[4]))
-		style[SliderbarDefaultColor] = int(raylib.GetHexValue(fadeColor[6]))
-		style[SliderbarHoverColor] = int(raylib.GetHexValue(fadeColor[7]))
-		style[SliderbarActiveColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[SliderbarZeroLineColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[ProgressbarInsideColor] = int(raylib.GetHexValue(fadeColor[4]))
-		style[ProgressbarProgressColor] = int(raylib.GetHexValue(fadeColor[6]))
-		style[SpinnerLabelInsideColor] = int(raylib.GetHexValue(fadeColor[4]))
-		style[SpinnerDefaultButtonInsideColor] = int(raylib.GetHexValue(fadeColor[4]))
-		style[SpinnerHoverButtonInsideColor] = int(raylib.GetHexValue(fadeColor[4]))
-		style[SpinnerPressedButtonInsideColor] = int(raylib.GetHexValue(fadeColor[5]))
-		style[ComboboxDefaultInsideColor] = int(raylib.GetHexValue(fadeColor[4]))
-		style[ComboboxHoverInsideColor] = int(raylib.GetHexValue(fadeColor[4]))
-		style[ComboboxPressedInsideColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[ComboboxPressedListInsideColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[CheckboxDefaultInsideColor] = int(raylib.GetHexValue(fadeColor[4]))
-		style[CheckboxClickInsideColor] = int(raylib.GetHexValue(fadeColor[6]))
-		style[CheckboxStatusActiveColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[TextboxInsideColor] = int(raylib.GetHexValue(fadeColor[4]))
+		style[GlobalBackgroundColor] = int64(raylib.GetHexValue(fadeColor[3]))
+		style[ButtonDefaultInsideColor] = int64(raylib.GetHexValue(fadeColor[4]))
+		style[ButtonHoverInsideColor] = int64(raylib.GetHexValue(fadeColor[4]))
+		style[ButtonPressedInsideColor] = int64(raylib.GetHexValue(fadeColor[5]))
+		style[ToggleDefaultInsideColor] = int64(raylib.GetHexValue(fadeColor[4]))
+		style[ToggleHoverInsideColor] = int64(raylib.GetHexValue(fadeColor[4]))
+		style[TogglePressedInsideColor] = int64(raylib.GetHexValue(fadeColor[5]))
+		style[ToggleActiveInsideColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[SliderInsideColor] = int64(raylib.GetHexValue(fadeColor[4]))
+		style[SliderDefaultColor] = int64(raylib.GetHexValue(fadeColor[6]))
+		style[SliderHoverColor] = int64(raylib.GetHexValue(fadeColor[7]))
+		style[SliderActiveColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[SliderbarInsideColor] = int64(raylib.GetHexValue(fadeColor[4]))
+		style[SliderbarDefaultColor] = int64(raylib.GetHexValue(fadeColor[6]))
+		style[SliderbarHoverColor] = int64(raylib.GetHexValue(fadeColor[7]))
+		style[SliderbarActiveColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[SliderbarZeroLineColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[ProgressbarInsideColor] = int64(raylib.GetHexValue(fadeColor[4]))
+		style[ProgressbarProgressColor] = int64(raylib.GetHexValue(fadeColor[6]))
+		style[SpinnerLabelInsideColor] = int64(raylib.GetHexValue(fadeColor[4]))
+		style[SpinnerDefaultButtonInsideColor] = int64(raylib.GetHexValue(fadeColor[4]))
+		style[SpinnerHoverButtonInsideColor] = int64(raylib.GetHexValue(fadeColor[4]))
+		style[SpinnerPressedButtonInsideColor] = int64(raylib.GetHexValue(fadeColor[5]))
+		style[ComboboxDefaultInsideColor] = int64(raylib.GetHexValue(fadeColor[4]))
+		style[ComboboxHoverInsideColor] = int64(raylib.GetHexValue(fadeColor[4]))
+		style[ComboboxPressedInsideColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[ComboboxPressedListInsideColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[CheckboxDefaultInsideColor] = int64(raylib.GetHexValue(fadeColor[4]))
+		style[CheckboxClickInsideColor] = int64(raylib.GetHexValue(fadeColor[6]))
+		style[CheckboxStatusActiveColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[TextboxInsideColor] = int64(raylib.GetHexValue(fadeColor[4]))
 	} else if guiProperty == GlobalBorderColor {
 		baseColor := raylib.GetColor(int32(value))
 		fadeColor := make([]raylib.Color, numColorSamples)
@@ -1158,28 +1158,28 @@ func SetStyleProperty(guiProperty Property, value int) {
 		}
 
 		style[GlobalBorderColor] = value
-		style[ButtonDefaultBorderColor] = int(raylib.GetHexValue(fadeColor[7]))
-		style[ButtonHoverBorderColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[ButtonPressedBorderColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[ToggleDefaultBorderColor] = int(raylib.GetHexValue(fadeColor[7]))
-		style[ToggleHoverBorderColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[TogglePressedBorderColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[ToggleActiveBorderColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[SliderBorderColor] = int(raylib.GetHexValue(fadeColor[7]))
-		style[SliderbarBorderColor] = int(raylib.GetHexValue(fadeColor[7]))
-		style[ProgressbarBorderColor] = int(raylib.GetHexValue(fadeColor[7]))
-		style[SpinnerLabelBorderColor] = int(raylib.GetHexValue(fadeColor[7]))
-		style[SpinnerDefaultButtonBorderColor] = int(raylib.GetHexValue(fadeColor[7]))
-		style[SpinnerHoverButtonBorderColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[SpinnerPressedButtonBorderColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[ComboboxDefaultBorderColor] = int(raylib.GetHexValue(fadeColor[7]))
-		style[ComboboxHoverBorderColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[ComboboxPressedBorderColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[ComboboxPressedListBorderColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[CheckboxDefaultBorderColor] = int(raylib.GetHexValue(fadeColor[7]))
-		style[CheckboxHoverBorderColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[CheckboxClickBorderColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[TextboxBorderColor] = int(raylib.GetHexValue(fadeColor[7]))
+		style[ButtonDefaultBorderColor] = int64(raylib.GetHexValue(fadeColor[7]))
+		style[ButtonHoverBorderColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[ButtonPressedBorderColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[ToggleDefaultBorderColor] = int64(raylib.GetHexValue(fadeColor[7]))
+		style[ToggleHoverBorderColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[TogglePressedBorderColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[ToggleActiveBorderColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[SliderBorderColor] = int64(raylib.GetHexValue(fadeColor[7]))
+		style[SliderbarBorderColor] = int64(raylib.GetHexValue(fadeColor[7]))
+		style[ProgressbarBorderColor] = int64(raylib.GetHexValue(fadeColor[7]))
+		style[SpinnerLabelBorderColor] = int64(raylib.GetHexValue(fadeColor[7]))
+		style[SpinnerDefaultButtonBorderColor] = int64(raylib.GetHexValue(fadeColor[7]))
+		style[SpinnerHoverButtonBorderColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[SpinnerPressedButtonBorderColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[ComboboxDefaultBorderColor] = int64(raylib.GetHexValue(fadeColor[7]))
+		style[ComboboxHoverBorderColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[ComboboxPressedBorderColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[ComboboxPressedListBorderColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[CheckboxDefaultBorderColor] = int64(raylib.GetHexValue(fadeColor[7]))
+		style[CheckboxHoverBorderColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[CheckboxClickBorderColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[TextboxBorderColor] = int64(raylib.GetHexValue(fadeColor[7]))
 	} else if guiProperty == GlobalTextColor {
 		baseColor := raylib.GetColor(int32(value))
 		fadeColor := make([]raylib.Color, numColorSamples)
@@ -1189,35 +1189,35 @@ func SetStyleProperty(guiProperty Property, value int) {
 		}
 
 		style[GlobalTextColor] = value
-		style[LabelTextColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[ButtonDefaultTextColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[ButtonHoverTextColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[ButtonPressedTextColor] = int(raylib.GetHexValue(fadeColor[5]))
-		style[ToggleDefaultTextColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[ToggleHoverTextColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[TogglePressedTextColor] = int(raylib.GetHexValue(fadeColor[5]))
-		style[ToggleActiveTextColor] = int(raylib.GetHexValue(fadeColor[5]))
-		style[SpinnerDefaultSymbolColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[SpinnerDefaultTextColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[SpinnerHoverSymbolColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[SpinnerHoverTextColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[SpinnerPressedSymbolColor] = int(raylib.GetHexValue(fadeColor[5]))
-		style[SpinnerPressedTextColor] = int(raylib.GetHexValue(fadeColor[5]))
-		style[ComboboxDefaultTextColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[ComboboxDefaultListTextColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[ComboboxHoverTextColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[ComboboxHoverListTextColor] = int(raylib.GetHexValue(fadeColor[8]))
-		style[ComboboxPressedTextColor] = int(raylib.GetHexValue(fadeColor[4]))
-		style[ComboboxPressedListTextColor] = int(raylib.GetHexValue(fadeColor[4]))
-		style[TextboxTextColor] = int(raylib.GetHexValue(fadeColor[9]))
-		style[TextboxLineColor] = int(raylib.GetHexValue(fadeColor[6]))
+		style[LabelTextColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[ButtonDefaultTextColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[ButtonHoverTextColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[ButtonPressedTextColor] = int64(raylib.GetHexValue(fadeColor[5]))
+		style[ToggleDefaultTextColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[ToggleHoverTextColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[TogglePressedTextColor] = int64(raylib.GetHexValue(fadeColor[5]))
+		style[ToggleActiveTextColor] = int64(raylib.GetHexValue(fadeColor[5]))
+		style[SpinnerDefaultSymbolColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[SpinnerDefaultTextColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[SpinnerHoverSymbolColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[SpinnerHoverTextColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[SpinnerPressedSymbolColor] = int64(raylib.GetHexValue(fadeColor[5]))
+		style[SpinnerPressedTextColor] = int64(raylib.GetHexValue(fadeColor[5]))
+		style[ComboboxDefaultTextColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[ComboboxDefaultListTextColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[ComboboxHoverTextColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[ComboboxHoverListTextColor] = int64(raylib.GetHexValue(fadeColor[8]))
+		style[ComboboxPressedTextColor] = int64(raylib.GetHexValue(fadeColor[4]))
+		style[ComboboxPressedListTextColor] = int64(raylib.GetHexValue(fadeColor[4]))
+		style[TextboxTextColor] = int64(raylib.GetHexValue(fadeColor[9]))
+		style[TextboxLineColor] = int64(raylib.GetHexValue(fadeColor[6]))
 	} else {
 		style[guiProperty] = value
 	}
 }
 
 // Get one style property
-func GetStyleProperty(guiProperty Property) int {
+func GetStyleProperty(guiProperty Property) int64 {
 	return style[int(guiProperty)]
 }
 

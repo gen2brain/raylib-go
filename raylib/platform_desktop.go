@@ -7,7 +7,12 @@ package raylib
 #include <stdlib.h>
 */
 import "C"
-import "unsafe"
+
+import (
+	"io"
+	"os"
+	"unsafe"
+)
 
 // Initialize Window and OpenGL Graphics
 func InitWindow(width int32, height int32, title string) {
@@ -69,4 +74,13 @@ func GetDroppedFiles(count *int32) []string {
 // Clear dropped files paths buffer
 func ClearDroppedFiles() {
 	C.ClearDroppedFiles()
+}
+
+// Open asset
+func OpenAsset(name string) (io.ReadCloser, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
 }
