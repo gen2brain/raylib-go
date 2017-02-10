@@ -7,22 +7,44 @@ package raylib
 import "C"
 import "unsafe"
 
+// SpriteFont character info
+type CharInfo struct {
+	// Character value (Unicode)
+	Value int32
+	// Character rectangle in sprite font
+	Rec Rectangle
+	// Character offset X when drawing
+	OffsetX int32
+	// Character offset Y when drawing
+	OffsetY int32
+	// Character advance position X
+	AdvanceX int32
+}
+
+func (c *CharInfo) cptr() *C.CharInfo {
+	return (*C.CharInfo)(unsafe.Pointer(c))
+}
+
+// Returns new SpriteFont
+func NewCharInfo(value int32, rec Rectangle, offsetX, offsetY, advanceX int32) CharInfo {
+	return CharInfo{value, rec, offsetX, offsetY, advanceX}
+}
+
+// Returns new SpriteFont from pointer
+func NewCharInfoFromPointer(ptr unsafe.Pointer) CharInfo {
+	return *(*CharInfo)(ptr)
+}
+
 // SpriteFont type, includes texture and charSet array data
 type SpriteFont struct {
 	// Font texture
 	Texture Texture2D
 	// Base size (default chars height)
-	Size int32
+	BaseSize int32
 	// Number of characters
-	NumChars int32
-	// Characters values array
-	CharValues []int32
-	// Characters rectangles within the texture
-	CharRecs []Rectangle
-	// Characters offsets (on drawing)
-	CharOffsets []Vector2
-	// Characters x advance (on drawing)
-	CharAdvanceX []int32
+	CharsCount int32
+	// Characters info data
+	Chars *CharInfo
 }
 
 func (s *SpriteFont) cptr() *C.SpriteFont {
@@ -30,8 +52,8 @@ func (s *SpriteFont) cptr() *C.SpriteFont {
 }
 
 // Returns new SpriteFont
-func NewSpriteFont(texture Texture2D, size, numChars int32, charValues []int32, charRecs []Rectangle, charOffsets []Vector2, charAdvanceX []int32) SpriteFont {
-	return SpriteFont{texture, size, numChars, charValues, charRecs, charOffsets, charAdvanceX}
+func NewSpriteFont(texture Texture2D, baseSize, charsCount int32, chars *CharInfo) SpriteFont {
+	return SpriteFont{texture, baseSize, charsCount, chars}
 }
 
 // Returns new SpriteFont from pointer
@@ -56,13 +78,13 @@ func LoadSpriteFont(fileName string) SpriteFont {
 }
 
 // Load a SpriteFont from TTF font with parameters
-func LoadSpriteFontTTF(fileName string, fontSize int32, numChars int32, fontChars *int32) SpriteFont {
+func LoadSpriteFontTTF(fileName string, fontSize int32, charsCount int32, fontChars *int32) SpriteFont {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	cfontSize := (C.int)(fontSize)
-	cnumChars := (C.int)(numChars)
+	ccharsCount := (C.int)(charsCount)
 	cfontChars := (*C.int)(unsafe.Pointer(fontChars))
-	ret := C.LoadSpriteFontTTF(cfileName, cfontSize, cnumChars, cfontChars)
+	ret := C.LoadSpriteFontTTF(cfileName, cfontSize, ccharsCount, cfontChars)
 	v := NewSpriteFontFromPointer(unsafe.Pointer(&ret))
 	return v
 }

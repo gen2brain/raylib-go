@@ -30,7 +30,7 @@ func main() {
 
 	text := "THIS is THE FONT you SELECTED!" // Main text
 
-	textSize := raylib.MeasureTextEx(fonts[currentFont], text, float32(fonts[currentFont].Size)*3, 1)
+	textSize := raylib.MeasureTextEx(fonts[currentFont], text, float32(fonts[currentFont].BaseSize)*3, 1)
 
 	mousePoint := raylib.Vector2{}
 
@@ -112,7 +112,7 @@ func main() {
 		}
 
 		// Text measurement for better positioning on screen
-		textSize = raylib.MeasureTextEx(fonts[currentFont], text, float32(fonts[currentFont].Size)*3, 1)
+		textSize = raylib.MeasureTextEx(fonts[currentFont], text, float32(fonts[currentFont].BaseSize)*3, 1)
 
 		// Draw
 		raylib.BeginDrawing()
@@ -131,7 +131,7 @@ func main() {
 		raylib.DrawRectangle(675, positionY+2, 105, 40, btnNextInColor)
 		raylib.DrawText("NEXT", 700, positionY+13, 20, btnNextOutColor)
 
-		raylib.DrawTextEx(fonts[currentFont], text, raylib.NewVector2(float32(screenWidth)/2-textSize.X/2, 260+(70-textSize.Y)/2), float32(fonts[currentFont].Size*3), 1, colors[currentFont])
+		raylib.DrawTextEx(fonts[currentFont], text, raylib.NewVector2(float32(screenWidth)/2-textSize.X/2, 260+(70-textSize.Y)/2), float32(fonts[currentFont].BaseSize*3), 1, colors[currentFont])
 
 		raylib.EndDrawing()
 	}

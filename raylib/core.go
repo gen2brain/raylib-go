@@ -484,6 +484,12 @@ func ToggleFullscreen() {
 	C.ToggleFullscreen()
 }
 
+// Set icon for window (only PLATFORM_DESKTOP)
+func SetWindowIcon(image Image) {
+	cimage := image.cptr()
+	C.SetWindowIcon(*cimage)
+}
+
 // Get current screen width
 func GetScreenWidth() int32 {
 	ret := C.GetScreenWidth()

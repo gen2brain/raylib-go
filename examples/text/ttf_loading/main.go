@@ -25,7 +25,7 @@ func main() {
 	// NOTE: On 2D drawing it won't be noticeable, it looks like FILTER_BILINEAR
 	raylib.GenTextureMipmaps(&font.Texture)
 
-	fontSize := font.Size
+	fontSize := font.BaseSize
 	fontPosition := raylib.NewVector2(40, float32(screenHeight)/2+50)
 	textSize := raylib.Vector2{}
 

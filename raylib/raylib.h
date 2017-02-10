@@ -366,15 +366,21 @@ typedef struct RenderTexture2D {
     Texture2D depth;        // Depth buffer attachment texture
 } RenderTexture2D;
 
+// SpriteFont character info
+typedef struct CharInfo {
+    int value;              // Character value (Unicode)
+    Rectangle rec;          // Character rectangle in sprite font
+    int offsetX;            // Character offset X when drawing
+    int offsetY;            // Character offset Y when drawing
+    int advanceX;           // Character advance position X
+} CharInfo;
+
 // SpriteFont type, includes texture and charSet array data
 typedef struct SpriteFont {
     Texture2D texture;      // Font texture
-    int size;               // Base size (default chars height)
-    int numChars;           // Number of characters
-    int *charValues;        // Characters values array
-    Rectangle *charRecs;    // Characters rectangles within the texture
-    Vector2 *charOffsets;   // Characters offsets (on drawing)
-    int *charAdvanceX;      // Characters x advance (on drawing)
+    int baseSize;           // Base size (default chars height)
+    int charsCount;         // Number of characters
+    CharInfo *chars;        // Characters info data
 } SpriteFont;
 
 // Camera type, defines a camera position/orientation in 3d space
@@ -589,21 +595,21 @@ typedef enum {
 // rRES data returned when reading a resource, it contains all required data for user (24 byte)
 typedef struct {
     unsigned int type;          // Resource type (4 byte)
-    
+
     unsigned int param1;        // Resouce parameter 1 (4 byte)
     unsigned int param2;        // Resouce parameter 2 (4 byte)
     unsigned int param3;        // Resouce parameter 3 (4 byte)
     unsigned int param4;        // Resouce parameter 4 (4 byte)
-    
+
     void *data;                 // Resource data pointer (4 byte)
 } RRESData;
 
-typedef enum { 
-    RRES_RAW = 0, 
-    RRES_IMAGE, 
-    RRES_WAVE, 
-    RRES_VERTEX, 
-    RRES_TEXT 
+typedef enum {
+    RRES_RAW = 0,
+    RRES_IMAGE,
+    RRES_WAVE,
+    RRES_VERTEX,
+    RRES_TEXT
 } RRESDataType;
 
 #ifdef __cplusplus
@@ -628,6 +634,7 @@ RLAPI void CloseWindow(void);                                     // Close Windo
 RLAPI bool WindowShouldClose(void);                               // Detect if KEY_ESCAPE pressed or Close icon pressed
 RLAPI bool IsWindowMinimized(void);                               // Detect if window has been minimized (or lost focus)
 RLAPI void ToggleFullscreen(void);                                // Fullscreen toggle (only PLATFORM_DESKTOP)
+RLAPI void SetWindowIcon(Image image);                            // Set icon for window (only PLATFORM_DESKTOP)
 RLAPI int GetScreenWidth(void);                                   // Get current screen width
 RLAPI int GetScreenHeight(void);                                  // Get current screen height
 
@@ -796,7 +803,7 @@ RLAPI Image ImageText(const char *text, int fontSize, Color color);             
 RLAPI Image ImageTextEx(SpriteFont font, const char *text, float fontSize, int spacing, Color tint);     // Create an image from text (custom sprite font)
 RLAPI void ImageDraw(Image *dst, Image src, Rectangle srcRec, Rectangle dstRec);                         // Draw a source image within a destination image
 RLAPI void ImageDrawText(Image *dst, Vector2 position, const char *text, int fontSize, Color color);     // Draw text (default font) within an image (destination)
-RLAPI void ImageDrawTextEx(Image *dst, Vector2 position, SpriteFont font, const char *text, 
+RLAPI void ImageDrawTextEx(Image *dst, Vector2 position, SpriteFont font, const char *text,
                            float fontSize, int spacing, Color color);                                    // Draw text (custom sprite font) within an image (destination)
 RLAPI void ImageFlipVertical(Image *image);                                                              // Flip image vertically
 RLAPI void ImageFlipHorizontal(Image *image);                                                            // Flip image horizontally
@@ -821,7 +828,7 @@ RLAPI void DrawTexturePro(Texture2D texture, Rectangle sourceRec, Rectangle dest
 //------------------------------------------------------------------------------------
 RLAPI SpriteFont GetDefaultFont(void);                                                                   // Get the default SpriteFont
 RLAPI SpriteFont LoadSpriteFont(const char *fileName);                                                   // Load SpriteFont from file into GPU memory (VRAM)
-RLAPI SpriteFont LoadSpriteFontTTF(const char *fileName, int fontSize, int numChars, int *fontChars);    // Load SpriteFont from TTF font file with generation parameters
+RLAPI SpriteFont LoadSpriteFontTTF(const char *fileName, int fontSize, int charsCount, int *fontChars);  // Load SpriteFont from TTF font file with generation parameters
 RLAPI void UnloadSpriteFont(SpriteFont spriteFont);                                                      // Unload SpriteFont from GPU memory (VRAM)
 
 RLAPI void DrawText(const char *text, int posX, int posY, int fontSize, Color color);                    // Draw text (using default font)
@@ -872,15 +879,15 @@ RLAPI Material LoadDefaultMaterial(void);                                       
 RLAPI void UnloadMaterial(Material material);                                                           // Unload material from GPU memory (VRAM)
 
 RLAPI void DrawModel(Model model, Vector3 position, float scale, Color tint);                           // Draw a model (with texture if set)
-RLAPI void DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, 
+RLAPI void DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis,
                        float rotationAngle, Vector3 scale, Color tint);                                 // Draw a model with extended parameters
 RLAPI void DrawModelWires(Model model, Vector3 position, float scale, Color tint);                      // Draw a model wires (with texture if set)
-RLAPI void DrawModelWiresEx(Model model, Vector3 position, Vector3 rotationAxis, 
+RLAPI void DrawModelWiresEx(Model model, Vector3 position, Vector3 rotationAxis,
                             float rotationAngle, Vector3 scale, Color tint);                            // Draw a model wires (with texture if set) with extended parameters
 RLAPI void DrawBoundingBox(BoundingBox box, Color color);                                               // Draw bounding box (wires)
 
 RLAPI void DrawBillboard(Camera camera, Texture2D texture, Vector3 center, float size, Color tint);     // Draw a billboard texture
-RLAPI void DrawBillboardRec(Camera camera, Texture2D texture, Rectangle sourceRec, 
+RLAPI void DrawBillboardRec(Camera camera, Texture2D texture, Rectangle sourceRec,
                             Vector3 center, float size, Color tint);                                    // Draw a billboard texture defined by sourceRec
 
 RLAPI BoundingBox CalculateBoundingBox(Mesh mesh);                                                      // Calculate mesh bounding box limits
@@ -888,7 +895,7 @@ RLAPI bool CheckCollisionSpheres(Vector3 centerA, float radiusA, Vector3 centerB
 RLAPI bool CheckCollisionBoxes(BoundingBox box1, BoundingBox box2);                                     // Detect collision between two bounding boxes
 RLAPI bool CheckCollisionBoxSphere(BoundingBox box, Vector3 centerSphere, float radiusSphere);          // Detect collision between box and sphere
 RLAPI bool CheckCollisionRaySphere(Ray ray, Vector3 spherePosition, float sphereRadius);                // Detect collision between ray and sphere
-RLAPI bool CheckCollisionRaySphereEx(Ray ray, Vector3 spherePosition, float sphereRadius, 
+RLAPI bool CheckCollisionRaySphereEx(Ray ray, Vector3 spherePosition, float sphereRadius,
                                      Vector3 *collisionPoint);                                          // Detect collision between ray and sphere, returns collision point
 RLAPI bool CheckCollisionRayBox(Ray ray, BoundingBox box);                                              // Detect collision between ray and box
 RLAPI RayHitInfo GetCollisionRayMesh(Ray ray, Mesh *mesh);                                              // Get collision info between ray and mesh
@@ -936,6 +943,7 @@ RLAPI void ToggleVrMode(void);                    // Enable/Disable VR experienc
 RLAPI void InitAudioDevice(void);                                     // Initialize audio device and context
 RLAPI void CloseAudioDevice(void);                                    // Close the audio device and context
 RLAPI bool IsAudioDeviceReady(void);                                  // Check if audio device has been initialized successfully
+RLAPI void SetMasterVolume(float volume);                             // Set master volume (listener)
 
 RLAPI Wave LoadWave(const char *fileName);                            // Load wave data from file
 RLAPI Wave LoadWaveEx(void *data, int sampleCount, int sampleRate, int sampleSize, int channels); // Load wave data from raw array data
@@ -965,6 +973,7 @@ RLAPI void ResumeMusicStream(Music music);                            // Resume 
 RLAPI bool IsMusicPlaying(Music music);                               // Check if music is playing
 RLAPI void SetMusicVolume(Music music, float volume);                 // Set volume for music (1.0 is max level)
 RLAPI void SetMusicPitch(Music music, float pitch);                   // Set pitch for a music (1.0 is base level)
+RLAPI void SetMusicLoopCount(Music music, float count);               // Set music loop count (loop repeats)
 RLAPI float GetMusicTimeLength(Music music);                          // Get music time length (in seconds)
 RLAPI float GetMusicTimePlayed(Music music);                          // Get current music time played (in seconds)
 

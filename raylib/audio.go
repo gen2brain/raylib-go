@@ -112,6 +112,12 @@ func IsAudioDeviceReady() bool {
 	return v
 }
 
+// Set master volume (listener)
+func SetMasterVolume(volume float32) {
+	cvolume := (C.float)(volume)
+	C.SetMasterVolume(cvolume)
+}
+
 // Load wave data from file into RAM
 func LoadWave(fileName string) Wave {
 	cfileName := C.CString(fileName)
@@ -319,6 +325,14 @@ func SetMusicPitch(music Music, pitch float32) {
 	cmusic := *(*C.Music)(unsafe.Pointer(&music))
 	cpitch := (C.float)(pitch)
 	C.SetMusicPitch(cmusic, cpitch)
+}
+
+// Set music loop count (loop repeats)
+// NOTE: If set to -1, means infinite loop
+func SetMusicLoopCount(music Music, count float32) {
+	cmusic := *(*C.Music)(unsafe.Pointer(&music))
+	ccount := (C.float)(count)
+	C.SetMusicLoopCount(cmusic, ccount)
 }
 
 // Get music time length (in seconds)

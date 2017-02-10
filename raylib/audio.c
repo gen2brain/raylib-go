@@ -128,7 +128,7 @@ typedef struct MusicData {
 
     AudioStream stream;                 // Audio stream (double buffering)
 
-    bool loop;                          // Repeat music after finish (loop)
+    int loopCount;                      // Loops count (times music repeats), -1 means infinite loop
     unsigned int totalSamples;          // Total number of samples
     unsigned int samplesLeft;           // Number of samples left to end
 } MusicData;
@@ -182,9 +182,11 @@ void InitAudioDevice(void)
             TraceLog(INFO, "Audio device and context initialized successfully: %s", alcGetString(device, ALC_DEVICE_SPECIFIER));
 
             // Listener definition (just for 2D)
-            alListener3f(AL_POSITION, 0, 0, 0);
-            alListener3f(AL_VELOCITY, 0, 0, 0);
-            alListener3f(AL_ORIENTATION, 0, 0, -1);
+            alListener3f(AL_POSITION, 0.0f, 0.0f, 0.0f);
+            alListener3f(AL_VELOCITY, 0.0f, 0.0f, 0.0f);
+            alListener3f(AL_ORIENTATION, 0.0f, 0.0f, -1.0f);
+            
+            alListenerf(AL_GAIN, 1.0f);
         }
     }
 }
@@ -219,6 +221,15 @@ bool IsAudioDeviceReady(void)
         if (device == NULL) return false;
         else return true;
     }
+}
+
+// Set master volume (listener)
+void SetMasterVolume(float volume)
+{
+    if (volume < 0.0f) volume = 0.0f;
+    else if (volume > 1.0f) volume = 1.0f;
+    
+    alListenerf(AL_GAIN, volume);
 }
 
 //----------------------------------------------------------------------------------
@@ -318,10 +329,10 @@ Sound LoadSoundFromWave(Wave wave)
         ALuint source;
         alGenSources(1, &source);            // Generate pointer to audio source
 
-        alSourcef(source, AL_PITCH, 1);
-        alSourcef(source, AL_GAIN, 1);
-        alSource3f(source, AL_POSITION, 0, 0, 0);
-        alSource3f(source, AL_VELOCITY, 0, 0, 0);
+        alSourcef(source, AL_PITCH, 1.0f);
+        alSourcef(source, AL_GAIN, 1.0f);
+        alSource3f(source, AL_POSITION, 0.0f, 0.0f, 0.0f);
+        alSource3f(source, AL_VELOCITY, 0.0f, 0.0f, 0.0f);
         alSourcei(source, AL_LOOPING, AL_FALSE);
 
         // Convert loaded data to OpenAL buffer
@@ -626,7 +637,7 @@ Music LoadMusicStream(const char *fileName)
             music->totalSamples = (unsigned int)stb_vorbis_stream_length_in_samples(music->ctxOgg); // Independent by channel
             music->samplesLeft = music->totalSamples;
             music->ctxType = MUSIC_AUDIO_OGG;
-            music->loop = true;                  // We loop by default
+            music->loopCount = -1;                       // Infinite loop by default
 
             TraceLog(DEBUG, "[%s] FLAC total samples: %i", fileName, music->totalSamples);
             TraceLog(DEBUG, "[%s] OGG sample rate: %i", fileName, info.sample_rate);
@@ -645,7 +656,7 @@ Music LoadMusicStream(const char *fileName)
             music->totalSamples = (unsigned int)music->ctxFlac->totalSampleCount/music->ctxFlac->channels;
             music->samplesLeft = music->totalSamples;
             music->ctxType = MUSIC_AUDIO_FLAC;
-            music->loop = true;                  // We loop by default
+            music->loopCount = -1;                       // Infinite loop by default
 
             TraceLog(DEBUG, "[%s] FLAC total samples: %i", fileName, music->totalSamples);
             TraceLog(DEBUG, "[%s] FLAC sample rate: %i", fileName, music->ctxFlac->sampleRate);
@@ -659,14 +670,14 @@ Music LoadMusicStream(const char *fileName)
 
         if (!result)    // XM context created successfully
         {
-            jar_xm_set_max_loop_count(music->ctxXm, 0);     // Set infinite number of loops
+            jar_xm_set_max_loop_count(music->ctxXm, 0); // Set infinite number of loops
 
             // NOTE: Only stereo is supported for XM
             music->stream = InitAudioStream(48000, 16, 2);
             music->totalSamples = (unsigned int)jar_xm_get_remaining_samples(music->ctxXm);
             music->samplesLeft = music->totalSamples;
             music->ctxType = MUSIC_MODULE_XM;
-            music->loop = true;
+            music->loopCount = -1;                       // Infinite loop by default
 
             TraceLog(DEBUG, "[%s] XM number of samples: %i", fileName, music->totalSamples);
             TraceLog(DEBUG, "[%s] XM track length: %11.6f sec", fileName, (float)music->totalSamples/48000.0f);
@@ -683,7 +694,7 @@ Music LoadMusicStream(const char *fileName)
             music->totalSamples = (unsigned int)jar_mod_max_samples(&music->ctxMod);
             music->samplesLeft = music->totalSamples;
             music->ctxType = MUSIC_MODULE_MOD;
-            music->loop = true;
+            music->loopCount = -1;                       // Infinite loop by default
 
             TraceLog(DEBUG, "[%s] MOD number of samples: %i", fileName, music->samplesLeft);
             TraceLog(DEBUG, "[%s] MOD track length: %11.6f sec", fileName, (float)music->totalSamples/48000.0f);
@@ -807,7 +818,13 @@ void UpdateMusicStream(Music music)
         if (!active)
         {
             StopMusicStream(music);        // Stop music (and reset)
-            if (music->loop) PlayMusicStream(music);    // Play again
+            
+            // Decrease loopCount to stop when required
+            if (music->loopCount > 0)
+            {
+                music->loopCount--;        // Decrease loop count
+                PlayMusicStream(music);    // Play again
+            }
         }
         else
         {
@@ -843,6 +860,13 @@ void SetMusicVolume(Music music, float volume)
 void SetMusicPitch(Music music, float pitch)
 {
     alSourcef(music->stream.source, AL_PITCH, pitch);
+}
+
+// Set music loop count (loop repeats)
+// NOTE: If set to -1, means infinite loop
+void SetMusicLoopCount(Music music, float count)
+{
+    music->loopCount = count;
 }
 
 // Get music time length (in seconds)
@@ -904,10 +928,10 @@ AudioStream InitAudioStream(unsigned int sampleRate, unsigned int sampleSize, un
 
     // Create an audio source
     alGenSources(1, &stream.source);
-    alSourcef(stream.source, AL_PITCH, 1);
-    alSourcef(stream.source, AL_GAIN, 1);
-    alSource3f(stream.source, AL_POSITION, 0, 0, 0);
-    alSource3f(stream.source, AL_VELOCITY, 0, 0, 0);
+    alSourcef(stream.source, AL_PITCH, 1.0f);
+    alSourcef(stream.source, AL_GAIN, 1.0f);
+    alSource3f(stream.source, AL_POSITION, 0.0f, 0.0f, 0.0f);
+    alSource3f(stream.source, AL_VELOCITY, 0.0f, 0.0f, 0.0f);
 
     // Create Buffers (double buffering)
     alGenBuffers(MAX_STREAM_BUFFERS, stream.buffers);

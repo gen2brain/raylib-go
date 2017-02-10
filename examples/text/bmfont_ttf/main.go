@@ -19,8 +19,8 @@ func main() {
 
 	fontPosition := raylib.Vector2{}
 
-	fontPosition.X = float32(screenWidth)/2 - raylib.MeasureTextEx(fontBm, msgBm, float32(fontBm.Size), 0).X/2
-	fontPosition.Y = float32(screenHeight)/2 - float32(fontBm.Size)/2 - 80
+	fontPosition.X = float32(screenWidth)/2 - raylib.MeasureTextEx(fontBm, msgBm, float32(fontBm.BaseSize), 0).X/2
+	fontPosition.Y = float32(screenHeight)/2 - float32(fontBm.BaseSize)/2 - 80
 
 	raylib.SetTargetFPS(60)
 
@@ -29,8 +29,8 @@ func main() {
 
 		raylib.ClearBackground(raylib.RayWhite)
 
-		raylib.DrawTextEx(fontBm, msgBm, fontPosition, float32(fontBm.Size), 0, raylib.Maroon)
-		raylib.DrawTextEx(fontTtf, msgTtf, raylib.NewVector2(75.0, 240.0), float32(fontTtf.Size)*0.8, 2, raylib.Lime)
+		raylib.DrawTextEx(fontBm, msgBm, fontPosition, float32(fontBm.BaseSize), 0, raylib.Maroon)
+		raylib.DrawTextEx(fontTtf, msgTtf, raylib.NewVector2(75.0, 240.0), float32(fontTtf.BaseSize)*0.8, 2, raylib.Lime)
 
 		raylib.EndDrawing()
 	}
