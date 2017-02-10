@@ -156,11 +156,11 @@ func LoadSoundFromWave(wave Wave) Sound {
 }
 
 // Update sound buffer with new data
-func UpdateSound(sound Sound, data unsafe.Pointer, numSamples int32) {
+func UpdateSound(sound Sound, data unsafe.Pointer, samplesCount int32) {
 	csound := sound.cptr()
 	cdata := (unsafe.Pointer)(unsafe.Pointer(data))
-	cnumSamples := (C.int)(numSamples)
-	C.UpdateSound(*csound, cdata, cnumSamples)
+	csamplesCount := (C.int)(samplesCount)
+	C.UpdateSound(*csound, cdata, csamplesCount)
 }
 
 // Unload wave data
@@ -362,11 +362,11 @@ func InitAudioStream(sampleRate uint32, sampleSize uint32, channels uint32) Audi
 }
 
 // Update audio stream buffers with data
-func UpdateAudioStream(stream AudioStream, data unsafe.Pointer, numSamples int32) {
+func UpdateAudioStream(stream AudioStream, data unsafe.Pointer, samplesCount int32) {
 	cstream := stream.cptr()
 	cdata := (unsafe.Pointer)(unsafe.Pointer(data))
-	cnumSamples := (C.int)(numSamples)
-	C.UpdateAudioStream(*cstream, cdata, cnumSamples)
+	csamplesCount := (C.int)(samplesCount)
+	C.UpdateAudioStream(*cstream, cdata, csamplesCount)
 }
 
 // Close audio stream and free memory
