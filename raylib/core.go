@@ -293,7 +293,7 @@ func (v *Vector3) cptr() *C.Vector3 {
 
 // Returns new Vector3
 func NewVector3(X, Y, Z float32) Vector3 {
-	return Vector3{X, Y, X}
+	return Vector3{X, Y, Z}
 }
 
 // Returns new Vector3 from pointer
