@@ -679,7 +679,9 @@ const char* drflac_next_vorbis_comment(drflac_vorbis_comment_iterator* pIter, ui
 #endif
 
 #ifdef __linux__
+#ifndef _BSD_SOURCE
 #define _BSD_SOURCE
+#endif
 #include <endian.h>
 #endif
 
@@ -715,7 +717,7 @@ static DRFLAC_INLINE uint16_t drflac__swap_endian_uint16(uint16_t n)
 {
 #ifdef _MSC_VER
     return _byteswap_ushort(n);
-#elif defined(__GNUC__) && ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
+#elif defined(__GNUC__) && ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8))
     return __builtin_bswap16(n);
 #else
     return ((n & 0xFF00) >> 8) |
@@ -727,7 +729,7 @@ static DRFLAC_INLINE uint32_t drflac__swap_endian_uint32(uint32_t n)
 {
 #ifdef _MSC_VER
     return _byteswap_ulong(n);
-#elif defined(__GNUC__) && ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
+#elif defined(__GNUC__) && ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8))
     return __builtin_bswap32(n);
 #else
     return ((n & 0xFF000000) >> 24) |
