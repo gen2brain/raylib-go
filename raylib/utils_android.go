@@ -3,29 +3,14 @@
 package raylib
 
 /*
-#include <android/log.h>
 #include <stdlib.h>
-
-void log_info(const char *msg) {
-    __android_log_print(ANDROID_LOG_INFO, "raylib", msg);
-}
-
-void log_warn(const char *msg) {
-    __android_log_print(ANDROID_LOG_WARN, "raylib", msg);
-}
-
-void log_error(const char *msg) {
-    __android_log_print(ANDROID_LOG_ERROR, "raylib", msg);
-}
-
-void log_debug(const char *msg) {
-    __android_log_print(ANDROID_LOG_DEBUG, "raylib", msg);
-}
 
 void log_info(const char *msg);
 void log_warn(const char *msg);
 void log_error(const char *msg);
 void log_debug(const char *msg);
+
+extern char* get_internal_storage_path();
 */
 import "C"
 
@@ -73,4 +58,10 @@ func TraceLog(msgType int, text string, v ...interface{}) {
 			C.log_debug(msg)
 		}
 	}
+}
+
+// HomeDir returns user home directory
+// NOTE: On Android this returns internal data path and must be called after InitWindow
+func HomeDir() string {
+	return C.GoString(C.get_internal_storage_path())
 }

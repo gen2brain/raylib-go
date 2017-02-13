@@ -1,4 +1,4 @@
-// +build !android,!windows
+// +build windows
 
 package raylib
 
@@ -41,5 +41,9 @@ func TraceLog(msgType int, text string, v ...interface{}) {
 
 // HomeDir returns user home directory
 func HomeDir() string {
-	return os.Getenv("HOME")
+	home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
+	if home == "" {
+		home = os.Getenv("USERPROFILE")
+	}
+	return home
 }

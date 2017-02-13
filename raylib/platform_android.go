@@ -8,9 +8,10 @@ package raylib
 #include <android_native_app_glue.h>
 
 extern void android_main(struct android_app *app);
+extern void android_init(void *state);
 
 AAssetManager* asset_manager;
-extern void init_asset_manager(void *state);
+const char* internal_storage_path;
 */
 import "C"
 
@@ -31,7 +32,7 @@ func InitWindow(width int32, height int32, t interface{}) {
 	app, ok := t.(unsafe.Pointer)
 	if ok {
 		C.InitWindow(cwidth, cheight, app)
-		C.init_asset_manager(app)
+		C.android_init(app)
 	}
 }
 
