@@ -1,5 +1,10 @@
 package raylib
 
+/*
+#include "raylib.h"
+*/
+import "C"
+
 // Gestures
 type Gestures int32
 
