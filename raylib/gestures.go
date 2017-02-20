@@ -4,6 +4,7 @@ package raylib
 #include "raylib.h"
 */
 import "C"
+import "unsafe"
 
 // Gestures
 type Gestures int32
