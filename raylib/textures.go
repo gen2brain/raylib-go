@@ -183,6 +183,17 @@ func LoadImageEx(pixels []Color, width int32, height int32) *Image {
 	return v
 }
 
+// Load image from raw data with parameters
+func LoadImagePro(data []byte, width int32, height int32, format TextureFormat) *Image {
+	cdata := unsafe.Pointer(&data[0])
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	cformat := (C.int)(format)
+	ret := C.LoadImagePro(cdata, cwidth, cheight, cformat)
+	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // Load image data from RAW file
 func LoadImageRaw(fileName string, width int32, height int32, format TextureFormat, headerSize int32) *Image {
 	cfileName := C.CString(fileName)

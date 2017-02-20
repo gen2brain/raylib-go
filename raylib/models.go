@@ -6,6 +6,7 @@ package raylib
 */
 import "C"
 import "unsafe"
+import "reflect"
 
 // Vertex data definning a mesh
 type Mesh struct {
@@ -14,19 +15,19 @@ type Mesh struct {
 	// Number of triangles stored (indexed or not)
 	TriangleCount int32
 	// Vertex position (XYZ - 3 components per vertex) (shader-location = 0)
-	Vertices *float32
+	Vertices *[]float32
 	// Vertex texture coordinates (UV - 2 components per vertex) (shader-location = 1)
-	Texcoords *float32
+	Texcoords *[]float32
 	// Vertex second texture coordinates (useful for lightmaps) (shader-location = 5)
-	Texcoords2 *float32
+	Texcoords2 *[]float32
 	// Vertex normals (XYZ - 3 components per vertex) (shader-location = 2)
-	Normals *float32
+	Normals *[]float32
 	// Vertex tangents (XYZ - 3 components per vertex) (shader-location = 4)
-	Tangents *float32
+	Tangents *[]float32
 	// Vertex colors (RGBA - 4 components per vertex) (shader-location = 3)
-	Colors *uint8
+	Colors *[]uint8
 	// Vertex indices (in case vertex data comes indexed)
-	Indices *uint16
+	Indices *[]uint16
 	// OpenGL Vertex Array Object id
 	VaoID uint32
 	// OpenGL Vertex Buffer Objects id (7 types of vertex data)
@@ -38,7 +39,7 @@ func (m *Mesh) cptr() *C.Mesh {
 }
 
 // Returns new Mesh
-func NewMesh(vertexCount, triangleCount int32, vertices, texcoords, texcoords2, normals, tangents *float32, colors *uint8, indices *uint16, vaoID uint32, vboID [7]uint32) Mesh {
+func NewMesh(vertexCount, triangleCount int32, vertices, texcoords, texcoords2, normals, tangents *[]float32, colors *[]uint8, indices *[]uint16, vaoID uint32, vboID [7]uint32) Mesh {
 	return Mesh{vertexCount, triangleCount, vertices, texcoords, texcoords2, normals, tangents, colors, indices, vaoID, vboID}
 }
 
@@ -264,7 +265,28 @@ func DrawGizmo(position Vector3) {
 	C.DrawGizmo(*cposition)
 }
 
-// Load a 3d model (.OBJ)
+// Load mesh from file
+func LoadMesh(fileName string) Mesh {
+	cfileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(cfileName))
+	ret := C.LoadMesh(cfileName)
+	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// Load mesh from vertex data
+func LoadMeshEx(numVertex int32, vData []float32, vtData []float32, vnData []float32, cData []Color) Mesh {
+	cnumVertex := (C.int)(numVertex)
+	cvData := (*C.float)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&vData)).Data))
+	cvtData := (*C.float)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&vtData)).Data))
+	cvnData := (*C.float)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&vnData)).Data))
+	ccData := (*C.Color)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&cData)).Data))
+	ret := C.LoadMeshEx(cnumVertex, cvData, cvtData, cvnData, ccData)
+	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// Load model from file
 func LoadModel(fileName string) Model {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
@@ -273,7 +295,19 @@ func LoadModel(fileName string) Model {
 	return v
 }
 
-// Load a heightmap image as a 3d model
+// Load model from mesh data
+func LoadModelFromMesh(data Mesh, dynamic bool) Model {
+	cdata := data.cptr()
+	cdynamic := 0
+	if dynamic {
+		cdynamic = 1
+	}
+	ret := C.LoadModelFromMesh(*cdata, C.bool(cdynamic))
+	v := NewModelFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// Load heightmap model from image data
 func LoadHeightmap(heightmap *Image, size Vector3) Model {
 	cheightmap := heightmap.cptr()
 	csize := size.cptr()
@@ -282,7 +316,7 @@ func LoadHeightmap(heightmap *Image, size Vector3) Model {
 	return v
 }
 
-// Load a map image as a 3d model (cubes based)
+// Load cubes-based map model from image data
 func LoadCubicmap(cubicmap *Image) Model {
 	ccubicmap := cubicmap.cptr()
 	ret := C.LoadCubicmap(*ccubicmap)
@@ -290,7 +324,13 @@ func LoadCubicmap(cubicmap *Image) Model {
 	return v
 }
 
-// Unload 3d model from memory
+// Unload mesh from memory (RAM and/or VRAM)
+func UnloadMesh(mesh *Mesh) {
+	cmesh := mesh.cptr()
+	C.UnloadMesh(cmesh)
+}
+
+// Unload model from memory (RAM and/or VRAM)
 func UnloadModel(model Model) {
 	cmodel := model.cptr()
 	C.UnloadModel(*cmodel)

@@ -139,3 +139,10 @@ func MeasureTextEx(spriteFont SpriteFont, text string, fontSize float32, spacing
 	v := NewVector2FromPointer(unsafe.Pointer(&ret))
 	return v
 }
+
+// Shows current FPS
+func DrawFPS(posX int32, posY int32) {
+	cposX := (C.int)(posX)
+	cposY := (C.int)(posY)
+	C.DrawFPS(cposX, cposY)
+}
