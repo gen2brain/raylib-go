@@ -4,8 +4,9 @@ import (
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
-const NumProcesses = 8
+const numProcesses = 8
 
+// Process
 const (
 	None = iota
 	ColorGrayscale
@@ -41,9 +42,9 @@ func main() {
 	currentProcess := None
 	textureReload := false
 
-	selectRecs := make([]raylib.Rectangle, NumProcesses)
+	selectRecs := make([]raylib.Rectangle, numProcesses)
 
-	for i := int32(0); i < NumProcesses; i++ {
+	for i := int32(0); i < numProcesses; i++ {
 		selectRecs[i] = raylib.NewRectangle(40, 50+32*i, 150, 30)
 	}
 
@@ -110,7 +111,7 @@ func main() {
 		raylib.DrawText("IMAGE PROCESSING:", 40, 30, 10, raylib.DarkGray)
 
 		// Draw rectangles
-		for i := 0; i < NumProcesses; i++ {
+		for i := 0; i < numProcesses; i++ {
 			if i == currentProcess {
 				raylib.DrawRectangleRec(selectRecs[i], raylib.SkyBlue)
 				raylib.DrawRectangleLines(selectRecs[i].X, selectRecs[i].Y, selectRecs[i].Width, selectRecs[i].Height, raylib.Blue)

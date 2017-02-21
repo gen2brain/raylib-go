@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	MaxBuildings int = 100
+	maxBuildings int = 100
 )
 
 func main() {
@@ -16,12 +16,12 @@ func main() {
 
 	player := raylib.NewRectangle(400, 280, 40, 40)
 
-	buildings := make([]raylib.Rectangle, MaxBuildings)
-	buildColors := make([]raylib.Color, MaxBuildings)
+	buildings := make([]raylib.Rectangle, maxBuildings)
+	buildColors := make([]raylib.Color, maxBuildings)
 
 	spacing := int32(0)
 
-	for i := 0; i < MaxBuildings; i++ {
+	for i := 0; i < maxBuildings; i++ {
 		r := raylib.Rectangle{}
 		r.Width = raylib.GetRandomValue(50, 200)
 		r.Height = raylib.GetRandomValue(100, 800)
@@ -93,7 +93,7 @@ func main() {
 
 		raylib.DrawRectangle(-6000, 320, 13000, 8000, raylib.DarkGray)
 
-		for i := 0; i < MaxBuildings; i++ {
+		for i := 0; i < maxBuildings; i++ {
 			raylib.DrawRectangleRec(buildings[i], buildColors[i])
 		}
 

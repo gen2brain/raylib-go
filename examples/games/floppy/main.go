@@ -18,19 +18,19 @@ const (
 	spriteSize = 48
 )
 
-// Floppy
+// Floppy type
 type Floppy struct {
 	Position raylib.Vector2
 }
 
-// Pipe
+// Pipe type
 type Pipe struct {
 	Rec    raylib.Rectangle
 	Color  raylib.Color
 	Active bool
 }
 
-// Game
+// Game type
 type Game struct {
 	ScreenWidth  int32
 	ScreenHeight int32
@@ -60,7 +60,7 @@ type Game struct {
 	PipesSpeedX int32
 }
 
-// New Game
+// NewGame - Start new game
 func NewGame() (g Game) {
 	g.Init()
 	return
@@ -119,7 +119,7 @@ func run(app unsafe.Pointer) {
 	os.Exit(0)
 }
 
-// Initialize game
+// Init - Initialize game
 func (g *Game) Init() {
 	// Window resolution
 	g.ScreenWidth = 504
@@ -173,7 +173,7 @@ func (g *Game) Init() {
 	g.Pause = false
 }
 
-// Load resources
+// Load - Load resources
 func (g *Game) Load() {
 	g.FxFlap = raylib.LoadSound("sounds/flap.wav")
 	g.FxSlap = raylib.LoadSound("sounds/slap.wav")
@@ -182,7 +182,7 @@ func (g *Game) Load() {
 	g.Texture = raylib.LoadTexture("images/sprite.png")
 }
 
-// Unload resources
+// Unload - Unload resources
 func (g *Game) Unload() {
 	raylib.UnloadSound(g.FxFlap)
 	raylib.UnloadSound(g.FxSlap)
@@ -191,7 +191,7 @@ func (g *Game) Unload() {
 	raylib.UnloadTexture(g.Texture)
 }
 
-// Update game
+// Update - Update game
 func (g *Game) Update() {
 	if raylib.WindowShouldClose() {
 		g.WindowShouldClose = true
@@ -304,7 +304,7 @@ func (g *Game) Update() {
 	}
 }
 
-// Draw game
+// Draw - Draw game
 func (g *Game) Draw() {
 	raylib.BeginDrawing()
 

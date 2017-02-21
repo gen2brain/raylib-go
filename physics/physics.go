@@ -1,4 +1,4 @@
-// 2D Physics library for videogames
+// Package physics - 2D Physics library for videogames
 //
 // A port of Victor Fisac's physac engine (https://github.com/raysan5/raylib/blob/master/src/physac.h)
 package physics
@@ -35,6 +35,7 @@ type Mat2 struct {
 	M11 float32
 }
 
+// PolygonData type
 type PolygonData struct {
 	// Current used vertex and normals count
 	VertexCount uint32
@@ -46,6 +47,7 @@ type PolygonData struct {
 	Transform Mat2
 }
 
+// PhysicsShape type
 type PhysicsShape struct {
 	// Physics shape type (circle or polygon)
 	Type uint32
@@ -59,6 +61,7 @@ type PhysicsShape struct {
 	VertexData PolygonData
 }
 
+// PhysicsBodyData type
 type PhysicsBodyData struct {
 	// Reference unique identifier
 	Id uint32
@@ -102,6 +105,7 @@ type PhysicsBodyData struct {
 	Shape PhysicsShape
 }
 
+// PhysicsManifoldData type
 type PhysicsManifoldData struct {
 	// Reference unique identifier
 	Id uint32

@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	MaxGestureStrings int = 20
+	maxGestureStrings int = 20
 )
 
 func main() {
@@ -56,7 +56,7 @@ func main() {
 					gestureStrings = append(gestureStrings, "GESTURE PINCH OUT")
 				}
 
-				if len(gestureStrings) >= MaxGestureStrings {
+				if len(gestureStrings) >= maxGestureStrings {
 					gestureStrings = make([]string, 0)
 				}
 			}

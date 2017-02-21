@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	StorageScore   = 0
-	StorageHiscore = 1
+	storageScore   = 0
+	storageHiscore = 1
 )
 
 func main() {
@@ -28,12 +28,12 @@ func main() {
 		}
 
 		if raylib.IsKeyPressed(raylib.KeyEnter) {
-			raylib.StorageSaveValue(StorageScore, score)
-			raylib.StorageSaveValue(StorageHiscore, hiscore)
+			raylib.StorageSaveValue(storageScore, score)
+			raylib.StorageSaveValue(storageHiscore, hiscore)
 		} else if raylib.IsKeyPressed(raylib.KeySpace) {
 			// NOTE: If requested position could not be found, value 0 is returned
-			score = raylib.StorageLoadValue(StorageScore)
-			hiscore = raylib.StorageLoadValue(StorageHiscore)
+			score = raylib.StorageLoadValue(storageScore)
+			hiscore = raylib.StorageLoadValue(storageHiscore)
 		}
 
 		framesCounter++

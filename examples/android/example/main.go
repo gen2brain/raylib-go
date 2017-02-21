@@ -8,6 +8,7 @@ import (
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
+// Game states
 const (
 	Logo = iota
 	Title
