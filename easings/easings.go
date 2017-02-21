@@ -1,4 +1,4 @@
-// Useful easing functions for values animation
+// Package easings - Useful easing functions for values animation
 //
 // A port of Robert Penner's easing equations (http://robertpenner.com/easing/)
 package easings
