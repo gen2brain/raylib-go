@@ -20,9 +20,9 @@ package raylib
 #include "external/glfw/src/egl_context.c"
 
 #cgo windows,!static LDFLAGS: -lopengl32 -lgdi32 -lopenal -lwinmm -lole32
-#cgo windows,!static CFLAGS: -D_GLFW_WIN32 -Iexternal/glfw/deps/mingw -DPLATFORM_DESKTOP -DGRAPHICS_API_OPENGL_33 -DSHARED_OPENAL
+#cgo windows,!static CFLAGS: -D_GLFW_WIN32 -Iexternal/glfw/include -Iexternal/glfw/deps/mingw -DPLATFORM_DESKTOP -DGRAPHICS_API_OPENGL_33 -DSHARED_OPENAL
 
 #cgo windows,static LDFLAGS: -lopengl32 -lgdi32 -lopenal -lwinmm -lole32
-#cgo windows,static CFLAGS: -D_GLFW_WIN32 -Iexternal/glfw/deps/mingw -DPLATFORM_DESKTOP -DGRAPHICS_API_OPENGL_33 -DAL_LIBTYPE_STATIC
+#cgo windows,static CFLAGS: -D_GLFW_WIN32 -Iexternal/glfw/include -Iexternal/glfw/deps/mingw -DPLATFORM_DESKTOP -DGRAPHICS_API_OPENGL_33 -DAL_LIBTYPE_STATIC
 */
 import "C"
