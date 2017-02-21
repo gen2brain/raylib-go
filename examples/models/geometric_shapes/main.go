@@ -11,7 +11,7 @@ func main() {
 	raylib.InitWindow(screenWidth, screenHeight, "raylib [models] example - geometric shapes")
 
 	camera := raylib.Camera{}
-	camera.Position = raylib.NewVector3(0.1, 10.0, 10.0)
+	camera.Position = raylib.NewVector3(0.0, 10.0, 10.0)
 	camera.Target = raylib.NewVector3(0.0, 0.0, 0.0)
 	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0

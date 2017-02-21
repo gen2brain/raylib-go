@@ -7,7 +7,11 @@ package raylib
 #include <stdlib.h>
 */
 import "C"
-import "unsafe"
+
+import (
+	"os"
+	"unsafe"
+)
 
 // Initialize Window and OpenGL Graphics
 func InitWindow(width int32, height int32, t interface{}) {
@@ -52,6 +56,21 @@ func EnableCursor() {
 // Disables cursor
 func DisableCursor() {
 	C.DisableCursor()
+}
+
+// Check if a file have been dropped into window
+func IsFileDropped() bool {
+	return false
+}
+
+// Retrieve dropped files into window
+func GetDroppedFiles(count *int32) (files []string) {
+	return
+}
+
+// Clear dropped files paths buffer
+func ClearDroppedFiles() {
+	return
 }
 
 // Open asset

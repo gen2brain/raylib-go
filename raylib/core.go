@@ -349,58 +349,6 @@ func NewRectangleFromPointer(ptr unsafe.Pointer) Rectangle {
 	return *(*Rectangle)(ptr)
 }
 
-// Camera type, defines a camera position/orientation in 3d space
-type Camera struct {
-	// Camera position
-	Position Vector3
-	// Camera target it looks-at
-	Target Vector3
-	// Camera up vector (rotation over its axis)
-	Up Vector3
-	// Camera field-of-view apperture in Y (degrees)
-	Fovy float32
-}
-
-func (c *Camera) cptr() *C.Camera {
-	return (*C.Camera)(unsafe.Pointer(c))
-}
-
-// Returns new Camera
-func NewCamera(pos, target, up Vector3, fovy float32) Camera {
-	return Camera{pos, target, up, fovy}
-}
-
-// Returns new Camera from pointer
-func NewCameraFromPointer(ptr unsafe.Pointer) Camera {
-	return *(*Camera)(ptr)
-}
-
-// Camera2D type, defines a 2d camera
-type Camera2D struct {
-	// Camera offset (displacement from target)
-	Offset Vector2
-	// Camera target (rotation and zoom origin)
-	Target Vector2
-	// Camera rotation in degrees
-	Rotation float32
-	// Camera zoom (scaling), should be 1.0f by default
-	Zoom float32
-}
-
-func (c *Camera2D) cptr() *C.Camera2D {
-	return (*C.Camera2D)(unsafe.Pointer(c))
-}
-
-// Returns new Camera2D
-func NewCamera2D(offset, target Vector2, rotation, zoom float32) Camera2D {
-	return Camera2D{offset, target, rotation, zoom}
-}
-
-// Returns new Camera2D from pointer
-func NewCamera2DFromPointer(ptr unsafe.Pointer) Camera2D {
-	return *(*Camera2D)(ptr)
-}
-
 // Bounding box
 type BoundingBox struct {
 	// Minimum vertex box-corner

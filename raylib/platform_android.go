@@ -48,6 +48,46 @@ func androidMain(app *C.struct_android_app) {
 	}
 }
 
+// Shows cursor
+func ShowCursor() {
+	return
+}
+
+// Hides cursor
+func HideCursor() {
+	return
+}
+
+// Returns true if cursor is not visible
+func IsCursorHidden() bool {
+	return false
+}
+
+// Enables cursor
+func EnableCursor() {
+	return
+}
+
+// Disables cursor
+func DisableCursor() {
+	return
+}
+
+// Check if a file have been dropped into window
+func IsFileDropped() bool {
+	return false
+}
+
+// Retrieve dropped files into window
+func GetDroppedFiles(count *int32) (files []string) {
+	return
+}
+
+// Clear dropped files paths buffer
+func ClearDroppedFiles() {
+	return
+}
+
 // Open asset
 func OpenAsset(name string) (Asset, error) {
 	cname := C.CString(name)
