@@ -8,7 +8,7 @@ import "C"
 import "unsafe"
 import "reflect"
 
-// Vertex data definning a mesh
+// Mesh - Vertex data definning a mesh
 type Mesh struct {
 	// Number of vertices stored in arrays
 	VertexCount int32

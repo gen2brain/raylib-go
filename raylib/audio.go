@@ -64,7 +64,7 @@ func NewSoundFromPointer(ptr unsafe.Pointer) Sound {
 // NOTE: Anything longer than ~10 seconds should be streamed
 type Music C.Music
 
-// Audio stream type
+// AudioStream type
 // NOTE: Useful to create custom audio streams not bound to a specific file
 type AudioStream struct {
 	// Frequency (samples per second)
@@ -327,8 +327,8 @@ func SetMusicPitch(music Music, pitch float32) {
 	C.SetMusicPitch(cmusic, cpitch)
 }
 
-// Set music loop count (loop repeats)
-// SetMusicLoopCount - NOTE: If set to -1, means infinite loop
+// SetMusicLoopCount - Set music loop count (loop repeats)
+// NOTE: If set to -1, means infinite loop
 func SetMusicLoopCount(music Music, count float32) {
 	cmusic := *(*C.Music)(unsafe.Pointer(&music))
 	ccount := (C.float)(count)

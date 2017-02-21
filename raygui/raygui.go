@@ -1,4 +1,4 @@
-// raygui is simple and easy-to-use IMGUI (immediate mode GUI API) library.
+// Package raygui - Simple and easy-to-use IMGUI (immediate mode GUI API) library
 package raygui
 
 import (
@@ -11,7 +11,7 @@ import (
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
-// GUI property
+// Property - GUI property
 type Property int32
 
 // GUI properties enumeration

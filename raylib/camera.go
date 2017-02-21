@@ -60,7 +60,7 @@ func NewCamera2DFromPointer(ptr unsafe.Pointer) Camera2D {
 	return *(*Camera2D)(ptr)
 }
 
-// Camera mode
+// CameraMode type
 type CameraMode int32
 
 // Camera system modes

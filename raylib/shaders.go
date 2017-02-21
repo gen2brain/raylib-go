@@ -8,7 +8,7 @@ import "C"
 import "unsafe"
 import "reflect"
 
-// Vr device
+// VrDevice type
 type VrDevice int32
 
 // Head Mounted Display devices
@@ -24,7 +24,7 @@ const (
 	HmdFoveVr            VrDevice = C.HMD_FOVE_VR
 )
 
-// Blend mode
+// BlendMode type
 type BlendMode int32
 
 // Color blending modes (pre-defined)

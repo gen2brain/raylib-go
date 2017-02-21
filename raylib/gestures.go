@@ -6,10 +6,10 @@ package raylib
 import "C"
 import "unsafe"
 
-// Gestures
+// Gestures type
 type Gestures int32
 
-// Gestures type
+// Gestures types
 // NOTE: It could be used as flags to enable only some gestures
 const (
 	GestureNone       Gestures = C.GESTURE_NONE

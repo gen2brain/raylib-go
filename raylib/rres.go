@@ -9,7 +9,7 @@ import (
 	"unsafe"
 )
 
-// rRES file header (8 byte)
+// RRESFileHeader - rRES file header (8 byte)
 type RRESFileHeader struct {
 	// File identifier: rRES (4 byte)
 	ID [4]int8
@@ -19,7 +19,7 @@ type RRESFileHeader struct {
 	Count uint16
 }
 
-// rRES info header, every resource includes this header (16 byte + 16 byte)
+// RRESInfoHeader - rRES info header, every resource includes this header (16 byte + 16 byte)
 type RRESInfoHeader struct {
 	// Resource unique identifier (4 byte)
 	ID uint32

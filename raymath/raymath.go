@@ -1,4 +1,4 @@
-// Some useful functions to work with Vector3, Matrix and Quaternions
+// Package raymath - Some useful functions to work with Vector3, Matrix and Quaternions
 package raymath
 
 import (

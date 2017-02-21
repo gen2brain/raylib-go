@@ -7,7 +7,7 @@ package raylib
 import "C"
 import "unsafe"
 
-// Texture format
+// TextureFormat - Texture format
 type TextureFormat int32
 
 // Texture formats
@@ -51,7 +51,7 @@ const (
 	CompressedAstc8x8Rgba TextureFormat = C.COMPRESSED_ASTC_8x8_RGBA
 )
 
-// Texture filter mode
+// TextureFilterMode - Texture filter mode
 type TextureFilterMode int32
 
 // Texture parameters: filter mode
@@ -72,7 +72,7 @@ const (
 	FilterAnisotropic16x TextureFilterMode = C.FILTER_ANISOTROPIC_16X
 )
 
-// Texture wrap mode
+// TextureWrapMode - Texture wrap mode
 type TextureWrapMode int32
 
 // Texture parameters: wrap mode

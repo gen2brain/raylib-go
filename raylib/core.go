@@ -349,7 +349,7 @@ func NewRectangleFromPointer(ptr unsafe.Pointer) Rectangle {
 	return *(*Rectangle)(ptr)
 }
 
-// Bounding box
+// BoundingBox type
 type BoundingBox struct {
 	// Minimum vertex box-corner
 	Min Vector3

@@ -7,7 +7,7 @@ package raylib
 import "C"
 import "unsafe"
 
-// SpriteFont character info
+// CharInfo - SpriteFont character info
 type CharInfo struct {
 	// Character value (Unicode)
 	Value int32
