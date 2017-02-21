@@ -9,57 +9,57 @@ import (
 
 // Linear Easing functions
 
-// Linear None
+// LinearNone
 func LinearNone(t, b, c, d float32) float32 {
 	return c*t/d + b
 }
 
-// Linear In
+// LinearIn
 func LinearIn(t, b, c, d float32) float32 {
 	return c*t/d + b
 }
 
-// Linear Out
+// LinearOut
 func LinearOut(t, b, c, d float32) float32 {
 	return c*t/d + b
 }
 
-// Linear In Out
+// LinearInOut
 func LinearInOut(t, b, c, d float32) float32 {
 	return c*t/d + b
 }
 
 // Sine Easing functions
 
-// Sine In
+// SineIn
 func SineIn(t, b, c, d float32) float32 {
 	return -c*float32(math.Cos(float64(t/d)*(math.Pi/2))) + c + b
 }
 
-// Sine Out
+// SineOut
 func SineOut(t, b, c, d float32) float32 {
 	return c*float32(math.Sin(float64(t/d)*(math.Pi/2))) + b
 }
 
-// Sine In Out
+// SineInOut
 func SineInOut(t, b, c, d float32) float32 {
 	return -c/2*(float32(math.Cos(math.Pi*float64(t/d)))-1) + b
 }
 
 // Circular Easing functions
 
-// Circ In
+// CircIn
 func CircIn(t, b, c, d float32) float32 {
 	t = t / d
 	return -c*(float32(math.Sqrt(float64(1-t*t)))-1) + b
 }
 
-// Circ Out
+// CircOut
 func CircOut(t, b, c, d float32) float32 {
 	return c*float32(math.Sqrt(1-float64((t/d-1)*t))) + b
 }
 
-// Circ In Out
+// CircInOut
 func CircInOut(t, b, c, d float32) float32 {
 	t = t / d * 2
 
@@ -73,19 +73,19 @@ func CircInOut(t, b, c, d float32) float32 {
 
 // Cubic Easing functions
 
-// Cubic In
+// CubicIn
 func CubicIn(t, b, c, d float32) float32 {
 	t = t / d
 	return c*t*t*t + b
 }
 
-// Cubic Out
+// CubicOut
 func CubicOut(t, b, c, d float32) float32 {
 	t = t/d - 1
 	return c*(t*t*t+1) + b
 }
 
-// Cubic In Out
+// CubicInOut
 func CubicInOut(t, b, c, d float32) float32 {
 	t = t / d * 2
 	if t < 1 {
@@ -98,19 +98,19 @@ func CubicInOut(t, b, c, d float32) float32 {
 
 // Quadratic Easing functions
 
-// Quad In
+// QuadIn
 func QuadIn(t, b, c, d float32) float32 {
 	t = t / d
 	return c*t*t + b
 }
 
-// Quad Out
+// QuadOut
 func QuadOut(t, b, c, d float32) float32 {
 	t = t / d
 	return (-c*t*(t-2) + b)
 }
 
-// Quad In Out
+// QuadInOut
 func QuadInOut(t, b, c, d float32) float32 {
 	t = t / d * 2
 	if t < 1 {
@@ -122,7 +122,7 @@ func QuadInOut(t, b, c, d float32) float32 {
 
 // Exponential Easing functions
 
-// Expo In
+// ExpoIn
 func ExpoIn(t, b, c, d float32) float32 {
 	if t == 0 {
 		return b
@@ -131,7 +131,7 @@ func ExpoIn(t, b, c, d float32) float32 {
 	return (c*float32(math.Pow(2, 10*float64(t/d-1))) + b)
 }
 
-// Expo Out
+// ExpoOut
 func ExpoOut(t, b, c, d float32) float32 {
 	if t == d {
 		return (b + c)
@@ -140,7 +140,7 @@ func ExpoOut(t, b, c, d float32) float32 {
 	return c*(-float32(math.Pow(2, -10*float64(t/d)))+1) + b
 }
 
-// Expo In Out
+// ExpoInOut
 func ExpoInOut(t, b, c, d float32) float32 {
 	if t == 0 {
 		return b
@@ -161,21 +161,21 @@ func ExpoInOut(t, b, c, d float32) float32 {
 
 // Back Easing functions
 
-// Back In
+// BackIn
 func BackIn(t, b, c, d float32) float32 {
 	s := float32(1.70158)
 	t = t / d
 	return c*t*t*((s+1)*t-s) + b
 }
 
-// Back Out
+// BackOut
 func BackOut(t, b, c, d float32) float32 {
 	s := float32(1.70158)
 	t = t/d - 1
 	return c*(t*t*((s+1)*t+s)+1) + b
 }
 
-// Back In Out
+// BackInOut
 func BackInOut(t, b, c, d float32) float32 {
 	s := float32(1.70158)
 	s = s * 1.525
@@ -191,12 +191,12 @@ func BackInOut(t, b, c, d float32) float32 {
 
 // Bounce Easing functions
 
-// Bounce In
+// BounceIn
 func BounceIn(t, b, c, d float32) float32 {
 	return (c - BounceOut(d-t, 0, c, d) + b)
 }
 
-// Bounce Out
+// BounceOut
 func BounceOut(t, b, c, d float32) float32 {
 	t = t / d
 	if t < (1 / 2.75) {
@@ -213,7 +213,7 @@ func BounceOut(t, b, c, d float32) float32 {
 	return c*(7.5625*t*t+0.984375) + b
 }
 
-// Bounce In Out
+// BounceInOut
 func BounceInOut(t, b, c, d float32) float32 {
 	if t < d/2 {
 		return BounceIn(t*2, 0, c, d)*0.5 + b
@@ -224,7 +224,7 @@ func BounceInOut(t, b, c, d float32) float32 {
 
 // Elastic Easing functions
 
-// Elastic In
+// ElasticIn
 func ElasticIn(t, b, c, d float32) float32 {
 	if t == 0 {
 		return b
@@ -244,7 +244,7 @@ func ElasticIn(t, b, c, d float32) float32 {
 	return -(postFix * float32(math.Sin(float64(t*d-s)*(2*math.Pi)/float64(p)))) + b
 }
 
-// Elastic Out
+// ElasticOut
 func ElasticOut(t, b, c, d float32) float32 {
 	if t == 0 {
 		return b
@@ -263,7 +263,7 @@ func ElasticOut(t, b, c, d float32) float32 {
 	return a*float32(math.Pow(2, -10*float64(t)))*float32(math.Sin(float64(t*d-s)*(2*math.Pi)/float64(p))) + c + b
 }
 
-// Elastic In Out
+// ElasticInOut
 func ElasticInOut(t, b, c, d float32) float32 {
 	if t == 0 {
 		return b

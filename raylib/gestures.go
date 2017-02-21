@@ -25,13 +25,13 @@ const (
 	GesturePinchOut   Gestures = C.GESTURE_PINCH_OUT
 )
 
-// Enable a set of gestures using flags
+// SetGesturesEnabled - Enable a set of gestures using flags
 func SetGesturesEnabled(gestureFlags uint32) {
 	cgestureFlags := (C.uint)(gestureFlags)
 	C.SetGesturesEnabled(cgestureFlags)
 }
 
-// Check if a gesture have been detected
+// IsGestureDetected - Check if a gesture have been detected
 func IsGestureDetected(gesture Gestures) bool {
 	cgesture := (C.int)(gesture)
 	ret := C.IsGestureDetected(cgesture)
@@ -39,49 +39,49 @@ func IsGestureDetected(gesture Gestures) bool {
 	return v
 }
 
-// Get latest detected gesture
+// GetGestureDetected - Get latest detected gesture
 func GetGestureDetected() Gestures {
 	ret := C.GetGestureDetected()
 	v := (Gestures)(ret)
 	return v
 }
 
-// Get touch points count
+// GetTouchPointsCount - Get touch points count
 func GetTouchPointsCount() int32 {
 	ret := C.GetTouchPointsCount()
 	v := (int32)(ret)
 	return v
 }
 
-// Get gesture hold time in milliseconds
+// GetGestureHoldDuration - Get gesture hold time in milliseconds
 func GetGestureHoldDuration() float32 {
 	ret := C.GetGestureHoldDuration()
 	v := (float32)(ret)
 	return v
 }
 
-// Get gesture drag vector
+// GetGestureDragVector - Get gesture drag vector
 func GetGestureDragVector() Vector2 {
 	ret := C.GetGestureDragVector()
 	v := NewVector2FromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
-// Get gesture drag angle
+// GetGestureDragAngle - Get gesture drag angle
 func GetGestureDragAngle() float32 {
 	ret := C.GetGestureDragAngle()
 	v := (float32)(ret)
 	return v
 }
 
-// Get gesture pinch delta
+// GetGesturePinchVector - Get gesture pinch delta
 func GetGesturePinchVector() Vector2 {
 	ret := C.GetGesturePinchVector()
 	v := NewVector2FromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
-// Get gesture pinch angle
+// GetGesturePinchAngle - Get gesture pinch angle
 func GetGesturePinchAngle() float32 {
 	ret := C.GetGesturePinchAngle()
 	v := (float32)(ret)

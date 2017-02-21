@@ -133,13 +133,13 @@ const (
 	RRESVertFloat
 )
 
-// Load resource from file (only one)
+// LoadResource - Load resource from file (only one)
 // NOTE: Returns uncompressed data with parameters, only first resource found
 func LoadResource(fileName string) []byte {
 	return LoadResourceByID(fileName, 0)
 }
 
-// Load resource from file by id
+// LoadResourceByID - Load resource from file by id
 // NOTE: Returns uncompressed data with parameters, search resource by id
 func LoadResourceByID(fileName string, rresID int) (data []byte) {
 	file, err := OpenAsset(fileName)

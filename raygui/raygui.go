@@ -368,22 +368,22 @@ var propertyName = []string{
 	"TEXTBOX_TEXT_FONTSIZE",
 }
 
-// Get background color
+// BackgroundColor - Get background color
 func BackgroundColor() raylib.Color {
 	return raylib.GetColor(int32(style[GlobalBackgroundColor]))
 }
 
-// Get lines color
+// LinesColor - Get lines color
 func LinesColor() raylib.Color {
 	return raylib.GetColor(int32(style[GlobalLinesColor]))
 }
 
-// Label element, show text
+// Label - Label element, show text
 func Label(bounds raylib.Rectangle, text string) {
 	LabelEx(bounds, text, raylib.GetColor(int32(style[LabelTextColor])), raylib.NewColor(0, 0, 0, 0), raylib.NewColor(0, 0, 0, 0))
 }
 
-// Label element extended, configurable colors
+// LabelEx - Label element extended, configurable colors
 func LabelEx(bounds raylib.Rectangle, text string, textColor, border, inner raylib.Color) {
 	// Update control
 	textWidth := raylib.MeasureText(text, int32(style[GlobalTextFontsize]))
@@ -402,7 +402,7 @@ func LabelEx(bounds raylib.Rectangle, text string, textColor, border, inner rayl
 	raylib.DrawText(text, bounds.X+((bounds.Width/2)-(textWidth/2)), bounds.Y+((bounds.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), textColor)
 }
 
-// Button element, returns true when clicked
+// Button - Button element, returns true when clicked
 func Button(bounds raylib.Rectangle, text string) bool {
 	buttonState := ButtonDefault
 	mousePoint := raylib.GetMousePosition()
@@ -465,7 +465,7 @@ func Button(bounds raylib.Rectangle, text string) bool {
 	return false
 }
 
-// Toggle Button element, returns true when active
+// ToggleButton - Toggle Button element, returns true when active
 func ToggleButton(bounds raylib.Rectangle, text string, toggle bool) bool {
 	toggleState := ToggleUnactive
 	toggleButton := bounds
@@ -533,7 +533,7 @@ func ToggleButton(bounds raylib.Rectangle, text string, toggle bool) bool {
 	return toggle
 }
 
-// Toggle Group element, returns toggled button index
+// ToggleGroup - Toggle Group element, returns toggled button index
 func ToggleGroup(bounds raylib.Rectangle, toggleText []string, toggleActive int) int {
 	for i := 0; i < len(toggleText); i++ {
 		if i == toggleActive {
@@ -546,7 +546,7 @@ func ToggleGroup(bounds raylib.Rectangle, toggleText []string, toggleActive int)
 	return toggleActive
 }
 
-// Combo Box element, returns selected item index
+// ComboBox - Combo Box element, returns selected item index
 func ComboBox(bounds raylib.Rectangle, comboText []string, comboActive int) int {
 	comboBoxState := ComboboxUnactive
 	comboBoxButton := bounds
@@ -637,7 +637,7 @@ func ComboBox(bounds raylib.Rectangle, comboText []string, comboActive int) int 
 	return comboActive
 }
 
-// Check Box element, returns true when active
+// CheckBox - Check Box element, returns true when active
 func CheckBox(bounds raylib.Rectangle, text string, checked bool) bool {
 	checkBoxState := CheckboxStatus
 	mousePoint := raylib.GetMousePosition()
@@ -683,7 +683,7 @@ func CheckBox(bounds raylib.Rectangle, text string, checked bool) bool {
 	return checked
 }
 
-// Slider element, returns selected value
+// Slider - Slider element, returns selected value
 func Slider(bounds raylib.Rectangle, value, minValue, maxValue float32) float32 {
 	sliderPos := float32(0)
 	sliderState := SliderDefault
@@ -755,7 +755,7 @@ func Slider(bounds raylib.Rectangle, value, minValue, maxValue float32) float32 
 	return minValue + (maxValue-minValue)*sliderPos
 }
 
-// Slider Bar element, returns selected value
+// SliderBar - Slider Bar element, returns selected value
 func SliderBar(bounds raylib.Rectangle, value, minValue, maxValue float32) float32 {
 	sliderState := SliderDefault
 	mousePoint := raylib.GetMousePosition()
@@ -826,7 +826,7 @@ func SliderBar(bounds raylib.Rectangle, value, minValue, maxValue float32) float
 	return fixedValue + minValue
 }
 
-// Progress Bar element, shows current progress value
+// ProgressBar - Progress Bar element, shows current progress value
 func ProgressBar(bounds raylib.Rectangle, value float32) {
 	if value > 1.0 {
 		value = 1.0
@@ -843,7 +843,7 @@ func ProgressBar(bounds raylib.Rectangle, value float32) {
 	raylib.DrawRectangleRec(progressValue, raylib.GetColor(int32(style[ProgressbarProgressColor])))
 }
 
-// Spinner element, returns selected value
+// Spinner - Spinner element, returns selected value
 func Spinner(bounds raylib.Rectangle, value, minValue, maxValue int) int {
 	spinnerState := SpinnerDefault
 	labelBoxBound := raylib.NewRectangle(bounds.X+bounds.Width/4+1, bounds.Y, bounds.Width/2, bounds.Height)
@@ -1006,7 +1006,7 @@ func Spinner(bounds raylib.Rectangle, value, minValue, maxValue int) int {
 	return value
 }
 
-// Text Box element, returns input text
+// TextBox - Text Box element, returns input text
 func TextBox(bounds raylib.Rectangle, text string) string {
 	keyBackspaceText := int32(259) // GLFW BACKSPACE: 3 + 256
 
@@ -1056,7 +1056,7 @@ func TextBox(bounds raylib.Rectangle, text string) string {
 	return text
 }
 
-// Save GUI style file
+// SaveGuiStyle - Save GUI style file
 func SaveGuiStyle(fileName string) {
 	var styleFile string
 	for i := 0; i < len(propertyName); i++ {
@@ -1066,7 +1066,7 @@ func SaveGuiStyle(fileName string) {
 	ioutil.WriteFile(fileName, []byte(styleFile), 0644)
 }
 
-// Load GUI style file
+// LoadGuiStyle - Load GUI style file
 func LoadGuiStyle(fileName string) {
 	file, err := raylib.OpenAsset(fileName)
 	if err != nil {
@@ -1105,7 +1105,7 @@ func LoadGuiStyle(fileName string) {
 	}
 }
 
-// Set one style property
+// SetStyleProperty - Set one style property
 func SetStyleProperty(guiProperty Property, value int64) {
 	numColorSamples := 10
 
@@ -1216,7 +1216,7 @@ func SetStyleProperty(guiProperty Property, value int64) {
 	}
 }
 
-// Get one style property
+// GetStyleProperty - Get one style property
 func GetStyleProperty(guiProperty Property) int64 {
 	return style[int(guiProperty)]
 }

@@ -25,12 +25,12 @@ func (c *CharInfo) cptr() *C.CharInfo {
 	return (*C.CharInfo)(unsafe.Pointer(c))
 }
 
-// Returns new SpriteFont
+// NewCharInfo - Returns new SpriteFont
 func NewCharInfo(value int32, rec Rectangle, offsetX, offsetY, advanceX int32) CharInfo {
 	return CharInfo{value, rec, offsetX, offsetY, advanceX}
 }
 
-// Returns new SpriteFont from pointer
+// NewCharInfoFromPointer - Returns new SpriteFont from pointer
 func NewCharInfoFromPointer(ptr unsafe.Pointer) CharInfo {
 	return *(*CharInfo)(ptr)
 }
@@ -51,24 +51,24 @@ func (s *SpriteFont) cptr() *C.SpriteFont {
 	return (*C.SpriteFont)(unsafe.Pointer(s))
 }
 
-// Returns new SpriteFont
+// NewSpriteFont - Returns new SpriteFont
 func NewSpriteFont(texture Texture2D, baseSize, charsCount int32, chars *CharInfo) SpriteFont {
 	return SpriteFont{texture, baseSize, charsCount, chars}
 }
 
-// Returns new SpriteFont from pointer
+// NewSpriteFontFromPointer - Returns new SpriteFont from pointer
 func NewSpriteFontFromPointer(ptr unsafe.Pointer) SpriteFont {
 	return *(*SpriteFont)(ptr)
 }
 
-// Get the default SpriteFont
+// GetDefaultFont - Get the default SpriteFont
 func GetDefaultFont() SpriteFont {
 	ret := C.GetDefaultFont()
 	v := NewSpriteFontFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
-// Load a SpriteFont image into GPU memory
+// LoadSpriteFont - Load a SpriteFont image into GPU memory
 func LoadSpriteFont(fileName string) SpriteFont {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
@@ -77,7 +77,7 @@ func LoadSpriteFont(fileName string) SpriteFont {
 	return v
 }
 
-// Load a SpriteFont from TTF font with parameters
+// LoadSpriteFontTTF - Load a SpriteFont from TTF font with parameters
 func LoadSpriteFontTTF(fileName string, fontSize int32, charsCount int32, fontChars *int32) SpriteFont {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
@@ -89,13 +89,13 @@ func LoadSpriteFontTTF(fileName string, fontSize int32, charsCount int32, fontCh
 	return v
 }
 
-// Unload SpriteFont from GPU memory
+// UnloadSpriteFont - Unload SpriteFont from GPU memory
 func UnloadSpriteFont(spriteFont SpriteFont) {
 	cspriteFont := spriteFont.cptr()
 	C.UnloadSpriteFont(*cspriteFont)
 }
 
-// Draw text (using default font)
+// DrawText - Draw text (using default font)
 func DrawText(text string, posX int32, posY int32, fontSize int32, color Color) {
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
@@ -106,7 +106,7 @@ func DrawText(text string, posX int32, posY int32, fontSize int32, color Color) 
 	C.DrawText(ctext, cposX, cposY, cfontSize, *ccolor)
 }
 
-// Draw text using SpriteFont and additional parameters
+// DrawTextEx - Draw text using SpriteFont and additional parameters
 func DrawTextEx(spriteFont SpriteFont, text string, position Vector2, fontSize float32, spacing int32, tint Color) {
 	cspriteFont := spriteFont.cptr()
 	ctext := C.CString(text)
@@ -118,7 +118,7 @@ func DrawTextEx(spriteFont SpriteFont, text string, position Vector2, fontSize f
 	C.DrawTextEx(*cspriteFont, ctext, *cposition, cfontSize, cspacing, *ctint)
 }
 
-// Measure string width for default font
+// MeasureText - Measure string width for default font
 func MeasureText(text string, fontSize int32) int32 {
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
@@ -128,7 +128,7 @@ func MeasureText(text string, fontSize int32) int32 {
 	return v
 }
 
-// Measure string size for SpriteFont
+// MeasureTextEx - Measure string size for SpriteFont
 func MeasureTextEx(spriteFont SpriteFont, text string, fontSize float32, spacing int32) Vector2 {
 	cspriteFont := spriteFont.cptr()
 	ctext := C.CString(text)
@@ -140,7 +140,7 @@ func MeasureTextEx(spriteFont SpriteFont, text string, fontSize float32, spacing
 	return v
 }
 
-// Shows current FPS
+// DrawFPS - Shows current FPS
 func DrawFPS(posX int32, posY int32) {
 	cposX := (C.int)(posX)
 	cposY := (C.int)(posY)

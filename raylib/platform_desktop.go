@@ -13,7 +13,7 @@ import (
 	"unsafe"
 )
 
-// Initialize Window and OpenGL Graphics
+// InitWindow - Initialize Window and OpenGL Graphics
 func InitWindow(width int32, height int32, t interface{}) {
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
@@ -26,46 +26,46 @@ func InitWindow(width int32, height int32, t interface{}) {
 	}
 }
 
-// Sets callback function
+// SetCallbackFunc - Sets callback function
 func SetCallbackFunc(func(unsafe.Pointer)) {
 	return
 }
 
-// Shows cursor
+// ShowCursor - Shows cursor
 func ShowCursor() {
 	C.ShowCursor()
 }
 
-// Hides cursor
+// HideCursor - Hides cursor
 func HideCursor() {
 	C.HideCursor()
 }
 
-// Returns true if cursor is not visible
+// IsCursorHidden - Returns true if cursor is not visible
 func IsCursorHidden() bool {
 	ret := C.IsCursorHidden()
 	v := bool(int(ret) == 1)
 	return v
 }
 
-// Enables cursor
+// EnableCursor - Enables cursor
 func EnableCursor() {
 	C.EnableCursor()
 }
 
-// Disables cursor
+// DisableCursor - Disables cursor
 func DisableCursor() {
 	C.DisableCursor()
 }
 
-// Check if a file have been dropped into window
+// IsFileDropped - Check if a file have been dropped into window
 func IsFileDropped() bool {
 	ret := C.IsFileDropped()
 	v := bool(int(ret) == 1)
 	return v
 }
 
-// Retrieve dropped files into window
+// GetDroppedFiles - Retrieve dropped files into window
 func GetDroppedFiles(count *int32) []string {
 	ccount := (*C.int)(unsafe.Pointer(count))
 	ret := C.GetDroppedFiles(ccount)
@@ -79,12 +79,12 @@ func GetDroppedFiles(count *int32) []string {
 	return gostrings
 }
 
-// Clear dropped files paths buffer
+// ClearDroppedFiles - Clear dropped files paths buffer
 func ClearDroppedFiles() {
 	C.ClearDroppedFiles()
 }
 
-// Open asset
+// OpenAsset - Open asset
 func OpenAsset(name string) (Asset, error) {
 	f, err := os.Open(name)
 	if err != nil {

@@ -30,12 +30,12 @@ const (
 
 var traceDebugMsgs = false
 
-// Set debug messages
+// SetDebug - Set debug messages
 func SetDebug(enabled bool) {
 	traceDebugMsgs = enabled
 }
 
-// Trace log
+// TraceLog - Trace log
 func TraceLog(msgType int, text string, v ...interface{}) {
 	switch msgType {
 	case LogInfo:
@@ -60,7 +60,7 @@ func TraceLog(msgType int, text string, v ...interface{}) {
 	}
 }
 
-// HomeDir returns user home directory
+// HomeDir - Returns user home directory
 // NOTE: On Android this returns internal data path and must be called after InitWindow
 func HomeDir() string {
 	return C.GoString(C.get_internal_storage_path())

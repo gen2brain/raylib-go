@@ -24,7 +24,7 @@ import (
 
 var callbackHolder func(unsafe.Pointer)
 
-// Initialize Window and OpenGL Graphics
+// InitWindow - Initialize Window and OpenGL Graphics
 func InitWindow(width int32, height int32, t interface{}) {
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
@@ -36,7 +36,7 @@ func InitWindow(width int32, height int32, t interface{}) {
 	}
 }
 
-// Sets callback function
+// SetCallbackFunc - Sets callback function
 func SetCallbackFunc(callback func(unsafe.Pointer)) {
 	callbackHolder = callback
 }
@@ -48,47 +48,47 @@ func androidMain(app *C.struct_android_app) {
 	}
 }
 
-// Shows cursor
+// ShowCursor - Shows cursor
 func ShowCursor() {
 	return
 }
 
-// Hides cursor
+// HideCursor - Hides cursor
 func HideCursor() {
 	return
 }
 
-// Returns true if cursor is not visible
+// IsCursorHidden - Returns true if cursor is not visible
 func IsCursorHidden() bool {
 	return false
 }
 
-// Enables cursor
+// EnableCursor - Enables cursor
 func EnableCursor() {
 	return
 }
 
-// Disables cursor
+// DisableCursor - Disables cursor
 func DisableCursor() {
 	return
 }
 
-// Check if a file have been dropped into window
+// IsFileDropped - Check if a file have been dropped into window
 func IsFileDropped() bool {
 	return false
 }
 
-// Retrieve dropped files into window
+// GetDroppedFiles - Retrieve dropped files into window
 func GetDroppedFiles(count *int32) (files []string) {
 	return
 }
 
-// Clear dropped files paths buffer
+// ClearDroppedFiles - Clear dropped files paths buffer
 func ClearDroppedFiles() {
 	return
 }
 
-// Open asset
+// OpenAsset - Open asset
 func OpenAsset(name string) (Asset, error) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))

@@ -24,12 +24,12 @@ func (c *Camera) cptr() *C.Camera {
 	return (*C.Camera)(unsafe.Pointer(c))
 }
 
-// Returns new Camera
+// NewCamera - Returns new Camera
 func NewCamera(pos, target, up Vector3, fovy float32) Camera {
 	return Camera{pos, target, up, fovy}
 }
 
-// Returns new Camera from pointer
+// NewCameraFromPointer - Returns new Camera from pointer
 func NewCameraFromPointer(ptr unsafe.Pointer) Camera {
 	return *(*Camera)(ptr)
 }
@@ -50,12 +50,12 @@ func (c *Camera2D) cptr() *C.Camera2D {
 	return (*C.Camera2D)(unsafe.Pointer(c))
 }
 
-// Returns new Camera2D
+// NewCamera2D - Returns new Camera2D
 func NewCamera2D(offset, target Vector2, rotation, zoom float32) Camera2D {
 	return Camera2D{offset, target, rotation, zoom}
 }
 
-// Returns new Camera2D from pointer
+// NewCamera2DFromPointer - Returns new Camera2D from pointer
 func NewCamera2DFromPointer(ptr unsafe.Pointer) Camera2D {
 	return *(*Camera2D)(ptr)
 }
@@ -72,38 +72,38 @@ const (
 	CameraThirdPerson CameraMode = C.CAMERA_THIRD_PERSON
 )
 
-// Set camera mode (multiple camera modes available)
+// SetCameraMode - Set camera mode (multiple camera modes available)
 func SetCameraMode(camera Camera, mode CameraMode) {
 	ccamera := camera.cptr()
 	cmode := (C.int)(mode)
 	C.SetCameraMode(*ccamera, cmode)
 }
 
-// Update camera position for selected mode
+// UpdateCamera - Update camera position for selected mode
 func UpdateCamera(camera *Camera) {
 	ccamera := camera.cptr()
 	C.UpdateCamera(ccamera)
 }
 
-// Set camera pan key to combine with mouse movement (free camera)
+// SetCameraPanControl - Set camera pan key to combine with mouse movement (free camera)
 func SetCameraPanControl(panKey int32) {
 	cpanKey := (C.int)(panKey)
 	C.SetCameraPanControl(cpanKey)
 }
 
-// Set camera alt key to combine with mouse movement (free camera)
+// SetCameraAltControl - Set camera alt key to combine with mouse movement (free camera)
 func SetCameraAltControl(altKey int32) {
 	caltKey := (C.int)(altKey)
 	C.SetCameraAltControl(caltKey)
 }
 
-// Set camera smooth zoom key to combine with mouse (free camera)
+// SetCameraSmoothZoomControl - Set camera smooth zoom key to combine with mouse (free camera)
 func SetCameraSmoothZoomControl(szKey int32) {
 	cszKey := (C.int)(szKey)
 	C.SetCameraSmoothZoomControl(cszKey)
 }
 
-// Set camera move controls (1st person and 3rd person cameras)
+// SetCameraMoveControls - Set camera move controls (1st person and 3rd person cameras)
 func SetCameraMoveControls(frontKey int32, backKey int32, rightKey int32, leftKey int32, upKey int32, downKey int32) {
 	cfrontKey := (C.int)(frontKey)
 	cbackKey := (C.int)(backKey)

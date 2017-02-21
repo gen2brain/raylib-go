@@ -38,12 +38,12 @@ func (m *Mesh) cptr() *C.Mesh {
 	return (*C.Mesh)(unsafe.Pointer(m))
 }
 
-// Returns new Mesh
+// NewMesh - Returns new Mesh
 func NewMesh(vertexCount, triangleCount int32, vertices, texcoords, texcoords2, normals, tangents *[]float32, colors *[]uint8, indices *[]uint16, vaoID uint32, vboID [7]uint32) Mesh {
 	return Mesh{vertexCount, triangleCount, vertices, texcoords, texcoords2, normals, tangents, colors, indices, vaoID, vboID}
 }
 
-// Returns new Mesh from pointer
+// NewMeshFromPointer - Returns new Mesh from pointer
 func NewMeshFromPointer(ptr unsafe.Pointer) Mesh {
 	return *(*Mesh)(ptr)
 }
@@ -72,12 +72,12 @@ func (m *Material) cptr() *C.Material {
 	return (*C.Material)(unsafe.Pointer(m))
 }
 
-// Returns new Material
+// NewMaterial - Returns new Material
 func NewMaterial(shader Shader, texDiffuse, texNormal, texSpecular Texture2D, colDiffuse, colAmbient, colSpecular Color, glossiness float32) Material {
 	return Material{shader, texDiffuse, texNormal, texSpecular, colDiffuse, colAmbient, colSpecular, glossiness}
 }
 
-// Returns new Material from pointer
+// NewMaterialFromPointer - Returns new Material from pointer
 func NewMaterialFromPointer(ptr unsafe.Pointer) Material {
 	return *(*Material)(ptr)
 }
@@ -98,12 +98,12 @@ func (m *Model) cptr() *C.Model {
 	return (*C.Model)(unsafe.Pointer(m))
 }
 
-// Returns new Model
+// NewModel - Returns new Model
 func NewModel(mesh Mesh, transform Matrix, material Material) Model {
 	return Model{mesh, transform, material, [4]byte{}}
 }
 
-// Returns new Model from pointer
+// NewModelFromPointer - Returns new Model from pointer
 func NewModelFromPointer(ptr unsafe.Pointer) Model {
 	return *(*Model)(ptr)
 }
@@ -120,17 +120,17 @@ func (r *Ray) cptr() *C.Ray {
 	return (*C.Ray)(unsafe.Pointer(r))
 }
 
-// Returns new Ray
+// NewRay - Returns new Ray
 func NewRay(position, direction Vector3) Ray {
 	return Ray{position, direction}
 }
 
-// Returns new Ray from pointer
+// NewRayFromPointer - Returns new Ray from pointer
 func NewRayFromPointer(ptr unsafe.Pointer) Ray {
 	return *(*Ray)(ptr)
 }
 
-// Draw a line in 3D world space
+// DrawLine3D - Draw a line in 3D world space
 func DrawLine3D(startPos Vector3, endPos Vector3, color Color) {
 	cstartPos := startPos.cptr()
 	cendPos := endPos.cptr()
@@ -138,7 +138,7 @@ func DrawLine3D(startPos Vector3, endPos Vector3, color Color) {
 	C.DrawLine3D(*cstartPos, *cendPos, *ccolor)
 }
 
-// Draw a circle in 3D world space
+// DrawCircle3D - Draw a circle in 3D world space
 func DrawCircle3D(center Vector3, radius float32, rotationAxis Vector3, rotationAngle float32, color Color) {
 	ccenter := center.cptr()
 	cradius := (C.float)(radius)
@@ -148,7 +148,7 @@ func DrawCircle3D(center Vector3, radius float32, rotationAxis Vector3, rotation
 	C.DrawCircle3D(*ccenter, cradius, *crotationAxis, crotationAngle, *ccolor)
 }
 
-// Draw cube
+// DrawCube - Draw cube
 func DrawCube(position Vector3, width float32, height float32, length float32, color Color) {
 	cposition := position.cptr()
 	cwidth := (C.float)(width)
@@ -158,7 +158,7 @@ func DrawCube(position Vector3, width float32, height float32, length float32, c
 	C.DrawCube(*cposition, cwidth, cheight, clength, *ccolor)
 }
 
-// Draw cube (Vector version)
+// DrawCubeV - Draw cube (Vector version)
 func DrawCubeV(position Vector3, size Vector3, color Color) {
 	cposition := position.cptr()
 	csize := size.cptr()
@@ -166,7 +166,7 @@ func DrawCubeV(position Vector3, size Vector3, color Color) {
 	C.DrawCubeV(*cposition, *csize, *ccolor)
 }
 
-// Draw cube wires
+// DrawCubeWires - Draw cube wires
 func DrawCubeWires(position Vector3, width float32, height float32, length float32, color Color) {
 	cposition := position.cptr()
 	cwidth := (C.float)(width)
@@ -176,7 +176,7 @@ func DrawCubeWires(position Vector3, width float32, height float32, length float
 	C.DrawCubeWires(*cposition, cwidth, cheight, clength, *ccolor)
 }
 
-// Draw cube textured
+// DrawCubeTexture - Draw cube textured
 func DrawCubeTexture(texture Texture2D, position Vector3, width float32, height float32, length float32, color Color) {
 	ctexture := texture.cptr()
 	cposition := position.cptr()
@@ -187,7 +187,7 @@ func DrawCubeTexture(texture Texture2D, position Vector3, width float32, height 
 	C.DrawCubeTexture(*ctexture, *cposition, cwidth, cheight, clength, *ccolor)
 }
 
-// Draw sphere
+// DrawSphere - Draw sphere
 func DrawSphere(centerPos Vector3, radius float32, color Color) {
 	ccenterPos := centerPos.cptr()
 	cradius := (C.float)(radius)
@@ -195,7 +195,7 @@ func DrawSphere(centerPos Vector3, radius float32, color Color) {
 	C.DrawSphere(*ccenterPos, cradius, *ccolor)
 }
 
-// Draw sphere with extended parameters
+// DrawSphereEx - Draw sphere with extended parameters
 func DrawSphereEx(centerPos Vector3, radius float32, rings int32, slices int32, color Color) {
 	ccenterPos := centerPos.cptr()
 	cradius := (C.float)(radius)
@@ -205,7 +205,7 @@ func DrawSphereEx(centerPos Vector3, radius float32, rings int32, slices int32, 
 	C.DrawSphereEx(*ccenterPos, cradius, crings, cslices, *ccolor)
 }
 
-// Draw sphere wires
+// DrawSphereWires - Draw sphere wires
 func DrawSphereWires(centerPos Vector3, radius float32, rings int32, slices int32, color Color) {
 	ccenterPos := centerPos.cptr()
 	cradius := (C.float)(radius)
@@ -215,7 +215,7 @@ func DrawSphereWires(centerPos Vector3, radius float32, rings int32, slices int3
 	C.DrawSphereWires(*ccenterPos, cradius, crings, cslices, *ccolor)
 }
 
-// Draw a cylinder/cone
+// DrawCylinder - Draw a cylinder/cone
 func DrawCylinder(position Vector3, radiusTop float32, radiusBottom float32, height float32, slices int32, color Color) {
 	cposition := position.cptr()
 	cradiusTop := (C.float)(radiusTop)
@@ -226,7 +226,7 @@ func DrawCylinder(position Vector3, radiusTop float32, radiusBottom float32, hei
 	C.DrawCylinder(*cposition, cradiusTop, cradiusBottom, cheight, cslices, *ccolor)
 }
 
-// Draw a cylinder/cone wires
+// DrawCylinderWires - Draw a cylinder/cone wires
 func DrawCylinderWires(position Vector3, radiusTop float32, radiusBottom float32, height float32, slices int32, color Color) {
 	cposition := position.cptr()
 	cradiusTop := (C.float)(radiusTop)
@@ -237,7 +237,7 @@ func DrawCylinderWires(position Vector3, radiusTop float32, radiusBottom float32
 	C.DrawCylinderWires(*cposition, cradiusTop, cradiusBottom, cheight, cslices, *ccolor)
 }
 
-// Draw a plane XZ
+// DrawPlane - Draw a plane XZ
 func DrawPlane(centerPos Vector3, size Vector2, color Color) {
 	ccenterPos := centerPos.cptr()
 	csize := size.cptr()
@@ -245,27 +245,27 @@ func DrawPlane(centerPos Vector3, size Vector2, color Color) {
 	C.DrawPlane(*ccenterPos, *csize, *ccolor)
 }
 
-// Draw a ray line
+// DrawRay - Draw a ray line
 func DrawRay(ray Ray, color Color) {
 	cray := ray.cptr()
 	ccolor := color.cptr()
 	C.DrawRay(*cray, *ccolor)
 }
 
-// Draw a grid (centered at (0, 0, 0))
+// DrawGrid - Draw a grid (centered at (0, 0, 0))
 func DrawGrid(slices int32, spacing float32) {
 	cslices := (C.int)(slices)
 	cspacing := (C.float)(spacing)
 	C.DrawGrid(cslices, cspacing)
 }
 
-// Draw simple gizmo
+// DrawGizmo - Draw simple gizmo
 func DrawGizmo(position Vector3) {
 	cposition := position.cptr()
 	C.DrawGizmo(*cposition)
 }
 
-// Load mesh from file
+// LoadMesh - Load mesh from file
 func LoadMesh(fileName string) Mesh {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
@@ -274,7 +274,7 @@ func LoadMesh(fileName string) Mesh {
 	return v
 }
 
-// Load mesh from vertex data
+// LoadMeshEx - Load mesh from vertex data
 func LoadMeshEx(numVertex int32, vData []float32, vtData []float32, vnData []float32, cData []Color) Mesh {
 	cnumVertex := (C.int)(numVertex)
 	cvData := (*C.float)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&vData)).Data))
@@ -286,7 +286,7 @@ func LoadMeshEx(numVertex int32, vData []float32, vtData []float32, vnData []flo
 	return v
 }
 
-// Load model from file
+// LoadModel - Load model from file
 func LoadModel(fileName string) Model {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
@@ -295,7 +295,7 @@ func LoadModel(fileName string) Model {
 	return v
 }
 
-// Load model from mesh data
+// LoadModelFromMesh - Load model from mesh data
 func LoadModelFromMesh(data Mesh, dynamic bool) Model {
 	cdata := data.cptr()
 	cdynamic := 0
@@ -307,7 +307,7 @@ func LoadModelFromMesh(data Mesh, dynamic bool) Model {
 	return v
 }
 
-// Load heightmap model from image data
+// LoadHeightmap - Load heightmap model from image data
 func LoadHeightmap(heightmap *Image, size Vector3) Model {
 	cheightmap := heightmap.cptr()
 	csize := size.cptr()
@@ -316,7 +316,7 @@ func LoadHeightmap(heightmap *Image, size Vector3) Model {
 	return v
 }
 
-// Load cubes-based map model from image data
+// LoadCubicmap - Load cubes-based map model from image data
 func LoadCubicmap(cubicmap *Image) Model {
 	ccubicmap := cubicmap.cptr()
 	ret := C.LoadCubicmap(*ccubicmap)
@@ -324,19 +324,19 @@ func LoadCubicmap(cubicmap *Image) Model {
 	return v
 }
 
-// Unload mesh from memory (RAM and/or VRAM)
+// UnloadMesh - Unload mesh from memory (RAM and/or VRAM)
 func UnloadMesh(mesh *Mesh) {
 	cmesh := mesh.cptr()
 	C.UnloadMesh(cmesh)
 }
 
-// Unload model from memory (RAM and/or VRAM)
+// UnloadModel - Unload model from memory (RAM and/or VRAM)
 func UnloadModel(model Model) {
 	cmodel := model.cptr()
 	C.UnloadModel(*cmodel)
 }
 
-// Load material data (.MTL)
+// LoadMaterial - Load material data (.MTL)
 func LoadMaterial(fileName string) Material {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
@@ -345,20 +345,20 @@ func LoadMaterial(fileName string) Material {
 	return v
 }
 
-// Load default material (uses default models shader)
+// LoadDefaultMaterial - Load default material (uses default models shader)
 func LoadDefaultMaterial() Material {
 	ret := C.LoadDefaultMaterial()
 	v := NewMaterialFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
-// Unload material textures from VRAM
+// UnloadMaterial - Unload material textures from VRAM
 func UnloadMaterial(material Material) {
 	cmaterial := material.cptr()
 	C.UnloadMaterial(*cmaterial)
 }
 
-// Draw a model (with texture if set)
+// DrawModel - Draw a model (with texture if set)
 func DrawModel(model Model, position Vector3, scale float32, tint Color) {
 	cmodel := model.cptr()
 	cposition := position.cptr()
@@ -367,7 +367,7 @@ func DrawModel(model Model, position Vector3, scale float32, tint Color) {
 	C.DrawModel(*cmodel, *cposition, cscale, *ctint)
 }
 
-// Draw a model with extended parameters
+// DrawModelEx - Draw a model with extended parameters
 func DrawModelEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint Color) {
 	cmodel := model.cptr()
 	cposition := position.cptr()
@@ -378,7 +378,7 @@ func DrawModelEx(model Model, position Vector3, rotationAxis Vector3, rotationAn
 	C.DrawModelEx(*cmodel, *cposition, *crotationAxis, crotationAngle, *cscale, *ctint)
 }
 
-// Draw a model wires (with texture if set)
+// DrawModelWires - Draw a model wires (with texture if set)
 func DrawModelWires(model Model, position Vector3, scale float32, tint Color) {
 	cmodel := model.cptr()
 	cposition := position.cptr()
@@ -387,7 +387,7 @@ func DrawModelWires(model Model, position Vector3, scale float32, tint Color) {
 	C.DrawModelWires(*cmodel, *cposition, cscale, *ctint)
 }
 
-// Draw a model wires (with texture if set) with extended parameters
+// DrawModelWiresEx - Draw a model wires (with texture if set) with extended parameters
 func DrawModelWiresEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint Color) {
 	cmodel := model.cptr()
 	cposition := position.cptr()
@@ -398,14 +398,14 @@ func DrawModelWiresEx(model Model, position Vector3, rotationAxis Vector3, rotat
 	C.DrawModelWiresEx(*cmodel, *cposition, *crotationAxis, crotationAngle, *cscale, *ctint)
 }
 
-// Draw bounding box (wires)
+// DrawBoundingBox - Draw bounding box (wires)
 func DrawBoundingBox(box BoundingBox, color Color) {
 	cbox := box.cptr()
 	ccolor := color.cptr()
 	C.DrawBoundingBox(*cbox, *ccolor)
 }
 
-// Draw a billboard texture
+// DrawBillboard - Draw a billboard texture
 func DrawBillboard(camera Camera, texture Texture2D, center Vector3, size float32, tint Color) {
 	ccamera := camera.cptr()
 	ctexture := texture.cptr()
@@ -415,7 +415,7 @@ func DrawBillboard(camera Camera, texture Texture2D, center Vector3, size float3
 	C.DrawBillboard(*ccamera, *ctexture, *ccenter, csize, *ctint)
 }
 
-// Draw a billboard texture defined by sourceRec
+// DrawBillboardRec - Draw a billboard texture defined by sourceRec
 func DrawBillboardRec(camera Camera, texture Texture2D, sourceRec Rectangle, center Vector3, size float32, tint Color) {
 	ccamera := camera.cptr()
 	ctexture := texture.cptr()
@@ -426,7 +426,7 @@ func DrawBillboardRec(camera Camera, texture Texture2D, sourceRec Rectangle, cen
 	C.DrawBillboardRec(*ccamera, *ctexture, *csourceRec, *ccenter, csize, *ctint)
 }
 
-// Calculate mesh bounding box limits
+// CalculateBoundingBox - Calculate mesh bounding box limits
 func CalculateBoundingBox(mesh Mesh) BoundingBox {
 	cmesh := mesh.cptr()
 	ret := C.CalculateBoundingBox(*cmesh)
@@ -434,7 +434,7 @@ func CalculateBoundingBox(mesh Mesh) BoundingBox {
 	return v
 }
 
-// Detect collision between two spheres
+// CheckCollisionSpheres - Detect collision between two spheres
 func CheckCollisionSpheres(centerA Vector3, radiusA float32, centerB Vector3, radiusB float32) bool {
 	ccenterA := centerA.cptr()
 	cradiusA := (C.float)(radiusA)
@@ -445,7 +445,7 @@ func CheckCollisionSpheres(centerA Vector3, radiusA float32, centerB Vector3, ra
 	return v
 }
 
-// Detect collision between two bounding boxes
+// CheckCollisionBoxes - Detect collision between two bounding boxes
 func CheckCollisionBoxes(box1 BoundingBox, box2 BoundingBox) bool {
 	cbox1 := box1.cptr()
 	cbox2 := box2.cptr()
@@ -454,7 +454,7 @@ func CheckCollisionBoxes(box1 BoundingBox, box2 BoundingBox) bool {
 	return v
 }
 
-// Detect collision between box and sphere
+// CheckCollisionBoxSphere - Detect collision between box and sphere
 func CheckCollisionBoxSphere(box BoundingBox, centerSphere Vector3, radiusSphere float32) bool {
 	cbox := box.cptr()
 	ccenterSphere := centerSphere.cptr()
@@ -464,7 +464,7 @@ func CheckCollisionBoxSphere(box BoundingBox, centerSphere Vector3, radiusSphere
 	return v
 }
 
-// Detect collision between ray and sphere
+// CheckCollisionRaySphere - Detect collision between ray and sphere
 func CheckCollisionRaySphere(ray Ray, spherePosition Vector3, sphereRadius float32) bool {
 	cray := ray.cptr()
 	cspherePosition := spherePosition.cptr()
@@ -474,7 +474,7 @@ func CheckCollisionRaySphere(ray Ray, spherePosition Vector3, sphereRadius float
 	return v
 }
 
-// Detect collision between ray and sphere with extended parameters and collision point detection
+// CheckCollisionRaySphereEx - Detect collision between ray and sphere with extended parameters and collision point detection
 func CheckCollisionRaySphereEx(ray Ray, spherePosition Vector3, sphereRadius float32, collisionPoint Vector3) bool {
 	cray := ray.cptr()
 	cspherePosition := spherePosition.cptr()
@@ -485,7 +485,7 @@ func CheckCollisionRaySphereEx(ray Ray, spherePosition Vector3, sphereRadius flo
 	return v
 }
 
-// Detect collision between ray and box
+// CheckCollisionRayBox - Detect collision between ray and box
 func CheckCollisionRayBox(ray Ray, box BoundingBox) bool {
 	cray := ray.cptr()
 	cbox := box.cptr()
