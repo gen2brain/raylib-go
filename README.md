@@ -28,6 +28,10 @@ On OS X system OpenAL framework is used.
 
 [Android example](https://github.com/gen2brain/raylib-go/tree/master/examples/android/example).
 
+##### Raspberry Pi
+
+[RPi example](https://github.com/gen2brain/raylib-go/tree/master/examples/rpi/basic_window).
+
 ### Installation
 
     go get -v github.com/gen2brain/raylib-go/raylib
