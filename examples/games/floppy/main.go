@@ -10,12 +10,28 @@ import (
 )
 
 const (
+	// Screen width
+	screenWidth = 504
+	// Screen height
+	screenHeight = 896
+
 	// Maximum number of pipes
 	maxPipes = 100
+	// Maximum number of particles
+	maxParticles = 50
+
 	// Pipes width
 	pipesWidth = 60
 	// Sprite size
 	spriteSize = 48
+
+	// Pipes speed
+	pipesSpeedX = 2.5
+	// Clouds speed
+	cloudsSpeedX = 1
+
+	// Gravity
+	gravity = 1.2
 )
 
 // Floppy type
@@ -30,17 +46,28 @@ type Pipe struct {
 	Active bool
 }
 
+// Particle type
+type Particle struct {
+	Position raylib.Vector2
+	Color    raylib.Color
+	Alpha    float32
+	Size     float32
+	Rotation float32
+	Active   bool
+}
+
 // Game type
 type Game struct {
-	ScreenWidth  int32
-	ScreenHeight int32
-
 	FxFlap  raylib.Sound
 	FxSlap  raylib.Sound
 	FxPoint raylib.Sound
 	FxClick raylib.Sound
 
-	Texture  raylib.Texture2D
+	TxSprites raylib.Texture2D
+	TxSmoke   raylib.Texture2D
+	TxClouds  raylib.Texture2D
+
+	CloudRec raylib.Rectangle
 	FrameRec raylib.Rectangle
 
 	GameOver bool
@@ -48,16 +75,17 @@ type Game struct {
 	Pause    bool
 	SuperFX  bool
 
-	Score             int
-	HiScore           int
-	FramesCounter     int32
+	Score         int
+	HiScore       int
+	FramesCounter int32
+
 	WindowShouldClose bool
 
-	Floppy Floppy
+	Floppy    Floppy
+	Particles []Particle
 
-	Pipes       []Pipe
-	PipesPos    []raylib.Vector2
-	PipesSpeedX int32
+	Pipes    []Pipe
+	PipesPos []raylib.Vector2
 }
 
 // NewGame - Start new game
@@ -80,12 +108,13 @@ func main() {
 func run(app unsafe.Pointer) {
 	// Initialize game
 	game := NewGame()
+	game.GameOver = true
 
 	// Initialize window
 	if runtime.GOOS != "android" {
-		raylib.InitWindow(game.ScreenWidth, game.ScreenHeight, "Floppy Gopher")
+		raylib.InitWindow(screenWidth, screenHeight, "Floppy Gopher")
 	} else {
-		raylib.InitWindow(game.ScreenWidth, game.ScreenHeight, app)
+		raylib.InitWindow(screenWidth, screenHeight, app)
 	}
 
 	// Initialize audio
@@ -121,16 +150,26 @@ func run(app unsafe.Pointer) {
 
 // Init - Initialize game
 func (g *Game) Init() {
-	// Window resolution
-	g.ScreenWidth = 504
-	g.ScreenHeight = 896
 
-	g.Floppy = Floppy{}
-	g.Floppy.Position = raylib.NewVector2(80, float32(g.ScreenHeight)/2-spriteSize/2)
-	g.PipesSpeedX = 2
+	// Gopher
+	g.Floppy = Floppy{raylib.NewVector2(80, float32(screenHeight)/2-spriteSize/2)}
 
 	// Sprite rectangle
 	g.FrameRec = raylib.NewRectangle(0, 0, spriteSize, spriteSize)
+
+	// Cloud rectangle
+	g.CloudRec = raylib.NewRectangle(0, 0, screenWidth, g.TxClouds.Height)
+
+	// Initialize particles
+	g.Particles = make([]Particle, maxParticles)
+	for i := 0; i < maxParticles; i++ {
+		g.Particles[i].Position = raylib.NewVector2(0, 0)
+		g.Particles[i].Color = raylib.RayWhite
+		g.Particles[i].Alpha = 1.0
+		g.Particles[i].Size = float32(raylib.GetRandomValue(1, 30)) / 20.0
+		g.Particles[i].Rotation = float32(raylib.GetRandomValue(0, 360))
+		g.Particles[i].Active = false
+	}
 
 	// Pipes positions
 	g.PipesPos = make([]raylib.Vector2, maxPipes)
@@ -179,7 +218,9 @@ func (g *Game) Load() {
 	g.FxSlap = raylib.LoadSound("sounds/slap.wav")
 	g.FxPoint = raylib.LoadSound("sounds/point.wav")
 	g.FxClick = raylib.LoadSound("sounds/click.wav")
-	g.Texture = raylib.LoadTexture("images/sprite.png")
+	g.TxSprites = raylib.LoadTexture("images/sprite.png")
+	g.TxSmoke = raylib.LoadTexture("images/smoke.png")
+	g.TxClouds = raylib.LoadTexture("images/clouds.png")
 }
 
 // Unload - Unload resources
@@ -188,7 +229,9 @@ func (g *Game) Unload() {
 	raylib.UnloadSound(g.FxSlap)
 	raylib.UnloadSound(g.FxPoint)
 	raylib.UnloadSound(g.FxClick)
-	raylib.UnloadTexture(g.Texture)
+	raylib.UnloadTexture(g.TxSprites)
+	raylib.UnloadTexture(g.TxSmoke)
+	raylib.UnloadTexture(g.TxClouds)
 }
 
 // Update - Update game
@@ -210,9 +253,9 @@ func (g *Game) Update() {
 
 		if !g.Pause {
 			if !g.Dead {
-				// Scroll X
+				// Scroll pipes
 				for i := 0; i < maxPipes; i++ {
-					g.PipesPos[i].X -= float32(g.PipesSpeedX)
+					g.PipesPos[i].X -= float32(pipesSpeedX)
 				}
 
 				for i := 0; i < maxPipes*2; i += 2 {
@@ -220,9 +263,27 @@ func (g *Game) Update() {
 					g.Pipes[i+1].Rec.X = int32(g.PipesPos[i/2].X)
 				}
 
+				// Scroll clouds
+				g.CloudRec.X += cloudsSpeedX
+				if g.CloudRec.X > g.TxClouds.Width {
+					g.CloudRec.X = 0
+				}
+
 				// Movement/Controls
-				if raylib.IsKeyDown(raylib.KeySpace) || raylib.IsMouseButtonDown(raylib.MouseLeftButton) && !g.GameOver {
+				if raylib.IsKeyDown(raylib.KeySpace) || raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
 					raylib.PlaySound(g.FxFlap)
+
+					// Activate one particle every frame
+					for i := 0; i < maxParticles; i++ {
+						if !g.Particles[i].Active {
+							g.Particles[i].Active = true
+							g.Particles[i].Alpha = 1.0
+							g.Particles[i].Position = g.Floppy.Position
+							g.Particles[i].Position.X += spriteSize / 2
+							g.Particles[i].Position.Y += spriteSize / 2
+							i = maxParticles
+						}
+					}
 
 					// Switch flap sprites every 8 frames
 					g.FramesCounter++
@@ -236,10 +297,7 @@ func (g *Game) Update() {
 					// Floppy go up
 					g.Floppy.Position.Y -= 3
 				} else {
-					// Default sprite
-					//g.FrameRec.X = spriteSize
-
-					// Switch flap sprites every 8 frames
+					// Switch run sprites every 8 frames
 					g.FramesCounter++
 					if g.FramesCounter >= 8 {
 						g.FramesCounter = 0
@@ -249,11 +307,23 @@ func (g *Game) Update() {
 					}
 
 					// Floppy fall down
-					g.Floppy.Position.Y += 1
+					g.Floppy.Position.Y += gravity
 				}
-			}
 
-			if !g.Dead {
+				// Update active particles
+				for i := 0; i < maxParticles; i++ {
+					if g.Particles[i].Active {
+						g.Particles[i].Position.X -= 1.0
+						g.Particles[i].Alpha -= 0.05
+
+						if g.Particles[i].Alpha <= 0.0 {
+							g.Particles[i].Active = false
+						}
+
+						g.Particles[i].Rotation += 3.0
+					}
+				}
+
 				// Check Collisions
 				for i := 0; i < maxPipes*2; i++ {
 					if raylib.CheckCollisionRecs(raylib.NewRectangle(int32(g.Floppy.Position.X), int32(g.Floppy.Position.Y), spriteSize, spriteSize), g.Pipes[i].Rec) {
@@ -284,7 +354,12 @@ func (g *Game) Update() {
 					g.GameOver = true
 				}
 
-				g.FrameRec.X = spriteSize * 4
+				// Switch dead sprite
+				if g.FramesCounter >= 8 {
+					g.FrameRec.X = spriteSize * 5
+				} else {
+					g.FrameRec.X = spriteSize * 4
+				}
 			}
 		} else {
 			if raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
@@ -301,6 +376,15 @@ func (g *Game) Update() {
 			g.WindowShouldClose = true
 		}
 
+		// Switch flap sprites
+		g.FramesCounter++
+		if g.FramesCounter >= 8 {
+			g.FramesCounter = 0
+			g.FrameRec.X = spriteSize
+		} else {
+			g.FrameRec.X = 0
+		}
+
 	}
 }
 
@@ -311,8 +395,31 @@ func (g *Game) Draw() {
 	raylib.ClearBackground(raylib.SkyBlue)
 
 	if !g.GameOver {
+		// Draw clouds
+		raylib.DrawTextureRec(g.TxClouds, g.CloudRec, raylib.NewVector2(0, float32(screenHeight-g.TxClouds.Height)), raylib.RayWhite)
+
+		// Draw rotated clouds
+		raylib.DrawTexturePro(g.TxClouds, raylib.NewRectangle(-g.CloudRec.X, 0, g.TxClouds.Width, g.TxClouds.Height),
+			raylib.NewRectangle(0, 0, g.TxClouds.Width, g.TxClouds.Height), raylib.NewVector2(float32(g.TxClouds.Width), float32(g.TxClouds.Height)), 180, raylib.White)
+
 		// Draw Gopher
-		raylib.DrawTextureRec(g.Texture, g.FrameRec, g.Floppy.Position, raylib.RayWhite) // Draw part of the texture
+		raylib.DrawTextureRec(g.TxSprites, g.FrameRec, g.Floppy.Position, raylib.RayWhite)
+
+		// Draw active particles
+		if !g.Dead {
+			for i := 0; i < maxParticles; i++ {
+				if g.Particles[i].Active {
+					raylib.DrawTexturePro(
+						g.TxSmoke,
+						raylib.NewRectangle(0, 0, g.TxSmoke.Width, g.TxSmoke.Height),
+						raylib.NewRectangle(int32(g.Particles[i].Position.X), int32(g.Particles[i].Position.Y), g.TxSmoke.Width*int32(g.Particles[i].Size), g.TxSmoke.Height*int32(g.Particles[i].Size)),
+						raylib.NewVector2(float32(g.TxSmoke.Width)*g.Particles[i].Size/2, float32(g.TxSmoke.Height)*g.Particles[i].Size/2),
+						g.Particles[i].Rotation,
+						raylib.Fade(g.Particles[i].Color, g.Particles[i].Alpha),
+					)
+				}
+			}
+		}
 
 		// Draw pipes
 		for i := 0; i < maxPipes; i++ {
@@ -326,25 +433,30 @@ func (g *Game) Draw() {
 
 		// Draw Super Flashing FX (one frame only)
 		if g.SuperFX {
-			raylib.DrawRectangle(0, 0, g.ScreenWidth, g.ScreenHeight, raylib.White)
+			raylib.DrawRectangle(0, 0, screenWidth, screenHeight, raylib.White)
 			g.SuperFX = false
 		}
 
 		// Draw HI-SCORE
-		raylib.DrawText(fmt.Sprintf("%02d", g.Score), 20, 20, 32, raylib.RayWhite)
-		raylib.DrawText(fmt.Sprintf("HI-SCORE: %02d", g.HiScore), 20, 64, 20, raylib.RayWhite)
+		raylib.DrawText(fmt.Sprintf("%02d", g.Score), 20, 20, 32, raylib.Black)
+		raylib.DrawText(fmt.Sprintf("HI-SCORE: %02d", g.HiScore), 20, 64, 20, raylib.Black)
 
 		if g.Pause {
 			// Draw PAUSED text
-			raylib.DrawText("PAUSED", g.ScreenWidth/2-raylib.MeasureText("PAUSED", 24)/2, g.ScreenHeight/2-50, 20, raylib.RayWhite)
+			raylib.DrawText("PAUSED", screenWidth/2-raylib.MeasureText("PAUSED", 24)/2, screenHeight/2-50, 20, raylib.Black)
 		}
 	} else {
-		// Draw PLAY AGAIN text
+		// Draw text
+		raylib.DrawText("Floppy Gopher", raylib.GetScreenWidth()/2-raylib.MeasureText("Floppy Gopher", 40)/2, raylib.GetScreenHeight()/2-150, 40, raylib.RayWhite)
+
 		if runtime.GOOS == "android" {
-			raylib.DrawText("[TAP] TO PLAY AGAIN", raylib.GetScreenWidth()/2-raylib.MeasureText("[TAP] TO PLAY AGAIN", 20)/2, raylib.GetScreenHeight()/2-50, 20, raylib.RayWhite)
+			raylib.DrawText("[TAP] TO PLAY", raylib.GetScreenWidth()/2-raylib.MeasureText("[TAP] TO PLAY", 20)/2, raylib.GetScreenHeight()/2-50, 20, raylib.Black)
 		} else {
-			raylib.DrawText("[ENTER] TO PLAY AGAIN", raylib.GetScreenWidth()/2-raylib.MeasureText("[ENTER] TO PLAY AGAIN", 20)/2, raylib.GetScreenHeight()/2-50, 20, raylib.RayWhite)
+			raylib.DrawText("[ENTER] TO PLAY", raylib.GetScreenWidth()/2-raylib.MeasureText("[ENTER] TO PLAY", 20)/2, raylib.GetScreenHeight()/2-50, 20, raylib.Black)
 		}
+
+		// Draw Gopher
+		raylib.DrawTextureRec(g.TxSprites, g.FrameRec, raylib.NewVector2(float32(raylib.GetScreenWidth()/2-spriteSize/2), float32(raylib.GetScreenHeight()/2)), raylib.RayWhite)
 	}
 
 	raylib.EndDrawing()
