@@ -6,7 +6,6 @@ package raylib
 #include "raylib.h"
 */
 import "C"
-import "unsafe"
 
 // CameraMode type
 type CameraMode int32
