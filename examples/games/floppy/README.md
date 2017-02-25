@@ -1,3 +1,3 @@
 ## Floppy Gopher
 
-![screenshot](https://goo.gl/uwRi60)
+![screenshot](https://goo.gl/photos/KNsPH2gkCtrXe8ku8)
