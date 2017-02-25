@@ -45,9 +45,6 @@ func main() {
 	// Unload CPU (RAM) image data
 	raylib.UnloadImage(imEx)
 
-	// Unload CPU (RAM) pixels data
-	pixels = nil
-
 	raylib.SetTargetFPS(60)
 
 	for !raylib.WindowShouldClose() {

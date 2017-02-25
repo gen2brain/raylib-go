@@ -368,6 +368,12 @@ var propertyName = []string{
 	"TEXTBOX_TEXT_FONTSIZE",
 }
 
+// For spinner
+var (
+	framesCounter int
+	valueSpeed    bool
+)
+
 // BackgroundColor - Get background color
 func BackgroundColor() raylib.Color {
 	return raylib.GetColor(int32(style[GlobalBackgroundColor]))
@@ -854,9 +860,6 @@ func Spinner(bounds raylib.Rectangle, value, minValue, maxValue int) int {
 	textWidth := raylib.MeasureText(fmt.Sprintf("%d", value), int32(style[GlobalTextFontsize]))
 
 	buttonSide := 0
-
-	var framesCounter int
-	var valueSpeed bool
 
 	// Update control
 	if raylib.CheckCollisionPointRec(mousePoint, leftButtonBound) || raylib.CheckCollisionPointRec(mousePoint, rightButtonBound) || raylib.CheckCollisionPointRec(mousePoint, labelBoxBound) {

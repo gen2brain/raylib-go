@@ -39,9 +39,6 @@ func main() {
 	checked := raylib.LoadTextureFromImage(checkedIm)
 	raylib.UnloadImage(checkedIm) // Unload CPU (RAM) image data
 
-	// Dynamic memory must be freed after using it
-	pixels = nil // Unload CPU (RAM) pixels data
-
 	raylib.SetTargetFPS(60)
 
 	for !raylib.WindowShouldClose() {
