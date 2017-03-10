@@ -1,10 +1,10 @@
 ﻿/**********************************************************************************************
 *
-*   raylib 1.7.0 (www.raylib.com)
+*   raylib v1.7.0 (www.raylib.com)
 *
 *   A simple and easy-to-use library to learn videogames programming
 *
-*   Features:
+*   FEATURES:
 *     Library written in plain C code (C99)
 *     Uses PascalCase/camelCase notation
 *     Hardware accelerated with OpenGL (1.1, 2.1, 3.3 or ES 2.0)
@@ -20,7 +20,13 @@
 *     Minimal external dependencies (GLFW3, OpenGL, OpenAL)
 *     Complete binding for Lua [rlua]
 *
-*   External libs:
+*   NOTES:
+*     32bit Colors - All defined color are always RGBA (struct Color is 4 byte)
+*     One custom default font could be loaded automatically when InitWindow() [core]
+*     If using OpenGL 3.3 or ES2, several vertex buffers (VAO/VBO) are created to manage lines-triangles-quads
+*     If using OpenGL 3.3 or ES2, two default shaders could be loaded automatically (internally defined)
+*
+*   DEPENDENCIES:
 *     GLFW3 (www.glfw.org) for window/context management and input [core]
 *     GLAD for OpenGL extensions loading (3.3 Core profile, only PLATFORM_DESKTOP) [rlgl]
 *     stb_image (Sean Barret) for images loading (JPEG, PNG, BMP, TGA) [textures]
@@ -33,13 +39,8 @@
 *     OpenAL Soft for audio device/context management [audio]
 *     tinfl for data decompression (DEFLATE algorithm) [utils]
 *
-*   Some design decisions:
-*     32bit Colors - All defined color are always RGBA (struct Color is 4 byte)
-*     One custom default font could be loaded automatically when InitWindow() [core]
-*     If using OpenGL 3.3 or ES2, several vertex buffers (VAO/VBO) are created to manage lines-triangles-quads
-*     If using OpenGL 3.3 or ES2, two default shaders could be loaded automatically (internally defined)
 *
-*   -- LICENSE --
+*   LICENSE: zlib/libpng
 *
 *   raylib is licensed under an unmodified zlib/libpng license, which is an OSI-certified,
 *   BSD-like license that allows static linking with closed source software:
@@ -97,13 +98,13 @@
 #define RAD2DEG (180.0f/PI)
 
 // raylib Config Flags
-#define FLAG_FULLSCREEN_MODE    1
-#define FLAG_RESIZABLE_WINDOW   2
-#define FLAG_SHOW_LOGO          4
-#define FLAG_SHOW_MOUSE_CURSOR  8
-#define FLAG_CENTERED_MODE     16
-#define FLAG_MSAA_4X_HINT      32
-#define FLAG_VSYNC_HINT        64
+#define FLAG_SHOW_LOGO              1       // Set to show raylib logo at startup
+#define FLAG_FULLSCREEN_MODE        2       // Set to run program in fullscreen
+#define FLAG_WINDOW_RESIZABLE       4       // Set to allow resizable window
+#define FLAG_WINDOW_DECORATED       8       // Set to show window decoration (frame and buttons)
+#define FLAG_WINDOW_TRANSPARENT    16       // Set to allow transparent window
+#define FLAG_MSAA_4X_HINT          32       // Set to try enabling MSAA 4X
+#define FLAG_VSYNC_HINT            64       // Set to try enabling V-Sync on GPU
 
 // Keyboard Function Keys
 #define KEY_SPACE            32
@@ -592,8 +593,9 @@ typedef enum {
     HMD_FOVE_VR,
 } VrDevice;
 
-// rRES data returned when reading a resource, it contains all required data for user (24 byte)
-typedef struct {
+// rRES data returned when reading a resource, 
+// it contains all required data for user (24 byte)
+typedef struct RRESData {
     unsigned int type;          // Resource type (4 byte)
 
     unsigned int param1;        // Resouce parameter 1 (4 byte)
@@ -604,13 +606,20 @@ typedef struct {
     void *data;                 // Resource data pointer (4 byte)
 } RRESData;
 
-typedef enum {
-    RRES_RAW = 0,
-    RRES_IMAGE,
-    RRES_WAVE,
-    RRES_VERTEX,
-    RRES_TEXT
+// RRESData type
+typedef enum { 
+    RRES_TYPE_RAW = 0, 
+    RRES_TYPE_IMAGE, 
+    RRES_TYPE_WAVE, 
+    RRES_TYPE_VERTEX, 
+    RRES_TYPE_TEXT,
+    RRES_TYPE_FONT_IMAGE,
+    RRES_TYPE_FONT_CHARDATA,    // CharInfo data array
+    RRES_TYPE_DIRECTORY
 } RRESDataType;
+
+// RRES type (pointer to RRESData array)
+typedef struct RRESData *RRES;
 
 #ifdef __cplusplus
 extern "C" {            // Prevents name mangling of functions
@@ -635,6 +644,8 @@ RLAPI bool WindowShouldClose(void);                               // Detect if K
 RLAPI bool IsWindowMinimized(void);                               // Detect if window has been minimized (or lost focus)
 RLAPI void ToggleFullscreen(void);                                // Fullscreen toggle (only PLATFORM_DESKTOP)
 RLAPI void SetWindowIcon(Image image);                            // Set icon for window (only PLATFORM_DESKTOP)
+RLAPI void SetWindowPosition(int x, int y);                       // Set window position on screen (only PLATFORM_DESKTOP)
+RLAPI void SetWindowMonitor(int monitor);                         // Set monitor for the current window (fullscreen mode)
 RLAPI int GetScreenWidth(void);                                   // Get current screen width
 RLAPI int GetScreenHeight(void);                                  // Get current screen height
 
@@ -662,8 +673,8 @@ RLAPI Vector2 GetWorldToScreen(Vector3 position, Camera camera);  // Returns the
 RLAPI Matrix GetCameraMatrix(Camera camera);                      // Returns camera transform matrix (view matrix)
 
 RLAPI void SetTargetFPS(int fps);                                 // Set target FPS (maximum)
-RLAPI int GetFPS(void);                                           // Returns current FPS (rounded value)
-RLAPI float GetFrameTime(void);                                   // Returns time in seconds for one frame (rounded value)
+RLAPI int GetFPS(void);                                           // Returns current FPS
+RLAPI float GetFrameTime(void);                                   // Returns time in seconds for one frame
 
 RLAPI Color GetColor(int hexValue);                               // Returns a Color struct from hexadecimal value
 RLAPI int GetHexValue(Color color);                               // Returns hexadecimal value for a Color
@@ -752,12 +763,14 @@ RLAPI void DrawPixel(int posX, int posY, Color color);                          
 RLAPI void DrawPixelV(Vector2 position, Color color);                                                    // Draw a pixel (Vector version)
 RLAPI void DrawLine(int startPosX, int startPosY, int endPosX, int endPosY, Color color);                // Draw a line
 RLAPI void DrawLineV(Vector2 startPos, Vector2 endPos, Color color);                                     // Draw a line (Vector version)
+RLAPI void DrawLineEx(Vector2 startPos, Vector2 endPos, float thick, Color color);                       // Draw a line defining thickness
 RLAPI void DrawCircle(int centerX, int centerY, float radius, Color color);                              // Draw a color-filled circle
 RLAPI void DrawCircleGradient(int centerX, int centerY, float radius, Color color1, Color color2);       // Draw a gradient-filled circle
 RLAPI void DrawCircleV(Vector2 center, float radius, Color color);                                       // Draw a color-filled circle (Vector version)
 RLAPI void DrawCircleLines(int centerX, int centerY, float radius, Color color);                         // Draw circle outline
 RLAPI void DrawRectangle(int posX, int posY, int width, int height, Color color);                        // Draw a color-filled rectangle
 RLAPI void DrawRectangleRec(Rectangle rec, Color color);                                                 // Draw a color-filled rectangle
+RLAPI void DrawRectanglePro(Rectangle rec, Vector2 origin, float rotation, Color color);                 // Draw a color-filled rectangle with pro parameters
 RLAPI void DrawRectangleGradient(int posX, int posY, int width, int height, Color color1, Color color2); // Draw a gradient-filled rectangle
 RLAPI void DrawRectangleV(Vector2 position, Vector2 size, Color color);                                  // Draw a color-filled rectangle (Vector version)
 RLAPI void DrawRectangleLines(int posX, int posY, int width, int height, Color color);                   // Draw rectangle outline

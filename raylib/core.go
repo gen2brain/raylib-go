@@ -19,13 +19,21 @@ const (
 	Rad2deg = 57.295776
 
 	// Raylib Config Flags
-	FlagFullscreenMode  = 1
-	FlagResizableWindow = 2
-	FlagShowLogo        = 4
-	FlagShowMouseCursor = 8
-	FlagCenteredMode    = 16
-	FlagMsaa4xHint      = 32
-	FlagVsyncHint       = 64
+
+	// Set to show raylib logo at startup
+	FlagShowLogo = 1
+	// Set to run program in fullscreen
+	FlagFullscreenMode = 2
+	// Set to allow resizable window
+	FlagWindowResizable = 4
+	// Set to show window decoration (frame and buttons)
+	FlagWindowDecorated = 8
+	// Set to allow transparent window
+	FlagWindowTransparent = 16
+	// Set to try enabling MSAA 4X
+	FlagMsaa4xHint = 32
+	// Set to try enabling V-Sync on GPU
+	FlagVsyncHint = 64
 
 	// Keyboard Function Keys
 	KeySpace        = 32
@@ -457,6 +465,19 @@ func ToggleFullscreen() {
 func SetWindowIcon(image Image) {
 	cimage := image.cptr()
 	C.SetWindowIcon(*cimage)
+}
+
+// SetWindowPosition - Set window position on screen (only PLATFORM_DESKTOP)
+func SetWindowPosition(x, y int32) {
+	cx := (C.int)(x)
+	cy := (C.int)(y)
+	C.SetWindowPosition(cx, cy)
+}
+
+// SetWindowMonitor - Set monitor for the current window (fullscreen mode)
+func SetWindowMonitor(monitor int32) {
+	cmonitor := (C.int)(monitor)
+	C.SetWindowMonitor(cmonitor)
 }
 
 // GetScreenWidth - Get current screen width

@@ -40,6 +40,15 @@ func DrawLineV(startPos Vector2, endPos Vector2, color Color) {
 	C.DrawLineV(*cstartPos, *cendPos, *ccolor)
 }
 
+// DrawLineEx - Draw a line defining thickness
+func DrawLineEx(startPos Vector2, endPos Vector2, thick float32, color Color) {
+	cstartPos := startPos.cptr()
+	cendPos := endPos.cptr()
+	cthick := (C.float)(thick)
+	ccolor := color.cptr()
+	C.DrawLineEx(*cstartPos, *cendPos, cthick, *ccolor)
+}
+
 // DrawCircle - Draw a color-filled circle
 func DrawCircle(centerX int32, centerY int32, radius float32, color Color) {
 	ccenterX := (C.int)(centerX)
@@ -91,6 +100,15 @@ func DrawRectangleRec(rec Rectangle, color Color) {
 	crec := rec.cptr()
 	ccolor := color.cptr()
 	C.DrawRectangleRec(*crec, *ccolor)
+}
+
+// DrawRectanglePro - Draw a color-filled rectangle with pro parameters
+func DrawRectanglePro(rec Rectangle, origin Vector2, rotation float32, color Color) {
+	crec := rec.cptr()
+	corigin := origin.cptr()
+	crotation := (C.float)(rotation)
+	ccolor := color.cptr()
+	C.DrawRectanglePro(*crec, *corigin, crotation, *ccolor)
 }
 
 // DrawRectangleGradient - Draw a gradient-filled rectangle

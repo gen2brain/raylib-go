@@ -1,6 +1,8 @@
 package raylib
 
 /*
+#include "external/stb_vorbis.c"
+
 #include "raylib.h"
 #include <stdlib.h>
 */

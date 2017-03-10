@@ -1,27 +1,46 @@
 /**********************************************************************************************
 *
-*   raylib.core
-*
-*   Basic functions to manage windows, OpenGL context and input on multiple platforms
+*   raylib.core - Basic functions to manage windows, OpenGL context and input on multiple platforms
 *
 *   The following platforms are supported: Windows, Linux, Mac (OSX), Android, Raspberry Pi, HTML5, Oculus Rift CV1
 *
-*   External libs:
+*   CONFIGURATION:
+*
+*   #define PLATFORM_DESKTOP
+*       Windowing and input system configured for desktop platforms: Windows, Linux, OSX (managed by GLFW3 library)
+*       NOTE: Oculus Rift CV1 requires PLATFORM_DESKTOP for mirror rendering - View [rlgl] module to enable it
+*
+*   #define PLATFORM_ANDROID
+*       Windowing and input system configured for Android device, app activity managed internally in this module.
+*       NOTE: OpenGL ES 2.0 is required and graphic device is managed by EGL
+*
+*   #define PLATFORM_RPI
+*       Windowing and input system configured for Raspberry Pi (tested on Raspbian), graphic device is managed by EGL 
+*       and inputs are processed is raw mode, reading from /dev/input/
+*
+*   #define PLATFORM_WEB
+*       Windowing and input system configured for HTML5 (run on browser), code converted from C to asm.js
+*       using emscripten compiler. OpenGL ES 2.0 required for direct translation to WebGL equivalent code.
+*
+*   #define LOAD_DEFAULT_FONT (defined by default)
+*       Default font is loaded on window initialization to be available for the user to render simple text.
+*       NOTE: If enabled, uses external module functions to load default raylib font (module: text)
+*
+*   #define INCLUDE_CAMERA_SYSTEM / SUPPORT_CAMERA_SYSTEM
+*
+*   #define INCLUDE_GESTURES_SYSTEM / SUPPORT_GESTURES_SYSTEM
+*
+*   #define SUPPORT_MOUSE_GESTURES
+*       Mouse gestures are directly mapped like touches and processed by gestures system.
+*
+*   DEPENDENCIES:
 *       GLFW3    - Manage graphic device, OpenGL context and inputs on PLATFORM_DESKTOP (Windows, Linux, OSX)
 *       raymath  - 3D math functionality (Vector3, Matrix, Quaternion)
 *       camera   - Multiple 3D camera modes (free, orbital, 1st person, 3rd person)
 *       gestures - Gestures system for touch-ready devices (or simulated from mouse inputs)
 *
-*   Module Configuration Flags:
-*       PLATFORM_DESKTOP     - Windows, Linux, Mac (OSX)
-*       PLATFORM_ANDROID     - Android (only OpenGL ES 2.0 devices), graphic device is managed by EGL and input system by Android activity.
-*       PLATFORM_RPI         - Rapsberry Pi (tested on Raspbian), graphic device is managed by EGL and input system is coded in raw mode.
-*       PLATFORM_WEB         - HTML5 (using emscripten compiler)
 *
-*       RL_LOAD_DEFAULT_FONT - Use external module functions to load default raylib font (module: text)
-*
-*   NOTE: Oculus Rift CV1 requires PLATFORM_DESKTOP for render mirror - View [rlgl] module to enable it
-*
+*   LICENSE: zlib/libpng
 *
 *   Copyright (c) 2014-2016 Ramon Santamaria (@raysan5)
 *
@@ -69,6 +88,8 @@
 
 #if defined __linux || defined(PLATFORM_WEB)
     #include <sys/time.h>           // Required for: timespec, nanosleep(), select() - POSIX
+#elif defined __APPLE__
+    #include <unistd.h>             // Required for: usleep()
 #endif
 
 #if defined(PLATFORM_DESKTOP) || defined(PLATFORM_WEB)
@@ -140,7 +161,7 @@
 #define MAX_GAMEPAD_BUTTONS       32        // Max bumber of buttons supported (per gamepad)
 #define MAX_GAMEPAD_AXIS          8         // Max number of axis supported (per gamepad)
 
-#define RL_LOAD_DEFAULT_FONT        // Load default font on window initialization (module: text)
+#define LOAD_DEFAULT_FONT        // Load default font on window initialization (module: text)
 
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
@@ -256,7 +277,7 @@ static bool showLogo = false;               // Track if showing logo at init is 
 //----------------------------------------------------------------------------------
 // Other Modules Functions Declaration (required by core)
 //----------------------------------------------------------------------------------
-#if defined(RL_LOAD_DEFAULT_FONT)
+#if defined(LOAD_DEFAULT_FONT)
 extern void LoadDefaultFont(void);          // [Module: text] Loads default font on InitWindow()
 extern void UnloadDefaultFont(void);        // [Module: text] Unloads default font from GPU memory
 #endif
@@ -268,7 +289,7 @@ static void InitGraphicsDevice(int width, int height);  // Initialize graphics d
 static void SetupFramebufferSize(int displayWidth, int displayHeight);
 static void InitTimer(void);                            // Initialize timer
 static double GetTime(void);                            // Returns time since InitTimer() was run
-static void Wait(int ms);                               // Wait for some milliseconds (stop program execution)
+static void Wait(float ms);                             // Wait for some milliseconds (stop program execution)
 static bool GetKeyStatus(int key);                      // Returns if a key has been pressed
 static bool GetMouseButtonStatus(int button);           // Returns if a mouse button has been pressed
 static void PollInputEvents(void);                      // Register user events
@@ -320,7 +341,7 @@ static void *GamepadThread(void *arg);                  // Mouse reading thread
 
 #if defined(_WIN32)
     // NOTE: We include Sleep() function signature here to avoid windows.h inclusion
-    void __stdcall Sleep(unsigned long msTimeout);      // Required for Delay()
+    void __stdcall Sleep(unsigned long msTimeout);      // Required for Wait()
 #endif
 
 //----------------------------------------------------------------------------------
@@ -338,7 +359,7 @@ void InitWindow(int width, int height, const char *title)
     // Init graphics device (display device and OpenGL context)
     InitGraphicsDevice(width, height);
 
-#if defined(RL_LOAD_DEFAULT_FONT)
+#if defined(LOAD_DEFAULT_FONT)
     // Load default font
     // NOTE: External function (defined in module: text)
     LoadDefaultFont();
@@ -450,7 +471,7 @@ void InitWindow(int width, int height, void *state)
 // Close Window and Terminate Context
 void CloseWindow(void)
 {
-#if defined(RL_LOAD_DEFAULT_FONT)
+#if defined(LOAD_DEFAULT_FONT)
     UnloadDefaultFont();
 #endif
 
@@ -559,6 +580,30 @@ void SetWindowIcon(Image image)
 #endif
 }
 
+// Set window position on screen (windowed mode)
+void SetWindowPosition(int x, int y)
+{
+#if defined(PLATFORM_DESKTOP)
+    glfwSetWindowPos(window, x, y);
+#endif
+}
+
+// Set monitor for the current window (fullscreen mode)
+void SetWindowMonitor(int monitor)
+{
+#if defined(PLATFORM_DESKTOP)
+    int monitorCount;
+    GLFWmonitor** monitors = glfwGetMonitors(&monitorCount);
+    
+    if ((monitor >= 0) && (monitor < monitorCount)) 
+    {
+        glfwSetWindowMonitor(window, monitors[monitor], 0, 0, screenWidth, screenHeight, GLFW_DONT_CARE);
+        TraceLog(INFO, "Selected fullscreen monitor: [%i] %s", monitor, glfwGetMonitorName(monitors[monitor]));
+    }
+    else TraceLog(WARNING, "Selected monitor not found");
+#endif
+}
+
 // Get current screen width
 int GetScreenWidth(void)
 {
@@ -664,19 +709,19 @@ void EndDrawing(void)
     currentTime = GetTime();
     drawTime = currentTime - previousTime;
     previousTime = currentTime;
-
+    
     frameTime = updateTime + drawTime;
 
     // Wait for some milliseconds...
     if (frameTime < targetTime)
     {
-        Wait((int)((targetTime - frameTime)*1000));
+        Wait((targetTime - frameTime)*1000.0f);
 
         currentTime = GetTime();
         double extraTime = currentTime - previousTime;
         previousTime = currentTime;
 
-        frameTime = updateTime + drawTime + extraTime;
+        frameTime += extraTime;
     }
 }
 
@@ -812,14 +857,14 @@ void SetTargetFPS(int fps)
 // Returns current FPS
 int GetFPS(void)
 {
-    return (int)floorf(1.0f/GetFrameTime());
+    return (int)(1.0f/GetFrameTime());
 }
 
 // Returns time in seconds for one frame
 float GetFrameTime(void)
 {
     // NOTE: We round value to milliseconds
-    return (roundf(frameTime*1000.0)/1000.0f);
+    return (float)frameTime;
 }
 
 // Converts Color to float array and normalizes
@@ -1084,16 +1129,16 @@ Ray GetMouseRay(Vector2 mousePosition, Camera camera)
     MatrixInvert(&matProjView);
 
     // Calculate far and near points
-    Quaternion near = { deviceCoords.x, deviceCoords.y, 0.0f, 1.0f };
-    Quaternion far = { deviceCoords.x, deviceCoords.y, 1.0f, 1.0f };
+    Quaternion qNear = { deviceCoords.x, deviceCoords.y, 0.0f, 1.0f };
+    Quaternion qFar = { deviceCoords.x, deviceCoords.y, 1.0f, 1.0f };
 
     // Multiply points by unproject matrix
-    QuaternionTransform(&near, matProjView);
-    QuaternionTransform(&far, matProjView);
+    QuaternionTransform(&qNear, matProjView);
+    QuaternionTransform(&qFar, matProjView);
 
     // Calculate normalized world points in vectors
-    Vector3 nearPoint = { near.x/near.w, near.y/near.w, near.z/near.w};
-    Vector3 farPoint = { far.x/far.w, far.y/far.w, far.z/far.w};
+    Vector3 nearPoint = { qNear.x/qNear.w, qNear.y/qNear.w, qNear.z/qNear.w};
+    Vector3 farPoint = { qFar.x/qFar.w, qFar.y/qFar.w, qFar.z/qFar.w};
 #endif
 
     // Calculate normalized direction vector
@@ -1517,13 +1562,23 @@ static void InitGraphicsDevice(int width, int height)
 
     glfwDefaultWindowHints();                       // Set default windows hints
 
-    if (configFlags & FLAG_RESIZABLE_WINDOW)
-    {
-        glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);    // Resizable window
-    }
+    // Check some Window creation flags
+    if (configFlags & FLAG_WINDOW_RESIZABLE) glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);   // Resizable window
     else glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);  // Avoid window being resizable
 
-    //glfwWindowHint(GLFW_DECORATED, GL_TRUE);      // Border and buttons on Window
+    if (configFlags & FLAG_WINDOW_DECORATED) glfwWindowHint(GLFW_DECORATED, GL_TRUE);   // Border and buttons on Window
+    
+    if (configFlags & FLAG_WINDOW_TRANSPARENT)
+    {
+        // TODO: Enable transparent window (not ready yet on GLFW 3.2)
+    }
+
+    if (configFlags & FLAG_MSAA_4X_HINT)
+    {
+        glfwWindowHint(GLFW_SAMPLES, 4);            // Enables multisampling x4 (MSAA), default is 0
+        TraceLog(INFO, "Trying to enable MSAA x4");
+    }
+    
     //glfwWindowHint(GLFW_RED_BITS, 8);             // Framebuffer red color component bits
     //glfwWindowHint(GLFW_DEPTH_BITS, 16);          // Depthbuffer bits (24 by default)
     //glfwWindowHint(GLFW_REFRESH_RATE, 0);         // Refresh rate for fullscreen window
@@ -1532,13 +1587,7 @@ static void InitGraphicsDevice(int width, int height)
 
     // NOTE: When asking for an OpenGL context version, most drivers provide highest supported version
     // with forward compatibility to older OpenGL versions.
-    // For example, if using OpenGL 1.1, driver can provide a 3.3 context fordward compatible.
-
-    if (configFlags & FLAG_MSAA_4X_HINT)
-    {
-        glfwWindowHint(GLFW_SAMPLES, 4);            // Enables multisampling x4 (MSAA), default is 0
-        TraceLog(INFO, "Trying to enable MSAA x4");
-    }
+    // For example, if using OpenGL 1.1, driver can provide a 4.3 context forward compatible.
 
     // Check selection OpenGL version
     if (rlGetVersion() == OPENGL_21)
@@ -1645,7 +1694,10 @@ static void InitGraphicsDevice(int width, int height)
 #endif
 
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(0);                // Disable VSync by default
+    
+    // Try to disable GPU V-Sync by default, set framerate using SetTargetFPS()
+    // NOTE: V-Sync can be enabled by graphic driver configuration
+    glfwSwapInterval(0);                
 
 #if defined(PLATFORM_DESKTOP)
     // Load OpenGL 3.3 extensions
@@ -1653,9 +1705,8 @@ static void InitGraphicsDevice(int width, int height)
     rlglLoadExtensions(glfwGetProcAddress);
 #endif
 
-    // Enables GPU v-sync, so frames are not limited to screen refresh rate (60Hz -> 60 FPS)
-    // If not set, swap interval uses GPU v-sync configuration
-    // Framerate can be setup using SetTargetFPS()
+    // Try to enable GPU V-Sync, so frames are limited to screen refresh rate (60Hz -> 60 FPS)
+    // NOTE: V-Sync can be enabled by graphic driver configuration
     if (configFlags & FLAG_VSYNC_HINT)
     {
         glfwSwapInterval(1);
@@ -1958,27 +2009,30 @@ static double GetTime(void)
 }
 
 // Wait for some milliseconds (stop program execution)
-static void Wait(int ms)
+static void Wait(float ms)
 {
-#if defined _WIN32
-    Sleep(ms);
-#elif defined __linux || defined(PLATFORM_WEB)
-    struct timespec req = { 0 };
-    time_t sec = (int)(ms/1000);
-    ms -= (sec*1000);
-    req.tv_sec=sec;
-    req.tv_nsec=ms*1000000L;
-
-    // NOTE: Use nanosleep() on Unix platforms... usleep() it's deprecated.
-    while (nanosleep(&req,&req) == -1) continue;
-//#elif defined __APPLE__
-    // TODO:
-#else
+//#define SUPPORT_BUSY_WAIT_LOOP
+#if defined(SUPPORT_BUSY_WAIT_LOOP)
     double prevTime = GetTime();
     double nextTime = 0.0;
 
     // Busy wait loop
-    while ((nextTime - prevTime) < (double)ms/1000.0) nextTime = GetTime();
+    while ((nextTime - prevTime) < ms/1000.0f) nextTime = GetTime();
+#else
+    #if defined _WIN32
+        Sleep(ms);
+    #elif defined __linux || defined(PLATFORM_WEB)
+        struct timespec req = { 0 };
+        time_t sec = (int)(ms/1000.0f);
+        ms -= (sec*1000);
+        req.tv_sec = sec;
+        req.tv_nsec = ms*1000000L;
+
+        // NOTE: Use nanosleep() on Unix platforms... usleep() it's deprecated.
+        while (nanosleep(&req, &req) == -1) continue;
+    #elif defined __APPLE__
+        usleep(ms*1000.0f);
+    #endif
 #endif
 }
 
@@ -2410,7 +2464,7 @@ static void AndroidCommandCallback(struct android_app *app, int32_t cmd)
                     // Init graphics device (display device and OpenGL context)
                     InitGraphicsDevice(screenWidth, screenHeight);
 
-                    #if defined(RL_LOAD_DEFAULT_FONT)
+                    #if defined(LOAD_DEFAULT_FONT)
                     // Load default font
                     // NOTE: External function (defined in module: text)
                     LoadDefaultFont();
