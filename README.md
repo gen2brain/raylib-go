@@ -14,8 +14,8 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
     apt-get install libopenal-dev libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev
 
 ##### Fedora
-    
-    dnf install openal-soft-devel mesa-libGL-devel libXi-devel
+
+    dnf install openal-soft-devel mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel
 
 ##### OS X
 
@@ -23,7 +23,7 @@ On OS X system OpenAL framework is used.
 
 ##### Windows ([MSYS2](https://msys2.github.io/))
 
-    pacman -S mingw-w64-x86_64-openal mingw-w64-x86_64-gcc mingw-w64-x86_64-go git 
+    pacman -S mingw-w64-x86_64-openal mingw-w64-x86_64-gcc mingw-w64-x86_64-go git
 
 ##### Android
 
