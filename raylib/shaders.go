@@ -182,27 +182,20 @@ func EndBlendMode() {
 	C.EndBlendMode()
 }
 
-// InitVrDevice - Init VR device
-func InitVrDevice(vdDevice VrDevice) {
+// InitVrSimulator - Init VR simulator for selected device
+func InitVrSimulator(vdDevice VrDevice) {
 	cvdDevice := (C.int)(vdDevice)
-	C.InitVrDevice(cvdDevice)
+	C.InitVrSimulator(cvdDevice)
 }
 
-// CloseVrDevice - Close VR device
-func CloseVrDevice() {
-	C.CloseVrDevice()
+// CloseVrSimulator - Close VR simulator for current device
+func CloseVrSimulator() {
+	C.CloseVrSimulator()
 }
 
-// IsVrDeviceReady - Detect if VR device is ready
-func IsVrDeviceReady() bool {
-	ret := C.IsVrDeviceReady()
-	v := bool(int(ret) == 1)
-	return v
-}
-
-// IsVrSimulator - Detect if VR simulator is running
-func IsVrSimulator() bool {
-	ret := C.IsVrSimulator()
+// IsVrSimulatorReady - Detect if VR simulator is ready
+func IsVrSimulatorReady() bool {
+	ret := C.IsVrSimulatorReady()
 	v := bool(int(ret) == 1)
 	return v
 }
@@ -216,4 +209,14 @@ func UpdateVrTracking(camera *Camera) {
 // ToggleVrMode - Enable/Disable VR experience (device or simulator)
 func ToggleVrMode() {
 	C.ToggleVrMode()
+}
+
+// BeginVrDrawing - Begin VR simulator stereo rendering
+func BeginVrDrawing() {
+	C.BeginVrDrawing()
+}
+
+// EndVrDrawing - End VR simulator stereo rendering
+func EndVrDrawing() {
+	C.EndVrDrawing()
 }

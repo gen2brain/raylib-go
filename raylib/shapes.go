@@ -49,6 +49,15 @@ func DrawLineEx(startPos Vector2, endPos Vector2, thick float32, color Color) {
 	C.DrawLineEx(*cstartPos, *cendPos, cthick, *ccolor)
 }
 
+// DrawLineBezier - Draw a line using cubic-bezier curves in-out
+func DrawLineBezier(startPos Vector2, endPos Vector2, thick float32, color Color) {
+	cstartPos := startPos.cptr()
+	cendPos := endPos.cptr()
+	cthick := (C.float)(thick)
+	ccolor := color.cptr()
+	C.DrawLineBezier(*cstartPos, *cendPos, cthick, *ccolor)
+}
+
 // DrawCircle - Draw a color-filled circle
 func DrawCircle(centerX int32, centerY int32, radius float32, color Color) {
 	ccenterX := (C.int)(centerX)

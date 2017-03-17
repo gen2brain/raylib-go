@@ -22,7 +22,7 @@ func SetDebug(enabled bool) {
 	traceDebugMsgs = enabled
 }
 
-// TraceLog - Trace log
+// TraceLog - Trace log messages showing (INFO, WARNING, ERROR, DEBUG)
 func TraceLog(msgType int, text string, v ...interface{}) {
 	switch msgType {
 	case LogInfo:
