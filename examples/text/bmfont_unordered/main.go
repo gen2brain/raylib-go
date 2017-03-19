@@ -27,10 +27,10 @@ func main() {
 		raylib.ClearBackground(raylib.RayWhite)
 
 		raylib.DrawText("Font name:       PixAntiqua", 40, 50, 20, raylib.Gray)
-		raylib.DrawText(fmt.Sprintf("Font base size:           %d", font.Size), 40, 80, 20, raylib.Gray)
-		raylib.DrawText(fmt.Sprintf("Font chars number:     %d", font.NumChars), 40, 110, 20, raylib.Gray)
+		raylib.DrawText(fmt.Sprintf("Font base size:           %d", font.BaseSize), 40, 80, 20, raylib.Gray)
+		raylib.DrawText(fmt.Sprintf("Font chars number:     %d", font.CharsCount), 40, 110, 20, raylib.Gray)
 
-		raylib.DrawTextEx(font, msg, raylib.NewVector2(40, 180), float32(font.Size), 0, raylib.Maroon)
+		raylib.DrawTextEx(font, msg, raylib.NewVector2(40, 180), float32(font.BaseSize), 0, raylib.Maroon)
 
 		raylib.EndDrawing()
 	}

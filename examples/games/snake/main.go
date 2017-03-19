@@ -9,6 +9,7 @@ const (
 	squareSize  = 31
 )
 
+// Snake type
 type Snake struct {
 	Position raylib.Vector2
 	Size     raylib.Vector2
@@ -16,6 +17,7 @@ type Snake struct {
 	Color    raylib.Color
 }
 
+// Food type
 type Food struct {
 	Position raylib.Vector2
 	Size     raylib.Vector2
@@ -23,6 +25,7 @@ type Food struct {
 	Color    raylib.Color
 }
 
+// Game type
 type Game struct {
 	ScreenWidth  int32
 	ScreenHeight int32
@@ -56,7 +59,7 @@ func main() {
 	raylib.CloseWindow()
 }
 
-// Initialize game
+// Init - Initialize game
 func (g *Game) Init() {
 	g.ScreenWidth = 800
 	g.ScreenHeight = 450
@@ -97,7 +100,7 @@ func (g *Game) Init() {
 	g.Fruit.Active = false
 }
 
-// Update game
+// Update - Update game
 func (g *Game) Update() {
 	if !g.GameOver {
 		if raylib.IsKeyPressed('P') {
@@ -192,7 +195,7 @@ func (g *Game) Update() {
 	}
 }
 
-// Draw game
+// Draw - Draw game
 func (g *Game) Draw() {
 	raylib.BeginDrawing()
 

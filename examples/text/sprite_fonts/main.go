@@ -21,14 +21,14 @@ func main() {
 
 	var fontPosition1, fontPosition2, fontPosition3 raylib.Vector2
 
-	fontPosition1.X = float32(screenWidth)/2 - raylib.MeasureTextEx(font1, msg1, float32(font1.Size), -3).X/2
-	fontPosition1.Y = float32(screenHeight)/2 - float32(font1.Size)/2 - 80
+	fontPosition1.X = float32(screenWidth)/2 - raylib.MeasureTextEx(font1, msg1, float32(font1.BaseSize), -3).X/2
+	fontPosition1.Y = float32(screenHeight)/2 - float32(font1.BaseSize)/2 - 80
 
-	fontPosition2.X = float32(screenWidth)/2 - raylib.MeasureTextEx(font2, msg2, float32(font2.Size), -2).X/2
-	fontPosition2.Y = float32(screenHeight)/2 - float32(font2.Size)/2 - 10
+	fontPosition2.X = float32(screenWidth)/2 - raylib.MeasureTextEx(font2, msg2, float32(font2.BaseSize), -2).X/2
+	fontPosition2.Y = float32(screenHeight)/2 - float32(font2.BaseSize)/2 - 10
 
-	fontPosition3.X = float32(screenWidth)/2 - raylib.MeasureTextEx(font3, msg3, float32(font3.Size), 2).X/2
-	fontPosition3.Y = float32(screenHeight)/2 - float32(font3.Size)/2 + 50
+	fontPosition3.X = float32(screenWidth)/2 - raylib.MeasureTextEx(font3, msg3, float32(font3.BaseSize), 2).X/2
+	fontPosition3.Y = float32(screenHeight)/2 - float32(font3.BaseSize)/2 + 50
 
 	raylib.SetTargetFPS(60)
 
@@ -37,9 +37,9 @@ func main() {
 
 		raylib.ClearBackground(raylib.RayWhite)
 
-		raylib.DrawTextEx(font1, msg1, fontPosition1, float32(font1.Size), -3, raylib.White)
-		raylib.DrawTextEx(font2, msg2, fontPosition2, float32(font2.Size), -2, raylib.White)
-		raylib.DrawTextEx(font3, msg3, fontPosition3, float32(font3.Size), 2, raylib.White)
+		raylib.DrawTextEx(font1, msg1, fontPosition1, float32(font1.BaseSize), -3, raylib.White)
+		raylib.DrawTextEx(font2, msg2, fontPosition2, float32(font2.BaseSize), -2, raylib.White)
+		raylib.DrawTextEx(font3, msg3, fontPosition3, float32(font3.BaseSize), 2, raylib.White)
 
 		raylib.EndDrawing()
 	}

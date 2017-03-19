@@ -1,4 +1,4 @@
-// Some useful functions to work with Vector3, Matrix and Quaternions
+// Package raymath - Some useful functions to work with Vector3, Matrix and Quaternions
 package raymath
 
 import (
@@ -7,7 +7,7 @@ import (
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
-// Add two vectors
+// VectorAdd - Add two vectors
 func VectorAdd(v1, v2 raylib.Vector3) raylib.Vector3 {
 	result := raylib.Vector3{}
 
@@ -18,7 +18,7 @@ func VectorAdd(v1, v2 raylib.Vector3) raylib.Vector3 {
 	return result
 }
 
-// Subtract two vectors
+// VectorSubtract - Subtract two vectors
 func VectorSubtract(v1, v2 raylib.Vector3) raylib.Vector3 {
 	result := raylib.Vector3{}
 
@@ -29,7 +29,7 @@ func VectorSubtract(v1, v2 raylib.Vector3) raylib.Vector3 {
 	return result
 }
 
-// Calculate two vectors cross product
+// VectorCrossProduct - Calculate two vectors cross product
 func VectorCrossProduct(v1, v2 raylib.Vector3) raylib.Vector3 {
 	result := raylib.Vector3{}
 
@@ -40,7 +40,7 @@ func VectorCrossProduct(v1, v2 raylib.Vector3) raylib.Vector3 {
 	return result
 }
 
-// Calculate one vector perpendicular vector
+// VectorPerpendicular - Calculate one vector perpendicular vector
 func VectorPerpendicular(v raylib.Vector3) raylib.Vector3 {
 	result := raylib.Vector3{}
 
@@ -61,31 +61,31 @@ func VectorPerpendicular(v raylib.Vector3) raylib.Vector3 {
 	return result
 }
 
-// Calculate two vectors dot product
+// VectorDotProduct - Calculate two vectors dot product
 func VectorDotProduct(v1, v2 raylib.Vector3) float32 {
 	return v1.X*v2.X + v1.Y*v2.Y + v1.Z*v2.Z
 }
 
-// Calculate vector length
+// VectorLength - Calculate vector length
 func VectorLength(v raylib.Vector3) float32 {
 	return float32(math.Sqrt(float64(v.X*v.X + v.Y*v.Y + v.Z*v.Z)))
 }
 
-// Scale provided vector
+// VectorScale - Scale provided vector
 func VectorScale(v *raylib.Vector3, scale float32) {
 	v.X *= scale
 	v.Y *= scale
 	v.Z *= scale
 }
 
-// Negate provided vector (invert direction)
+// VectorNegate - Negate provided vector (invert direction)
 func VectorNegate(v *raylib.Vector3) {
 	v.X = -v.X
 	v.Y = -v.Y
 	v.Z = -v.Z
 }
 
-// Normalize provided vector
+// VectorNormalize - Normalize provided vector
 func VectorNormalize(v *raylib.Vector3) {
 	var length, ilength float32
 
@@ -102,7 +102,7 @@ func VectorNormalize(v *raylib.Vector3) {
 	v.Z *= ilength
 }
 
-// Calculate distance between two points
+// VectorDistance - Calculate distance between two points
 func VectorDistance(v1, v2 raylib.Vector3) float32 {
 	var result float32
 
@@ -115,7 +115,7 @@ func VectorDistance(v1, v2 raylib.Vector3) float32 {
 	return result
 }
 
-// Calculate linear interpolation between two vectors
+// VectorLerp - Calculate linear interpolation between two vectors
 func VectorLerp(v1, v2 raylib.Vector3, amount float32) raylib.Vector3 {
 	result := raylib.Vector3{}
 
@@ -126,7 +126,7 @@ func VectorLerp(v1, v2 raylib.Vector3, amount float32) raylib.Vector3 {
 	return result
 }
 
-// Calculate reflected vector to normal
+// VectorReflect - Calculate reflected vector to normal
 func VectorReflect(vector, normal raylib.Vector3) raylib.Vector3 {
 	// I is the original vector
 	// N is the normal of the incident plane
@@ -143,7 +143,7 @@ func VectorReflect(vector, normal raylib.Vector3) raylib.Vector3 {
 	return result
 }
 
-// Transforms a Vector3 by a given Matrix
+// VectorTransform - Transforms a Vector3 by a given Matrix
 func VectorTransform(v *raylib.Vector3, mat raylib.Matrix) {
 	x := v.X
 	y := v.Y
@@ -154,12 +154,12 @@ func VectorTransform(v *raylib.Vector3, mat raylib.Matrix) {
 	v.Z = mat.M2*x + mat.M6*y + mat.M10*z + mat.M14
 }
 
-// Return a Vector3 init to zero
+// VectorZero - Return a Vector3 init to zero
 func VectorZero() raylib.Vector3 {
 	return raylib.NewVector3(0.0, 0.0, 0.0)
 }
 
-// Return min value for each pair of components
+// VectorMin - Return min value for each pair of components
 func VectorMin(vec1, vec2 raylib.Vector3) raylib.Vector3 {
 	result := raylib.Vector3{}
 
@@ -170,7 +170,7 @@ func VectorMin(vec1, vec2 raylib.Vector3) raylib.Vector3 {
 	return result
 }
 
-// Return max value for each pair of components
+// VectorMax - Return max value for each pair of components
 func VectorMax(vec1, vec2 raylib.Vector3) raylib.Vector3 {
 	result := raylib.Vector3{}
 
@@ -181,7 +181,7 @@ func VectorMax(vec1, vec2 raylib.Vector3) raylib.Vector3 {
 	return result
 }
 
-// Compute matrix determinant
+// MatrixDeterminant - Compute matrix determinant
 func MatrixDeterminant(mat raylib.Matrix) float32 {
 	var result float32
 
@@ -212,12 +212,12 @@ func MatrixDeterminant(mat raylib.Matrix) float32 {
 	return result
 }
 
-// Returns the trace of the matrix (sum of the values along the diagonal)
+// MatrixTrace - Returns the trace of the matrix (sum of the values along the diagonal)
 func MatrixTrace(mat raylib.Matrix) float32 {
 	return mat.M0 + mat.M5 + mat.M10 + mat.M15
 }
 
-// Transposes provided matrix
+// MatrixTranspose - Transposes provided matrix
 func MatrixTranspose(mat *raylib.Matrix) {
 	var temp raylib.Matrix
 
@@ -241,7 +241,7 @@ func MatrixTranspose(mat *raylib.Matrix) {
 	mat = &temp
 }
 
-// Invert provided matrix
+// MatrixInvert - Invert provided matrix
 func MatrixInvert(mat *raylib.Matrix) {
 	var temp raylib.Matrix
 
@@ -298,7 +298,7 @@ func MatrixInvert(mat *raylib.Matrix) {
 	mat = &temp
 }
 
-// Normalize provided matrix
+// MatrixNormalize - Normalize provided matrix
 func MatrixNormalize(mat *raylib.Matrix) {
 	det := MatrixDeterminant(*mat)
 
@@ -320,7 +320,7 @@ func MatrixNormalize(mat *raylib.Matrix) {
 	mat.M15 /= det
 }
 
-// Returns identity matrix
+// MatrixIdentity - Returns identity matrix
 func MatrixIdentity() raylib.Matrix {
 	return raylib.NewMatrix(
 		1.0, 0.0, 0.0, 0.0,
@@ -329,7 +329,7 @@ func MatrixIdentity() raylib.Matrix {
 		0.0, 0.0, 0.0, 1.0)
 }
 
-// Add two matrices
+// MatrixAdd - Add two matrices
 func MatrixAdd(left, right raylib.Matrix) raylib.Matrix {
 	result := MatrixIdentity()
 
@@ -353,7 +353,7 @@ func MatrixAdd(left, right raylib.Matrix) raylib.Matrix {
 	return result
 }
 
-// Subtract two matrices (left - right)
+// MatrixSubtract - Subtract two matrices (left - right)
 func MatrixSubtract(left, right raylib.Matrix) raylib.Matrix {
 	result := MatrixIdentity()
 
@@ -377,7 +377,7 @@ func MatrixSubtract(left, right raylib.Matrix) raylib.Matrix {
 	return result
 }
 
-// Returns translation matrix
+// MatrixTranslate - Returns translation matrix
 func MatrixTranslate(x, y, z float32) raylib.Matrix {
 	return raylib.NewMatrix(
 		1.0, 0.0, 0.0, 0.0,
@@ -386,7 +386,7 @@ func MatrixTranslate(x, y, z float32) raylib.Matrix {
 		x, y, z, 1.0)
 }
 
-// Returns rotation matrix for an angle around an specified axis (angle in radians)
+// MatrixRotate - Returns rotation matrix for an angle around an specified axis (angle in radians)
 func MatrixRotate(axis raylib.Vector3, angle float32) raylib.Matrix {
 	var result raylib.Matrix
 
@@ -455,7 +455,7 @@ func MatrixRotate(axis raylib.Vector3, angle float32) raylib.Matrix {
 	return result
 }
 
-// Returns x-rotation matrix (angle in radians)
+// MatrixRotateX - Returns x-rotation matrix (angle in radians)
 func MatrixRotateX(angle float32) raylib.Matrix {
 	result := MatrixIdentity()
 
@@ -470,7 +470,7 @@ func MatrixRotateX(angle float32) raylib.Matrix {
 	return result
 }
 
-// Returns y-rotation matrix (angle in radians)
+// MatrixRotateY - Returns y-rotation matrix (angle in radians)
 func MatrixRotateY(angle float32) raylib.Matrix {
 	result := MatrixIdentity()
 
@@ -485,7 +485,7 @@ func MatrixRotateY(angle float32) raylib.Matrix {
 	return result
 }
 
-// Returns z-rotation matrix (angle in radians)
+// MatrixRotateZ - Returns z-rotation matrix (angle in radians)
 func MatrixRotateZ(angle float32) raylib.Matrix {
 	result := MatrixIdentity()
 
@@ -500,7 +500,7 @@ func MatrixRotateZ(angle float32) raylib.Matrix {
 	return result
 }
 
-// Returns scaling matrix
+// MatrixScale - Returns scaling matrix
 func MatrixScale(x, y, z float32) raylib.Matrix {
 	result := raylib.NewMatrix(
 		x, 0.0, 0.0, 0.0,
@@ -511,7 +511,7 @@ func MatrixScale(x, y, z float32) raylib.Matrix {
 	return result
 }
 
-// Returns two matrix multiplication
+// MatrixMultiply - Returns two matrix multiplication
 func MatrixMultiply(left, right raylib.Matrix) raylib.Matrix {
 	var result raylib.Matrix
 
@@ -535,7 +535,7 @@ func MatrixMultiply(left, right raylib.Matrix) raylib.Matrix {
 	return result
 }
 
-// Returns perspective projection matrix
+// MatrixFrustum - Returns perspective projection matrix
 func MatrixFrustum(left, right, bottom, top, near, far float32) raylib.Matrix {
 	var result raylib.Matrix
 
@@ -566,7 +566,7 @@ func MatrixFrustum(left, right, bottom, top, near, far float32) raylib.Matrix {
 	return result
 }
 
-// Returns perspective projection matrix
+// MatrixPerspective - Returns perspective projection matrix
 func MatrixPerspective(fovy, aspect, near, far float32) raylib.Matrix {
 	top := near * float32(math.Tan(float64(fovy*raylib.Pi)/360.0))
 	right := top * aspect
@@ -574,7 +574,7 @@ func MatrixPerspective(fovy, aspect, near, far float32) raylib.Matrix {
 	return MatrixFrustum(-right, right, -top, top, near, far)
 }
 
-// Returns orthographic projection matrix
+// MatrixOrtho - Returns orthographic projection matrix
 func MatrixOrtho(left, right, bottom, top, near, far float32) raylib.Matrix {
 	var result raylib.Matrix
 
@@ -602,7 +602,7 @@ func MatrixOrtho(left, right, bottom, top, near, far float32) raylib.Matrix {
 	return result
 }
 
-// Returns camera look-at matrix (view matrix)
+// MatrixLookAt - Returns camera look-at matrix (view matrix)
 func MatrixLookAt(eye, target, up raylib.Vector3) raylib.Matrix {
 	var result raylib.Matrix
 
@@ -633,12 +633,12 @@ func MatrixLookAt(eye, target, up raylib.Vector3) raylib.Matrix {
 	return result
 }
 
-// Compute the length of a quaternion
+// QuaternionLength - Compute the length of a quaternion
 func QuaternionLength(quat raylib.Quaternion) float32 {
 	return float32(math.Sqrt(float64(quat.X*quat.X + quat.Y*quat.Y + quat.Z*quat.Z + quat.W*quat.W)))
 }
 
-// Normalize provided quaternion
+// QuaternionNormalize - Normalize provided quaternion
 func QuaternionNormalize(q *raylib.Quaternion) {
 	var length, ilength float32
 
@@ -656,7 +656,7 @@ func QuaternionNormalize(q *raylib.Quaternion) {
 	q.W *= ilength
 }
 
-// Invert provided quaternion
+// QuaternionInvert - Invert provided quaternion
 func QuaternionInvert(quat *raylib.Quaternion) {
 	length := QuaternionLength(*quat)
 	lengthSq := length * length
@@ -671,7 +671,7 @@ func QuaternionInvert(quat *raylib.Quaternion) {
 	}
 }
 
-// Calculate two quaternion multiplication
+// QuaternionMultiply - Calculate two quaternion multiplication
 func QuaternionMultiply(q1, q2 raylib.Quaternion) raylib.Quaternion {
 	var result raylib.Quaternion
 
@@ -692,7 +692,7 @@ func QuaternionMultiply(q1, q2 raylib.Quaternion) raylib.Quaternion {
 	return result
 }
 
-// Calculates spherical linear interpolation between two quaternions
+// QuaternionSlerp - Calculates spherical linear interpolation between two quaternions
 func QuaternionSlerp(q1, q2 raylib.Quaternion, amount float32) raylib.Quaternion {
 	var result raylib.Quaternion
 
@@ -723,7 +723,7 @@ func QuaternionSlerp(q1, q2 raylib.Quaternion, amount float32) raylib.Quaternion
 	return result
 }
 
-// Returns a quaternion for a given rotation matrix
+// QuaternionFromMatrix - Returns a quaternion for a given rotation matrix
 func QuaternionFromMatrix(matrix raylib.Matrix) raylib.Quaternion {
 	var result raylib.Quaternion
 
@@ -772,7 +772,7 @@ func QuaternionFromMatrix(matrix raylib.Matrix) raylib.Quaternion {
 	return result
 }
 
-// Returns a matrix for a given quaternion
+// QuaternionToMatrix - Returns a matrix for a given quaternion
 func QuaternionToMatrix(q raylib.Quaternion) raylib.Matrix {
 	var result raylib.Matrix
 
@@ -817,7 +817,7 @@ func QuaternionToMatrix(q raylib.Quaternion) raylib.Matrix {
 	return result
 }
 
-// Returns rotation quaternion for an angle and axis
+// QuaternionFromAxisAngle - Returns rotation quaternion for an angle and axis
 func QuaternionFromAxisAngle(axis raylib.Vector3, angle float32) raylib.Quaternion {
 	result := raylib.NewQuaternion(0.0, 0.0, 0.0, 1.0)
 
@@ -840,7 +840,7 @@ func QuaternionFromAxisAngle(axis raylib.Vector3, angle float32) raylib.Quaterni
 	return result
 }
 
-// Returns the rotation angle and axis for a given quaternion
+// QuaternionToAxisAngle - Returns the rotation angle and axis for a given quaternion
 func QuaternionToAxisAngle(q raylib.Quaternion, outAxis *raylib.Vector3, outAngle *float32) {
 	if math.Abs(float64(q.W)) > 1.0 {
 		QuaternionNormalize(&q)
@@ -865,7 +865,7 @@ func QuaternionToAxisAngle(q raylib.Quaternion, outAxis *raylib.Vector3, outAngl
 	*outAngle = resAngle
 }
 
-// Transform a quaternion given a transformation matrix
+// QuaternionTransform - Transform a quaternion given a transformation matrix
 func QuaternionTransform(q *raylib.Quaternion, mat raylib.Matrix) {
 	x := q.X
 	y := q.Y

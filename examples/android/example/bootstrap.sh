@@ -22,28 +22,28 @@ export PATH=${INSTALL_PREFIX}/android-arm7/bin:${INSTALL_PREFIX}/android-arm64/b
 BUILD_DIR=`mktemp -d`
 mkdir -p ${BUILD_DIR}/bootstrap
 
-echo "Make standalone android toolchains"
+echo "##### Make standalone android toolchains"
 ${ANDROID_NDK_HOME}/build/tools/make-standalone-toolchain.sh --platform=android-9 --install-dir=${INSTALL_PREFIX}/android-arm7 --toolchain=arm-linux-androideabi-4.9
 ${ANDROID_NDK_HOME}/build/tools/make-standalone-toolchain.sh --platform=android-21 --install-dir=${INSTALL_PREFIX}/android-arm64 --toolchain=aarch64-linux-android-4.9
 
-echo "Download Go binaries"
+echo "##### Download Go binaries"
 cd ${BUILD_DIR}/bootstrap && curl -s -L http://storage.googleapis.com/golang/${GO_VERSION}.${GO_OS}-${GO_ARCH}.tar.gz | tar xz
 
-echo "Download Go source"
+echo "##### Download Go source"
 cd ${BUILD_DIR} && curl -s -L http://storage.googleapis.com/golang/${GO_VERSION}.src.tar.gz | tar xz && cd ${BUILD_DIR}/go/src
 
-echo "Compile Go for host"
+echo "##### Compile Go for host"
 GOROOT_BOOTSTRAP=${BUILD_DIR}/bootstrap/go ./make.bash || exit 1
 
-echo "Compile Go for arm-linux-androideabi"
+echo "##### Compile Go for arm-linux-androideabi"
 GOROOT_BOOTSTRAP=${BUILD_DIR}/bootstrap/go CC_FOR_TARGET=arm-linux-androideabi-gcc GOOS=android GOARCH=arm CGO_ENABLED=1 ./make.bash --no-clean || exit 1
 
-echo "Compile Go for aarch64-linux-android"
+echo "##### Compile Go for aarch64-linux-android"
 GOROOT_BOOTSTRAP=${BUILD_DIR}/bootstrap/go CC_FOR_TARGET=aarch64-linux-android-gcc GOOS=android GOARCH=arm64 CGO_ENABLED=1 ./make.bash --no-clean || exit 1
 
 cp -r -f ${BUILD_DIR}/go ${INSTALL_PREFIX}
 
-echo "Compile OpenAL"
+echo "##### Compile OpenAL"
 
 cd ${BUILD_DIR} && curl -s -L  http://kcat.strangesoft.net/openal-releases/openal-soft-${OPENAL_VERSION}.tar.bz2 | tar -xj
 
@@ -75,7 +75,7 @@ cd ${BUILD_DIR}/openal-soft-${OPENAL_VERSION}/build-arm64
 cmake -DLIBTYPE=STATIC -DCMAKE_TOOLCHAIN_FILE=../android-arm64.cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}/android-arm64 ..
 make -j $(nproc) && make install
 
-echo "Compile android_native_app_glue"
+echo "##### Compile android_native_app_glue"
 
 mkdir -p ${BUILD_DIR}/native_app_glue/jni
 cp -r ${ANDROID_NDK_HOME}/sources/android/native_app_glue/* ${BUILD_DIR}/native_app_glue/jni/
@@ -89,5 +89,5 @@ cp ${BUILD_DIR}/native_app_glue/obj/local/arm64-v8a/libandroid_native_app_glue.a
 cp ${ANDROID_NDK_HOME}/sources/android/native_app_glue/android_native_app_glue.h ${INSTALL_PREFIX}/android-arm7/include/
 cp ${ANDROID_NDK_HOME}/sources/android/native_app_glue/android_native_app_glue.h ${INSTALL_PREFIX}/android-arm64/include/
 
-echo "Remove build directory"
+echo "##### Remove build directory"
 rm -rf ${BUILD_DIR}

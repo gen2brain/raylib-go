@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	Xbox360NameId = "Xbox 360 Controller"
-	Ps3NameId     = "PLAYSTATION(R)3 Controller"
+	xbox360NameID = "Xbox 360 Controller"
+	ps3NameID     = "PLAYSTATION(R)3 Controller"
 )
 
 func main() {
@@ -29,7 +29,7 @@ func main() {
 		if raylib.IsGamepadAvailable(raylib.GamepadPlayer1) {
 			raylib.DrawText(fmt.Sprintf("GP1: %s", raylib.GetGamepadName(raylib.GamepadPlayer1)), 10, 10, 10, raylib.Black)
 
-			if raylib.IsGamepadName(raylib.GamepadPlayer1, Xbox360NameId) {
+			if raylib.IsGamepadName(raylib.GamepadPlayer1, xbox360NameID) {
 				raylib.DrawTexture(texXboxPad, 0, 0, raylib.DarkGray)
 
 				// Draw buttons: xbox home
@@ -99,7 +99,7 @@ func main() {
 				raylib.DrawRectangle(170, 30, 15, int32(((1.0+raylib.GetGamepadAxisMovement(raylib.GamepadPlayer1, raylib.GamepadXboxAxisLt))/2.0)*70), raylib.Red)
 				raylib.DrawRectangle(604, 30, 15, int32(((1.0+raylib.GetGamepadAxisMovement(raylib.GamepadPlayer1, raylib.GamepadXboxAxisRt))/2.0)*70), raylib.Red)
 
-			} else if raylib.IsGamepadName(raylib.GamepadPlayer1, Ps3NameId) {
+			} else if raylib.IsGamepadName(raylib.GamepadPlayer1, ps3NameID) {
 				raylib.DrawTexture(texPs3Pad, 0, 0, raylib.DarkGray)
 
 				// Draw buttons: ps

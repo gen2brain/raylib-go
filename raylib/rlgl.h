@@ -251,25 +251,6 @@ typedef unsigned char byte;
         float fovy;             // Camera field-of-view apperture in Y (degrees)
     } Camera;
 
-    // Light type
-    typedef struct LightData {
-        unsigned int id;        // Light unique id
-        bool enabled;           // Light enabled
-        int type;               // Light type: LIGHT_POINT, LIGHT_DIRECTIONAL, LIGHT_SPOT
-
-        Vector3 position;       // Light position
-        Vector3 target;         // Light target: LIGHT_DIRECTIONAL and LIGHT_SPOT (cone direction target)
-        float radius;           // Light attenuation radius light intensity reduced with distance (world distance)
-
-        Color diffuse;          // Light diffuse color
-        float intensity;        // Light intensity level
-
-        float coneAngle;        // Light cone max angle: LIGHT_SPOT
-    } LightData, *Light;
-
-    // Light types
-    typedef enum { LIGHT_POINT, LIGHT_DIRECTIONAL, LIGHT_SPOT } LightType;
-    
     // Texture parameters: filter mode
     // NOTE 1: Filtering considers mipmaps if available in the texture
     // NOTE 2: Filter is accordingly set for minification and magnification
@@ -415,25 +396,15 @@ void EndShaderMode(void);                                           // End custo
 void BeginBlendMode(int mode);                                      // Begin blending mode (alpha, additive, multiplied)
 void EndBlendMode(void);                                            // End blending mode (reset to default: alpha blending)
 
-Light CreateLight(int type, Vector3 position, Color diffuse);       // Create a new light, initialize it and add to pool
-void DestroyLight(Light light);                                     // Destroy a light and take it out of the list
-
 void TraceLog(int msgType, const char *text, ...);
 float *MatrixToFloat(Matrix mat);
 
-void InitVrDevice(int vrDevice);            // Init VR device
-void CloseVrDevice(void);                   // Close VR device
-bool IsVrDeviceReady(void);                 // Detect if VR device is ready
-bool IsVrSimulator(void);                   // Detect if VR simulator is running
+void InitVrSimulator(int vrDevice);         // Init VR simulator for selected device
+void CloseVrSimulator(void);                // Close VR simulator for current device
 void UpdateVrTracking(Camera *camera);      // Update VR tracking (position and orientation) and camera
 void ToggleVrMode(void);                    // Enable/Disable VR experience (device or simulator)
-
-// Oculus Rift API for direct access the device (no simulator)
-bool InitOculusDevice(void);                // Initialize Oculus device (returns true if success)
-void CloseOculusDevice(void);               // Close Oculus device
-void UpdateOculusTracking(Camera *camera);  // Update Oculus head position-orientation tracking (and camera)
-void BeginOculusDrawing(void);              // Setup Oculus buffers for drawing
-void EndOculusDrawing(void);                // Finish Oculus drawing and blit framebuffer to mirror
+void BeginVrDrawing(void);                  // Begin VR stereo rendering
+void EndVrDrawing(void);                    // End VR stereo rendering
 #endif
 
 #ifdef __cplusplus

@@ -2,11 +2,13 @@ package main
 
 import (
 	"os"
+	"runtime"
 	"unsafe"
 
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
+// Game states
 const (
 	Logo = iota
 	Title
@@ -24,7 +26,11 @@ func run(app unsafe.Pointer) {
 
 	raylib.SetConfigFlags(raylib.FlagVsyncHint)
 
-	raylib.InitWindow(screenWidth, screenHeight, app)
+	if runtime.GOOS != "android" {
+		raylib.InitWindow(screenWidth, screenHeight, "Android example")
+	} else {
+		raylib.InitWindow(screenWidth, screenHeight, app)
+	}
 
 	raylib.InitAudioDevice()
 
@@ -44,7 +50,7 @@ func run(app unsafe.Pointer) {
 	for !windowShouldClose {
 		raylib.UpdateMusicStream(ambient)
 
-		if raylib.IsKeyDown(raylib.KeyBack) {
+		if runtime.GOOS == "android" && raylib.IsKeyDown(raylib.KeyBack) || raylib.WindowShouldClose() {
 			windowShouldClose = true
 		}
 
@@ -122,4 +128,5 @@ func run(app unsafe.Pointer) {
 }
 
 func main() {
+	run(nil)
 }

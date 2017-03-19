@@ -36,8 +36,8 @@ func main() {
 
 	var i int32
 	for i = 0; i < 8; i++ {
-		x := screenWidth/2 - int32(raylib.MeasureTextEx(fonts[i], messages[i], float32(fonts[i].Size*2), spacings[i]).X/2)
-		y := 60 + fonts[i].Size + 45*i
+		x := screenWidth/2 - int32(raylib.MeasureTextEx(fonts[i], messages[i], float32(fonts[i].BaseSize*2), spacings[i]).X/2)
+		y := 60 + fonts[i].BaseSize + 45*i
 		positions[i] = raylib.NewVector2(float32(x), float32(y))
 	}
 
@@ -53,7 +53,7 @@ func main() {
 		raylib.DrawLine(220, 50, 590, 50, raylib.DarkGray)
 
 		for i = 0; i < 8; i++ {
-			raylib.DrawTextEx(fonts[i], messages[i], positions[i], float32(fonts[i].Size*2), spacings[i], colors[i])
+			raylib.DrawTextEx(fonts[i], messages[i], positions[i], float32(fonts[i].BaseSize*2), spacings[i], colors[i])
 		}
 
 		raylib.EndDrawing()

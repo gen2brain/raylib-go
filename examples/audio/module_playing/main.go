@@ -4,9 +4,9 @@ import (
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
-const MaxCircles = 64
+const maxCircles = 64
 
-type CircleWave struct {
+type circleWave struct {
 	Position raylib.Vector2
 	Radius   float32
 	Alpha    float32
@@ -30,10 +30,10 @@ func main() {
 		raylib.Yellow, raylib.Green, raylib.SkyBlue, raylib.Purple, raylib.Beige,
 	}
 
-	circles := make([]CircleWave, MaxCircles)
+	circles := make([]circleWave, maxCircles)
 
-	for i := MaxCircles - 1; i >= 0; i-- {
-		c := CircleWave{}
+	for i := maxCircles - 1; i >= 0; i-- {
+		c := circleWave{}
 
 		c.Alpha = 0
 		c.Radius = float32(raylib.GetRandomValue(10, 40))
@@ -79,7 +79,7 @@ func main() {
 		timePlayed := int32(raylib.GetMusicTimePlayed(xm)/raylib.GetMusicTimeLength(xm)*float32(screenWidth-40)) * 2
 
 		// Color circles animation
-		for i := MaxCircles - 1; (i >= 0) && !pause; i-- {
+		for i := maxCircles - 1; (i >= 0) && !pause; i-- {
 			circles[i].Alpha += circles[i].Speed
 			circles[i].Radius += circles[i].Speed * 10.0
 
@@ -101,7 +101,7 @@ func main() {
 
 		raylib.ClearBackground(raylib.RayWhite)
 
-		for i := MaxCircles - 1; i >= 0; i-- {
+		for i := maxCircles - 1; i >= 0; i-- {
 			raylib.DrawCircleV(circles[i].Position, float32(circles[i].Radius), raylib.Fade(circles[i].Color, circles[i].Alpha))
 		}
 

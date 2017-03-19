@@ -5,10 +5,10 @@ import (
 )
 
 const (
-	MaxParticles = 200
+	maxParticles = 200
 )
 
-type Particle struct {
+type particle struct {
 	Position raylib.Vector2
 	Color    raylib.Color
 	Alpha    float32
@@ -25,10 +25,10 @@ func main() {
 	raylib.InitWindow(screenWidth, screenHeight, "raylib [textures] example - particles trail blending")
 
 	// Particles pool, reuse them!
-	mouseTail := make([]Particle, MaxParticles)
+	mouseTail := make([]particle, maxParticles)
 
 	// Initialize particles
-	for i := 0; i < MaxParticles; i++ {
+	for i := 0; i < maxParticles; i++ {
 		mouseTail[i].Position = raylib.NewVector2(0, 0)
 		mouseTail[i].Color = raylib.NewColor(byte(raylib.GetRandomValue(0, 255)), byte(raylib.GetRandomValue(0, 255)), byte(raylib.GetRandomValue(0, 255)), 255)
 		mouseTail[i].Alpha = 1.0
@@ -52,16 +52,16 @@ func main() {
 		// NOTE: Particles initial position should be mouse position when activated
 		// NOTE: Particles fall down with gravity and rotation... and disappear after 2 seconds (alpha = 0)
 		// NOTE: When a particle disappears, active = false and it can be reused.
-		for i := 0; i < MaxParticles; i++ {
+		for i := 0; i < maxParticles; i++ {
 			if !mouseTail[i].Active {
 				mouseTail[i].Active = true
 				mouseTail[i].Alpha = 1.0
 				mouseTail[i].Position = raylib.GetMousePosition()
-				i = MaxParticles
+				i = maxParticles
 			}
 		}
 
-		for i := 0; i < MaxParticles; i++ {
+		for i := 0; i < maxParticles; i++ {
 			if mouseTail[i].Active {
 				mouseTail[i].Position.Y += gravity
 				mouseTail[i].Alpha -= 0.01
@@ -91,7 +91,7 @@ func main() {
 		raylib.BeginBlendMode(blending)
 
 		// Draw active particles
-		for i := 0; i < MaxParticles; i++ {
+		for i := 0; i < maxParticles; i++ {
 			if mouseTail[i].Active {
 				raylib.DrawTexturePro(
 					smoke,

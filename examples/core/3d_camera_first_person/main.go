@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	MaxColumns = 20
+	maxColumns = 20
 )
 
 func main() {
@@ -18,11 +18,11 @@ func main() {
 	camera.Fovy = 60.0
 
 	// Generates some random columns
-	heights := make([]float32, MaxColumns)
-	positions := make([]raylib.Vector3, MaxColumns)
-	colors := make([]raylib.Color, MaxColumns)
+	heights := make([]float32, maxColumns)
+	positions := make([]raylib.Vector3, maxColumns)
+	colors := make([]raylib.Color, maxColumns)
 
-	for i := 0; i < MaxColumns; i++ {
+	for i := 0; i < maxColumns; i++ {
 		heights[i] = float32(raylib.GetRandomValue(1, 12))
 		positions[i] = raylib.NewVector3(float32(raylib.GetRandomValue(-15, 15)), heights[i]/2, float32(raylib.GetRandomValue(-15, 15)))
 		colors[i] = raylib.NewColor(uint8(raylib.GetRandomValue(20, 255)), uint8(raylib.GetRandomValue(10, 55)), 30, 255)
@@ -47,7 +47,7 @@ func main() {
 		raylib.DrawCube(raylib.NewVector3(0.0, 2.5, 16.0), 32.0, 5.0, 1.0, raylib.Gold)                     // Draw a yellow wall
 
 		// Draw some cubes around
-		for i := 0; i < MaxColumns; i++ {
+		for i := 0; i < maxColumns; i++ {
 			raylib.DrawCube(positions[i], 2.0, heights[i], 2.0, colors[i])
 			raylib.DrawCubeWires(positions[i], 2.0, heights[i], 2.0, raylib.Maroon)
 		}

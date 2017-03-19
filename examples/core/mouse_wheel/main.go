@@ -6,10 +6,6 @@ import (
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
-var (
-	MaxBuildings int = 100
-)
-
 func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)

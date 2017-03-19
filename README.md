@@ -1,4 +1,5 @@
-## raylib-go [![GoDoc](https://godoc.org/github.com/gen2brain/raylib-go/raylib?status.svg)](https://godoc.org/github.com/gen2brain/raylib-go/raylib)
+![logo](https://goo.gl/jhpm6K)
+## raylib-go [![Build Status](https://travis-ci.org/gen2brain/raylib-go.svg?branch=master)](https://travis-ci.org/gen2brain/raylib-go) [![GoDoc](https://godoc.org/github.com/gen2brain/raylib-go/raylib?status.svg)](https://godoc.org/github.com/gen2brain/raylib-go/raylib) [![Go Report Card](https://goreportcard.com/badge/github.com/gen2brain/raylib-go)](https://goreportcard.com/report/github.com/gen2brain/raylib-go)
 
 Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use library to learn videogames programming.
 
@@ -6,27 +7,31 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
 ### Requirements
 
-* [GLFW3](http://www.glfw.org/) (desktop platform only, not needed on Android and RPi)
 * [OpenAL Soft](http://kcat.strangesoft.net/openal.html)
 
 ##### Ubuntu
 
-    apt-get install libglfw3-dev
-    apt-get install openal-dev
+    apt-get install libopenal-dev libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev
 
 ##### Fedora
-    
-    dnf install glfw-devel
-    dnf install openal-soft-devel
+
+    dnf install openal-soft-devel mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel
 
 ##### OS X
 
-    brew install glfw3
-    brew install openal-soft
+On OS X system OpenAL framework is used.
+
+##### Windows ([MSYS2](https://msys2.github.io/))
+
+    pacman -S mingw-w64-x86_64-openal mingw-w64-x86_64-gcc mingw-w64-x86_64-go git
 
 ##### Android
 
 [Android example](https://github.com/gen2brain/raylib-go/tree/master/examples/android/example).
+
+##### Raspberry Pi
+
+[RPi example](https://github.com/gen2brain/raylib-go/tree/master/examples/rpi/basic_window).
 
 ### Installation
 

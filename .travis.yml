@@ -1,0 +1,8 @@
+language: go
+
+go:
+  - 1.8.x
+
+install:
+  - sudo apt-get update -y
+  - sudo apt-get install libopenal-dev libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev -y
