@@ -19,7 +19,7 @@ func main() {
 	fontChars := int32(0)
 
 	// TTF SpriteFont loading with custom generation parameters
-	font := raylib.LoadSpriteFontTTF("fonts/KAISG.ttf", 96, 0, &fontChars)
+	font := raylib.LoadSpriteFontEx("fonts/KAISG.ttf", 96, 0, &fontChars)
 
 	// Generate mipmap levels to use trilinear filtering
 	// NOTE: On 2D drawing it won't be noticeable, it looks like FILTER_BILINEAR
@@ -69,7 +69,7 @@ func main() {
 
 			if count == 1 { // Only support one ttf file dropped
 				raylib.UnloadSpriteFont(font)
-				font = raylib.LoadSpriteFontTTF(droppedFiles[0], fontSize, 0, &fontChars)
+				font = raylib.LoadSpriteFontEx(droppedFiles[0], fontSize, 0, &fontChars)
 				raylib.ClearDroppedFiles()
 			}
 		}

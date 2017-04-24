@@ -68,7 +68,7 @@ func GetDefaultFont() SpriteFont {
 	return v
 }
 
-// LoadSpriteFont - Load a SpriteFont image into GPU memory
+// LoadSpriteFont - Load a SpriteFont image into GPU memory (VRAM)
 func LoadSpriteFont(fileName string) SpriteFont {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
@@ -77,19 +77,19 @@ func LoadSpriteFont(fileName string) SpriteFont {
 	return v
 }
 
-// LoadSpriteFontTTF - Load a SpriteFont from TTF font with parameters
-func LoadSpriteFontTTF(fileName string, fontSize int32, charsCount int32, fontChars *int32) SpriteFont {
+// LoadSpriteFontEx - Load SpriteFont from file with extended parameters
+func LoadSpriteFontEx(fileName string, fontSize int32, charsCount int32, fontChars *int32) SpriteFont {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	cfontSize := (C.int)(fontSize)
 	ccharsCount := (C.int)(charsCount)
 	cfontChars := (*C.int)(unsafe.Pointer(fontChars))
-	ret := C.LoadSpriteFontTTF(cfileName, cfontSize, ccharsCount, cfontChars)
+	ret := C.LoadSpriteFontEx(cfileName, cfontSize, ccharsCount, cfontChars)
 	v := NewSpriteFontFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
-// UnloadSpriteFont - Unload SpriteFont from GPU memory
+// UnloadSpriteFont - Unload SpriteFont from GPU memory (VRAM)
 func UnloadSpriteFont(spriteFont SpriteFont) {
 	cspriteFont := spriteFont.cptr()
 	C.UnloadSpriteFont(*cspriteFont)

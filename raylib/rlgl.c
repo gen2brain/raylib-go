@@ -2,10 +2,8 @@
 *
 *   rlgl - raylib OpenGL abstraction layer
 *
-*   DESCRIPTION:
-*
-*   rlgl allows usage of OpenGL 1.1 style functions (rlVertex) that are internally mapped to
-*   selected OpenGL version (1.1, 2.1, 3.3 Core, ES 2.0).
+*   rlgl is a wrapper for multiple OpenGL versions (1.1, 2.1, 3.3 Core, ES 2.0) to 
+*   pseudo-OpenGL 1.1 style functions (rlVertex, rlTranslate, rlRotate...). 
 *
 *   When chosing an OpenGL version greater than OpenGL 1.1, rlgl stores vertex data on internal
 *   VBO buffers (and VAOs if available). It requires calling 3 functions:
@@ -16,32 +14,19 @@
 *   CONFIGURATION:
 *
 *   #define GRAPHICS_API_OPENGL_11
-*       Use OpenGL 1.1 backend
-*
 *   #define GRAPHICS_API_OPENGL_21
-*       Use OpenGL 2.1 backend
-*
 *   #define GRAPHICS_API_OPENGL_33
-*       Use OpenGL 3.3 Core profile backend
-*
 *   #define GRAPHICS_API_OPENGL_ES2
-*       Use OpenGL ES 2.0 backend
+*       Use selected OpenGL backend
 *
 *   #define RLGL_STANDALONE
 *       Use rlgl as standalone library (no raylib dependency)
 *
-*   #define RLGL_NO_DISTORTION_SHADER
-*       Avoid stereo rendering distortion sahder (shader_distortion.h) inclusion
+*   #define SUPPORT_VR_SIMULATOR
+*       Support VR simulation functionality (stereo rendering)
 *
-*   #define SUPPORT_SHADER_DEFAULT / ENABLE_SHADER_DEFAULT
-*
-*   #define SUPPORT_SHADER_DISTORTION
-*
-*   #define SUPPORT_VR_SIMULATION
-*
-*   #define SUPPORT_STEREO_RENDERING
-*
-*   #define RLGL_NO_DEFAULT_SHADER
+*   #define SUPPORT_DISTORTION_SHADER
+*       Include stereo rendering distortion shader (shader_distortion.h)
 *
 *   DEPENDENCIES:
 *       raymath     - 3D math functionality (Vector3, Matrix, Quaternion)
@@ -50,7 +35,7 @@
 *
 *   LICENSE: zlib/libpng
 *
-*   Copyright (c) 2014-2016 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2014-2017 Ramon Santamaria (@raysan5)
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -68,6 +53,12 @@
 *     3. This notice may not be removed or altered from any source distribution.
 *
 **********************************************************************************************/
+
+// Default configuration flags (supported features)
+//-------------------------------------------------
+#define SUPPORT_VR_SIMULATOR
+#define SUPPORT_DISTORTION_SHADER
+//-------------------------------------------------
 
 #include "rlgl.h"
 
@@ -115,7 +106,7 @@
     #include <stdarg.h>             // Required for: va_list, va_start(), vfprintf(), va_end() [Used only on TraceLog()]
 #endif
 
-#if !defined(GRAPHICS_API_OPENGL_11) && !defined(RLGL_NO_DISTORTION_SHADER)
+#if !defined(GRAPHICS_API_OPENGL_11) && defined(SUPPORT_DISTORTION_SHADER)
     #include "shader_distortion.h"  // Distortion shader to be embedded
 #endif
 
@@ -231,6 +222,7 @@ typedef struct DrawCall {
     //Guint fboId;
 } DrawCall;
 
+#if defined(SUPPORT_VR_SIMULATOR)
 // Head-Mounted-Display device parameters
 typedef struct VrDeviceInfo {
     int hResolution;                // HMD horizontal resolution in pixels
@@ -253,6 +245,7 @@ typedef struct VrStereoConfig {
     Matrix eyesProjection[2];       // VR stereo rendering eyes projection matrices
     Matrix eyesViewOffset[2];       // VR stereo rendering eyes view offset matrices
 } VrStereoConfig;
+#endif
 
 //----------------------------------------------------------------------------------
 // Global Variables Definition
@@ -266,7 +259,7 @@ static Matrix projection;
 static Matrix *currentMatrix;
 static int currentMatrixMode;
 
-static DrawMode currentDrawMode;
+static int currentDrawMode;
 
 static float currentDepth = -1.0f;
 
@@ -295,7 +288,17 @@ static bool texCompETC1Supported = false;   // ETC1 texture compression support
 static bool texCompETC2Supported = false;   // ETC2/EAC texture compression support
 static bool texCompPVRTSupported = false;   // PVR texture compression support
 static bool texCompASTCSupported = false;   // ASTC texture compression support
-#endif
+
+#if defined(SUPPORT_VR_SIMULATOR)
+// VR global variables
+static VrDeviceInfo hmd;                // Current VR device info
+static VrStereoConfig vrConfig;         // VR stereo configuration for simulator
+static bool vrSimulatorReady = false;   // VR simulator ready flag
+static bool vrStereoRender = false;     // VR stereo rendering enabled/disabled flag
+                                        // NOTE: This flag is useful to render data over stereo image (i.e. FPS)
+#endif  // defined(SUPPORT_VR_SIMULATOR)
+
+#endif  // defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
 
 // Extension supported flag: Anisotropic filtering
 static bool texAnisotropicFilterSupported = false;  // Anisotropic texture filtering support
@@ -303,13 +306,6 @@ static float maxAnisotropicLevel = 0.0f;        // Maximum anisotropy level supp
 
 // Extension supported flag: Clamp mirror wrap mode
 static bool texClampMirrorSupported = false;    // Clamp mirror wrap mode supported
-
-// VR global variables
-static VrDeviceInfo hmd;                // Current VR device info
-static VrStereoConfig vrConfig;         // VR stereo configuration for simulator
-static bool vrSimulatorReady = false;   // VR simulator ready flag
-static bool vrStereoRender = false;     // VR stereo rendering enabled/disabled flag
-                                        // NOTE: This flag is useful to render data over stereo image (i.e. FPS)
 
 #if defined(GRAPHICS_API_OPENGL_ES2)
 // NOTE: VAO functionality is exposed through extensions (OES)
@@ -348,12 +344,12 @@ static void UpdateDefaultBuffers(void);     // Update default internal buffers (
 static void DrawDefaultBuffers(void);       // Draw default internal buffers vertex data
 static void UnloadDefaultBuffers(void);     // Unload default internal buffers vertex data from CPU and GPU
 
-// Configure stereo rendering (including distortion shader) with HMD device parameters
-static void SetStereoConfig(VrDeviceInfo info);
-
-// Set internal projection and modelview matrix depending on eyes tracking data
-static void SetStereoView(int eye, Matrix matProjection, Matrix matModelView);
+#if defined(SUPPORT_VR_SIMULATOR)
+static void SetStereoConfig(VrDeviceInfo info); // Configure stereo rendering (including distortion shader) with HMD device parameters
+static void SetStereoView(int eye, Matrix matProjection, Matrix matModelView); // Set internal projection and modelview matrix depending on eye
 #endif
+
+#endif  // defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
 
 #if defined(GRAPHICS_API_OPENGL_11)
 static int GenerateMipmaps(unsigned char *data, int baseWidth, int baseHeight);
@@ -1335,7 +1331,7 @@ Vector3 rlglUnproject(Vector3 source, Matrix proj, Matrix view)
 }
 
 // Convert image data to OpenGL texture (returns OpenGL valid Id)
-unsigned int rlglLoadTexture(void *data, int width, int height, int textureFormat, int mipmapCount)
+unsigned int rlglLoadTexture(void *data, int width, int height, int format, int mipmapCount)
 {
     glBindTexture(GL_TEXTURE_2D, 0);    // Free any old binding
 
@@ -1343,39 +1339,39 @@ unsigned int rlglLoadTexture(void *data, int width, int height, int textureForma
 
     // Check texture format support by OpenGL 1.1 (compressed textures not supported)
 #if defined(GRAPHICS_API_OPENGL_11)
-    if (textureFormat >= 8)
+    if (format >= COMPRESSED_DXT1_RGB)
     {
         TraceLog(WARNING, "OpenGL 1.1 does not support GPU compressed texture formats");
         return id;
     }
 #endif
 
-    if ((!texCompDXTSupported) && ((textureFormat == COMPRESSED_DXT1_RGB) || (textureFormat == COMPRESSED_DXT1_RGBA) ||
-        (textureFormat == COMPRESSED_DXT3_RGBA) || (textureFormat == COMPRESSED_DXT5_RGBA)))
+    if ((!texCompDXTSupported) && ((format == COMPRESSED_DXT1_RGB) || (format == COMPRESSED_DXT1_RGBA) ||
+        (format == COMPRESSED_DXT3_RGBA) || (format == COMPRESSED_DXT5_RGBA)))
     {
         TraceLog(WARNING, "DXT compressed texture format not supported");
         return id;
     }
 #if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
-    if ((!texCompETC1Supported) && (textureFormat == COMPRESSED_ETC1_RGB))
+    if ((!texCompETC1Supported) && (format == COMPRESSED_ETC1_RGB))
     {
         TraceLog(WARNING, "ETC1 compressed texture format not supported");
         return id;
     }
 
-    if ((!texCompETC2Supported) && ((textureFormat == COMPRESSED_ETC2_RGB) || (textureFormat == COMPRESSED_ETC2_EAC_RGBA)))
+    if ((!texCompETC2Supported) && ((format == COMPRESSED_ETC2_RGB) || (format == COMPRESSED_ETC2_EAC_RGBA)))
     {
         TraceLog(WARNING, "ETC2 compressed texture format not supported");
         return id;
     }
 
-    if ((!texCompPVRTSupported) && ((textureFormat == COMPRESSED_PVRT_RGB) || (textureFormat == COMPRESSED_PVRT_RGBA)))
+    if ((!texCompPVRTSupported) && ((format == COMPRESSED_PVRT_RGB) || (format == COMPRESSED_PVRT_RGBA)))
     {
         TraceLog(WARNING, "PVRT compressed texture format not supported");
         return id;
     }
 
-    if ((!texCompASTCSupported) && ((textureFormat == COMPRESSED_ASTC_4x4_RGBA) || (textureFormat == COMPRESSED_ASTC_8x8_RGBA)))
+    if ((!texCompASTCSupported) && ((format == COMPRESSED_ASTC_4x4_RGBA) || (format == COMPRESSED_ASTC_8x8_RGBA)))
     {
         TraceLog(WARNING, "ASTC compressed texture format not supported");
         return id;
@@ -1403,7 +1399,7 @@ unsigned int rlglLoadTexture(void *data, int width, int height, int textureForma
     // GL_RGBA8                 GL_RGBA     GL_UNSIGNED_BYTE
     // GL_RGB8                  GL_RGB      GL_UNSIGNED_BYTE
 
-    switch (textureFormat)
+    switch (format)
     {
         case UNCOMPRESSED_GRAYSCALE:
         {
@@ -1444,7 +1440,7 @@ unsigned int rlglLoadTexture(void *data, int width, int height, int textureForma
     }
 #elif defined(GRAPHICS_API_OPENGL_11) || defined(GRAPHICS_API_OPENGL_ES2)
     // NOTE: on OpenGL ES 2.0 (WebGL), internalFormat must match format and options allowed are: GL_LUMINANCE, GL_RGB, GL_RGBA
-    switch (textureFormat)
+    switch (format)
     {
         case UNCOMPRESSED_GRAYSCALE: glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
         case UNCOMPRESSED_GRAY_ALPHA: glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
@@ -2077,12 +2073,16 @@ void rlglDrawMesh(Mesh mesh, Material material, Matrix transform)
     }
 
     int eyesCount = 1;
+#if defined(SUPPORT_VR_SIMULATOR)
     if (vrStereoRender) eyesCount = 2;
+#endif
     
     for (int eye = 0; eye < eyesCount; eye++)
     {
-        if (eyesCount == 2) SetStereoView(eye, matProjection, matModelView);
-        else modelview = matModelView;
+        if (eyesCount == 1) modelview = matModelView;
+        #if defined(SUPPORT_VR_SIMULATOR)
+        else SetStereoView(eye, matProjection, matModelView);
+        #endif
 
         // Calculate model-view-projection matrix (MVP)
         Matrix matMVP = MatrixMultiply(modelview, projection);        // Transform to screen-space coordinates
@@ -2250,7 +2250,7 @@ void *rlglReadTexturePixels(Texture2D texture)
 
     pixels = (unsigned char *)malloc(texture.width*texture.height*4*sizeof(unsigned char));
 
-    // NOTE: Despite FBO color texture is RGB, we read data as RGBA... reading as RGB doesn't work... o__O
+    // NOTE: We read data as RGBA because FBO texture is configured as RGBA, despite binding a RGB texture...
     glReadPixels(0, 0, texture.width, texture.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
     // Re-attach internal FBO color texture before deleting it
@@ -2543,6 +2543,7 @@ void EndBlendMode(void)
     BeginBlendMode(BLEND_ALPHA);
 }
 
+#if defined(SUPPORT_VR_SIMULATOR)
 // Init VR simulator for selected device
 // NOTE: It modifies the global variable: VrDeviceInfo hmd
 void InitVrSimulator(int vrDevice)
@@ -2568,7 +2569,7 @@ void InitVrSimulator(int vrDevice)
         hmd.chromaAbCorrection[2] = 1.014f;     // HMD chromatic aberration correction parameter 2
         hmd.chromaAbCorrection[3] = 0.0f;       // HMD chromatic aberration correction parameter 3
         
-        TraceLog(WARNING, "Initializing VR Simulator (Oculus Rift DK2)");
+        TraceLog(INFO, "Initializing VR Simulator (Oculus Rift DK2)");
     }
     else if ((vrDevice == HMD_DEFAULT_DEVICE) || (vrDevice == HMD_OCULUS_RIFT_CV1))
     {
@@ -2595,21 +2596,23 @@ void InitVrSimulator(int vrDevice)
         hmd.chromaAbCorrection[2] = 1.014f;     // HMD chromatic aberration correction parameter 2
         hmd.chromaAbCorrection[3] = 0.0f;       // HMD chromatic aberration correction parameter 3
         
-        TraceLog(WARNING, "Initializing VR Simulator (Oculus Rift CV1)");
+        TraceLog(INFO, "Initializing VR Simulator (Oculus Rift CV1)");
     }
     else 
     {
-        TraceLog(WARNING, "VR Simulator doesn't support current device yet,");
+        TraceLog(WARNING, "VR Simulator doesn't support selected device parameters,");
         TraceLog(WARNING, "using default VR Simulator parameters");
     }
 
     // Initialize framebuffer and textures for stereo rendering
     // NOTE: screen size should match HMD aspect ratio
     vrConfig.stereoFbo = rlglLoadRenderTexture(screenWidth, screenHeight);
-
+    
+#if defined(SUPPORT_DISTORTION_SHADER)
     // Load distortion shader (initialized by default with Oculus Rift CV1 parameters)
     vrConfig.distortionShader.id = LoadShaderProgram(vDistortionShaderStr, fDistortionShaderStr);
     if (vrConfig.distortionShader.id != 0) LoadDefaultShaderLocations(&vrConfig.distortionShader);
+#endif
 
     SetStereoConfig(hmd);
 
@@ -2628,7 +2631,9 @@ void CloseVrSimulator(void)
     if (vrSimulatorReady)
     {
         rlDeleteRenderTextures(vrConfig.stereoFbo); // Unload stereo framebuffer and texture
+        #if defined(SUPPORT_DISTORTION_SHADER)
         UnloadShader(vrConfig.distortionShader);    // Unload distortion shader
+        #endif
     }
 #endif
 }
@@ -2636,7 +2641,11 @@ void CloseVrSimulator(void)
 // Detect if VR simulator is running
 bool IsVrSimulatorReady(void)
 {
+#if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
     return vrSimulatorReady;
+#else
+    return false;
+#endif
 }
 
 // Enable/Disable VR experience (device or simulator)
@@ -2711,8 +2720,12 @@ void EndVrDrawing(void)
         rlMatrixMode(RL_MODELVIEW);                             // Enable internal modelview matrix
         rlLoadIdentity();                                       // Reset internal modelview matrix
 
+#if defined(SUPPORT_DISTORTION_SHADER)
         // Draw RenderTexture (stereoFbo) using distortion shader
         currentShader = vrConfig.distortionShader;
+#else
+        currentShader = GetDefaultShader();
+#endif
 
         rlEnableTexture(vrConfig.stereoFbo.texture.id);
 
@@ -2758,6 +2771,7 @@ void EndVrDrawing(void)
     }
 #endif
 }
+#endif          // SUPPORT_VR_SIMULATOR
 
 //----------------------------------------------------------------------------------
 // Module specific Functions Definition
@@ -3303,11 +3317,15 @@ static void DrawDefaultBuffers()
     Matrix matModelView = modelview;
     
     int eyesCount = 1;
+#if defined(SUPPORT_VR_SIMULATOR)
     if (vrStereoRender) eyesCount = 2;
+#endif
 
     for (int eye = 0; eye < eyesCount; eye++)
     {
+        #if defined(SUPPORT_VR_SIMULATOR)
         if (eyesCount == 2) SetStereoView(eye, matProjection, matModelView);
+        #endif
 
         // Set current shader and upload current MVP matrix
         if ((lines.vCounter > 0) || (triangles.vCounter > 0) || (quads.vCounter > 0))
@@ -3513,6 +3531,7 @@ static void UnloadDefaultBuffers(void)
     free(quads.indices);
 }
 
+#if defined(SUPPORT_VR_SIMULATOR)
 // Configure stereo rendering (including distortion shader) with HMD device parameters
 static void SetStereoConfig(VrDeviceInfo hmd)
 {
@@ -3547,6 +3566,7 @@ static void SetStereoConfig(VrDeviceInfo hmd)
     TraceLog(DEBUG, "VR: Distortion Shader: Scale = { %f, %f }", scale[0], scale[1]);
     TraceLog(DEBUG, "VR: Distortion Shader: ScaleIn = { %f, %f }", scaleIn[0], scaleIn[1]);
 
+#if defined(SUPPORT_DISTORTION_SHADER)
     // Update distortion shader with lens and distortion-scale parameters
     SetShaderValue(vrConfig.distortionShader, GetShaderLocation(vrConfig.distortionShader, "leftLensCenter"), leftLensCenter, 2);
     SetShaderValue(vrConfig.distortionShader, GetShaderLocation(vrConfig.distortionShader, "rightLensCenter"), rightLensCenter, 2);
@@ -3557,6 +3577,7 @@ static void SetStereoConfig(VrDeviceInfo hmd)
     SetShaderValue(vrConfig.distortionShader, GetShaderLocation(vrConfig.distortionShader, "scaleIn"), scaleIn, 2);
     SetShaderValue(vrConfig.distortionShader, GetShaderLocation(vrConfig.distortionShader, "hmdWarpParam"), hmd.distortionK, 4);
     SetShaderValue(vrConfig.distortionShader, GetShaderLocation(vrConfig.distortionShader, "chromaAbParam"), hmd.chromaAbCorrection, 4);
+#endif
 
     // Fovy is normally computed with: 2*atan2(hmd.vScreenSize, 2*hmd.eyeToScreenDistance)*RAD2DEG
     // ...but with lens distortion it is increased (see Oculus SDK Documentation)
@@ -3602,6 +3623,8 @@ static void SetStereoView(int eye, Matrix matProjection, Matrix matModelView)
     SetMatrixModelview(eyeModelView);
     SetMatrixProjection(eyeProjection);
 }
+#endif      // defined(SUPPORT_VR_SIMULATOR)
+
 #endif //defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
 
 #if defined(GRAPHICS_API_OPENGL_11)

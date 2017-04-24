@@ -1,7 +1,14 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/gen2brain/raylib-go/raylib"
+)
+
+const (
+	maxFrameSpeed = 15
+	minFrameSpeed = 1
 )
 
 func main() {
@@ -11,47 +18,70 @@ func main() {
 	raylib.InitWindow(screenWidth, screenHeight, "raylib [textures] example - texture loading and drawing")
 
 	// NOTE: Textures MUST be loaded after Window initialization (OpenGL context is required)
-	guybrush := raylib.LoadTexture("guybrush.png") // Texture loading
+	scarfy := raylib.LoadTexture("scarfy.png") // Texture loading
 
-	position := raylib.NewVector2(350.0, 240.0)
-	frameRec := raylib.NewRectangle(0, 0, guybrush.Width/7, guybrush.Height)
+	position := raylib.NewVector2(350.0, 280.0)
+	frameRec := raylib.NewRectangle(0, 0, scarfy.Width/6, scarfy.Height)
 	currentFrame := int32(0)
+
+	framesCounter := 0
+	framesSpeed := 8 // Number of spritesheet frames shown by second
 
 	raylib.SetTargetFPS(60)
 
 	for !raylib.WindowShouldClose() {
-		if raylib.IsKeyPressed(raylib.KeyRight) {
+		framesCounter++
+
+		if framesCounter >= (60 / framesSpeed) {
+			framesCounter = 0
 			currentFrame++
 
-			if currentFrame > 6 {
+			if currentFrame > 5 {
 				currentFrame = 0
 			}
 
-			frameRec.X = currentFrame * guybrush.Width / 7
+			frameRec.X = currentFrame * scarfy.Width / 6
+		}
+
+		if raylib.IsKeyPressed(raylib.KeyRight) {
+			framesSpeed++
+		} else if raylib.IsKeyPressed(raylib.KeyLeft) {
+			framesSpeed--
+		}
+
+		if framesSpeed > maxFrameSpeed {
+			framesSpeed = maxFrameSpeed
+		} else if framesSpeed < minFrameSpeed {
+			framesSpeed = minFrameSpeed
 		}
 
 		raylib.BeginDrawing()
 
 		raylib.ClearBackground(raylib.RayWhite)
 
-		raylib.DrawTexture(guybrush, 35, 40, raylib.White)
-		raylib.DrawRectangleLines(35, 40, guybrush.Width, guybrush.Height, raylib.Lime)
+		raylib.DrawTexture(scarfy, 15, 40, raylib.White)
+		raylib.DrawRectangleLines(15, 40, scarfy.Width, scarfy.Height, raylib.Lime)
+		raylib.DrawRectangleLines(15+frameRec.X, 40+frameRec.Y, frameRec.Width, frameRec.Height, raylib.Red)
 
-		raylib.DrawTextureRec(guybrush, frameRec, position, raylib.White) // Draw part of the texture
+		raylib.DrawText("FRAME SPEED: ", 165, 210, 10, raylib.DarkGray)
+		raylib.DrawText(fmt.Sprintf("%02d FPS", framesSpeed), 575, 210, 10, raylib.DarkGray)
+		raylib.DrawText("PRESS RIGHT/LEFT KEYS to CHANGE SPEED!", 290, 240, 10, raylib.DarkGray)
 
-		raylib.DrawRectangleLines(35+frameRec.X, 40+frameRec.Y, frameRec.Width, frameRec.Height, raylib.Red)
+		for i := 0; i < maxFrameSpeed; i++ {
+			if i < framesSpeed {
+				raylib.DrawRectangle(int32(250+21*i), 205, 20, 20, raylib.Red)
+			}
+			raylib.DrawRectangleLines(int32(250+21*i), 205, 20, 20, raylib.Maroon)
+		}
 
-		raylib.DrawText("PRESS RIGHT KEY TO", 540, 310, 10, raylib.Gray)
-		raylib.DrawText("CHANGE DRAWING RECTANGLE", 520, 330, 10, raylib.Gray)
+		raylib.DrawTextureRec(scarfy, frameRec, position, raylib.White) // Draw part of the texture
 
-		raylib.DrawText("Guybrush Ulysses Threepwood,", 100, 300, 10, raylib.Gray)
-		raylib.DrawText("main character of the Monkey Island series", 80, 320, 10, raylib.Gray)
-		raylib.DrawText("of computer adventure games by LucasArts.", 80, 340, 10, raylib.Gray)
+		raylib.DrawText("(c) Scarfy sprite by Eiden Marsal", screenWidth-200, screenHeight-20, 10, raylib.Gray)
 
 		raylib.EndDrawing()
 	}
 
-	raylib.UnloadTexture(guybrush)
+	raylib.UnloadTexture(scarfy)
 
 	raylib.CloseWindow()
 }

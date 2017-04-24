@@ -665,15 +665,20 @@ func Fade(color Color, alpha float32) Color {
 	return v
 }
 
+// ShowLogo - Activates raylib logo at startup (can be done with flags)
+func ShowLogo() {
+	C.ShowLogo()
+}
+
 // SetConfigFlags - Setup some window configuration flags
 func SetConfigFlags(flags byte) {
 	cflags := (C.char)(flags)
 	C.SetConfigFlags(cflags)
 }
 
-// ShowLogo - Activates raylib logo at startup (can be done with flags)
-func ShowLogo() {
-	C.ShowLogo()
+// TakeScreenshot - Takes a screenshot and saves it in the same folder as executable
+func TakeScreenshot() {
+	C.TakeScreenshot()
 }
 
 // StorageSaveValue - Storage save integer value (to defined position)

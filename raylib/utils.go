@@ -10,8 +10,8 @@ import (
 // Log message types
 const (
 	LogInfo = iota
-	LogError
 	LogWarning
+	LogError
 	LogDebug
 )
 
@@ -22,16 +22,16 @@ func SetDebug(enabled bool) {
 	traceDebugMsgs = enabled
 }
 
-// TraceLog - Trace log messages showing (INFO, WARNING, ERROR, DEBUG)
+// TraceLog - Show trace log messages (INFO, WARNING, ERROR, DEBUG)
 func TraceLog(msgType int, text string, v ...interface{}) {
 	switch msgType {
 	case LogInfo:
 		fmt.Printf("INFO: "+text+"\n", v...)
+	case LogWarning:
+		fmt.Printf("WARNING: "+text+"\n", v...)
 	case LogError:
 		fmt.Printf("ERROR: "+text+"\n", v...)
 		os.Exit(1)
-	case LogWarning:
-		fmt.Printf("WARNING: "+text+"\n", v...)
 	case LogDebug:
 		if traceDebugMsgs {
 			fmt.Printf("DEBUG: "+text+"\n", v...)
