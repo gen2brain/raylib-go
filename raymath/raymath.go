@@ -43,8 +43,8 @@ func Vector2Subtract(v1, v2 raylib.Vector2) raylib.Vector2 {
 	return raylib.NewVector2(v1.X-v2.X, v1.Y-v2.Y)
 }
 
-// Vector2Lenght - Calculate vector lenght
-func Vector2Lenght(v raylib.Vector2) float32 {
+// Vector2Length - Calculate vector length
+func Vector2Length(v raylib.Vector2) float32 {
 	return float32(math.Sqrt(float64((v.X * v.X) + (v.Y * v.Y))))
 }
 
@@ -58,7 +58,7 @@ func Vector2Distance(v1, v2 raylib.Vector2) float32 {
 	return float32(math.Sqrt(float64((v1.X-v2.X)*(v1.X-v2.X) + (v1.Y-v2.Y)*(v1.Y-v2.Y))))
 }
 
-// Vector2Angle - Calculate angle from two vectors in X-axis
+// Vector2Angle - Calculate angle between two vectors in X-axis
 func Vector2Angle(v1, v2 raylib.Vector2) float32 {
 	angle := float32(math.Atan2(float64(v2.Y-v1.Y), float64(v2.X-v1.X)) * (180.0 / float64(raylib.Pi)))
 
@@ -89,7 +89,7 @@ func Vector2Divide(v *raylib.Vector2, div float32) {
 
 // Vector2Normalize - Normalize provided vector
 func Vector2Normalize(v *raylib.Vector2) {
-	Vector2Divide(v, Vector2Lenght(*v))
+	Vector2Divide(v, Vector2Length(*v))
 }
 
 // VectorZero - Vector with components value 0.0
