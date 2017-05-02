@@ -92,6 +92,50 @@ func Vector2Normalize(v *raylib.Vector2) {
 	Vector2Divide(v, Vector2Length(*v))
 }
 
+// Vector2CrossProduct - Calculate two vectors cross product
+func Vector2CrossProduct(v1, v2 raylib.Vector2) float32 {
+	return v1.X*v2.Y - v1.Y*v2.X
+}
+
+// Vector2Cross - Calculate the cross product of a vector and a value
+func Vector2Cross(value float32, vector raylib.Vector2) raylib.Vector2 {
+	return raylib.NewVector2(-value*vector.Y, value*vector.X)
+}
+
+// Vector2LenSqr - Returns the len square root of a vector
+func Vector2LenSqr(vector raylib.Vector2) float32 {
+	return vector.X*vector.X + vector.Y*vector.Y
+}
+
+// Mat2Radians - Creates a matrix 2x2 from a given radians value
+func Mat2Radians(radians float32) raylib.Mat2 {
+	c := float32(math.Cos(float64(radians)))
+	s := float32(math.Sin(float64(radians)))
+
+	return raylib.NewMat2(c, -s, s, c)
+}
+
+// Mat2Set - Set values from radians to a created matrix 2x2
+func Mat2Set(matrix *raylib.Mat2, radians float32) {
+	cos := float32(math.Cos(float64(radians)))
+	sin := float32(math.Sin(float64(radians)))
+
+	matrix.M00 = cos
+	matrix.M01 = -sin
+	matrix.M10 = sin
+	matrix.M11 = cos
+}
+
+// Mat2Transpose - Returns the transpose of a given matrix 2x2
+func Mat2Transpose(matrix raylib.Mat2) raylib.Mat2 {
+	return raylib.NewMat2(matrix.M00, matrix.M10, matrix.M01, matrix.M11)
+}
+
+// Mat2MultiplyVector2 - Multiplies a vector by a matrix 2x2
+func Mat2MultiplyVector2(matrix raylib.Mat2, vector raylib.Vector2) raylib.Vector2 {
+	return raylib.NewVector2(matrix.M00*vector.X+matrix.M01*vector.Y, matrix.M10*vector.X+matrix.M11*vector.Y)
+}
+
 // VectorZero - Vector with components value 0.0
 func VectorZero() raylib.Vector3 {
 	return raylib.NewVector3(0.0, 0.0, 0.0)

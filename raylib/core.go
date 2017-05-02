@@ -300,6 +300,19 @@ func NewMatrixFromPointer(ptr unsafe.Pointer) Matrix {
 	return *(*Matrix)(ptr)
 }
 
+// Mat2 type (used for polygon shape rotation matrix)
+type Mat2 struct {
+	M00 float32
+	M01 float32
+	M10 float32
+	M11 float32
+}
+
+// NewMat2 - Returns new Mat2
+func NewMat2(m0, m1, m10, m11 float32) Mat2 {
+	return Mat2{m0, m1, m10, m11}
+}
+
 // Quaternion type
 type Quaternion struct {
 	X float32
