@@ -13,7 +13,7 @@ func main() {
 	raylib.InitWindow(screenWidth, screenHeight, "raylib [core] example - vr simulator")
 
 	// NOTE: default device (simulator)
-	raylib.InitVrSimulator(raylib.HmdOculusRiftCv1) // Init VR device (Oculus Rift CV1)
+	raylib.InitVrSimulator(raylib.GetVrDeviceInfo(raylib.HmdOculusRiftCv1)) // Init VR device (Oculus Rift CV1)
 
 	camera := raylib.Camera{}
 	camera.Position = raylib.NewVector3(5.0, 2.0, 5.0) // Camera position

@@ -16,13 +16,16 @@ func main() {
 	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
 
-	image := raylib.LoadImage("heightmap.png")                        // Load heightmap image (RAM)
-	texture := raylib.LoadTextureFromImage(image)                     // Convert image to texture (VRAM)
-	hmap := raylib.LoadHeightmap(image, raylib.NewVector3(16, 8, 16)) // Load heightmap model with defined size
-	hmap.Material.TexDiffuse = texture                                // Set map diffuse texture
-	mapPosition := raylib.NewVector3(-8.0, 0.0, -8.0)                 // Set model position
+	image := raylib.LoadImage("heightmap.png")    // Load heightmap image (RAM)
+	texture := raylib.LoadTextureFromImage(image) // Convert image to texture (VRAM)
 
-	raylib.UnloadImage(image) // Unload cubesmap image from RAM, already uploaded to VRAM
+	mesh := raylib.GenMeshHeightmap(*image, raylib.NewVector3(16, 8, 16)) // Generate heightmap mesh (RAM and VRAM)
+	model := raylib.LoadModelFromMesh(mesh)                               // Load model from generated mesh
+
+	model.Material.Maps[raylib.MapDiffuse].Texture = texture // Set map diffuse texture
+	mapPosition := raylib.NewVector3(-8.0, 0.0, -8.0)        // Set model position
+
+	raylib.UnloadImage(image) // Unload heightmap image from RAM, already uploaded to VRAM
 
 	raylib.SetCameraMode(camera, raylib.CameraOrbital) // Set an orbital camera mode
 
@@ -41,8 +44,7 @@ func main() {
 
 		raylib.Begin3dMode(camera)
 
-		// NOTE: Model is scaled to 1/4 of its original size (128x128 units)
-		raylib.DrawModel(hmap, mapPosition, 1.0, raylib.Red)
+		raylib.DrawModel(model, mapPosition, 1.0, raylib.Red)
 
 		raylib.DrawGrid(20, 1.0)
 
@@ -57,7 +59,7 @@ func main() {
 	}
 
 	raylib.UnloadTexture(texture) // Unload map texture
-	raylib.UnloadModel(hmap)      // Unload map model
+	raylib.UnloadModel(model)     // Unload map model
 
 	raylib.CloseWindow()
 }

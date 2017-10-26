@@ -36,7 +36,7 @@ func main() {
 		raylib.DrawText("USING CUSTOM SHADER", 190, 40, 10, raylib.Red)
 
 		raylib.DrawRectangle(250-60, 90, 120, 60, raylib.Red)
-		raylib.DrawRectangleGradient(250-90, 170, 180, 130, raylib.Maroon, raylib.Gold)
+		raylib.DrawRectangleGradientH(250-90, 170, 180, 130, raylib.Maroon, raylib.Gold)
 		raylib.DrawRectangleLines(250-40, 320, 80, 60, raylib.Orange)
 
 		// Activate our default shader for next drawings

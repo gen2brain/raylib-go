@@ -19,7 +19,7 @@ func main() {
 	dwarf := raylib.LoadModel("dwarf.obj")             // Load OBJ model
 	texture := raylib.LoadTexture("dwarf_diffuse.png") // Load model texture
 
-	dwarf.Material.TexDiffuse = texture // Set dwarf model diffuse texture
+	dwarf.Material.Maps[raylib.MapDiffuse].Texture = texture // Set dwarf model diffuse texture
 
 	position := raylib.NewVector3(0.0, 0.0, 0.0) // Set model position
 

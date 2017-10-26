@@ -25,7 +25,7 @@ func main() {
 		raylib.DrawCircleLines(screenWidth/4, 340, 80, raylib.DarkBlue)
 
 		raylib.DrawRectangle(screenWidth/4*2-60, 100, 120, 60, raylib.Red)
-		raylib.DrawRectangleGradient(screenWidth/4*2-90, 170, 180, 130, raylib.Maroon, raylib.Gold)
+		raylib.DrawRectangleGradientH(screenWidth/4*2-90, 170, 180, 130, raylib.Maroon, raylib.Gold)
 		raylib.DrawRectangleLines(screenWidth/4*2-40, 320, 80, 60, raylib.Orange)
 
 		raylib.DrawTriangle(raylib.NewVector2(float32(screenWidth)/4*3, 80),
