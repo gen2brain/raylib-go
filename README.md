@@ -11,7 +11,7 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
 ##### Ubuntu
 
-    apt-get install libopenal-dev libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev
+    apt-get install libopenal-dev libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev libxrandr-dev
 
 ##### Fedora
 
