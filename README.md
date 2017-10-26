@@ -9,6 +9,8 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
 * [OpenAL Soft](http://kcat.strangesoft.net/openal.html)
 
+* [GLFW](http://www.glfw.org/) is included as part of the Go package, but you need to make sure you have dependencies installed, see below.
+
 ##### Ubuntu
 
     apt-get install libopenal-dev libgl1-mesa-dev libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev libxrandr-dev
@@ -19,11 +21,13 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
 ##### OS X
 
-On OS X system OpenAL framework is used.
+On OS X system OpenAL framework is used, you need Xcode or Command Line Tools for Xcode.
 
 ##### Windows ([MSYS2](https://msys2.github.io/))
 
     pacman -S mingw-w64-x86_64-openal mingw-w64-x86_64-gcc mingw-w64-x86_64-go git
+
+On Windows, build binary in MSYS2 shell.
 
 ##### Android
 
