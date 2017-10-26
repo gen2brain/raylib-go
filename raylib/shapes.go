@@ -8,7 +8,7 @@ import "C"
 import "unsafe"
 
 // DrawPixel - Draw a pixel
-func DrawPixel(posX int32, posY int32, color Color) {
+func DrawPixel(posX, posY int32, color Color) {
 	cposX := (C.int)(posX)
 	cposY := (C.int)(posY)
 	ccolor := color.cptr()
@@ -23,7 +23,7 @@ func DrawPixelV(position Vector2, color Color) {
 }
 
 // DrawLine - Draw a line
-func DrawLine(startPosX int32, startPosY int32, endPosX int32, endPosY int32, color Color) {
+func DrawLine(startPosX, startPosY, endPosX, endPosY int32, color Color) {
 	cstartPosX := (C.int)(startPosX)
 	cstartPosY := (C.int)(startPosY)
 	cendPosX := (C.int)(endPosX)
@@ -33,7 +33,7 @@ func DrawLine(startPosX int32, startPosY int32, endPosX int32, endPosY int32, co
 }
 
 // DrawLineV - Draw a line (Vector version)
-func DrawLineV(startPos Vector2, endPos Vector2, color Color) {
+func DrawLineV(startPos, endPos Vector2, color Color) {
 	cstartPos := startPos.cptr()
 	cendPos := endPos.cptr()
 	ccolor := color.cptr()
@@ -41,7 +41,7 @@ func DrawLineV(startPos Vector2, endPos Vector2, color Color) {
 }
 
 // DrawLineEx - Draw a line defining thickness
-func DrawLineEx(startPos Vector2, endPos Vector2, thick float32, color Color) {
+func DrawLineEx(startPos, endPos Vector2, thick float32, color Color) {
 	cstartPos := startPos.cptr()
 	cendPos := endPos.cptr()
 	cthick := (C.float)(thick)
@@ -50,7 +50,7 @@ func DrawLineEx(startPos Vector2, endPos Vector2, thick float32, color Color) {
 }
 
 // DrawLineBezier - Draw a line using cubic-bezier curves in-out
-func DrawLineBezier(startPos Vector2, endPos Vector2, thick float32, color Color) {
+func DrawLineBezier(startPos, endPos Vector2, thick float32, color Color) {
 	cstartPos := startPos.cptr()
 	cendPos := endPos.cptr()
 	cthick := (C.float)(thick)
@@ -59,7 +59,7 @@ func DrawLineBezier(startPos Vector2, endPos Vector2, thick float32, color Color
 }
 
 // DrawCircle - Draw a color-filled circle
-func DrawCircle(centerX int32, centerY int32, radius float32, color Color) {
+func DrawCircle(centerX, centerY int32, radius float32, color Color) {
 	ccenterX := (C.int)(centerX)
 	ccenterY := (C.int)(centerY)
 	cradius := (C.float)(radius)
@@ -68,7 +68,7 @@ func DrawCircle(centerX int32, centerY int32, radius float32, color Color) {
 }
 
 // DrawCircleGradient - Draw a gradient-filled circle
-func DrawCircleGradient(centerX int32, centerY int32, radius float32, color1 Color, color2 Color) {
+func DrawCircleGradient(centerX, centerY int32, radius float32, color1, color2 Color) {
 	ccenterX := (C.int)(centerX)
 	ccenterY := (C.int)(centerY)
 	cradius := (C.float)(radius)
@@ -86,7 +86,7 @@ func DrawCircleV(center Vector2, radius float32, color Color) {
 }
 
 // DrawCircleLines - Draw circle outline
-func DrawCircleLines(centerX int32, centerY int32, radius float32, color Color) {
+func DrawCircleLines(centerX, centerY int32, radius float32, color Color) {
 	ccenterX := (C.int)(centerX)
 	ccenterY := (C.int)(centerY)
 	cradius := (C.float)(radius)
@@ -95,7 +95,7 @@ func DrawCircleLines(centerX int32, centerY int32, radius float32, color Color) 
 }
 
 // DrawRectangle - Draw a color-filled rectangle
-func DrawRectangle(posX int32, posY int32, width int32, height int32, color Color) {
+func DrawRectangle(posX, posY, width, height int32, color Color) {
 	cposX := (C.int)(posX)
 	cposY := (C.int)(posY)
 	cwidth := (C.int)(width)
@@ -120,15 +120,36 @@ func DrawRectanglePro(rec Rectangle, origin Vector2, rotation float32, color Col
 	C.DrawRectanglePro(*crec, *corigin, crotation, *ccolor)
 }
 
-// DrawRectangleGradient - Draw a gradient-filled rectangle
-func DrawRectangleGradient(posX int32, posY int32, width int32, height int32, color1 Color, color2 Color) {
+// DrawRectangleGradientV - Draw a vertical-gradient-filled rectangle
+func DrawRectangleGradientV(posX, posY, width, height int32, color1, color2 Color) {
 	cposX := (C.int)(posX)
 	cposY := (C.int)(posY)
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
 	ccolor1 := color1.cptr()
 	ccolor2 := color2.cptr()
-	C.DrawRectangleGradient(cposX, cposY, cwidth, cheight, *ccolor1, *ccolor2)
+	C.DrawRectangleGradientV(cposX, cposY, cwidth, cheight, *ccolor1, *ccolor2)
+}
+
+// DrawRectangleGradientH - Draw a horizontal-gradient-filled rectangle
+func DrawRectangleGradientH(posX, posY, width, height int32, color1, color2 Color) {
+	cposX := (C.int)(posX)
+	cposY := (C.int)(posY)
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	ccolor1 := color1.cptr()
+	ccolor2 := color2.cptr()
+	C.DrawRectangleGradientH(cposX, cposY, cwidth, cheight, *ccolor1, *ccolor2)
+}
+
+// DrawRectangleGradientEx - Draw a gradient-filled rectangle with custom vertex colors
+func DrawRectangleGradientEx(rec Rectangle, color1, color2, color3, color4 Color) {
+	crec := rec.cptr()
+	ccolor1 := color1.cptr()
+	ccolor2 := color2.cptr()
+	ccolor3 := color3.cptr()
+	ccolor4 := color4.cptr()
+	C.DrawRectangleGradientEx(*crec, *ccolor1, *ccolor2, *ccolor3, *ccolor4)
 }
 
 // DrawRectangleV - Draw a color-filled rectangle (Vector version)
@@ -140,7 +161,7 @@ func DrawRectangleV(position Vector2, size Vector2, color Color) {
 }
 
 // DrawRectangleLines - Draw rectangle outline
-func DrawRectangleLines(posX int32, posY int32, width int32, height int32, color Color) {
+func DrawRectangleLines(posX, posY, width, height int32, color Color) {
 	cposX := (C.int)(posX)
 	cposY := (C.int)(posY)
 	cwidth := (C.int)(width)
@@ -149,8 +170,18 @@ func DrawRectangleLines(posX int32, posY int32, width int32, height int32, color
 	C.DrawRectangleLines(cposX, cposY, cwidth, cheight, *ccolor)
 }
 
+// DrawRectangleT - Draw rectangle using text character
+func DrawRectangleT(posX, posY, width, height int32, color Color) {
+	cposX := (C.int)(posX)
+	cposY := (C.int)(posY)
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	ccolor := color.cptr()
+	C.DrawRectangleT(cposX, cposY, cwidth, cheight, *ccolor)
+}
+
 // DrawTriangle - Draw a color-filled triangle
-func DrawTriangle(v1 Vector2, v2 Vector2, v3 Vector2, color Color) {
+func DrawTriangle(v1, v2, v3 Vector2, color Color) {
 	cv1 := v1.cptr()
 	cv2 := v2.cptr()
 	cv3 := v3.cptr()
@@ -159,7 +190,7 @@ func DrawTriangle(v1 Vector2, v2 Vector2, v3 Vector2, color Color) {
 }
 
 // DrawTriangleLines - Draw triangle outline
-func DrawTriangleLines(v1 Vector2, v2 Vector2, v3 Vector2, color Color) {
+func DrawTriangleLines(v1, v2, v3 Vector2, color Color) {
 	cv1 := v1.cptr()
 	cv2 := v2.cptr()
 	cv3 := v3.cptr()
@@ -168,7 +199,7 @@ func DrawTriangleLines(v1 Vector2, v2 Vector2, v3 Vector2, color Color) {
 }
 
 // DrawPoly - Draw a regular polygon (Vector version)
-func DrawPoly(center Vector2, sides int32, radius float32, rotation float32, color Color) {
+func DrawPoly(center Vector2, sides int32, radius, rotation float32, color Color) {
 	ccenter := center.cptr()
 	csides := (C.int)(sides)
 	cradius := (C.float)(radius)
@@ -194,7 +225,7 @@ func DrawPolyExLines(points []Vector2, numPoints int32, color Color) {
 }
 
 // CheckCollisionRecs - Check collision between two rectangles
-func CheckCollisionRecs(rec1 Rectangle, rec2 Rectangle) bool {
+func CheckCollisionRecs(rec1, rec2 Rectangle) bool {
 	crec1 := rec1.cptr()
 	crec2 := rec2.cptr()
 	ret := C.CheckCollisionRecs(*crec1, *crec2)
@@ -224,7 +255,7 @@ func CheckCollisionCircleRec(center Vector2, radius float32, rec Rectangle) bool
 }
 
 // GetCollisionRec - Get collision rectangle for two rectangles collision
-func GetCollisionRec(rec1 Rectangle, rec2 Rectangle) Rectangle {
+func GetCollisionRec(rec1, rec2 Rectangle) Rectangle {
 	crec1 := rec1.cptr()
 	crec2 := rec2.cptr()
 	ret := C.GetCollisionRec(*crec1, *crec2)
@@ -252,7 +283,7 @@ func CheckCollisionPointCircle(point Vector2, center Vector2, radius float32) bo
 }
 
 // CheckCollisionPointTriangle - Check if point is inside a triangle
-func CheckCollisionPointTriangle(point Vector2, p1 Vector2, p2 Vector2, p3 Vector2) bool {
+func CheckCollisionPointTriangle(point, p1, p2, p3 Vector2) bool {
 	cpoint := point.cptr()
 	cp1 := p1.cptr()
 	cp2 := p2.cptr()

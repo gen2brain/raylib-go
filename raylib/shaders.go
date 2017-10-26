@@ -13,16 +13,54 @@ type VrDevice int32
 
 // Head Mounted Display devices
 const (
-	HmdDefaultDevice     VrDevice = C.HMD_DEFAULT_DEVICE
-	HmdOculusRiftDk2     VrDevice = C.HMD_OCULUS_RIFT_DK2
-	HmdOculusRiftCv1     VrDevice = C.HMD_OCULUS_RIFT_CV1
-	HmdValveHtcVive      VrDevice = C.HMD_VALVE_HTC_VIVE
-	HmdSamsungGearVr     VrDevice = C.HMD_SAMSUNG_GEAR_VR
-	HmdGoogleCardboard   VrDevice = C.HMD_GOOGLE_CARDBOARD
-	HmdSonyPlaystationVr VrDevice = C.HMD_SONY_PLAYSTATION_VR
-	HmdRazerOsvr         VrDevice = C.HMD_RAZER_OSVR
-	HmdFoveVr            VrDevice = C.HMD_FOVE_VR
+	HmdDefaultDevice VrDevice = iota
+	HmdOculusRiftDk2
+	HmdOculusRiftCv1
+	HmdOculusGo
+	HmdValveHtcVive
+	HmdSonyPsvr
 )
+
+// VrDeviceInfo - Head-Mounted-Display device parameters
+type VrDeviceInfo struct {
+	// HMD horizontal resolution in pixels
+	hResolution int
+	// HMD vertical resolution in pixels
+	vResolution int
+	// HMD horizontal size in meters
+	hScreenSize float32
+	// HMD vertical size in meters
+	vScreenSize float32
+	// HMD screen center in meters
+	vScreenCenter float32
+	// HMD distance between eye and display in meters
+	eyeToScreenDistance float32
+	// HMD lens separation distance in meters
+	lensSeparationDistance float32
+	// HMD IPD (distance between pupils) in meters
+	interpupillaryDistance float32
+	// HMD lens distortion constant parameters
+	lensDistortionValues [4]float32
+	// HMD chromatic aberration correction parameters
+	chromaAbCorrection [4]float32
+}
+
+func (v *VrDeviceInfo) cptr() *C.VrDeviceInfo {
+	return (*C.VrDeviceInfo)(unsafe.Pointer(v))
+}
+
+// NewVrDeviceInfo - Returns new VrDeviceInfo
+func NewVrDeviceInfo(hResolution, vResolution int, hScreenSize, vScreenSize, vScreenCenter, eyeToScreenDistance,
+	lensSeparationDistance, interpupillaryDistance float32, lensDistortionValues, chromaAbCorrection [4]float32) VrDeviceInfo {
+
+	return VrDeviceInfo{hResolution, vResolution, hScreenSize, vScreenSize, vScreenCenter, eyeToScreenDistance,
+		lensSeparationDistance, interpupillaryDistance, lensDistortionValues, chromaAbCorrection}
+}
+
+// NewVrDeviceInfoFromPointer - Returns new VrDeviceInfo from pointer
+func NewVrDeviceInfoFromPointer(ptr unsafe.Pointer) VrDeviceInfo {
+	return *(*VrDeviceInfo)(ptr)
+}
 
 // BlendMode type
 type BlendMode int32
@@ -38,32 +76,8 @@ const (
 type Shader struct {
 	// Shader program id
 	ID uint32
-	// Vertex attribute location point (default-location = 0)
-	VertexLoc int32
-	// Texcoord attribute location point (default-location = 1)
-	TexcoordLoc int32
-	// Texcoord2 attribute location point (default-location = 5)
-	Texcoord2Loc int32
-	// Normal attribute location point (default-location = 2)
-	NormalLoc int32
-	// Tangent attribute location point (default-location = 4)
-	TangentLoc int32
-	// Color attibute location point (default-location = 3)
-	ColorLoc int32
-	// ModelView-Projection matrix uniform location point (vertex shader)
-	MvpLoc int32
-	// Diffuse color uniform location point (fragment shader)
-	ColDiffuseLoc int32
-	// Ambient color uniform location point (fragment shader)
-	ColAmbientLoc int32
-	// Specular color uniform location point (fragment shader)
-	ColSpecularLoc int32
-	// Map texture uniform location point (default-texture-unit = 0)
-	MapTexture0Loc int32
-	// Map texture uniform location point (default-texture-unit = 1)
-	MapTexture1Loc int32
-	// Map texture uniform location point (default-texture-unit = 2)
-	MapTexture2Loc int32
+	// Shader locations array
+	Locs [MaxShaderLocations]int32
 }
 
 func (s *Shader) cptr() *C.Shader {
@@ -71,8 +85,8 @@ func (s *Shader) cptr() *C.Shader {
 }
 
 // NewShader - Returns new Shader
-func NewShader(id uint32, vertexLoc, texcoordLoc, texcoord2Loc, normalLoc, tangentLoc, colorLoc, mvpLoc, colDiffuseLoc, colAmbientLoc, colSpecularLoc, mapTexture0Loc, mapTexture1Loc, mapTexture2Loc int32) Shader {
-	return Shader{id, vertexLoc, texcoordLoc, texcoord2Loc, normalLoc, tangentLoc, colorLoc, mvpLoc, colDiffuseLoc, colAmbientLoc, colSpecularLoc, mapTexture0Loc, mapTexture1Loc, mapTexture2Loc}
+func NewShader(id uint32, locs [MaxShaderLocations]int32) Shader {
+	return Shader{id, locs}
 }
 
 // NewShaderFromPointer - Returns new Shader from pointer
@@ -98,16 +112,16 @@ func UnloadShader(shader Shader) {
 	C.UnloadShader(*cshader)
 }
 
-// GetDefaultShader - Get default shader
-func GetDefaultShader() Shader {
-	ret := C.GetDefaultShader()
+// GetShaderDefault - Get default shader
+func GetShaderDefault() Shader {
+	ret := C.GetShaderDefault()
 	v := NewShaderFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
-// GetDefaultTexture - Get default texture
-func GetDefaultTexture() *Texture2D {
-	ret := C.GetDefaultTexture()
+// GetTextureDefault - Get default texture
+func GetTextureDefault() *Texture2D {
+	ret := C.GetTextureDefault()
 	v := NewTexture2DFromPointer(unsafe.Pointer(&ret))
 	return &v
 }
@@ -117,6 +131,7 @@ func GetShaderLocation(shader Shader, uniformName string) int32 {
 	cshader := shader.cptr()
 	cuniformName := C.CString(uniformName)
 	defer C.free(unsafe.Pointer(cuniformName))
+
 	ret := C.GetShaderLocation(*cshader, cuniformName)
 	v := (int32)(ret)
 	return v
@@ -160,6 +175,50 @@ func SetMatrixModelview(view Matrix) {
 	C.SetMatrixModelview(*cview)
 }
 
+// GenTextureCubemap - Generate cubemap texture from HDR texture
+func GenTextureCubemap(shader Shader, skyHDR Texture2D, size int) Texture2D {
+	cshader := shader.cptr()
+	cskyHDR := skyHDR.cptr()
+	csize := (C.int)(size)
+
+	ret := C.GenTextureCubemap(*cshader, *cskyHDR, csize)
+	v := NewTexture2DFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenTextureIrradiance - Generate irradiance texture using cubemap data
+func GenTextureIrradiance(shader Shader, cubemap Texture2D, size int) Texture2D {
+	cshader := shader.cptr()
+	ccubemap := cubemap.cptr()
+	csize := (C.int)(size)
+
+	ret := C.GenTextureIrradiance(*cshader, *ccubemap, csize)
+	v := NewTexture2DFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenTexturePrefilter - Generate prefilter texture using cubemap data
+func GenTexturePrefilter(shader Shader, cubemap Texture2D, size int) Texture2D {
+	cshader := shader.cptr()
+	ccubemap := cubemap.cptr()
+	csize := (C.int)(size)
+
+	ret := C.GenTexturePrefilter(*cshader, *ccubemap, csize)
+	v := NewTexture2DFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenTextureBRDF - Generate BRDF texture using cubemap data
+func GenTextureBRDF(shader Shader, cubemap Texture2D, size int) Texture2D {
+	cshader := shader.cptr()
+	ccubemap := cubemap.cptr()
+	csize := (C.int)(size)
+
+	ret := C.GenTextureBRDF(*cshader, *ccubemap, csize)
+	v := NewTexture2DFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // BeginShaderMode - Begin custom shader drawing
 func BeginShaderMode(shader Shader) {
 	cshader := shader.cptr()
@@ -182,10 +241,18 @@ func EndBlendMode() {
 	C.EndBlendMode()
 }
 
+// GetVrDeviceInfo - Get VR device information for some standard devices
+func GetVrDeviceInfo(vrDevice VrDevice) VrDeviceInfo {
+	cvrDevice := (C.int)(vrDevice)
+	ret := C.GetVrDeviceInfo(cvrDevice)
+	v := NewVrDeviceInfoFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // InitVrSimulator - Init VR simulator for selected device
-func InitVrSimulator(vdDevice VrDevice) {
-	cvdDevice := (C.int)(vdDevice)
-	C.InitVrSimulator(cvdDevice)
+func InitVrSimulator(vrDeviceInfo VrDeviceInfo) {
+	cvrDeviceInfo := vrDeviceInfo.cptr()
+	C.InitVrSimulator(*cvrDeviceInfo)
 }
 
 // CloseVrSimulator - Close VR simulator for current device

@@ -34,6 +34,14 @@
 *
 **********************************************************************************************/
 
+/*  
+References:
+    RIFF file-format:  http://www.johnloomis.org/cpe102/asgn/asgn1/riff.html
+    ZIP file-format:   https://en.wikipedia.org/wiki/Zip_(file_format)
+                       http://www.onicos.com/staff/iz/formats/zip.html
+    XNB file-format:   http://xbox.create.msdn.com/en-US/sample/xnb_format
+*/
+
 #ifndef RRES_H
 #define RRES_H
 
@@ -75,6 +83,9 @@
         void *data;                 // Resource data pointer (4 byte)
     } RRESData;
     
+    // RRES type (pointer to RRESData array)
+    typedef struct RRESData *RRES;  // Resource pointer
+    
     // RRESData type
     typedef enum { 
         RRES_TYPE_RAW = 0, 
@@ -83,12 +94,25 @@
         RRES_TYPE_VERTEX, 
         RRES_TYPE_TEXT,
         RRES_TYPE_FONT_IMAGE,
-        RRES_TYPE_FONT_CHARDATA,        // Character { int value, recX, recY, recWidth, recHeight, offsetX, offsetY, xAdvance } 
+        RRES_TYPE_FONT_CHARDATA,    // CharInfo { int value, recX, recY, recWidth, recHeight, offsetX, offsetY, xAdvance } 
         RRES_TYPE_DIRECTORY
     } RRESDataType;
     
-    // RRES type (pointer to RRESData array)
-    typedef struct RRESData *RRES;
+// Parameters information depending on resource type
+
+// RRES_TYPE_RAW params:        <custom>
+// RRES_TYPE_IMAGE params:      width, height, mipmaps, format
+// RRES_TYPE_WAVE params:       sampleCount, sampleRate, sampleSize, channels
+// RRES_TYPE_VERTEX params:     vertexCount, vertexType, vertexFormat           // Use masks instead?
+// RRES_TYPE_TEXT params:       charsCount, cultureCode
+// RRES_TYPE_FONT_IMAGE params: width, height, format, mipmaps;
+// RRES_TYPE_FONT_CHARDATA params:  charsCount, baseSize
+// RRES_TYPE_DIRECTORY params:  fileCount, directoryCount
+
+// SpriteFont = RRES_TYPE_FONT_IMAGE chunk + RRES_TYPE_FONT_DATA chunk
+// Mesh = multiple RRES_TYPE_VERTEX chunks
+    
+
 #endif
 
 //----------------------------------------------------------------------------------
@@ -102,6 +126,54 @@
 //RRESDEF RRESData LoadResourceData(const char *rresFileName, int rresId, int part);
 RRESDEF RRES LoadResource(const char *fileName, int rresId);
 RRESDEF void UnloadResource(RRES rres);
+
+/*
+QUESTION: How to load each type of data from RRES ?
+
+rres->type == RRES_TYPE_RAW
+unsigned char data = (unsigned char *)rres[0]->data;
+
+rres->type == RRES_TYPE_IMAGE
+Image image;
+image.data = rres[0]->data;        // Be careful, duplicate pointer
+image.width = rres[0]->param1;
+image.height = rres[0]->param2;
+image.mipmaps = rres[0]->param3;
+image.format =  rres[0]->format;
+
+rres->type == RRES_TYPE_WAVE
+Wave wave;
+wave.data = rres[0]->data;
+wave.sampleCount = rres[0]->param1;
+wave.sampleRate = rres[0]->param2;
+wave.sampleSize = rres[0]->param3;
+wave.channels = rres[0]->param4;
+
+rres->type == RRES_TYPE_VERTEX (multiple parts)
+Mesh mesh;
+mesh.vertexCount = rres[0]->param1;
+mesh.vertices = (float *)rres[0]->data;
+mesh.texcoords = (float *)rres[1]->data;
+mesh.normals = (float *)rres[2]->data;
+mesh.tangents = (float *)rres[3]->data;
+mesh.tangents = (unsigned char *)rres[4]->data;
+
+rres->type == RRES_TYPE_TEXT
+unsigned char *text = (unsigned char *)rres->data;
+Shader shader = LoadShaderText(text, rres->param1);     Shader LoadShaderText(const char *shdrText, int length);
+
+rres->type == RRES_TYPE_FONT_IMAGE      (multiple parts)
+rres->type == RRES_TYPE_FONT_CHARDATA   
+SpriteFont font;
+font.texture = LoadTextureFromImage(image);     // rres[0]
+font.chars = (CharInfo *)rres[1]->data;
+font.charsCount = rres[1]->param1;
+font.baseSize = rres[1]->param2;
+
+rres->type == RRES_TYPE_DIRECTORY
+unsigned char *fileNames = (unsigned char *)rres[0]->data;  // fileNames separed by \n
+int filesCount = rres[0]->param1;
+*/
 
 #endif // RRES_H
 
@@ -169,6 +241,7 @@ typedef enum {
     // gzip, zopfli, lzo, zstd  // Other compression algorythms...
 } RRESCompressionType;
 
+// Encryption types
 typedef enum {
     RRES_CRYPTO_NONE = 0,       // No data encryption
     RRES_CRYPTO_XOR,            // XOR (128 bit) encryption
@@ -179,6 +252,7 @@ typedef enum {
     // twofish, RC5, RC6        // Other encryption algorythm...
 } RRESEncryptionType;
 
+// Image/Texture data type
 typedef enum {
     RRES_IM_UNCOMP_GRAYSCALE = 1,     // 8 bit per pixel (no alpha)
     RRES_IM_UNCOMP_GRAY_ALPHA,        // 16 bpp (2 channels)
@@ -201,6 +275,7 @@ typedef enum {
     //...
 } RRESImageFormat;
 
+// Vertex data type
 typedef enum {
     RRES_VERT_POSITION,
     RRES_VERT_TEXCOORD1,
@@ -214,6 +289,7 @@ typedef enum {
     //...
 } RRESVertexType;
 
+// Vertex data format type
 typedef enum {
     RRES_VERT_BYTE,
     RRES_VERT_SHORT,
@@ -252,7 +328,7 @@ RRESDEF RRES LoadResource(const char *fileName, int rresId)
     
     FILE *rresFile = fopen(fileName, "rb");
 
-    if (rresFile == NULL) TraceLog(WARNING, "[%s] rRES raylib resource file could not be opened", fileName);
+    if (rresFile == NULL) TraceLog(LOG_WARNING, "[%s] rRES raylib resource file could not be opened", fileName);
     else
     {
         // Read rres file info header
@@ -266,7 +342,7 @@ RRESDEF RRES LoadResource(const char *fileName, int rresId)
         // Verify "rRES" identifier
         if ((fileHeader.id[0] != 'r') && (fileHeader.id[1] != 'R') && (fileHeader.id[2] != 'E') && (fileHeader.id[3] != 'S'))
         {
-            TraceLog(WARNING, "[%s] This is not a valid raylib resource file", fileName);
+            TraceLog(LOG_WARNING, "[%s] This is not a valid raylib resource file", fileName);
         }
         else
         {
@@ -275,10 +351,10 @@ RRESDEF RRES LoadResource(const char *fileName, int rresId)
                 // Read resource info and parameters
                 fread(&infoHeader, sizeof(RRESInfoHeader), 1, rresFile);
                 
-                rres = (RRES)malloc(sizeof(RRESData)*infoHeader.partsCount);
-                
                 if (infoHeader.id == rresId)
                 {
+                    rres = (RRES)malloc(sizeof(RRESData)*infoHeader.partsCount);
+                                    
                     // Load all required resources parts
                     for (int k = 0; k < infoHeader.partsCount; k++)
                     {
@@ -305,7 +381,7 @@ RRESDEF RRES LoadResource(const char *fileName, int rresId)
                         }
                         else rres[k].data = data;
 
-                        if (rres[k].data != NULL) TraceLog(INFO, "[%s][ID %i] Resource data loaded successfully", fileName, (int)infoHeader.id);
+                        if (rres[k].data != NULL) TraceLog(LOG_INFO, "[%s][ID %i] Resource data loaded successfully", fileName, (int)infoHeader.id);
                         
                         // Read next part
                         fread(&infoHeader, sizeof(RRESInfoHeader), 1, rresFile); 
@@ -318,7 +394,7 @@ RRESDEF RRES LoadResource(const char *fileName, int rresId)
                 }
             }
             
-            if (rres[0].data == NULL) TraceLog(WARNING, "[%s][ID %i] Requested resource could not be found", fileName, (int)rresId);
+            if (rres[0].data == NULL) TraceLog(LOG_WARNING, "[%s][ID %i] Requested resource could not be found", fileName, (int)rresId);
         }
 
         fclose(rresFile);
@@ -327,8 +403,11 @@ RRESDEF RRES LoadResource(const char *fileName, int rresId)
     return rres;
 }
 
+// Unload resource data
 RRESDEF void UnloadResource(RRES rres)
 {
+    // TODO: When you load resource... how many parts conform it? depends on type? --> Not clear...
+    
     if (rres[0].data != NULL) free(rres[0].data);
 }
 
@@ -349,7 +428,7 @@ static void *DecompressData(const unsigned char *data, unsigned long compSize, i
     // Check correct memory allocation
     if (uncompData == NULL)
     {
-        TraceLog(WARNING, "Out of memory while decompressing data");
+        TraceLog(LOG_WARNING, "Out of memory while decompressing data");
     }
     else
     {
@@ -358,18 +437,18 @@ static void *DecompressData(const unsigned char *data, unsigned long compSize, i
 
         if (tempUncompSize == -1)
         {
-            TraceLog(WARNING, "Data decompression failed");
+            TraceLog(LOG_WARNING, "Data decompression failed");
             RRES_FREE(uncompData);
         }
 
         if (uncompSize != (int)tempUncompSize)
         {
-            TraceLog(WARNING, "Expected uncompressed size do not match, data may be corrupted");
-            TraceLog(WARNING, " -- Expected uncompressed size: %i", uncompSize);
-            TraceLog(WARNING, " -- Returned uncompressed size: %i", tempUncompSize);
+            TraceLog(LOG_WARNING, "Expected uncompressed size do not match, data may be corrupted");
+            TraceLog(LOG_WARNING, " -- Expected uncompressed size: %i", uncompSize);
+            TraceLog(LOG_WARNING, " -- Returned uncompressed size: %i", tempUncompSize);
         }
 
-        TraceLog(INFO, "Data decompressed successfully from %u bytes to %u bytes", (mz_uint32)compSize, (mz_uint32)tempUncompSize);
+        TraceLog(LOG_INFO, "Data decompressed successfully from %u bytes to %u bytes", (mz_uint32)compSize, (mz_uint32)tempUncompSize);
     }
 
     return uncompData;
@@ -377,61 +456,28 @@ static void *DecompressData(const unsigned char *data, unsigned long compSize, i
 
 // Some required functions for rres standalone module version
 #if defined(RRES_STANDALONE)
-// Outputs a trace log message (INFO, ERROR, WARNING)
-// NOTE: If a file has been init, output log is written there
+// Show trace log messages (LOG_INFO, LOG_WARNING, LOG_ERROR, LOG_DEBUG)
 void TraceLog(int logType, const char *text, ...)
 {
     va_list args;
-    int traceDebugMsgs = 0;
-
-#ifdef DO_NOT_TRACE_DEBUG_MSGS
-    traceDebugMsgs = 0;
-#endif
+    va_start(args, text);
 
     switch (msgType)
     {
         case LOG_INFO: fprintf(stdout, "INFO: "); break;
         case LOG_ERROR: fprintf(stdout, "ERROR: "); break;
         case LOG_WARNING: fprintf(stdout, "WARNING: "); break;
-        case LOG_DEBUG: if (traceDebugMsgs) fprintf(stdout, "DEBUG: "); break;
+        case LOG_DEBUG: fprintf(stdout, "DEBUG: "); break;
         default: break;
     }
 
-    if ((msgType != LOG_DEBUG) || ((msgType == LOG_DEBUG) && (traceDebugMsgs)))
-    {
-        va_start(args, text);
-        vfprintf(stdout, text, args);
-        va_end(args);
+    vfprintf(stdout, text, args);
+    fprintf(stdout, "\n");
 
-        fprintf(stdout, "\n");
-    }
+    va_end(args);
 
-    if (msgType == ERROR) exit(1);      // If ERROR message, exit program
+    if (msgType == LOG_ERROR) exit(1);
 }
 #endif
 
-#endif // RAYGUI_IMPLEMENTATION
-
-/*
-Mesh LoadMeshEx(int numVertex, float *vData, float *vtData, float *vnData, Color *cData);
-Mesh LoadMeshEx(rres.param1, rres.data, rres.data + offset, rres.data + offset*2, rres.data + offset*3);
-
-Shader LoadShader(const char *vsText, int vsLength);
-Shader LoadShaderV(rres.data, rres.param1);
-
-// Parameters information depending on resource type
-
-// RRES_TYPE_IMAGE params:      imgWidth, imgHeight, format, mipmaps;
-// RRES_TYPE_WAVE params:       sampleCount, sampleRate, sampleSize, channels;
-// RRES_TYPE_FONT_IMAGE params: imgWidth, imgHeight, format, mipmaps;
-// RRES_TYPE_FONT_DATA params:  charsCount, baseSize
-// RRES_TYPE_VERTEX params:     vertexCount, vertexType, vertexFormat        // Use masks instead?
-// RRES_TYPE_TEXT params:       charsCount, cultureCode
-// RRES_TYPE_DIRECTORY params:  fileCount, directoryCount
-
-// SpriteFont = RRES_TYPE_FONT_IMAGE chunk + RRES_TYPE_FONT_DATA chunk
-// Mesh = multiple RRES_TYPE_VERTEX chunks
-
-Ref: RIFF file-format: http://www.johnloomis.org/cpe102/asgn/asgn1/riff.html
-
-*/
+#endif // RRES_IMPLEMENTATION

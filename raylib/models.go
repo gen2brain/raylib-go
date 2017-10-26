@@ -6,7 +6,66 @@ package raylib
 */
 import "C"
 import "unsafe"
-import "reflect"
+
+// Shader location point type
+const (
+	LocVertexPosition = iota
+	LocVertexTexcoord01
+	LocVertexTexcoord02
+	LocVertexNormal
+	LocVertexTangent
+	LocVertexColor
+	LocMatrixMvp
+	LocMatrixModel
+	LocMatrixView
+	LocMatrixProjection
+	LocVectorView
+	LocColorDiffuse
+	LocColorSpecular
+	LocColorAmbient
+	LocMapAlbedo
+	LocMapMetalness
+	LocMapNormal
+	LocMapRoughness
+	LocMapOccusion
+	LocMapEmission
+	LocMapHeight
+	LocMapCubemap
+	LocMapIrradiance
+	LocMapPrefilter
+	LocMapBrdf
+)
+
+// Material map type
+const (
+	// MapDiffuse
+	MapAlbedo = iota
+	MapMetalness
+	MapNormal
+	MapRoughness
+	MapOcclusion
+	MapEmission
+	MapHeight
+	// NOTE: Uses GL_TEXTURE_CUBE_MAP
+	MapCubemap
+	// NOTE: Uses GL_TEXTURE_CUBE_MAP
+	MapIrradiance
+	// NOTE: Uses GL_TEXTURE_CUBE_MAP
+	MapPrefilter
+	MapBrdf
+)
+
+const (
+	MapDiffuse     = MapAlbedo
+	MapSpecular    = MapMetalness
+	LocMapDiffuse  = LocMapAlbedo
+	LocMapSpecular = LocMapMetalness
+)
+
+const (
+	MaxShaderLocations = 32
+	MaxMaterialMaps    = 12
+)
 
 // Mesh - Vertex data definning a mesh
 type Mesh struct {
@@ -50,22 +109,14 @@ func NewMeshFromPointer(ptr unsafe.Pointer) Mesh {
 
 // Material type
 type Material struct {
-	// Standard shader (supports 3 map textures)
+	// Shader
 	Shader Shader
-	// Diffuse texture  (binded to shader mapTexture0Loc)
-	TexDiffuse Texture2D
-	// Normal texture   (binded to shader mapTexture1Loc)
-	TexNormal Texture2D
-	// Specular texture (binded to shader mapTexture2Loc)
-	TexSpecular Texture2D
-	// Diffuse color
-	ColDiffuse Color
-	// Ambient color
-	ColAmbient Color
-	// Specular color
-	ColSpecular Color
-	// Glossiness level (Ranges from 0 to 1000)
-	Glossiness float32
+	// Maps
+	Maps [MaxMaterialMaps]MaterialMap
+	// Padding
+	_ [4]byte
+	// Generic parameters (if required)
+	Params *[]float32
 }
 
 func (m *Material) cptr() *C.Material {
@@ -73,13 +124,23 @@ func (m *Material) cptr() *C.Material {
 }
 
 // NewMaterial - Returns new Material
-func NewMaterial(shader Shader, texDiffuse, texNormal, texSpecular Texture2D, colDiffuse, colAmbient, colSpecular Color, glossiness float32) Material {
-	return Material{shader, texDiffuse, texNormal, texSpecular, colDiffuse, colAmbient, colSpecular, glossiness}
+func NewMaterial(shader Shader, maps [MaxMaterialMaps]MaterialMap, params *[]float32) Material {
+	return Material{shader, maps, [4]byte{}, params}
 }
 
 // NewMaterialFromPointer - Returns new Material from pointer
 func NewMaterialFromPointer(ptr unsafe.Pointer) Material {
 	return *(*Material)(ptr)
+}
+
+// MaterialMap type
+type MaterialMap struct {
+	// Texture
+	Texture Texture2D
+	// Color
+	Color Color
+	// Value
+	Value float32
 }
 
 // Model type
@@ -274,18 +335,6 @@ func LoadMesh(fileName string) Mesh {
 	return v
 }
 
-// LoadMeshEx - Load mesh from vertex data
-func LoadMeshEx(numVertex int32, vData []float32, vtData []float32, vnData []float32, cData []Color) Mesh {
-	cnumVertex := (C.int)(numVertex)
-	cvData := (*C.float)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&vData)).Data))
-	cvtData := (*C.float)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&vtData)).Data))
-	cvnData := (*C.float)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&vnData)).Data))
-	ccData := (*C.Color)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&cData)).Data))
-	ret := C.LoadMeshEx(cnumVertex, cvData, cvtData, cvnData, ccData)
-	v := NewMeshFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // LoadModel - Load model from file
 func LoadModel(fileName string) Model {
 	cfileName := C.CString(fileName)
@@ -296,32 +345,17 @@ func LoadModel(fileName string) Model {
 }
 
 // LoadModelFromMesh - Load model from mesh data
-func LoadModelFromMesh(data Mesh, dynamic bool) Model {
+func LoadModelFromMesh(data Mesh) Model {
 	cdata := data.cptr()
-	cdynamic := 0
-	if dynamic {
-		cdynamic = 1
-	}
-	ret := C.LoadModelFromMesh(*cdata, C.bool(cdynamic))
+	ret := C.LoadModelFromMesh(*cdata)
 	v := NewModelFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
-// LoadHeightmap - Load heightmap model from image data
-func LoadHeightmap(heightmap *Image, size Vector3) Model {
-	cheightmap := heightmap.cptr()
-	csize := size.cptr()
-	ret := C.LoadHeightmap(*cheightmap, *csize)
-	v := NewModelFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// LoadCubicmap - Load cubes-based map model from image data
-func LoadCubicmap(cubicmap *Image) Model {
-	ccubicmap := cubicmap.cptr()
-	ret := C.LoadCubicmap(*ccubicmap)
-	v := NewModelFromPointer(unsafe.Pointer(&ret))
-	return v
+// UnloadModel - Unload model from memory (RAM and/or VRAM)
+func UnloadModel(model Model) {
+	cmodel := model.cptr()
+	C.UnloadModel(*cmodel)
 }
 
 // UnloadMesh - Unload mesh from memory (RAM and/or VRAM)
@@ -330,10 +364,104 @@ func UnloadMesh(mesh *Mesh) {
 	C.UnloadMesh(cmesh)
 }
 
-// UnloadModel - Unload model from memory (RAM and/or VRAM)
-func UnloadModel(model Model) {
-	cmodel := model.cptr()
-	C.UnloadModel(*cmodel)
+// GenMeshPlane - Generate plane mesh (with subdivisions)
+func GenMeshPlane(width, length float32, resX, resZ int) Mesh {
+	cwidth := (C.float)(width)
+	clength := (C.float)(length)
+	cresX := (C.int)(resX)
+	cresZ := (C.int)(resZ)
+
+	ret := C.GenMeshPlane(cwidth, clength, cresX, cresZ)
+	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenMeshCube - Generate cuboid mesh
+func GenMeshCube(width, height, length float32) Mesh {
+	cwidth := (C.float)(width)
+	cheight := (C.float)(height)
+	clength := (C.float)(length)
+
+	ret := C.GenMeshCube(cwidth, cheight, clength)
+	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenMeshSphere - Generate sphere mesh (standard sphere)
+func GenMeshSphere(radius float32, rings, slices int) Mesh {
+	cradius := (C.float)(radius)
+	crings := (C.int)(rings)
+	cslices := (C.int)(slices)
+
+	ret := C.GenMeshSphere(cradius, crings, cslices)
+	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenMeshHemiSphere - Generate half-sphere mesh (no bottom cap)
+func GenMeshHemiSphere(radius float32, rings, slices int) Mesh {
+	cradius := (C.float)(radius)
+	crings := (C.int)(rings)
+	cslices := (C.int)(slices)
+
+	ret := C.GenMeshHemiSphere(cradius, crings, cslices)
+	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenMeshCylinder - Generate cylinder mesh
+func GenMeshCylinder(radius, height float32, slices int) Mesh {
+	cradius := (C.float)(radius)
+	cheight := (C.float)(height)
+	cslices := (C.int)(slices)
+
+	ret := C.GenMeshCylinder(cradius, cheight, cslices)
+	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenMeshTorus - Generate torus mesh
+func GenMeshTorus(radius, size float32, radSeg, sides int) Mesh {
+	cradius := (C.float)(radius)
+	csize := (C.float)(size)
+	cradSeg := (C.int)(radSeg)
+	csides := (C.int)(sides)
+
+	ret := C.GenMeshTorus(cradius, csize, cradSeg, csides)
+	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenMeshKnot - Generate trefoil knot mesh
+func GenMeshKnot(radius, size float32, radSeg, sides int) Mesh {
+	cradius := (C.float)(radius)
+	csize := (C.float)(size)
+	cradSeg := (C.int)(radSeg)
+	csides := (C.int)(sides)
+
+	ret := C.GenMeshKnot(cradius, csize, cradSeg, csides)
+	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenMeshHeightmap - Generate heightmap mesh from image data
+func GenMeshHeightmap(heightmap Image, size Vector3) Mesh {
+	cheightmap := heightmap.cptr()
+	csize := size.cptr()
+
+	ret := C.GenMeshHeightmap(*cheightmap, *csize)
+	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenMeshCubicmap - Generate cubes-based map mesh from image data
+func GenMeshCubicmap(cubicmap Image, size Vector3) Mesh {
+	ccubicmap := cubicmap.cptr()
+	csize := size.cptr()
+
+	ret := C.GenMeshCubicmap(*ccubicmap, *csize)
+	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	return v
 }
 
 // LoadMaterial - Load material data (.MTL)
@@ -345,9 +473,9 @@ func LoadMaterial(fileName string) Material {
 	return v
 }
 
-// LoadDefaultMaterial - Load default material (uses default models shader)
-func LoadDefaultMaterial() Material {
-	ret := C.LoadDefaultMaterial()
+// LoadMaterialDefault - Load default material (Supports: DIFFUSE, SPECULAR, NORMAL maps)
+func LoadMaterialDefault() Material {
+	ret := C.LoadMaterialDefault()
 	v := NewMaterialFromPointer(unsafe.Pointer(&ret))
 	return v
 }

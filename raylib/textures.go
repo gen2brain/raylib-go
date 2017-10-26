@@ -174,7 +174,7 @@ func LoadImage(fileName string) *Image {
 }
 
 // LoadImageEx - Load image data from Color array data (RGBA - 32bit)
-func LoadImageEx(pixels []Color, width int32, height int32) *Image {
+func LoadImageEx(pixels []Color, width, height int32) *Image {
 	cpixels := pixels[0].cptr()
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
@@ -184,7 +184,7 @@ func LoadImageEx(pixels []Color, width int32, height int32) *Image {
 }
 
 // LoadImagePro - Load image from raw data with parameters
-func LoadImagePro(data []byte, width int32, height int32, format TextureFormat) *Image {
+func LoadImagePro(data []byte, width, height int32, format TextureFormat) *Image {
 	cdata := unsafe.Pointer(&data[0])
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
@@ -195,7 +195,7 @@ func LoadImagePro(data []byte, width int32, height int32, format TextureFormat) 
 }
 
 // LoadImageRaw - Load image data from RAW file
-func LoadImageRaw(fileName string, width int32, height int32, format TextureFormat, headerSize int32) *Image {
+func LoadImageRaw(fileName string, width, height int32, format TextureFormat, headerSize int32) *Image {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	cwidth := (C.int)(width)
@@ -225,7 +225,7 @@ func LoadTextureFromImage(image *Image) Texture2D {
 }
 
 // LoadRenderTexture - Load a texture to be used for rendering
-func LoadRenderTexture(width int32, height int32) RenderTexture2D {
+func LoadRenderTexture(width, height int32) RenderTexture2D {
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
 	ret := C.LoadRenderTexture(cwidth, cheight)
@@ -273,6 +273,15 @@ func UpdateTexture(texture Texture2D, pixels unsafe.Pointer) {
 	C.UpdateTexture(*ctexture, cpixels)
 }
 
+// SaveImageAs - Save image to a PNG file
+func SaveImageAs(name string, image Image) {
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+	cimage := image.cptr()
+
+	C.SaveImageAs(cname, *cimage)
+}
+
 // ImageToPOT - Convert image to POT (power-of-two)
 func ImageToPOT(image *Image, fillColor Color) {
 	cimage := image.cptr()
@@ -288,14 +297,14 @@ func ImageFormat(image *Image, newFormat int32) {
 }
 
 // ImageAlphaMask - Apply alpha mask to image
-func ImageAlphaMask(image *Image, alphaMask *Image) {
+func ImageAlphaMask(image, alphaMask *Image) {
 	cimage := image.cptr()
 	calphaMask := alphaMask.cptr()
 	C.ImageAlphaMask(cimage, *calphaMask)
 }
 
 // ImageDither - Dither image data to 16bpp or lower (Floyd-Steinberg dithering)
-func ImageDither(image *Image, rBpp int32, gBpp int32, bBpp int32, aBpp int32) {
+func ImageDither(image *Image, rBpp, gBpp, bBpp, aBpp int32) {
 	cimage := image.cptr()
 	crBpp := (C.int)(rBpp)
 	cgBpp := (C.int)(gBpp)
@@ -320,7 +329,7 @@ func ImageCrop(image *Image, crop Rectangle) {
 }
 
 // ImageResize - Resize an image (bilinear filtering)
-func ImageResize(image *Image, newWidth int32, newHeight int32) {
+func ImageResize(image *Image, newWidth, newHeight int32) {
 	cimage := image.cptr()
 	cnewWidth := (C.int)(newWidth)
 	cnewHeight := (C.int)(newHeight)
@@ -328,7 +337,7 @@ func ImageResize(image *Image, newWidth int32, newHeight int32) {
 }
 
 // ImageResizeNN - Resize an image (Nearest-Neighbor scaling algorithm)
-func ImageResizeNN(image *Image, newWidth int32, newHeight int32) {
+func ImageResizeNN(image *Image, newWidth, newHeight int32) {
 	cimage := image.cptr()
 	cnewWidth := (C.int)(newWidth)
 	cnewHeight := (C.int)(newHeight)
@@ -360,7 +369,7 @@ func ImageTextEx(font SpriteFont, text string, fontSize float32, spacing int32, 
 }
 
 // ImageDraw - Draw a source image within a destination image
-func ImageDraw(dst *Image, src *Image, srcRec Rectangle, dstRec Rectangle) {
+func ImageDraw(dst, src *Image, srcRec, dstRec Rectangle) {
 	cdst := dst.cptr()
 	csrc := src.cptr()
 	csrcRec := srcRec.cptr()
@@ -437,6 +446,101 @@ func ImageColorBrightness(image *Image, brightness int32) {
 	C.ImageColorBrightness(cimage, cbrightness)
 }
 
+// GenImageColor - Generate image: plain color
+func GenImageColor(width, height int, color Color) *Image {
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	ccolor := color.cptr()
+
+	ret := C.GenImageColor(cwidth, cheight, *ccolor)
+	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenImageGradientV - Generate image: vertical gradient
+func GenImageGradientV(width, height int, top, bottom Color) *Image {
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	ctop := top.cptr()
+	cbottom := bottom.cptr()
+
+	ret := C.GenImageGradientV(cwidth, cheight, *ctop, *cbottom)
+	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenImageGradientH - Generate image: horizontal gradient
+func GenImageGradientH(width, height int, left, right Color) *Image {
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	cleft := left.cptr()
+	cright := right.cptr()
+
+	ret := C.GenImageGradientH(cwidth, cheight, *cleft, *cright)
+	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenImageGradientRadial - Generate image: radial gradient
+func GenImageGradientRadial(width, height int, density float32, inner, outer Color) *Image {
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	cdensity := (C.float)(density)
+	cinner := inner.cptr()
+	couter := outer.cptr()
+
+	ret := C.GenImageGradientRadial(cwidth, cheight, cdensity, *cinner, *couter)
+	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenImageChecked - Generate image: checked
+func GenImageChecked(width, height, checksX, checksY int, col1, col2 Color) *Image {
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	cchecksX := (C.int)(checksX)
+	cchecksY := (C.int)(checksY)
+	ccol1 := col1.cptr()
+	ccol2 := col2.cptr()
+
+	ret := C.GenImageChecked(cwidth, cheight, cchecksX, cchecksY, *ccol1, *ccol2)
+	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenImageWhiteNoise - Generate image: white noise
+func GenImageWhiteNoise(width, height int, factor float32) *Image {
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	cfactor := (C.float)(factor)
+
+	ret := C.GenImageWhiteNoise(cwidth, cheight, cfactor)
+	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenImagePerlinNoise - Generate image: perlin noise
+func GenImagePerlinNoise(width, height int, scale float32) *Image {
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	cscale := (C.float)(scale)
+
+	ret := C.GenImagePerlinNoise(cwidth, cheight, cscale)
+	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenImageCellular - Generate image: cellular algorithm. Bigger tileSize means bigger cells
+func GenImageCellular(width, height, tileSize int) *Image {
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	ctileSize := (C.int)(tileSize)
+
+	ret := C.GenImageCellular(cwidth, cheight, ctileSize)
+	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // GenTextureMipmaps - Generate GPU mipmaps for a texture
 func GenTextureMipmaps(texture *Texture2D) {
 	ctexture := texture.cptr()
@@ -475,7 +579,7 @@ func DrawTextureV(texture Texture2D, position Vector2, tint Color) {
 }
 
 // DrawTextureEx - Draw a Texture2D with extended parameters
-func DrawTextureEx(texture Texture2D, position Vector2, rotation float32, scale float32, tint Color) {
+func DrawTextureEx(texture Texture2D, position Vector2, rotation, scale float32, tint Color) {
 	ctexture := texture.cptr()
 	cposition := position.cptr()
 	crotation := (C.float)(rotation)
@@ -494,7 +598,7 @@ func DrawTextureRec(texture Texture2D, sourceRec Rectangle, position Vector2, ti
 }
 
 // DrawTexturePro - Draw a part of a texture defined by a rectangle with 'pro' parameters
-func DrawTexturePro(texture Texture2D, sourceRec Rectangle, destRec Rectangle, origin Vector2, rotation float32, tint Color) {
+func DrawTexturePro(texture Texture2D, sourceRec, destRec Rectangle, origin Vector2, rotation float32, tint Color) {
 	ctexture := texture.cptr()
 	csourceRec := sourceRec.cptr()
 	cdestRec := destRec.cptr()

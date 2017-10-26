@@ -17,7 +17,9 @@
 *   #define GRAPHICS_API_OPENGL_21
 *   #define GRAPHICS_API_OPENGL_33
 *   #define GRAPHICS_API_OPENGL_ES2
-*       Use selected OpenGL backend
+*       Use selected OpenGL graphics backend, should be supported by platform
+*       Those preprocessor defines are only used on rlgl module, if OpenGL version is 
+*       required by any other module, use rlGetVersion() tocheck it
 *
 *   #define RLGL_STANDALONE
 *       Use rlgl as standalone library (no raylib dependency)
@@ -25,7 +27,7 @@
 *   #define SUPPORT_VR_SIMULATION / SUPPORT_STEREO_RENDERING
 *       Support VR simulation functionality (stereo rendering)
 *
-*   #define SUPPORT_SHADER_DISTORTION
+*   #define SUPPORT_DISTORTION_SHADER
 *       Include stereo rendering distortion shader (shader_distortion.h)
 *
 *   DEPENDENCIES:
@@ -35,7 +37,7 @@
 *
 *   LICENSE: zlib/libpng
 *
-*   Copyright (c) 2014-2016 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2014-2017 Ramon Santamaria (@raysan5)
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -57,27 +59,13 @@
 #ifndef RLGL_H
 #define RLGL_H
 
-//#define RLGL_STANDALONE       // NOTE: To use rlgl as standalone lib, just uncomment this line
-
-#ifndef RLGL_STANDALONE
-    #include "raylib.h"         // Required for: Model, Shader, Texture2D
-    #include "utils.h"          // Required for: TraceLog()
-#endif
-
-#ifdef RLGL_STANDALONE
+#if defined(RLGL_STANDALONE)
     #define RAYMATH_STANDALONE
+#else
+    #include "raylib.h"         // Required for: Model, Shader, Texture2D, TraceLog()
 #endif
 
 #include "raymath.h"            // Required for: Vector3, Matrix
-
-// Select desired OpenGL version
-// NOTE: Those preprocessor defines are only used on rlgl module,
-// if OpenGL version is required by any other module, it uses rlGetVersion()
-
-// Choose opengl version here or just define it at compile time: -DGRAPHICS_API_OPENGL_33
-//#define GRAPHICS_API_OPENGL_11     // Only available on PLATFORM_DESKTOP
-//#define GRAPHICS_API_OPENGL_33     // Only available on PLATFORM_DESKTOP and RLGL_OCULUS_SUPPORT
-//#define GRAPHICS_API_OPENGL_ES2    // Only available on PLATFORM_ANDROID or PLATFORM_RPI or PLATFORM_WEB
 
 // Security check in case no GRAPHICS_API_OPENGL_* defined
 #if !defined(GRAPHICS_API_OPENGL_11) && !defined(GRAPHICS_API_OPENGL_21) && !defined(GRAPHICS_API_OPENGL_33) && !defined(GRAPHICS_API_OPENGL_ES2)
@@ -157,6 +145,56 @@ typedef unsigned char byte;
     // Boolean type
     typedef enum { false, true } bool;
     #endif
+    
+    // Shader location point type
+    typedef enum {
+        LOC_VERTEX_POSITION = 0,
+        LOC_VERTEX_TEXCOORD01,
+        LOC_VERTEX_TEXCOORD02,
+        LOC_VERTEX_NORMAL,
+        LOC_VERTEX_TANGENT,
+        LOC_VERTEX_COLOR,
+        LOC_MATRIX_MVP,
+        LOC_MATRIX_MODEL,
+        LOC_MATRIX_VIEW,
+        LOC_MATRIX_PROJECTION,
+        LOC_VECTOR_VIEW,
+        LOC_COLOR_DIFFUSE,
+        LOC_COLOR_SPECULAR,
+        LOC_COLOR_AMBIENT,
+        LOC_MAP_ALBEDO,          // LOC_MAP_DIFFUSE
+        LOC_MAP_METALNESS,       // LOC_MAP_SPECULAR
+        LOC_MAP_NORMAL,
+        LOC_MAP_ROUGHNESS,
+        LOC_MAP_OCCUSION,
+        LOC_MAP_EMISSION,
+        LOC_MAP_HEIGHT,
+        LOC_MAP_CUBEMAP,
+        LOC_MAP_IRRADIANCE,
+        LOC_MAP_PREFILTER,
+        LOC_MAP_BRDF
+    } ShaderLocationIndex;
+
+    #define LOC_MAP_DIFFUSE      LOC_MAP_ALBEDO
+    #define LOC_MAP_SPECULAR     LOC_MAP_METALNESS
+
+    // Material map type
+    typedef enum {
+        MAP_ALBEDO    = 0,       // MAP_DIFFUSE
+        MAP_METALNESS = 1,       // MAP_SPECULAR
+        MAP_NORMAL    = 2,
+        MAP_ROUGHNESS = 3,
+        MAP_OCCLUSION,
+        MAP_EMISSION,
+        MAP_HEIGHT,
+        MAP_CUBEMAP,             // NOTE: Uses GL_TEXTURE_CUBE_MAP
+        MAP_IRRADIANCE,          // NOTE: Uses GL_TEXTURE_CUBE_MAP
+        MAP_PREFILTER,           // NOTE: Uses GL_TEXTURE_CUBE_MAP
+        MAP_BRDF
+    } TexmapIndex;
+
+    #define MAP_DIFFUSE      MAP_ALBEDO
+    #define MAP_SPECULAR     MAP_METALNESS
 
     // Color type, RGBA (32bit)
     typedef struct Color {
@@ -165,69 +203,7 @@ typedef unsigned char byte;
         unsigned char b;
         unsigned char a;
     } Color;
-
-    // Texture formats (support depends on OpenGL version)
-    typedef enum {
-        UNCOMPRESSED_GRAYSCALE = 1,     // 8 bit per pixel (no alpha)
-        UNCOMPRESSED_GRAY_ALPHA,
-        UNCOMPRESSED_R5G6B5,            // 16 bpp
-        UNCOMPRESSED_R8G8B8,            // 24 bpp
-        UNCOMPRESSED_R5G5B5A1,          // 16 bpp (1 bit alpha)
-        UNCOMPRESSED_R4G4B4A4,          // 16 bpp (4 bit alpha)
-        UNCOMPRESSED_R8G8B8A8,          // 32 bpp
-        COMPRESSED_DXT1_RGB,            // 4 bpp (no alpha)
-        COMPRESSED_DXT1_RGBA,           // 4 bpp (1 bit alpha)
-        COMPRESSED_DXT3_RGBA,           // 8 bpp
-        COMPRESSED_DXT5_RGBA,           // 8 bpp
-        COMPRESSED_ETC1_RGB,            // 4 bpp
-        COMPRESSED_ETC2_RGB,            // 4 bpp
-        COMPRESSED_ETC2_EAC_RGBA,       // 8 bpp
-        COMPRESSED_PVRT_RGB,            // 4 bpp
-        COMPRESSED_PVRT_RGBA,           // 4 bpp
-        COMPRESSED_ASTC_4x4_RGBA,       // 8 bpp
-        COMPRESSED_ASTC_8x8_RGBA        // 2 bpp
-    } TextureFormat;
-
-    // Vertex data definning a mesh
-    typedef struct Mesh {
-        int vertexCount;        // number of vertices stored in arrays
-        int triangleCount;      // number of triangles stored (indexed or not)
-        float *vertices;        // vertex position (XYZ - 3 components per vertex) (shader-location = 0)
-        float *texcoords;       // vertex texture coordinates (UV - 2 components per vertex) (shader-location = 1)
-        float *texcoords2;      // vertex second texture coordinates (useful for lightmaps) (shader-location = 5)
-        float *normals;         // vertex normals (XYZ - 3 components per vertex) (shader-location = 2)
-        float *tangents;        // vertex tangents (XYZ - 3 components per vertex) (shader-location = 4)
-        unsigned char *colors;  // vertex colors (RGBA - 4 components per vertex) (shader-location = 3)
-        unsigned short *indices;// vertex indices (in case vertex data comes indexed)
-
-        unsigned int vaoId;     // OpenGL Vertex Array Object id
-        unsigned int vboId[7];  // OpenGL Vertex Buffer Objects id (7 types of vertex data)
-    } Mesh;
-
-    // Shader type (generic shader)
-    typedef struct Shader {
-        unsigned int id;        // Shader program id
-
-        // Vertex attributes locations (default locations)
-        int vertexLoc;          // Vertex attribute location point (default-location = 0)
-        int texcoordLoc;        // Texcoord attribute location point (default-location = 1)
-        int normalLoc;          // Normal attribute location point (default-location = 2)
-        int colorLoc;           // Color attibute location point (default-location = 3)
-        int tangentLoc;         // Tangent attribute location point (default-location = 4)
-        int texcoord2Loc;       // Texcoord2 attribute location point (default-location = 5)
-
-        // Uniform locations
-        int mvpLoc;             // ModelView-Projection matrix uniform location point (vertex shader)
-        int colDiffuseLoc;       // Color uniform location point (fragment shader)
-        int colAmbientLoc;      // Ambient color uniform location point (fragment shader)
-        int colSpecularLoc;     // Specular color uniform location point (fragment shader)
-
-        // Texture map locations (generic for any kind of map)
-        int mapTexture0Loc;     // Map texture uniform location point (default-texture-unit = 0)
-        int mapTexture1Loc;     // Map texture uniform location point (default-texture-unit = 1)
-        int mapTexture2Loc;     // Map texture uniform location point (default-texture-unit = 2)
-    } Shader;
-
+    
     // Texture2D type
     // NOTE: Data stored in GPU memory
     typedef struct Texture2D {
@@ -245,19 +221,44 @@ typedef unsigned char byte;
         Texture2D depth;        // Depth buffer attachment texture
     } RenderTexture2D;
 
-    // Material type
+    // Vertex data definning a mesh
+    typedef struct Mesh {
+        int vertexCount;        // number of vertices stored in arrays
+        int triangleCount;      // number of triangles stored (indexed or not)
+        float *vertices;        // vertex position (XYZ - 3 components per vertex) (shader-location = 0)
+        float *texcoords;       // vertex texture coordinates (UV - 2 components per vertex) (shader-location = 1)
+        float *texcoords2;      // vertex second texture coordinates (useful for lightmaps) (shader-location = 5)
+        float *normals;         // vertex normals (XYZ - 3 components per vertex) (shader-location = 2)
+        float *tangents;        // vertex tangents (XYZ - 3 components per vertex) (shader-location = 4)
+        unsigned char *colors;  // vertex colors (RGBA - 4 components per vertex) (shader-location = 3)
+        unsigned short *indices;// vertex indices (in case vertex data comes indexed)
+
+        unsigned int vaoId;     // OpenGL Vertex Array Object id
+        unsigned int vboId[7];  // OpenGL Vertex Buffer Objects id (7 types of vertex data)
+    } Mesh;
+    
+    // Shader and material limits
+    #define MAX_SHADER_LOCATIONS    32
+    #define MAX_MATERIAL_MAPS       12
+    
+    // Shader type (generic)
+    typedef struct Shader {
+        unsigned int id;                // Shader program id
+        int locs[MAX_SHADER_LOCATIONS]; // Shader locations array
+    } Shader;
+
+    // Material texture map
+    typedef struct MaterialMap {
+        Texture2D texture;      // Material map texture
+        Color color;            // Material map color
+        float value;            // Material map value
+    } MaterialMap;
+
+    // Material type (generic)
     typedef struct Material {
-        Shader shader;          // Standard shader (supports 3 map types: diffuse, normal, specular)
-
-        Texture2D texDiffuse;   // Diffuse texture
-        Texture2D texNormal;    // Normal texture
-        Texture2D texSpecular;  // Specular texture
-
-        Color colDiffuse;       // Diffuse color
-        Color colAmbient;       // Ambient color
-        Color colSpecular;      // Specular color
-
-        float glossiness;       // Glossiness level (Ranges from 0 to 1000)
+        Shader shader;          // Material shader
+        MaterialMap maps[MAX_MATERIAL_MAPS]; // Material maps
+        float *params;          // Material generic parameters (if required)
     } Material;
 
     // Camera type, defines a camera position/orientation in 3d space
@@ -267,6 +268,52 @@ typedef unsigned char byte;
         Vector3 up;             // Camera up vector (rotation over its axis)
         float fovy;             // Camera field-of-view apperture in Y (degrees)
     } Camera;
+    
+    // Head-Mounted-Display device parameters
+    typedef struct VrDeviceInfo {
+        int hResolution;                // HMD horizontal resolution in pixels
+        int vResolution;                // HMD vertical resolution in pixels
+        float hScreenSize;              // HMD horizontal size in meters
+        float vScreenSize;              // HMD vertical size in meters
+        float vScreenCenter;            // HMD screen center in meters
+        float eyeToScreenDistance;      // HMD distance between eye and display in meters
+        float lensSeparationDistance;   // HMD lens separation distance in meters
+        float interpupillaryDistance;   // HMD IPD (distance between pupils) in meters
+        float lensDistortionValues[4];  // HMD lens distortion constant parameters
+        float chromaAbCorrection[4];    // HMD chromatic aberration correction parameters
+    } VrDeviceInfo;
+    
+    // TraceLog message types
+    typedef enum { 
+        LOG_INFO = 0, 
+        LOG_ERROR, 
+        LOG_WARNING, 
+        LOG_DEBUG, 
+        LOG_OTHER 
+    } TraceLogType;
+    
+    // Texture formats (support depends on OpenGL version)
+    typedef enum {
+        UNCOMPRESSED_GRAYSCALE = 1,     // 8 bit per pixel (no alpha)
+        UNCOMPRESSED_GRAY_ALPHA,
+        UNCOMPRESSED_R5G6B5,            // 16 bpp
+        UNCOMPRESSED_R8G8B8,            // 24 bpp
+        UNCOMPRESSED_R5G5B5A1,          // 16 bpp (1 bit alpha)
+        UNCOMPRESSED_R4G4B4A4,          // 16 bpp (4 bit alpha)
+        UNCOMPRESSED_R8G8B8A8,          // 32 bpp
+        UNCOMPRESSED_R32G32B32,         // 32 bit per channel (float) - HDR
+        COMPRESSED_DXT1_RGB,            // 4 bpp (no alpha)
+        COMPRESSED_DXT1_RGBA,           // 4 bpp (1 bit alpha)
+        COMPRESSED_DXT3_RGBA,           // 8 bpp
+        COMPRESSED_DXT5_RGBA,           // 8 bpp
+        COMPRESSED_ETC1_RGB,            // 4 bpp
+        COMPRESSED_ETC2_RGB,            // 4 bpp
+        COMPRESSED_ETC2_EAC_RGBA,       // 8 bpp
+        COMPRESSED_PVRT_RGB,            // 4 bpp
+        COMPRESSED_PVRT_RGBA,           // 4 bpp
+        COMPRESSED_ASTC_4x4_RGBA,       // 8 bpp
+        COMPRESSED_ASTC_8x8_RGBA        // 2 bpp
+    } TextureFormat;
 
     // Texture parameters: filter mode
     // NOTE 1: Filtering considers mipmaps if available in the texture
@@ -281,25 +328,27 @@ typedef unsigned char byte;
     } TextureFilterMode;
     
     // Texture parameters: wrap mode
-    typedef enum { WRAP_REPEAT = 0, WRAP_CLAMP, WRAP_MIRROR } TextureWrapMode;
+    typedef enum { 
+        WRAP_REPEAT = 0, 
+        WRAP_CLAMP, 
+        WRAP_MIRROR 
+    } TextureWrapMode;
 
     // Color blending modes (pre-defined)
-    typedef enum { BLEND_ALPHA = 0, BLEND_ADDITIVE, BLEND_MULTIPLIED } BlendMode;
-
-    // TraceLog message types
-    typedef enum { INFO = 0, ERROR, WARNING, DEBUG, OTHER } TraceLogType;
+    typedef enum { 
+        BLEND_ALPHA = 0, 
+        BLEND_ADDITIVE, 
+        BLEND_MULTIPLIED 
+    } BlendMode;
 
     // VR Head Mounted Display devices
     typedef enum {
         HMD_DEFAULT_DEVICE = 0,
         HMD_OCULUS_RIFT_DK2,
         HMD_OCULUS_RIFT_CV1,
+        HMD_OCULUS_GO,
         HMD_VALVE_HTC_VIVE,
-        HMD_SAMSUNG_GEAR_VR,
-        HMD_GOOGLE_CARDBOARD,
-        HMD_SONY_PLAYSTATION_VR,
-        HMD_RAZER_OSVR,
-        HMD_FOVE_VR,
+        HMD_SONY_PSVR
     } VrDevice;
 #endif
 
@@ -317,7 +366,7 @@ void rlLoadIdentity(void);                      // Reset current matrix to ident
 void rlTranslatef(float x, float y, float z);   // Multiply the current matrix by a translation matrix
 void rlRotatef(float angleDeg, float x, float y, float z);  // Multiply the current matrix by a rotation matrix
 void rlScalef(float x, float y, float z);       // Multiply the current matrix by a scaling matrix
-void rlMultMatrixf(float *mat);                 // Multiply the current matrix by another matrix
+void rlMultMatrixf(float *matf);                // Multiply the current matrix by another matrix
 void rlFrustum(double left, double right, double bottom, double top, double near, double far);
 void rlOrtho(double left, double right, double bottom, double top, double near, double far);
 void rlViewport(int x, int y, int width, int height); // Set the viewport area
@@ -340,50 +389,48 @@ void rlColor4f(float x, float y, float z, float w); // Define one vertex (color)
 // Functions Declaration - OpenGL equivalent functions (common to 1.1, 3.3+, ES2)
 // NOTE: This functions are used to completely abstract raylib code from OpenGL layer
 //------------------------------------------------------------------------------------
-void rlEnableTexture(unsigned int id);          // Enable texture usage
-void rlDisableTexture(void);                    // Disable texture usage
+void rlEnableTexture(unsigned int id);                  // Enable texture usage
+void rlDisableTexture(void);                            // Disable texture usage
 void rlTextureParameters(unsigned int id, int param, int value); // Set texture parameters (filter, wrap)
-void rlEnableRenderTexture(unsigned int id);    // Enable render texture (fbo)
-void rlDisableRenderTexture(void);              // Disable render texture (fbo), return to default framebuffer
-void rlEnableDepthTest(void);                   // Enable depth test
-void rlDisableDepthTest(void);                  // Disable depth test
-void rlEnableWireMode(void);                    // Enable wire mode
-void rlDisableWireMode(void);                   // Disable wire mode
-void rlDeleteTextures(unsigned int id);         // Delete OpenGL texture from GPU
+void rlEnableRenderTexture(unsigned int id);            // Enable render texture (fbo)
+void rlDisableRenderTexture(void);                      // Disable render texture (fbo), return to default framebuffer
+void rlEnableDepthTest(void);                           // Enable depth test
+void rlDisableDepthTest(void);                          // Disable depth test
+void rlEnableWireMode(void);                            // Enable wire mode
+void rlDisableWireMode(void);                           // Disable wire mode
+void rlDeleteTextures(unsigned int id);                 // Delete OpenGL texture from GPU
 void rlDeleteRenderTextures(RenderTexture2D target);    // Delete render textures (fbo) from GPU
-void rlDeleteShader(unsigned int id);           // Delete OpenGL shader program from GPU
-void rlDeleteVertexArrays(unsigned int id);     // Unload vertex data (VAO) from GPU memory
-void rlDeleteBuffers(unsigned int id);          // Unload vertex data (VBO) from GPU memory
-void rlClearColor(byte r, byte g, byte b, byte a);  // Clear color buffer with color
-void rlClearScreenBuffers(void);                // Clear used screen buffers (color and depth)
-int rlGetVersion(void);                         // Returns current OpenGL version
+void rlDeleteShader(unsigned int id);                   // Delete OpenGL shader program from GPU
+void rlDeleteVertexArrays(unsigned int id);             // Unload vertex data (VAO) from GPU memory
+void rlDeleteBuffers(unsigned int id);                  // Unload vertex data (VBO) from GPU memory
+void rlClearColor(byte r, byte g, byte b, byte a);      // Clear color buffer with color
+void rlClearScreenBuffers(void);                        // Clear used screen buffers (color and depth)
 
 //------------------------------------------------------------------------------------
 // Functions Declaration - rlgl functionality
 //------------------------------------------------------------------------------------
 void rlglInit(int width, int height);           // Initialize rlgl (buffers, shaders, textures, states)
-void rlglClose(void);                           // De-init rlgl
-void rlglDraw(void);                            // Draw VAO/VBO
-void rlglLoadExtensions(void *loader);          // Load OpenGL extensions
+void rlglClose(void);                           // De-inititialize rlgl (buffers, shaders, textures)
+void rlglDraw(void);                            // Update and Draw default buffers (lines, triangles, quads)
 
-unsigned int rlglLoadTexture(void *data, int width, int height, int format, int mipmapCount);    // Load texture in GPU
-RenderTexture2D rlglLoadRenderTexture(int width, int height);   // Load a texture to be used for rendering (fbo with color and depth attachments)
-void rlglUpdateTexture(unsigned int id, int width, int height, int format, const void *data);         // Update GPU texture with new data
-void rlglGenerateMipmaps(Texture2D *texture);                       // Generate mipmap data for selected texture
+int rlGetVersion(void);                         // Returns current OpenGL version
+void rlLoadExtensions(void *loader);            // Load OpenGL extensions
+Vector3 rlUnproject(Vector3 source, Matrix proj, Matrix view);  // Get world coordinates from screen coordinates
 
-void rlglLoadMesh(Mesh *mesh, bool dynamic);                        // Upload vertex data into GPU and provided VAO/VBO ids
-void rlglUpdateMesh(Mesh mesh, int buffer, int numVertex);          // Update vertex data on GPU (upload new data to one buffer)
-void rlglDrawMesh(Mesh mesh, Material material, Matrix transform);  // Draw a 3d mesh with material and transform
-void rlglUnloadMesh(Mesh *mesh);                                    // Unload mesh data from CPU and GPU
+// Textures data management
+unsigned int rlLoadTexture(void *data, int width, int height, int format, int mipmapCount);    // Load texture in GPU
+void rlUpdateTexture(unsigned int id, int width, int height, int format, const void *data);    // Update GPU texture with new data
+void rlUnloadTexture(unsigned int id);
+void rlGenerateMipmaps(Texture2D *texture);                         // Generate mipmap data for selected texture
+void *rlReadTexturePixels(Texture2D texture);                       // Read texture pixel data
+unsigned char *rlReadScreenPixels(int width, int height);           // Read screen pixel data (color buffer)
+RenderTexture2D rlLoadRenderTexture(int width, int height);         // Load a texture to be used for rendering (fbo with color and depth attachments)
 
-Vector3 rlglUnproject(Vector3 source, Matrix proj, Matrix view);    // Get world coordinates from screen coordinates
-
-unsigned char *rlglReadScreenPixels(int width, int height);         // Read screen pixel data (color buffer)
-void *rlglReadTexturePixels(Texture2D texture);                     // Read texture pixel data
-
-// VR functions exposed to core module but not to raylib users
-void BeginVrDrawing(void);                  // Begin VR drawing configuration
-void EndVrDrawing(void);                    // End VR drawing process (and desktop mirror)
+// Vertex data management
+void rlLoadMesh(Mesh *mesh, bool dynamic);                          // Upload vertex data into GPU and provided VAO/VBO ids
+void rlUpdateMesh(Mesh mesh, int buffer, int numVertex);            // Update vertex data on GPU (upload new data to one buffer)
+void rlDrawMesh(Mesh mesh, Material material, Matrix transform);    // Draw a 3d mesh with material and transform
+void rlUnloadMesh(Mesh *mesh);                                      // Unload mesh data from CPU and GPU
 
 // NOTE: There is a set of shader related functions that are available to end user,
 // to avoid creating function wrappers through core module, they have been directly declared in raylib.h
@@ -393,35 +440,43 @@ void EndVrDrawing(void);                    // End VR drawing process (and deskt
 // Shaders System Functions (Module: rlgl)
 // NOTE: This functions are useless when using OpenGL 1.1
 //------------------------------------------------------------------------------------
-Shader LoadShader(char *vsFileName, char *fsFileName);              // Load a custom shader and bind default locations
-void UnloadShader(Shader shader);                                   // Unload a custom shader from memory
+Shader LoadShader(char *vsFileName, char *fsFileName);  // Load a custom shader and bind default locations
+void UnloadShader(Shader shader);                       // Unload a custom shader from memory
 
-Shader GetDefaultShader(void);                                      // Get default shader
-Shader GetStandardShader(void);                                     // Get default shader
-Texture2D GetDefaultTexture(void);                                  // Get default texture
+Shader GetShaderDefault(void);                          // Get default shader
+Texture2D GetTextureDefault(void);                      // Get default texture
 
+// Shader configuration functions
 int GetShaderLocation(Shader shader, const char *uniformName);              // Get shader uniform location
 void SetShaderValue(Shader shader, int uniformLoc, float *value, int size); // Set shader uniform value (float)
 void SetShaderValuei(Shader shader, int uniformLoc, int *value, int size);  // Set shader uniform value (int)
 void SetShaderValueMatrix(Shader shader, int uniformLoc, Matrix mat);       // Set shader uniform value (matrix 4x4)
-
 void SetMatrixProjection(Matrix proj);                              // Set a custom projection matrix (replaces internal projection matrix)
 void SetMatrixModelview(Matrix view);                               // Set a custom modelview matrix (replaces internal modelview matrix)
 
-void BeginShaderMode(Shader shader);                                // Begin custom shader drawing
-void EndShaderMode(void);                                           // End custom shader drawing (use default shader)
-void BeginBlendMode(int mode);                                      // Begin blending mode (alpha, additive, multiplied)
-void EndBlendMode(void);                                            // End blending mode (reset to default: alpha blending)
+// Texture maps generation (PBR)
+// NOTE: Required shaders should be provided
+Texture2D GenTextureCubemap(Shader shader, Texture2D skyHDR, int size);     // Generate cubemap texture from HDR texture
+Texture2D GenTextureIrradiance(Shader shader, Texture2D cubemap, int size); // Generate irradiance texture using cubemap data
+Texture2D GenTexturePrefilter(Shader shader, Texture2D cubemap, int size);  // Generate prefilter texture using cubemap data
+Texture2D GenTextureBRDF(Shader shader, Texture2D cubemap, int size);       // Generate BRDF texture using cubemap data
 
-void TraceLog(int msgType, const char *text, ...);
-float *MatrixToFloat(Matrix mat);
+// Shading and blending
+void BeginShaderMode(Shader shader);                    // Begin custom shader drawing
+void EndShaderMode(void);                               // End custom shader drawing (use default shader)
+void BeginBlendMode(int mode);                          // Begin blending mode (alpha, additive, multiplied)
+void EndBlendMode(void);                                // End blending mode (reset to default: alpha blending)
 
-void InitVrSimulator(int vrDevice);         // Init VR simulator for selected device
-void CloseVrSimulator(void);                // Close VR simulator for current device
-void UpdateVrTracking(Camera *camera);      // Update VR tracking (position and orientation) and camera
-void ToggleVrMode(void);                    // Enable/Disable VR experience (device or simulator)
-void BeginVrDrawing(void);                  // Begin VR stereo rendering
-void EndVrDrawing(void);                    // End VR stereo rendering
+// VR simulator functionality
+VrDeviceInfo GetVrDeviceInfo(int vrDeviceType);         // Get VR device information for some standard devices
+void InitVrSimulator(VrDeviceInfo info);                // Init VR simulator for selected device parameters
+void CloseVrSimulator(void);                            // Close VR simulator for current device
+void UpdateVrTracking(Camera *camera);                  // Update VR tracking (position and orientation) and camera
+void ToggleVrMode(void);                                // Enable/Disable VR experience (device or simulator)
+void BeginVrDrawing(void);                              // Begin VR stereo rendering
+void EndVrDrawing(void);                                // End VR stereo rendering
+
+void TraceLog(int msgType, const char *text, ...);      // Show trace log messages (LOG_INFO, LOG_WARNING, LOG_ERROR, LOG_DEBUG)
 #endif
 
 #ifdef __cplusplus

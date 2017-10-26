@@ -8,7 +8,6 @@ import "C"
 
 import (
 	"io"
-	"reflect"
 	"unsafe"
 )
 
@@ -480,6 +479,13 @@ func SetWindowIcon(image Image) {
 	C.SetWindowIcon(*cimage)
 }
 
+// SetWindowTitle - Set title for window (only PLATFORM_DESKTOP)
+func SetWindowTitle(title string) {
+	ctitle := C.CString(title)
+	defer C.free(unsafe.Pointer(ctitle))
+	C.SetWindowTitle(ctitle)
+}
+
 // SetWindowPosition - Set window position on screen (only PLATFORM_DESKTOP)
 func SetWindowPosition(x, y int32) {
 	cx := (C.int)(x)
@@ -620,48 +626,51 @@ func GetHexValue(color Color) int32 {
 
 // ColorToFloat - Converts Color to float array and normalizes
 func ColorToFloat(color Color) []float32 {
-	ccolor := color.cptr()
-	ret := C.ColorToFloat(*ccolor)
-
-	var data []float32
-	sliceHeader := (*reflect.SliceHeader)((unsafe.Pointer(&data)))
-	sliceHeader.Cap = 4
-	sliceHeader.Len = 4
-	sliceHeader.Data = uintptr(unsafe.Pointer(ret))
+	data := make([]float32, 0)
+	data[0] = float32(color.R) / 255
+	data[0] = float32(color.G) / 255
+	data[0] = float32(color.B) / 255
+	data[0] = float32(color.A) / 255
 
 	return data
 }
 
 // VectorToFloat - Converts Vector3 to float array
 func VectorToFloat(vec Vector3) []float32 {
-	cvec := vec.cptr()
-	ret := C.VectorToFloat(*cvec)
-
-	var data []float32
-	sliceHeader := (*reflect.SliceHeader)((unsafe.Pointer(&data)))
-	sliceHeader.Cap = 3
-	sliceHeader.Len = 3
-	sliceHeader.Data = uintptr(unsafe.Pointer(ret))
+	data := make([]float32, 0)
+	data[0] = vec.X
+	data[1] = vec.Y
+	data[2] = vec.Z
 
 	return data
 }
 
 // MatrixToFloat - Converts Matrix to float array
 func MatrixToFloat(mat Matrix) []float32 {
-	cmat := mat.cptr()
-	ret := C.MatrixToFloat(*cmat)
+	data := make([]float32, 0)
 
-	var data []float32
-	sliceHeader := (*reflect.SliceHeader)((unsafe.Pointer(&data)))
-	sliceHeader.Cap = 16
-	sliceHeader.Len = 16
-	sliceHeader.Data = uintptr(unsafe.Pointer(ret))
+	data[0] = mat.M0
+	data[1] = mat.M4
+	data[2] = mat.M8
+	data[3] = mat.M12
+	data[4] = mat.M1
+	data[5] = mat.M5
+	data[6] = mat.M9
+	data[7] = mat.M13
+	data[8] = mat.M2
+	data[9] = mat.M6
+	data[10] = mat.M10
+	data[11] = mat.M14
+	data[12] = mat.M3
+	data[13] = mat.M7
+	data[14] = mat.M11
+	data[15] = mat.M15
 
 	return data
 }
 
 // GetRandomValue - Returns a random value between min and max (both included)
-func GetRandomValue(min int32, max int32) int32 {
+func GetRandomValue(min, max int32) int32 {
 	cmin := (C.int)(min)
 	cmax := (C.int)(max)
 	ret := C.GetRandomValue(cmin, cmax)
@@ -689,13 +698,15 @@ func SetConfigFlags(flags byte) {
 	C.SetConfigFlags(cflags)
 }
 
-// TakeScreenshot - Takes a screenshot and saves it in the same folder as executable
-func TakeScreenshot() {
-	C.TakeScreenshot()
+// TakeScreenshot - Takes a screenshot of current screen (saved a .png)
+func TakeScreenshot(name string) {
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+	C.TakeScreenshot(cname)
 }
 
 // StorageSaveValue - Storage save integer value (to defined position)
-func StorageSaveValue(position int32, value int32) {
+func StorageSaveValue(position, value int32) {
 	cposition := (C.int)(position)
 	cvalue := (C.int)(value)
 	C.StorageSaveValue(cposition, cvalue)
@@ -781,7 +792,7 @@ func GetGamepadName(gamepad int32) string {
 }
 
 // IsGamepadButtonPressed - Detect if a gamepad button has been pressed once
-func IsGamepadButtonPressed(gamepad int32, button int32) bool {
+func IsGamepadButtonPressed(gamepad, button int32) bool {
 	cgamepad := (C.int)(gamepad)
 	cbutton := (C.int)(button)
 	ret := C.IsGamepadButtonPressed(cgamepad, cbutton)
@@ -790,7 +801,7 @@ func IsGamepadButtonPressed(gamepad int32, button int32) bool {
 }
 
 // IsGamepadButtonDown - Detect if a gamepad button is being pressed
-func IsGamepadButtonDown(gamepad int32, button int32) bool {
+func IsGamepadButtonDown(gamepad, button int32) bool {
 	cgamepad := (C.int)(gamepad)
 	cbutton := (C.int)(button)
 	ret := C.IsGamepadButtonDown(cgamepad, cbutton)
@@ -799,7 +810,7 @@ func IsGamepadButtonDown(gamepad int32, button int32) bool {
 }
 
 // IsGamepadButtonReleased - Detect if a gamepad button has been released once
-func IsGamepadButtonReleased(gamepad int32, button int32) bool {
+func IsGamepadButtonReleased(gamepad, button int32) bool {
 	cgamepad := (C.int)(gamepad)
 	cbutton := (C.int)(button)
 	ret := C.IsGamepadButtonReleased(cgamepad, cbutton)
@@ -808,7 +819,7 @@ func IsGamepadButtonReleased(gamepad int32, button int32) bool {
 }
 
 // IsGamepadButtonUp - Detect if a gamepad button is NOT being pressed
-func IsGamepadButtonUp(gamepad int32, button int32) bool {
+func IsGamepadButtonUp(gamepad, button int32) bool {
 	cgamepad := (C.int)(gamepad)
 	cbutton := (C.int)(button)
 	ret := C.IsGamepadButtonUp(cgamepad, cbutton)
@@ -832,7 +843,7 @@ func GetGamepadAxisCount(gamepad int32) int32 {
 }
 
 // GetGamepadAxisMovement - Return axis movement value for a gamepad axis
-func GetGamepadAxisMovement(gamepad int32, axis int32) float32 {
+func GetGamepadAxisMovement(gamepad, axis int32) float32 {
 	cgamepad := (C.int)(gamepad)
 	caxis := (C.int)(axis)
 	ret := C.GetGamepadAxisMovement(cgamepad, caxis)

@@ -119,11 +119,11 @@ void DrawLineEx(Vector2 startPos, Vector2 endPos, float thick, Color color)
     float d = sqrtf(dx*dx + dy*dy);
     float angle = asinf(dy/d);
     
-    rlEnableTexture(GetDefaultTexture().id);
+    rlEnableTexture(GetTextureDefault().id);
 
     rlPushMatrix();
         rlTranslatef((float)startPos.x, (float)startPos.y, 0);
-        rlRotatef(-RAD2DEG*angle, 0, 0, 1);
+        rlRotatef(RAD2DEG*angle, 0, 0, 1);
         rlTranslatef(0, -thick/2.0f, 0);
 
         rlBegin(RL_QUADS);
@@ -203,7 +203,7 @@ void DrawCircleV(Vector2 center, float radius, Color color)
     }
     else if ((rlGetVersion() == OPENGL_21) || (rlGetVersion() == OPENGL_33) || (rlGetVersion() == OPENGL_ES_20))
     {
-        rlEnableTexture(GetDefaultTexture().id); // Default white texture
+        rlEnableTexture(GetTextureDefault().id); // Default white texture
 
         rlBegin(RL_QUADS);
             for (int i = 0; i < 360; i += 20)
@@ -253,7 +253,7 @@ void DrawRectangleRec(Rectangle rec, Color color)
 
 void DrawRectanglePro(Rectangle rec, Vector2 origin, float rotation, Color color)
 {
-    rlEnableTexture(GetDefaultTexture().id);
+    rlEnableTexture(GetTextureDefault().id);
 
     rlPushMatrix();
         rlTranslatef((float)rec.x, (float)rec.y, 0);
@@ -274,19 +274,66 @@ void DrawRectanglePro(Rectangle rec, Vector2 origin, float rotation, Color color
     rlDisableTexture();
 }
 
-// Draw a gradient-filled rectangle
+// Draw a vertical-gradient-filled rectangle
 // NOTE: Gradient goes from bottom (color1) to top (color2)
-void DrawRectangleGradient(int posX, int posY, int width, int height, Color color1, Color color2)
+void DrawRectangleGradientV(int posX, int posY, int width, int height, Color color1, Color color2)
 {
-    rlBegin(RL_TRIANGLES);
-        rlColor4ub(color1.r, color1.g, color1.b, color1.a); rlVertex2i(posX, posY);
-        rlColor4ub(color2.r, color2.g, color2.b, color2.a); rlVertex2i(posX, posY + height);
-        rlColor4ub(color2.r, color2.g, color2.b, color2.a); rlVertex2i(posX + width, posY + height);
+    DrawRectangleGradientEx((Rectangle){ posX, posY, width, height }, color1, color2, color2, color1);
+}
 
-        rlColor4ub(color1.r, color1.g, color1.b, color1.a); rlVertex2i(posX, posY);
-        rlColor4ub(color2.r, color2.g, color2.b, color2.a); rlVertex2i(posX + width, posY + height);
-        rlColor4ub(color1.r, color1.g, color1.b, color1.a); rlVertex2i(posX + width, posY);
+// Draw a horizontal-gradient-filled rectangle
+// NOTE: Gradient goes from bottom (color1) to top (color2)
+void DrawRectangleGradientH(int posX, int posY, int width, int height, Color color1, Color color2)
+{
+    DrawRectangleGradientEx((Rectangle){ posX, posY, width, height }, color1, color1, color2, color2);
+}
+
+// Draw a gradient-filled rectangle
+// NOTE: Colors refer to corners, starting at top-lef corner and counter-clockwise
+void DrawRectangleGradientEx(Rectangle rec, Color col1, Color col2, Color col3, Color col4)
+{
+    rlEnableTexture(GetTextureDefault().id);    // Default white texture
+
+    rlBegin(RL_QUADS);
+        rlNormal3f(0.0f, 0.0f, 1.0f);
+
+        rlColor4ub(col1.r, col1.g, col1.b, col1.a);
+        rlTexCoord2f(0.0f, 0.0f);
+        rlVertex2f(rec.x, rec.y);
+
+        rlColor4ub(col2.r, col2.g, col2.b, col2.a);
+        rlTexCoord2f(0.0f, 1.0f);
+        rlVertex2f(rec.x, rec.y + rec.height);
+
+        rlColor4ub(col3.r, col3.g, col3.b, col3.a);
+        rlTexCoord2f(1.0f, 1.0f);
+        rlVertex2f(rec.x + rec.width, rec.y + rec.height);
+
+        rlColor4ub(col4.r, col4.g, col4.b, col4.a);
+        rlTexCoord2f(1.0f, 0.0f);
+        rlVertex2f(rec.x + rec.width, rec.y);
     rlEnd();
+    
+    // Draw rectangle using font texture white character
+    /*
+    rlTexCoord2f((float)GetDefaultFont().chars[95].rec.x/GetDefaultFont().texture.width, 
+                 (float)GetDefaultFont().chars[95].rec.y/GetDefaultFont().texture.height);
+    rlVertex2f(rec.x, rec.y);
+    
+    rlTexCoord2f((float)GetDefaultFont().chars[95].rec.x/GetDefaultFont().texture.width, 
+                 (float)(GetDefaultFont().chars[95].rec.y + GetDefaultFont().chars[95].rec.height)/GetDefaultFont().texture.height);
+    rlVertex2f(rec.x, rec.y + rec.height);
+    
+    rlTexCoord2f((float)(GetDefaultFont().chars[95].rec.x + GetDefaultFont().chars[95].rec.width)/GetDefaultFont().texture.width, 
+                 (float)(GetDefaultFont().chars[95].rec.y + GetDefaultFont().chars[95].rec.height)/GetDefaultFont().texture.height);
+    rlVertex2f(rec.x + rec.width, rec.y + rec.height);
+    
+    rlTexCoord2f((float)(GetDefaultFont().chars[95].rec.x + GetDefaultFont().chars[95].rec.width)/GetDefaultFont().texture.width, 
+                 (float)GetDefaultFont().chars[95].rec.y/GetDefaultFont().texture.height);
+    rlVertex2f(rec.x + rec.width, rec.y);
+    */
+                
+    rlDisableTexture();
 }
 
 // Draw a color-filled rectangle (Vector version)
@@ -309,7 +356,7 @@ void DrawRectangleV(Vector2 position, Vector2 size, Color color)
     }
     else if ((rlGetVersion() == OPENGL_21) || (rlGetVersion() == OPENGL_33) || (rlGetVersion() == OPENGL_ES_20))
     {
-        rlEnableTexture(GetDefaultTexture().id); // Default white texture
+        rlEnableTexture(GetTextureDefault().id); // Default white texture
 
         rlBegin(RL_QUADS);
             rlColor4ub(color.r, color.g, color.b, color.a);
@@ -362,6 +409,14 @@ void DrawRectangleLines(int posX, int posY, int width, int height, Color color)
     }
 }
 
+// Draw rectangle using text character (char: 127)
+// NOTE: Useful to avoid changing to default white texture
+void DrawRectangleT(int posX, int posY, int width, int height, Color color)
+{
+    DrawTexturePro(GetDefaultFont().texture, GetDefaultFont().chars[95].rec, 
+                   (Rectangle){ posX, posY, width, height }, (Vector2){ 0, 0 }, 0.0f, color);
+}
+
 // Draw a triangle
 void DrawTriangle(Vector2 v1, Vector2 v2, Vector2 v3, Color color)
 {
@@ -376,7 +431,7 @@ void DrawTriangle(Vector2 v1, Vector2 v2, Vector2 v3, Color color)
     }
     else if ((rlGetVersion() == OPENGL_21) || (rlGetVersion() == OPENGL_33) || (rlGetVersion() == OPENGL_ES_20))
     {
-        rlEnableTexture(GetDefaultTexture().id); // Default white texture
+        rlEnableTexture(GetTextureDefault().id); // Default white texture
 
         rlBegin(RL_QUADS);
             rlColor4ub(color.r, color.g, color.b, color.a);
@@ -627,6 +682,8 @@ Rectangle GetCollisionRec(Rectangle rec1, Rectangle rec2)
 // NOTE: Required for DrawLineBezier()
 static float EaseCubicInOut(float t, float b, float c, float d) 
 { 
-    if ((t/=d/2) < 1) return (c/2*t*t*t + b);
-    return (c/2*((t-=2)*t*t + 2) + b);
+    if ((t /= 0.5*d) < 1)
+        return 0.5*c*t*t*t + b;
+    t -= 2;
+    return 0.5*c*(t*t*t + 2) + b;
 }
