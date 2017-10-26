@@ -1,3 +1,5 @@
+// +build !noaudio
+
 /**********************************************************************************************
 *
 *   raylib.audio - Basic funtionality to work with audio

@@ -1,3 +1,5 @@
+// +build !noaudio
+
 package raylib
 
 /*

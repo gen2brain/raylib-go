@@ -7,7 +7,7 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
 ### Requirements
 
-* [OpenAL Soft](http://kcat.strangesoft.net/openal.html)
+* [OpenAL Soft](http://kcat.strangesoft.net/openal.html) NOTE: if you don't need audio you can use `-tags noaudio` during build, OpenAL will not be linked to binary, though none of the audio functions will be available.
 
 * [GLFW](http://www.glfw.org/) is included as part of the Go package, but you need to make sure you have dependencies installed, see below.
 

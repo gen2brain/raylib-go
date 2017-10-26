@@ -20,10 +20,12 @@ package raylib
 #include "external/glfw/src/xkb_unicode.c"
 #include "external/glfw/src/egl_context.c"
 
-#cgo linux,!static LDFLAGS: -lGL -lopenal -lm -pthread -ldl -lrt -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor
-#cgo linux,!static CFLAGS: -D_GLFW_X11 -Iexternal/glfw/include -DPLATFORM_DESKTOP -DGRAPHICS_API_OPENGL_33 -DSHARED_OPENAL
+#cgo linux LDFLAGS: -lGL -lm -pthread -ldl -lrt -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor
+#cgo linux CFLAGS: -D_GLFW_X11 -Iexternal/glfw/include -DPLATFORM_DESKTOP -DGRAPHICS_API_OPENGL_33
 
-#cgo linux,static LDFLAGS: -lGL -lopenal -lm -pthread -ldl -lrt -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor
-#cgo linux,static CFLAGS: -D_GLFW_X11 -Iexternal/glfw/include -DPLATFORM_DESKTOP -DGRAPHICS_API_OPENGL_33 -DAL_LIBTYPE_STATIC
+#cgo linux,!noaudio LDFLAGS: -lopenal
+
+#cgo linux,!static CFLAGS: -DSHARED_OPENAL
+#cgo linux,static CFLAGS: -DAL_LIBTYPE_STATIC
 */
 import "C"
