@@ -5,7 +5,11 @@ package raylib
 #include <stdlib.h>
 */
 import "C"
-import "unsafe"
+
+import (
+	"image"
+	"unsafe"
+)
 
 // TextureFormat - Texture format
 type TextureFormat int32
@@ -101,6 +105,18 @@ func (i *Image) cptr() *C.Image {
 	return (*C.Image)(unsafe.Pointer(i))
 }
 
+// ToImage converts a Image to Go image.Image
+func (i *Image) ToImage() image.Image {
+	img := image.NewRGBA(image.Rect(0, 0, int(i.Width), int(i.Height)))
+
+	// Get pixel data from image (RGBA 32bit)
+	pixels := GetImageData(i)
+
+	img.Pix = (*[1 << 30]uint8)(pixels)[:]
+
+	return img
+}
+
 // NewImage - Returns new Image
 func NewImage(data unsafe.Pointer, width, height, mipmaps int32, format TextureFormat) *Image {
 	return &Image{data, width, height, mipmaps, format}
@@ -109,6 +125,22 @@ func NewImage(data unsafe.Pointer, width, height, mipmaps int32, format TextureF
 // NewImageFromPointer - Returns new Image from pointer
 func NewImageFromPointer(ptr unsafe.Pointer) *Image {
 	return (*Image)(ptr)
+}
+
+// NewImageFromImage - Returns new Image from Go image.Image
+func NewImageFromImage(img image.Image) *Image {
+	size := img.Bounds().Size()
+	pixels := make([]Color, size.X*size.Y)
+
+	for y := 0; y < size.Y; y++ {
+		for x := 0; x < size.X; x++ {
+			color := img.At(x, y)
+			r, g, b, a := color.RGBA()
+			pixels[x+y*size.Y] = NewColor(uint8(r), uint8(g), uint8(b), uint8(a))
+		}
+	}
+
+	return LoadImageEx(pixels, int32(size.X), int32(size.Y))
 }
 
 // Texture2D type, bpp always RGBA (32bit)
