@@ -33,7 +33,7 @@ func main() {
 
 	var inputText string
 
-	//raylib.SetTargetFPS(60)
+	raylib.SetTargetFPS(60)
 
 	for !raylib.WindowShouldClose() {
 		if buttonClicked {
@@ -51,7 +51,8 @@ func main() {
 
 		buttonClicked = raygui.Button(raylib.NewRectangle(50, 70, 80, 40), "Button")
 
-		checkboxChecked = raygui.CheckBox(raylib.NewRectangle(50, 140, 20, 20), " CheckBox", checkboxChecked)
+		raygui.Label(raylib.NewRectangle(70, 140, 20, 20), "Checkbox")
+		checkboxChecked = raygui.CheckBox(raylib.NewRectangle(50, 140, 20, 20), checkboxChecked)
 
 		raygui.Label(raylib.NewRectangle(50, 190, 200, 20), "ProgressBar")
 		raygui.ProgressBar(raylib.NewRectangle(50, 210, 200, 20), progressValue)
