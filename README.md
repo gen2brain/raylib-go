@@ -39,7 +39,7 @@ On Windows, build binary in MSYS2 shell.
 
 ### Installation
 
-    go get -v github.com/gen2brain/raylib-go/raylib
+    go get -v -u github.com/gen2brain/raylib-go/raylib
 
 ### Example
 
