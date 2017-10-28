@@ -9,12 +9,12 @@ environment:
   MSYS_PATH: c:\msys64
   CGO_ENABLED: 1
   CGO_CFLAGS: -g -O2 -Ic:\msys64\mingw64\include
-  CC: c:\msys64\mingw64\bin\x86_64-w64-mingw32-gcc.exe
+  CC: x86_64-w64-mingw64-gcc
 
 install:
   - echo %GOPATH%
   - echo %MSYS_PATH%
-  - set PATH=%GOPATH%\bin;c:\go\bin;%MSYS_PATH%\usr\bin;%PATH%
+  - set PATH=%GOPATH%\bin;c:\go\bin;%MSYS_PATH%\usr\bin;%MSYS_PATH%\mingw64\bin;%PATH%
   - go version
   - go env
 
