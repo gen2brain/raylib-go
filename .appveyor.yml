@@ -20,7 +20,7 @@ install:
   - go env
 
 before_build:
-  - bash -lc "pacman --noconfirm --needed -Sy mingw-w64-i686-openal mingw-w64-i686-gcc"
+  - bash -lc "pacman --noconfirm --needed -Sy mingw-w64-i686-openal"
 
 build_script:
   - bash -lc "cd /c/gopath/src/github.com/gen2brain/raylib-go && make"
