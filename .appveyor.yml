@@ -4,19 +4,19 @@ clone_folder: c:\gopath\src\github.com\gen2brain\raylib-go
 
 environment:
   GOPATH: c:\gopath
-  CGO_ENABLED: 1
   MSYS_PATH: c:\msys64
+  CGO_ENABLED: 1
+  CGO_CFLAGS: -Ic:\msys64\mingw64\include
 
 install:
   - echo %GOPATH%
   - echo %MSYS_PATH%
   - set PATH=%GOPATH%\bin;c:\go\bin;%MSYS_PATH%\usr\bin;%PATH%
-  - echo %PATH%
-  - set CC=gcc
-  - set CXX=g++
   - go version
   - go env
-  - bash -lc "pacman --noconfirm --needed -Sy mingw-w64-x86_64-openal mingw-w64-x86_64-gcc mingw-w64-x86_64-make"
+
+before_build:
+  - bash -lc "pacman --noconfirm --needed -Sy mingw-w64-x86_64-openal"
 
 build_script:
   - bash -lc "cd /c/gopath/src/github.com/gen2brain/raylib-go && make"
