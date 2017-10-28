@@ -9,7 +9,8 @@ environment:
   MSYS_PATH: c:\msys64
   CGO_ENABLED: 1
   CGO_CFLAGS: -g -O2 -Ic:\msys64\mingw64\include
-  CC: x86_64-w64-mingw64-gcc
+  GOARCH: 386
+  CC: x86_64-w64-mingw32-gcc
 
 install:
   - echo %GOPATH%
