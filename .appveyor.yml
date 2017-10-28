@@ -1,12 +1,15 @@
 version: "{build}"
 
+clone_depth: 1
+
 clone_folder: c:\gopath\src\github.com\gen2brain\raylib-go
 
 environment:
   GOPATH: c:\gopath
   MSYS_PATH: c:\msys64
   CGO_ENABLED: 1
-  CGO_CFLAGS: -Ic:\msys64\mingw64\include
+  CGO_CFLAGS: -g -O2 -Ic:\msys64\mingw64\include
+  CC: c:\msys64\mingw64\bin\x86_64-w64-mingw32-gcc
 
 install:
   - echo %GOPATH%
