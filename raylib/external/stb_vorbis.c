@@ -193,7 +193,9 @@
    #undef __forceinline
    #endif
    #define __forceinline
+   #ifndef alloca
    #define alloca __builtin_alloca
+   #endif
 #elif !defined(_MSC_VER)
    #if __GNUC__
       #define __forceinline inline
