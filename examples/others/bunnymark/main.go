@@ -6,6 +6,7 @@ import (
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
+// Bunny type
 type Bunny struct {
 	Position raylib.Vector2
 	Speed    raylib.Vector2
