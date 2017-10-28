@@ -55,6 +55,7 @@ const (
 	MapBrdf
 )
 
+// Material map type
 const (
 	MapDiffuse     = MapAlbedo
 	MapSpecular    = MapMetalness
@@ -62,9 +63,12 @@ const (
 	LocMapSpecular = LocMapMetalness
 )
 
+// Shader and material limits
 const (
+	// Maximum number of predefined locations stored in shader struct
 	MaxShaderLocations = 32
-	MaxMaterialMaps    = 12
+	// Maximum number of texture maps stored in shader struct
+	MaxMaterialMaps = 12
 )
 
 // Mesh - Vertex data definning a mesh
