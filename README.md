@@ -48,7 +48,7 @@ On Windows, build binary in MSYS2 shell.
 
 ### Documentation
 
-Documentation on [GoDoc](https://godoc.org/github.com/gen2brain/raylib-go/raylib). Also check raylib [cheatsheet](http://www.raylib.com/cheatsheet/cheatsheet.html)
+Documentation on [GoDoc](https://godoc.org/github.com/gen2brain/raylib-go/raylib). Also check raylib [cheatsheet](http://www.raylib.com/cheatsheet/cheatsheet.html).
 
 ### Example
 
