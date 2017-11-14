@@ -97,12 +97,20 @@ func NewShaderFromPointer(ptr unsafe.Pointer) Shader {
 // LoadShader - Load a custom shader and bind default locations
 func LoadShader(vsFileName string, fsFileName string) Shader {
 	cvsFileName := C.CString(vsFileName)
-	cfsFileName := C.CString(fsFileName)
 	defer C.free(unsafe.Pointer(cvsFileName))
+
+	cfsFileName := C.CString(fsFileName)
 	defer C.free(unsafe.Pointer(cfsFileName))
 
-	ret := C.LoadShader(cvsFileName, cfsFileName)
-	v := NewShaderFromPointer(unsafe.Pointer(&ret))
+	var v Shader
+	if vsFileName == "" {
+		ret := C.LoadShader(nil, cfsFileName)
+		v = NewShaderFromPointer(unsafe.Pointer(&ret))
+	} else {
+		ret := C.LoadShader(cvsFileName, cfsFileName)
+		v = NewShaderFromPointer(unsafe.Pointer(&ret))
+	}
+
 	return v
 }
 
