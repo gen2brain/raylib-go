@@ -7,12 +7,15 @@ import (
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
+const (
+	maxSamples          = 22050
+	maxSamplesPerUpdate = 4096
+)
+
 func main() {
 	raylib.InitWindow(800, 450, "raylib [audio] example - raw audio streaming")
 
 	raylib.InitAudioDevice()
-
-	maxSamples := 20000
 
 	// Init raw audio stream (sample rate: 22050, sample size: 32bit-float, channels: 1-mono)
 	stream := raylib.InitAudioStream(22050, 32, 1)
@@ -39,8 +42,8 @@ func main() {
 		// Refill audio stream if required
 		if raylib.IsAudioBufferProcessed(stream) {
 			numSamples := int32(0)
-			if samplesLeft >= 4096 {
-				numSamples = 4096
+			if samplesLeft >= maxSamplesPerUpdate {
+				numSamples = maxSamplesPerUpdate
 			} else {
 				numSamples = samplesLeft
 			}
