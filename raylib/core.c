@@ -3,17 +3,18 @@
 *   raylib.core - Basic functions to manage windows, OpenGL context and input on multiple platforms
 *
 *   PLATFORMS SUPPORTED: 
-*       - Windows (win32/Win64)
+*       - Windows (Win32, Win64)
 *       - Linux (tested on Ubuntu)
-*       - OSX (Mac)
-*       - Android (ARM or ARM64) 
+*       - FreeBSD
+*       - OSX/macOS
+*       - Android (ARM, ARM64) 
 *       - Raspberry Pi (Raspbian)
 *       - HTML5 (Chrome, Firefox)
 *
 *   CONFIGURATION:
 *
 *   #define PLATFORM_DESKTOP
-*       Windowing and input system configured for desktop platforms: Windows, Linux, OSX (managed by GLFW3 library)
+*       Windowing and input system configured for desktop platforms: Windows, Linux, OSX, FreeBSD (managed by GLFW3 library)
 *       NOTE: Oculus Rift CV1 requires PLATFORM_DESKTOP for mirror rendering - View [rlgl] module to enable it
 *
 *   #define PLATFORM_ANDROID
@@ -278,10 +279,11 @@ static int renderOffsetY = 0;               // Offset Y from render area (must b
 static bool fullscreen = false;             // Fullscreen mode (useful only for PLATFORM_DESKTOP)
 static Matrix downscaleView;                // Matrix to downscale view (in case screen size bigger than display size)
 
-#if defined(PLATFORM_DESKTOP) || defined(PLATFORM_RPI) || defined(PLATFORM_WEB)
-static const char *windowTitle;             // Window text title...
-static bool cursorOnScreen = false;         // Tracks if cursor is inside client area
 static bool cursorHidden = false;           // Track if cursor is hidden
+
+#if defined(PLATFORM_DESKTOP) || defined(PLATFORM_RPI) || defined(PLATFORM_WEB)
+static const char *windowTitle = NULL;      // Window text title...
+static bool cursorOnScreen = false;         // Tracks if cursor is inside client area
 static int screenshotCounter = 0;           // Screenshots counter
 
 // Register mouse states
@@ -408,12 +410,13 @@ static void *GamepadThread(void *arg);                  // Mouse reading thread
 //----------------------------------------------------------------------------------
 #if defined(PLATFORM_DESKTOP) || defined(PLATFORM_RPI) || defined(PLATFORM_WEB)
 // Initialize window and OpenGL context
-void InitWindow(int width, int height, const char *title)
+// NOTE: data parameter could be used to pass any kind of required data to the initialization
+void InitWindow(int width, int height, void *data)
 {
     TraceLog(LOG_INFO, "Initializing raylib (v1.8.0)");
 
-    // Store window title (could be useful...)
-    windowTitle = title;
+    // Input data is window title char data
+    windowTitle = (char *)data;
 
     // Init graphics device (display device and OpenGL context)
     InitGraphicsDevice(width, height);
@@ -470,15 +473,17 @@ void InitWindow(int width, int height, const char *title)
 #endif
 
 #if defined(PLATFORM_ANDROID)
-// Initialize Android activity
-void InitWindow(int width, int height, void *state)
+// Initialize window and OpenGL context (and Android activity)
+// NOTE: data parameter could be used to pass any kind of required data to the initialization
+void InitWindow(int width, int height, void *data)
 {
     TraceLog(LOG_INFO, "Initializing raylib (v1.8.0)");
 
     screenWidth = width;
     screenHeight = height;
 
-    app = (struct android_app *)state;
+    // Input data is android app pointer
+    app = (struct android_app *)data;
     internalDataPath = app->activity->internalDataPath;
 
     // Set desired windows flags before initializing anything
@@ -507,7 +512,6 @@ void InitWindow(int width, int height, void *state)
     //AConfiguration_getScreenSize(app->config);
     //AConfiguration_getScreenLong(app->config);
 
-    //state->userData = &engine;
     app->onAppCmd = AndroidCommandCallback;
     app->onInputEvent = AndroidInputCallback;
 
@@ -708,7 +712,6 @@ int GetScreenHeight(void)
     return screenHeight;
 }
 
-#if !defined(PLATFORM_ANDROID)
 // Show mouse cursor
 void ShowCursor()
 {
@@ -771,7 +774,6 @@ void DisableCursor()
 #endif
     cursorHidden = true;
 }
-#endif  // !defined(PLATFORM_ANDROID)
 
 // Set background color (framebuffer clear color)
 void ClearBackground(Color color)
@@ -1108,9 +1110,7 @@ Color Fade(Color color, float alpha)
     if (alpha < 0.0f) alpha = 0.0f;
     else if (alpha > 1.0f) alpha = 1.0f;
 
-    float colorAlpha = (float)color.a*alpha;
-
-    return (Color){color.r, color.g, color.b, (unsigned char)colorAlpha};
+    return (Color){color.r, color.g, color.b, (unsigned char)(255.0f*alpha)};
 }
 
 // Activate raylib logo at startup (can be done with flags)
@@ -2525,6 +2525,8 @@ static void WindowSizeCallback(GLFWwindow *window, int width, int height)
     rlClearScreenBuffers();                     // Clear screen buffers (color and depth)
 
     // Window size must be updated to be used on 3D mode to get new aspect ratio (Begin3dMode())
+    // NOTE: Be careful! GLFW3 will choose the closest fullscreen resolution supported by current monitor,
+    // for example, if reescaling back to 800x450 (desired), it could set 720x480 (closest fullscreen supported)
     screenWidth = width;
     screenHeight = height;
     renderWidth = width;
@@ -2776,8 +2778,16 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
     ProcessGestureEvent(gestureEvent);
 #else
     
-    // TODO: Support only simple touch position
-    
+    // Support only simple touch position
+    if (flags == AMOTION_EVENT_ACTION_DOWN)
+    {
+        // Get first touch position
+        touchPosition[0].x = AMotionEvent_getX(event, 0);
+        touchPosition[0].y = AMotionEvent_getY(event, 0);
+        
+        touchPosition[0].x /= (float)GetScreenWidth();
+        touchPosition[0].y /= (float)GetScreenHeight();
+    }
 #endif
 
     return 0;

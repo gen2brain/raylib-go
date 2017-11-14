@@ -624,7 +624,7 @@ func GetHexValue(color Color) int32 {
 	return v
 }
 
-// ColorToFloat - Converts Color to float array and normalizes
+// ColorToFloat - Converts Color to float32 slice and normalizes
 func ColorToFloat(color Color) []float32 {
 	data := make([]float32, 0)
 	data[0] = float32(color.R) / 255
@@ -635,8 +635,8 @@ func ColorToFloat(color Color) []float32 {
 	return data
 }
 
-// VectorToFloat - Converts Vector3 to float array
-func VectorToFloat(vec Vector3) []float32 {
+// Vector3ToFloat - Converts Vector3 to float32 slice
+func Vector3ToFloat(vec Vector3) []float32 {
 	data := make([]float32, 0)
 	data[0] = vec.X
 	data[1] = vec.Y
@@ -645,7 +645,7 @@ func VectorToFloat(vec Vector3) []float32 {
 	return data
 }
 
-// MatrixToFloat - Converts Matrix to float array
+// MatrixToFloat - Converts Matrix to float32 slice
 func MatrixToFloat(mat Matrix) []float32 {
 	data := make([]float32, 0)
 

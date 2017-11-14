@@ -170,6 +170,11 @@
     #define GL_UNSIGNED_SHORT_4_4_4_4           0x8033
 #endif
 
+#if defined(GRAPHICS_API_OPENGL_21)
+    #define GL_LUMINANCE                        0x1909
+    #define GL_LUMINANCE_ALPHA                  0x190A
+#endif
+
 #if defined(GRAPHICS_API_OPENGL_ES2)
     #define glClearDepth                glClearDepthf
     #define GL_READ_FRAMEBUFFER         GL_FRAMEBUFFER
@@ -227,7 +232,7 @@ typedef struct DrawCall {
 typedef struct VrStereoConfig {
     RenderTexture2D stereoFbo;      // VR stereo rendering framebuffer
     Shader distortionShader;        // VR stereo rendering distortion shader
-    //Rectangle eyesViewport[2];      // VR stereo rendering eyes viewports
+    Rectangle eyesViewport[2];      // VR stereo rendering eyes viewports
     Matrix eyesProjection[2];       // VR stereo rendering eyes projection matrices
     Matrix eyesViewOffset[2];       // VR stereo rendering eyes view offset matrices
 } VrStereoConfig;
@@ -262,7 +267,9 @@ static Vector3 *tempBuffer;
 static int tempBufferCount = 0;
 static bool useTempBuffer = false;
 
-// Shader Programs
+// Shaders
+static unsigned int defaultVShaderId;       // Default vertex shader id (used by default shader program)
+static unsigned int defaultFShaderId;       // Default fragment shader Id (used by default shader program)
 static Shader defaultShader;                // Basic shader, support vertex color and diffuse texture
 static Shader currentShader;                // Shader to be used on rendering (by default, defaultShader)
 
@@ -319,7 +326,9 @@ static int screenHeight;    // Default framebuffer height
 //----------------------------------------------------------------------------------
 #if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
 static void LoadTextureCompressed(unsigned char *data, int width, int height, int compressedFormat, int mipmapCount);
-static unsigned int LoadShaderProgram(const char *vShaderStr, const char *fShaderStr);  // Load custom shader strings and return program id
+
+static unsigned int CompileShader(const char *shaderStr, int type);     // Compile custom shader and return shader id
+static unsigned int LoadShaderProgram(unsigned int vShaderId, unsigned int fShaderId);  // Load custom shader program
 
 static Shader LoadShaderDefault(void);      // Load default shader (just vertex positioning and texture coloring)
 static void SetShaderDefaultLocations(Shader *shader); // Bind default shader locations (attributes and uniforms)
@@ -1378,7 +1387,40 @@ unsigned int rlLoadTexture(void *data, int width, int height, int format, int mi
 
     glBindTexture(GL_TEXTURE_2D, id);
 
-#if defined(GRAPHICS_API_OPENGL_33)
+#if defined(GRAPHICS_API_OPENGL_11) || defined(GRAPHICS_API_OPENGL_21) || defined(GRAPHICS_API_OPENGL_ES2)
+    // NOTE: on OpenGL ES 2.0 (WebGL), internalFormat must match format and options allowed are: GL_LUMINANCE, GL_RGB, GL_RGBA
+    switch (format)
+    {
+        case UNCOMPRESSED_GRAYSCALE: glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
+        case UNCOMPRESSED_GRAY_ALPHA: glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
+        case UNCOMPRESSED_R5G6B5: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, (unsigned short *)data); break;
+        case UNCOMPRESSED_R8G8B8: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
+        case UNCOMPRESSED_R5G5B5A1: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, (unsigned short *)data); break;
+        case UNCOMPRESSED_R4G4B4A4: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, (unsigned short *)data); break;
+        case UNCOMPRESSED_R8G8B8A8: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
+    #if defined(GRAPHICS_API_OPENGL_21)
+        case COMPRESSED_DXT1_RGB: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, mipmapCount); break;
+        case COMPRESSED_DXT1_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, mipmapCount); break;
+        case COMPRESSED_DXT3_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, mipmapCount); break;
+        case COMPRESSED_DXT5_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, mipmapCount); break;
+    #endif
+    #if defined(GRAPHICS_API_OPENGL_ES2)
+        case UNCOMPRESSED_R32G32B32: if (texFloatSupported) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, (float *)data); break;  // NOTE: Requires extension OES_texture_float
+        case COMPRESSED_DXT1_RGB: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, mipmapCount); break;
+        case COMPRESSED_DXT1_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, mipmapCount); break;
+        case COMPRESSED_DXT3_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, mipmapCount); break;      // NOTE: Not supported by WebGL
+        case COMPRESSED_DXT5_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, mipmapCount); break;      // NOTE: Not supported by WebGL
+        case COMPRESSED_ETC1_RGB: if (texCompETC1Supported) LoadTextureCompressed((unsigned char *)data, width, height, GL_ETC1_RGB8_OES, mipmapCount); break;                      // NOTE: Requires OpenGL ES 2.0 or OpenGL 4.3
+        case COMPRESSED_ETC2_RGB: if (texCompETC2Supported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGB8_ETC2, mipmapCount); break;               // NOTE: Requires OpenGL ES 3.0 or OpenGL 4.3
+        case COMPRESSED_ETC2_EAC_RGBA: if (texCompETC2Supported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA8_ETC2_EAC, mipmapCount); break;     // NOTE: Requires OpenGL ES 3.0 or OpenGL 4.3
+        case COMPRESSED_PVRT_RGB: if (texCompPVRTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG, mipmapCount); break;    // NOTE: Requires PowerVR GPU
+        case COMPRESSED_PVRT_RGBA: if (texCompPVRTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG, mipmapCount); break;  // NOTE: Requires PowerVR GPU
+        case COMPRESSED_ASTC_4x4_RGBA: if (texCompASTCSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_ASTC_4x4_KHR, mipmapCount); break;  // NOTE: Requires OpenGL ES 3.1 or OpenGL 4.3
+        case COMPRESSED_ASTC_8x8_RGBA: if (texCompASTCSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_ASTC_8x8_KHR, mipmapCount); break;  // NOTE: Requires OpenGL ES 3.1 or OpenGL 4.3
+    #endif
+        default: TraceLog(LOG_WARNING, "Texture format not supported"); break;
+    }
+#elif defined(GRAPHICS_API_OPENGL_33)
     // NOTE: We define internal (GPU) format as GL_RGBA8 (probably BGRA8 in practice, driver takes care)
     // NOTE: On embedded systems, we let the driver choose the best internal format
 
@@ -1430,33 +1472,6 @@ unsigned int rlLoadTexture(void *data, int width, int height, int format, int mi
         case COMPRESSED_ASTC_4x4_RGBA: if (texCompASTCSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_ASTC_4x4_KHR, mipmapCount); break;  // NOTE: Requires OpenGL ES 3.1 or OpenGL 4.3
         case COMPRESSED_ASTC_8x8_RGBA: if (texCompASTCSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_ASTC_8x8_KHR, mipmapCount); break;  // NOTE: Requires OpenGL ES 3.1 or OpenGL 4.3
         default: TraceLog(LOG_WARNING, "Texture format not recognized"); break;
-    }
-#elif defined(GRAPHICS_API_OPENGL_11) || defined(GRAPHICS_API_OPENGL_ES2)
-    // NOTE: on OpenGL ES 2.0 (WebGL), internalFormat must match format and options allowed are: GL_LUMINANCE, GL_RGB, GL_RGBA
-    switch (format)
-    {
-        case UNCOMPRESSED_GRAYSCALE: glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        case UNCOMPRESSED_GRAY_ALPHA: glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        case UNCOMPRESSED_R5G6B5: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, (unsigned short *)data); break;
-        case UNCOMPRESSED_R8G8B8: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        case UNCOMPRESSED_R5G5B5A1: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, (unsigned short *)data); break;
-        case UNCOMPRESSED_R4G4B4A4: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, (unsigned short *)data); break;
-        case UNCOMPRESSED_R8G8B8A8: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-#if defined(GRAPHICS_API_OPENGL_ES2)
-        case UNCOMPRESSED_R32G32B32: if (texFloatSupported) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, (float *)data); break;  // NOTE: Requires extension OES_texture_float
-        case COMPRESSED_DXT1_RGB: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, mipmapCount); break;
-        case COMPRESSED_DXT1_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, mipmapCount); break;
-        case COMPRESSED_DXT3_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, mipmapCount); break;      // NOTE: Not supported by WebGL
-        case COMPRESSED_DXT5_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, mipmapCount); break;      // NOTE: Not supported by WebGL
-        case COMPRESSED_ETC1_RGB: if (texCompETC1Supported) LoadTextureCompressed((unsigned char *)data, width, height, GL_ETC1_RGB8_OES, mipmapCount); break;                      // NOTE: Requires OpenGL ES 2.0 or OpenGL 4.3
-        case COMPRESSED_ETC2_RGB: if (texCompETC2Supported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGB8_ETC2, mipmapCount); break;               // NOTE: Requires OpenGL ES 3.0 or OpenGL 4.3
-        case COMPRESSED_ETC2_EAC_RGBA: if (texCompETC2Supported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA8_ETC2_EAC, mipmapCount); break;     // NOTE: Requires OpenGL ES 3.0 or OpenGL 4.3
-        case COMPRESSED_PVRT_RGB: if (texCompPVRTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG, mipmapCount); break;    // NOTE: Requires PowerVR GPU
-        case COMPRESSED_PVRT_RGBA: if (texCompPVRTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG, mipmapCount); break;  // NOTE: Requires PowerVR GPU
-        case COMPRESSED_ASTC_4x4_RGBA: if (texCompASTCSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_ASTC_4x4_KHR, mipmapCount); break;  // NOTE: Requires OpenGL ES 3.1 or OpenGL 4.3
-        case COMPRESSED_ASTC_8x8_RGBA: if (texCompASTCSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_ASTC_8x8_KHR, mipmapCount); break;  // NOTE: Requires OpenGL ES 3.1 or OpenGL 4.3
-#endif
-        default: TraceLog(LOG_WARNING, "Texture format not supported"); break;
     }
 #endif
 
@@ -1575,10 +1590,10 @@ RenderTexture2D rlLoadRenderTexture(int width, int height)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-#if defined(GRAPHICS_API_OPENGL_33)
-    #define USE_DEPTH_TEXTURE
-#else
+#if defined(GRAPHICS_API_OPENGL_21) || defined(GRAPHICS_API_OPENGL_ES2)
     #define USE_DEPTH_RENDERBUFFER
+#else
+    #define USE_DEPTH_TEXTURE
 #endif
 
 #if defined(USE_DEPTH_RENDERBUFFER)
@@ -1937,17 +1952,17 @@ void rlDrawMesh(Mesh mesh, Material material, Matrix transform)
     
     // Upload to shader material.colDiffuse
     if (material.shader.locs[LOC_COLOR_DIFFUSE] != -1)
-        glUniform4f(material.shader.locs[LOC_COLOR_DIFFUSE], (float)material.maps[MAP_DIFFUSE].color.r/255, 
-                                                           (float)material.maps[MAP_DIFFUSE].color.g/255, 
-                                                           (float)material.maps[MAP_DIFFUSE].color.b/255, 
-                                                           (float)material.maps[MAP_DIFFUSE].color.a/255);
+        glUniform4f(material.shader.locs[LOC_COLOR_DIFFUSE], (float)material.maps[MAP_DIFFUSE].color.r/255.0f, 
+                                                           (float)material.maps[MAP_DIFFUSE].color.g/255.0f, 
+                                                           (float)material.maps[MAP_DIFFUSE].color.b/255.0f, 
+                                                           (float)material.maps[MAP_DIFFUSE].color.a/255.0f);
 
     // Upload to shader material.colSpecular (if available)
     if (material.shader.locs[LOC_COLOR_SPECULAR] != -1) 
-        glUniform4f(material.shader.locs[LOC_COLOR_SPECULAR], (float)material.maps[MAP_SPECULAR].color.r/255, 
-                                                               (float)material.maps[MAP_SPECULAR].color.g/255, 
-                                                               (float)material.maps[MAP_SPECULAR].color.b/255, 
-                                                               (float)material.maps[MAP_SPECULAR].color.a/255);
+        glUniform4f(material.shader.locs[LOC_COLOR_SPECULAR], (float)material.maps[MAP_SPECULAR].color.r/255.0f, 
+                                                               (float)material.maps[MAP_SPECULAR].color.g/255.0f, 
+                                                               (float)material.maps[MAP_SPECULAR].color.b/255.0f, 
+                                                               (float)material.maps[MAP_SPECULAR].color.a/255.0f);
                                                                
     if (material.shader.locs[LOC_MATRIX_VIEW] != -1) SetShaderValueMatrix(material.shader, material.shader.locs[LOC_MATRIX_VIEW], modelview);
     if (material.shader.locs[LOC_MATRIX_PROJECTION] != -1) SetShaderValueMatrix(material.shader, material.shader.locs[LOC_MATRIX_PROJECTION], projection);
@@ -2226,8 +2241,8 @@ void *rlReadTexturePixels(Texture2D texture)
     glEnable(GL_DEPTH_TEST);
     //glDisable(GL_BLEND);
     
-    glViewport(0, 0, width, height);
-    rlOrtho(0.0, width, height, 0.0, 0.0, 1.0);
+    glViewport(0, 0, texture.width, texture.height);
+    rlOrtho(0.0, texture.width, texture.height, 0.0, 0.0, 1.0);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(GetShaderDefault().id);
@@ -2340,26 +2355,38 @@ char *LoadText(const char *fileName)
 }
 
 // Load shader from files and bind default locations
+// NOTE: If shader string is NULL, using default vertex/fragment shaders
 Shader LoadShader(char *vsFileName, char *fsFileName)
 {
     Shader shader = { 0 };
+    
+    // NOTE: All locations must be reseted to -1 (no location)
+    for (int i = 0; i < MAX_SHADER_LOCATIONS; i++) shader.locs[i] = -1;
 
 #if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
-    // Shaders loading from external text file
-    char *vShaderStr = LoadText(vsFileName);
-    char *fShaderStr = LoadText(fsFileName);
 
-    if ((vShaderStr != NULL) && (fShaderStr != NULL))
+    unsigned int vertexShaderId, fragmentShaderId;
+
+    if (vsFileName == NULL) vertexShaderId = defaultVShaderId;
+    else 
     {
-        shader.id = LoadShaderProgram(vShaderStr, fShaderStr);
-
-        // After shader loading, we TRY to set default location names
-        if (shader.id > 0) SetShaderDefaultLocations(&shader);
-
-        // Shader strings must be freed
+        char *vShaderStr = LoadText(vsFileName);
+        vertexShaderId = CompileShader(vShaderStr, GL_VERTEX_SHADER);
         free(vShaderStr);
+    }
+
+    if (fsFileName == NULL) fragmentShaderId = defaultVShaderId;
+    else 
+    {
+        char* fShaderStr = LoadText(fsFileName);
+        fragmentShaderId = CompileShader(fShaderStr, GL_FRAGMENT_SHADER);
         free(fShaderStr);
     }
+
+    shader.id = LoadShaderProgram(vertexShaderId, fragmentShaderId);
+
+    if (vertexShaderId != defaultVShaderId) glDeleteShader(vertexShaderId);
+    if (fragmentShaderId != defaultFShaderId) glDeleteShader(fragmentShaderId);
 
     if (shader.id == 0)
     {
@@ -2367,6 +2394,8 @@ Shader LoadShader(char *vsFileName, char *fsFileName)
         shader = defaultShader;
     }
     
+    // After shader loading, we TRY to set default location names
+    if (shader.id > 0) SetShaderDefaultLocations(&shader);
     
     // Get available shader uniforms
     // NOTE: This information is useful for debug...
@@ -2391,7 +2420,6 @@ Shader LoadShader(char *vsFileName, char *fsFileName)
         
         TraceLog(LOG_DEBUG, "[SHDR ID %i] Active uniform [%s] set at location: %i", shader.id, name, location);
     }
-    
 #endif
 
     return shader;
@@ -2441,7 +2469,7 @@ int GetShaderLocation(Shader shader, const char *uniformName)
 }
 
 // Set shader uniform value (float)
-void SetShaderValue(Shader shader, int uniformLoc, float *value, int size)
+void SetShaderValue(Shader shader, int uniformLoc, const float *value, int size)
 {
 #if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
     glUseProgram(shader.id);
@@ -2457,7 +2485,7 @@ void SetShaderValue(Shader shader, int uniformLoc, float *value, int size)
 }
 
 // Set shader uniform value (int)
-void SetShaderValuei(Shader shader, int uniformLoc, int *value, int size)
+void SetShaderValuei(Shader shader, int uniformLoc, const int *value, int size)
 {
 #if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
     glUseProgram(shader.id);
@@ -2898,11 +2926,15 @@ void InitVrSimulator(VrDeviceInfo info)
     vrConfig.stereoFbo = rlLoadRenderTexture(screenWidth, screenHeight);
     
 #if defined(SUPPORT_DISTORTION_SHADER)
-    // Load distortion shader (initialized by default with Oculus Rift CV1 parameters)
-    vrConfig.distortionShader.id = LoadShaderProgram(vDistortionShaderStr, fDistortionShaderStr);
+    // Load distortion shader
+    unsigned int vertexShaderId = CompileShader(distortionVShaderStr, GL_VERTEX_SHADER);
+    unsigned int fragmentShaderId = CompileShader(distortionFShaderStr, GL_FRAGMENT_SHADER);
+    
+    vrConfig.distortionShader.id = LoadShaderProgram(vertexShaderId, fragmentShaderId);
     if (vrConfig.distortionShader.id > 0) SetShaderDefaultLocations(&vrConfig.distortionShader);
 #endif
 
+    // Set VR configutarion parameters, including distortion shader
     SetStereoConfig(info);
 
     vrSimulatorReady = true;
@@ -2927,18 +2959,6 @@ void CloseVrSimulator(void)
 #endif
 }
 
-// TODO: Review VR system to be more flexible, 
-// move distortion shader to user side,
-// SetStereoConfig() must be reviewed...
-/*
-// Set VR view distortion shader
-void SetVrDistortionShader(Shader shader)
-{
-    vrConfig.distortionShader = shader;
-    SetStereoConfig(info);
-}
-*/
-
 // Detect if VR simulator is running
 bool IsVrSimulatorReady(void)
 {
@@ -2947,6 +2967,15 @@ bool IsVrSimulatorReady(void)
 #else
     return false;
 #endif
+}
+
+// Set VR distortion shader for stereoscopic rendering
+// TODO: Review VR system to be more flexible, move distortion shader to user side
+void SetVrDistortionShader(Shader shader)
+{
+    vrConfig.distortionShader = shader;
+
+    //SetStereoConfig(info);  // TODO: Must be reviewed to set new distortion shader uniform values...
 }
 
 // Enable/Disable VR experience (device or simulator)
@@ -3113,86 +3142,53 @@ static void LoadTextureCompressed(unsigned char *data, int width, int height, in
     }
 }
 
+// Compile custom shader and return shader id
+static unsigned int CompileShader(const char *shaderStr, int type)
+{
+    unsigned int shader = glCreateShader(type);
+    glShaderSource(shader, 1, &shaderStr, NULL);
+
+    GLint success = 0;
+    glCompileShader(shader);
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+
+    if (success != GL_TRUE)
+    {
+        TraceLog(LOG_WARNING, "[SHDR ID %i] Failed to compile shader...", shader);
+        int maxLength = 0;
+        int length;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+
+#ifdef _MSC_VER
+        char *log = malloc(maxLength);
+#else
+        char log[maxLength];
+#endif
+        glGetShaderInfoLog(shader, maxLength, &length, log);
+
+        TraceLog(LOG_INFO, "%s", log);
+
+#ifdef _MSC_VER
+        free(log);
+#endif
+    }
+    else TraceLog(LOG_INFO, "[SHDR ID %i] Shader compiled successfully", shader);
+
+    return shader;
+}
+
 // Load custom shader strings and return program id
-static unsigned int LoadShaderProgram(const char *vShaderStr, const char *fShaderStr)
+static unsigned int LoadShaderProgram(unsigned int vShaderId, unsigned int fShaderId)
 {
     unsigned int program = 0;
 
 #if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
-    GLuint vertexShader;
-    GLuint fragmentShader;
-
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-
-    const char *pvs = vShaderStr;
-    const char *pfs = fShaderStr;
-
-    glShaderSource(vertexShader, 1, &pvs, NULL);
-    glShaderSource(fragmentShader, 1, &pfs, NULL);
 
     GLint success = 0;
-
-    glCompileShader(vertexShader);
-
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-
-    if (success != GL_TRUE)
-    {
-        TraceLog(LOG_WARNING, "[VSHDR ID %i] Failed to compile vertex shader...", vertexShader);
-
-        int maxLength = 0;
-        int length;
-
-        glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &maxLength);
-
-#ifdef _MSC_VER
-        char *log = malloc(maxLength);
-#else
-        char log[maxLength];
-#endif
-        glGetShaderInfoLog(vertexShader, maxLength, &length, log);
-
-        TraceLog(LOG_INFO, "%s", log);
-
-#ifdef _MSC_VER
-        free(log);
-#endif
-    }
-    else TraceLog(LOG_INFO, "[VSHDR ID %i] Vertex shader compiled successfully", vertexShader);
-
-    glCompileShader(fragmentShader);
-
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-
-    if (success != GL_TRUE)
-    {
-        TraceLog(LOG_WARNING, "[FSHDR ID %i] Failed to compile fragment shader...", fragmentShader);
-
-        int maxLength = 0;
-        int length;
-
-        glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &maxLength);
-
-#ifdef _MSC_VER
-        char *log = malloc(maxLength);
-#else
-        char log[maxLength];
-#endif
-        glGetShaderInfoLog(fragmentShader, maxLength, &length, log);
-
-        TraceLog(LOG_INFO, "%s", log);
-
-#ifdef _MSC_VER
-        free(log);
-#endif
-    }
-    else TraceLog(LOG_INFO, "[FSHDR ID %i] Fragment shader compiled successfully", fragmentShader);
-
     program = glCreateProgram();
 
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
+    glAttachShader(program, vShaderId);
+    glAttachShader(program, fShaderId);
 
     // NOTE: Default attribute shader locations must be binded before linking
     glBindAttribLocation(program, 0, DEFAULT_ATTRIB_POSITION_NAME);
@@ -3236,9 +3232,6 @@ static unsigned int LoadShaderProgram(const char *vShaderStr, const char *fShade
         program = 0;
     }
     else TraceLog(LOG_INFO, "[SHDR ID %i] Shader program loaded successfully", program);
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
 #endif
     return program;
 }
@@ -3248,10 +3241,13 @@ static unsigned int LoadShaderProgram(const char *vShaderStr, const char *fShade
 // NOTE: This shader program is used for batch buffers (lines, triangles, quads)
 static Shader LoadShaderDefault(void)
 {
-    Shader shader;
+    Shader shader = { 0 };
+    
+    // NOTE: All locations must be reseted to -1 (no location)
+    for (int i = 0; i < MAX_SHADER_LOCATIONS; i++) shader.locs[i] = -1;
 
     // Vertex shader directly defined, no external file required
-    char vDefaultShaderStr[] =
+    char defaultVShaderStr[] =
 #if defined(GRAPHICS_API_OPENGL_21)
     "#version 120                       \n"
 #elif defined(GRAPHICS_API_OPENGL_ES2)
@@ -3280,7 +3276,7 @@ static Shader LoadShaderDefault(void)
     "}                                  \n";
 
     // Fragment shader directly defined, no external file required
-    char fDefaultShaderStr[] =
+    char defaultFShaderStr[] =
 #if defined(GRAPHICS_API_OPENGL_21)
     "#version 120                       \n"
 #elif defined(GRAPHICS_API_OPENGL_ES2)
@@ -3309,22 +3305,29 @@ static Shader LoadShaderDefault(void)
 #endif
     "}                                  \n";
 
-    shader.id = LoadShaderProgram(vDefaultShaderStr, fDefaultShaderStr);
+    // NOTE: Compiled vertex/fragment shaders are kept for re-use
+    defaultVShaderId = CompileShader(defaultVShaderStr, GL_VERTEX_SHADER);     // Compile default vertex shader
+    defaultFShaderId = CompileShader(defaultFShaderStr, GL_FRAGMENT_SHADER);   // Compile default fragment shader
+    
+    shader.id = LoadShaderProgram(defaultVShaderId, defaultFShaderId);
 
     if (shader.id > 0) 
     {
         TraceLog(LOG_INFO, "[SHDR ID %i] Default shader loaded successfully", shader.id);
-        
-        // Set default shader locations
-        // Get handles to GLSL input attibute locations
+
+        // Set default shader locations: attributes locations
         shader.locs[LOC_VERTEX_POSITION] = glGetAttribLocation(shader.id, "vertexPosition");
         shader.locs[LOC_VERTEX_TEXCOORD01] = glGetAttribLocation(shader.id, "vertexTexCoord");
         shader.locs[LOC_VERTEX_COLOR] = glGetAttribLocation(shader.id, "vertexColor");
 
-        // Get handles to GLSL uniform locations
+        // Set default shader locations: uniform locations
         shader.locs[LOC_MATRIX_MVP]  = glGetUniformLocation(shader.id, "mvp");
         shader.locs[LOC_COLOR_DIFFUSE] = glGetUniformLocation(shader.id, "colDiffuse");
         shader.locs[LOC_MAP_DIFFUSE] = glGetUniformLocation(shader.id, "texture0");
+        
+        // NOTE: We could also use below function but in case DEFAULT_ATTRIB_* points are
+        // changed for external custom shaders, we just use direct bindings above
+        //SetShaderDefaultLocations(&shader);
     }
     else TraceLog(LOG_WARNING, "[SHDR ID %i] Default shader could not be loaded", shader.id);
 
@@ -3368,10 +3371,10 @@ static void UnloadShaderDefault(void)
 {
     glUseProgram(0);
 
-    //glDetachShader(defaultShader, vertexShader);
-    //glDetachShader(defaultShader, fragmentShader);
-    //glDeleteShader(vertexShader);     // Already deleted on shader compilation
-    //glDeleteShader(fragmentShader);   // Already deleted on shader compilation
+    glDetachShader(defaultShader.id, defaultVShaderId);
+    glDetachShader(defaultShader.id, defaultFShaderId);
+    glDeleteShader(defaultVShaderId);
+    glDeleteShader(defaultFShaderId);
     glDeleteProgram(defaultShader.id);
 }
 
@@ -4021,8 +4024,8 @@ static void SetStereoConfig(VrDeviceInfo hmd)
     vrConfig.eyesViewOffset[1] = MatrixTranslate(hmd.interpupillaryDistance*0.5f, 0.075f, 0.045f);
 
     // Compute eyes Viewports
-    //vrConfig.eyesViewport[0] = (Rectangle){ 0, 0, hmd.hResolution/2, hmd.vResolution };
-    //vrConfig.eyesViewport[1] = (Rectangle){ hmd.hResolution/2, 0, hmd.hResolution/2, hmd.vResolution };
+    vrConfig.eyesViewport[0] = (Rectangle){ 0, 0, hmd.hResolution/2, hmd.vResolution };
+    vrConfig.eyesViewport[1] = (Rectangle){ hmd.hResolution/2, 0, hmd.hResolution/2, hmd.vResolution };
 }
 
 // Set internal projection and modelview matrix depending on eyes tracking data
