@@ -7,22 +7,6 @@ import (
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
-// Clamp - Clamp float value
-func Clamp(value, min, max float32) float32 {
-	var res float32
-	if value < min {
-		res = min
-	} else {
-		res = value
-	}
-
-	if res > max {
-		return max
-	}
-
-	return res
-}
-
 // Vector2Zero - Vector with components value 0.0
 func Vector2Zero() raylib.Vector2 {
 	return raylib.NewVector2(0.0, 0.0)
@@ -1038,4 +1022,20 @@ func QuaternionTransform(q *raylib.Quaternion, mat raylib.Matrix) {
 	q.Y = mat.M1*x + mat.M5*y + mat.M9*z + mat.M13*w
 	q.Z = mat.M2*x + mat.M6*y + mat.M10*z + mat.M14*w
 	q.W = mat.M3*x + mat.M7*y + mat.M11*z + mat.M15*w
+}
+
+// Clamp - Clamp float value
+func Clamp(value, min, max float32) float32 {
+	var res float32
+	if value < min {
+		res = min
+	} else {
+		res = value
+	}
+
+	if res > max {
+		return max
+	}
+
+	return res
 }

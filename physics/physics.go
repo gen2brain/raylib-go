@@ -4,26 +4,25 @@
 package physics
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/gen2brain/raylib-go/raylib"
 	"github.com/gen2brain/raylib-go/raymath"
 )
 
-// Physics shape type
+// ShapeType type
 type ShapeType int
 
 // Physics shape types
 const (
 	// Circle type
-	Circle ShapeType = 1
+	CircleShape ShapeType = iota
 	// Polygon type
-	Polygon ShapeType = 2
+	PolygonShape
 )
 
-// PolygonData type
-type PolygonData struct {
+// Polygon type
+type Polygon struct {
 	// Current used vertex and normals count
 	VertexCount int
 	// Polygon vertex positions vectors
@@ -43,7 +42,7 @@ type Shape struct {
 	// Circle shape radius (used for circle shapes)
 	Radius float32
 	// Polygon shape vertices position and normals data (just used for polygon shapes)
-	VertexData *PolygonData
+	VertexData Polygon
 }
 
 // Body type
@@ -83,11 +82,11 @@ type Body struct {
 	// Physics rotation constraint
 	FreezeOrient bool
 	// Physics body shape information (type, radius, vertices, normals)
-	Shape *Shape
+	Shape Shape
 }
 
-// Manifold type
-type Manifold struct {
+// manifold type
+type manifold struct {
 	// Manifold first physics body reference
 	BodyA *Body
 	// Manifold second physics body reference
@@ -108,8 +107,11 @@ type Manifold struct {
 	StaticFriction float32
 }
 
-// Defines
+// Constants
 const (
+	maxBodies    = 64
+	maxManifolds = 4096
+
 	maxVertices    = 24
 	circleVertices = 24
 
@@ -121,21 +123,16 @@ const (
 	epsilon = 0.000001
 )
 
+// Globals
 var (
-	// Physics world gravity force
-	gravityForce raylib.Vector2
-
-	// Physics bodies pointers array
+	// Physics bodies pointers
 	bodies []*Body
 
-	// Physics world current bodies counter
-	bodiesCount int
+	// Physics manifolds pointers
+	manifolds []*manifold
 
-	// Physics manifolds pointers array
-	manifolds []*Manifold
-
-	// Physics world current manifolds counter
-	manifoldsCount int
+	// Physics world gravity force
+	gravityForce raylib.Vector2
 
 	// Delta time used for physics steps
 	deltaTime float32
@@ -145,10 +142,8 @@ var (
 func Init() {
 	gravityForce = raylib.NewVector2(0, 9.81/1000)
 
-	bodies = make([]*Body, 0)
-
-	manifolds = make([]*Manifold, 0)
-	manifoldsCount = 0
+	bodies = make([]*Body, 0, maxBodies)
+	manifolds = make([]*manifold, 0, maxManifolds)
 }
 
 // SetGravity - Sets physics global gravity force
@@ -157,16 +152,15 @@ func SetGravity(x, y float32) {
 	gravityForce.Y = y
 }
 
-// CreateBodyCircle - Creates a new circle physics body with generic parameters
-func CreateBodyCircle(pos raylib.Vector2, radius, density float32) *Body {
-	bodyCircle := CreateBodyPolygon(pos, radius, circleVertices, density)
-	//bodyCircle.Shape.Type = Circle
-	return bodyCircle
+// NewBodyCircle - Creates a new circle physics body with generic parameters
+func NewBodyCircle(pos raylib.Vector2, radius, density float32) *Body {
+	return NewBodyPolygon(pos, radius, circleVertices, density)
 }
 
-// CreateBodyRectangle - Creates a new rectangle physics body with generic parameters
-func CreateBodyRectangle(pos raylib.Vector2, width, height, density float32) *Body {
+// NewBodyRectangle - Creates a new rectangle physics body with generic parameters
+func NewBodyRectangle(pos raylib.Vector2, width, height, density float32) *Body {
 	newBody := &Body{}
+
 	// Initialize new body with generic values
 	newBody.Enabled = true
 	newBody.Position = pos
@@ -176,10 +170,10 @@ func CreateBodyRectangle(pos raylib.Vector2, width, height, density float32) *Bo
 	newBody.Torque = 0
 	newBody.Orient = 0
 
-	newBody.Shape = &Shape{}
-	newBody.Shape.Type = Polygon
+	newBody.Shape = Shape{}
+	newBody.Shape.Type = PolygonShape
 	newBody.Shape.Body = newBody
-	newBody.Shape.VertexData = createRectanglePolygon(pos, raylib.NewVector2(width, height))
+	newBody.Shape.VertexData = newRectanglePolygon(pos, raylib.NewVector2(width, height))
 
 	// Calculate centroid and moment of inertia
 	center := raylib.Vector2{}
@@ -229,24 +223,24 @@ func CreateBodyRectangle(pos raylib.Vector2, width, height, density float32) *Bo
 	newBody.IsGrounded = false
 	newBody.FreezeOrient = false
 
-	if newBody.Mass != 0.0 {
+	if newBody.Mass != 0 {
 		newBody.InverseMass = 1.0 / newBody.Mass
 	}
 
-	if newBody.Inertia != 0.0 {
+	if newBody.Inertia != 0 {
 		newBody.InverseInertia = 1.0 / newBody.Inertia
 	}
 
-	// Add new body to bodies pointers array and update bodies count
+	// Add new body to bodies pointers
 	bodies = append(bodies, newBody)
-	bodiesCount++
 
 	return newBody
 }
 
-// CreateBodyPolygon - Creates a new polygon physics body with generic parameters
-func CreateBodyPolygon(pos raylib.Vector2, radius float32, sides int32, density float32) *Body {
+// NewBodyPolygon - Creates a new polygon physics body with generic parameters
+func NewBodyPolygon(pos raylib.Vector2, radius float32, sides int, density float32) *Body {
 	newBody := &Body{}
+
 	// Initialize new body with generic values
 	newBody.Enabled = true
 	newBody.Position = pos
@@ -256,10 +250,10 @@ func CreateBodyPolygon(pos raylib.Vector2, radius float32, sides int32, density 
 	newBody.Torque = 0
 	newBody.Orient = 0
 
-	newBody.Shape = &Shape{}
-	newBody.Shape.Type = Polygon
+	newBody.Shape = Shape{}
+	newBody.Shape.Type = PolygonShape
 	newBody.Shape.Body = newBody
-	newBody.Shape.VertexData = createRandomPolygon(radius, sides)
+	newBody.Shape.VertexData = newRandomPolygon(radius, sides)
 
 	// Calculate centroid and moment of inertia
 	center := raylib.Vector2{}
@@ -309,45 +303,35 @@ func CreateBodyPolygon(pos raylib.Vector2, radius float32, sides int32, density 
 	newBody.IsGrounded = false
 	newBody.FreezeOrient = false
 
-	if newBody.Mass != 0.0 {
+	if newBody.Mass != 0 {
 		newBody.InverseMass = 1.0 / newBody.Mass
 	}
 
-	if newBody.Inertia != 0.0 {
+	if newBody.Inertia != 0 {
 		newBody.InverseInertia = 1.0 / newBody.Inertia
 	}
 
-	// Add new body to bodies pointers array and update bodies count
+	// Add new body to bodies pointers
 	bodies = append(bodies, newBody)
-	bodiesCount++
 
 	return newBody
 }
 
-// AddForce - Adds a force to a physics body
-func AddForce(body *Body, force raylib.Vector2) {
-	body.Force = raymath.Vector2Add(body.Force, force)
-}
-
-// AddTorque - Adds an angular force to a physics body
-func AddTorque(body *Body, amount float32) {
-	body.Torque += amount
-}
-
-// Shatter - Shatters a polygon shape physics body to little physics bodies with explosion force
-func Shatter(body *Body, position raylib.Vector2, force float32) {
+// GetBodies - Returns the slice of created physics bodies
+func GetBodies() []*Body {
+	return bodies
 }
 
 // GetBodiesCount - Returns the current amount of created physics bodies
 func GetBodiesCount() int {
-	return bodiesCount
+	return len(bodies)
 }
 
 // GetBody - Returns a physics body of the bodies pool at a specific index
 func GetBody(index int) *Body {
-	body := &Body{}
+	var body *Body
 
-	if index < bodiesCount {
+	if index < len(bodies) {
 		body = bodies[index]
 	} else {
 		raylib.TraceLog(raylib.LogDebug, "[PHYSAC] physics body index is out of bounds")
@@ -360,7 +344,7 @@ func GetBody(index int) *Body {
 func GetShapeType(index int) ShapeType {
 	var result ShapeType
 
-	if index < bodiesCount {
+	if index < len(bodies) {
 		result = bodies[index].Shape.Type
 	} else {
 		raylib.TraceLog(raylib.LogDebug, "[PHYSAC] physics body index is out of bounds")
@@ -373,12 +357,12 @@ func GetShapeType(index int) ShapeType {
 func GetShapeVerticesCount(index int) int {
 	result := 0
 
-	if index < bodiesCount {
+	if index < len(bodies) {
 		switch bodies[index].Shape.Type {
-		case Circle:
+		case CircleShape:
 			result = circleVertices
 			break
-		case Polygon:
+		case PolygonShape:
 			result = bodies[index].Shape.VertexData.VertexCount
 			break
 		}
@@ -389,161 +373,355 @@ func GetShapeVerticesCount(index int) int {
 	return result
 }
 
-// GetShapeVertex - Returns transformed position of a body shape (body position + vertex transformed position)
-func GetShapeVertex(body *Body, vertex int) raylib.Vector2 {
-	position := raylib.Vector2{}
-
-	switch body.Shape.Type {
-	case Circle:
-		position.X = body.Position.X + float32(math.Cos(360/float64(circleVertices)*float64(vertex)*raylib.Deg2rad))*body.Shape.Radius
-		position.Y = body.Position.Y + float32(math.Sin(360/float64(circleVertices)*float64(vertex)*raylib.Deg2rad))*body.Shape.Radius
-		break
-	case Polygon:
-		vertexData := body.Shape.VertexData
-		position = raymath.Vector2Add(body.Position, raymath.Mat2MultiplyVector2(vertexData.Transform, vertexData.Vertices[vertex]))
-		break
-	default:
-		break
+// DestroyBody - Unitializes and destroys a physics body
+func DestroyBody(body *Body) bool {
+	for index, b := range bodies {
+		if b == body {
+			// Free body allocated memory
+			bodies = append(bodies[:index], bodies[index+1:]...)
+			return true
+		}
 	}
 
-	return position
+	return false
 }
 
-// SetBodyRotation - Sets physics body shape transform based on radians parameter
-func SetBodyRotation(body *Body, radians float32) {
-	body.Orient = radians
-
-	if body.Shape.Type == Polygon {
-		body.Shape.VertexData.Transform = raymath.Mat2Radians(radians)
-	}
-}
-
-// DestroyBody - Unitializes and destroy a physics body
-func DestroyBody(index int) {
-	// Free body allocated memory
-	copy(bodies[index:], bodies[index+1:])
-	bodies[len(bodies)-1] = &Body{}
-	bodies = bodies[:len(bodies)-1]
-
-	// Update physics bodies count
-	bodiesCount--
-}
-
-// Step - Physics steps calculations (dynamics, collisions and position corrections)
-func Step(delta float32) {
-	deltaTime = delta
+// Update - Physics steps calculations (dynamics, collisions and position corrections)
+func Update() {
+	deltaTime = raylib.GetFrameTime() * 1000
 
 	// Clear previous generated collisions information
-	for i := manifoldsCount - 1; i >= 0; i-- {
-		destroyManifold(i)
+	for _, m := range manifolds {
+		destroyManifold(m)
 	}
 
 	// Reset physics bodies grounded state
-	for i := 0; i < bodiesCount; i++ {
-		bodies[i].IsGrounded = false
+	for _, b := range bodies {
+		b.IsGrounded = false
 	}
 
 	// Generate new collision information
+	bodiesCount := len(bodies)
 	for i := 0; i < bodiesCount; i++ {
+
 		bodyA := bodies[i]
 
-		fmt.Printf("bodyA.Shape %+v\n", bodyA.Shape)
-
 		for j := i + 1; j < bodiesCount; j++ {
+
 			bodyB := bodies[j]
 
 			if (bodyA.InverseMass == 0) && (bodyB.InverseMass == 0) {
 				continue
 			}
 
-			fmt.Printf("bodyB.Shape %+v\n", bodyB.Shape)
-
-			manifold := &Manifold{}
-			if bodyA.Shape.Type == Polygon && bodyB.Shape.Type == Circle {
-				manifold = createManifold(bodyB, bodyA)
+			var m *manifold
+			if bodyA.Shape.Type == PolygonShape && bodyB.Shape.Type == CircleShape {
+				m = newManifold(bodyB, bodyA)
 			} else {
-				manifold = createManifold(bodyA, bodyB)
+				m = newManifold(bodyA, bodyB)
 			}
 
-			solveManifold(manifold)
+			m.solveManifold()
 
-			if manifold.ContactsCount > 0 {
+			if m.ContactsCount > 0 {
 				// Create a new manifold with same information as previously solved manifold and add it to the manifolds pool last slot
-				newManifold := createManifold(bodyA, bodyB)
-				newManifold.Penetration = manifold.Penetration
-				newManifold.Normal = manifold.Normal
-				newManifold.Contacts[0] = manifold.Contacts[0]
-				newManifold.Contacts[1] = manifold.Contacts[1]
-				newManifold.ContactsCount = manifold.ContactsCount
-				newManifold.Restitution = manifold.Restitution
-				newManifold.DynamicFriction = manifold.DynamicFriction
-				newManifold.StaticFriction = manifold.StaticFriction
+				newManifold := newManifold(bodyA, bodyB)
+				newManifold.Penetration = m.Penetration
+				newManifold.Normal = m.Normal
+				newManifold.Contacts[0] = m.Contacts[0]
+				newManifold.Contacts[1] = m.Contacts[1]
+				newManifold.ContactsCount = m.ContactsCount
+				newManifold.Restitution = m.Restitution
+				newManifold.DynamicFriction = m.DynamicFriction
+				newManifold.StaticFriction = m.StaticFriction
 			}
 		}
 	}
 
 	// Integrate forces to physics bodies
-	for i := 0; i < bodiesCount; i++ {
-		integrateForces(bodies[i])
+	for _, b := range bodies {
+		b.integrateForces()
 	}
 
 	// Initialize physics manifolds to solve collisions
-	for i := 0; i < manifoldsCount; i++ {
-		initializeManifolds(manifolds[i])
+	for _, m := range manifolds {
+		m.initializeManifolds()
 	}
 
 	// Integrate physics collisions impulses to solve collisions
+	manifoldsCount := len(manifolds)
 	for i := 0; i < collisionIterations; i++ {
 		for j := 0; j < manifoldsCount; j++ {
-			integrateImpulses(manifolds[j])
+			if i < manifoldsCount {
+				manifolds[i].integrateImpulses()
+			}
 		}
 	}
 
 	// Integrate velocity to physics bodies
-	for i := 0; i < bodiesCount; i++ {
-		integrateVelocity(bodies[i])
+	for _, b := range bodies {
+		b.integrateVelocity()
 	}
 
 	// Correct physics bodies positions based on manifolds collision information
-	for i := 0; i < manifoldsCount; i++ {
-		correctPositions(manifolds[i])
+	for _, m := range manifolds {
+		m.correctPositions()
 	}
 
 	// Clear physics bodies forces
-	for i := 0; i < bodiesCount; i++ {
-		bodies[i].Force = raylib.Vector2{}
-		bodies[i].Torque = 0
+	for _, b := range bodies {
+		b.Force = raylib.Vector2{}
+		b.Torque = 0
 	}
 }
 
-// Reset - Destroys created physics bodies and manifolds and resets global values
+// Reset - Destroys created physics bodies and manifolds
 func Reset() {
-	bodies = make([]*Body, 0)
-	bodiesCount = 0
-
-	manifolds = make([]*Manifold, 0)
-	manifoldsCount = 0
-
-	raylib.TraceLog(raylib.LogDebug, "[PHYSAC] physics module reset successfully")
+	bodies = make([]*Body, 0, maxBodies)
+	manifolds = make([]*manifold, 0, maxManifolds)
 }
 
 // Close - Unitializes physics pointers
 func Close() {
 	// Unitialize physics manifolds dynamic memory allocations
-	for i := manifoldsCount - 1; i >= 0; i-- {
-		destroyManifold(i)
+	for _, m := range manifolds {
+		destroyManifold(m)
 	}
 
 	// Unitialize physics bodies dynamic memory allocations
-	for i := bodiesCount - 1; i >= 0; i-- {
-		DestroyBody(i)
+	for _, b := range bodies {
+		DestroyBody(b)
 	}
 }
 
-// createRandomPolygon - Creates a random polygon shape with max vertex distance from polygon pivot
-func createRandomPolygon(radius float32, sides int32) *PolygonData {
-	data := &PolygonData{}
-	data.VertexCount = int(sides)
+// AddForce - Adds a force to a physics body
+func (b *Body) AddForce(force raylib.Vector2) {
+	b.Force = raymath.Vector2Add(b.Force, force)
+}
+
+// AddTorque - Adds an angular force to a physics body
+func (b *Body) AddTorque(amount float32) {
+	b.Torque += amount
+}
+
+// Shatter - Shatters a polygon shape physics body to little physics bodies with explosion force
+func (b *Body) Shatter(position raylib.Vector2, force float32) {
+	if b.Shape.Type != PolygonShape {
+		return
+	}
+
+	vertexData := b.Shape.VertexData
+	collision := false
+
+	for i := 0; i < vertexData.VertexCount; i++ {
+		positionA := b.Position
+		positionB := raymath.Mat2MultiplyVector2(vertexData.Transform, raymath.Vector2Add(b.Position, vertexData.Vertices[i]))
+
+		nextIndex := 0
+		if i+1 < vertexData.VertexCount {
+			nextIndex = i + 1
+		}
+
+		positionC := raymath.Mat2MultiplyVector2(vertexData.Transform, raymath.Vector2Add(b.Position, vertexData.Vertices[nextIndex]))
+
+		// Check collision between each triangle
+		alpha := ((positionB.Y-positionC.Y)*(position.X-positionC.X) + (positionC.X-positionB.X)*(position.Y-positionC.Y)) /
+			((positionB.Y-positionC.Y)*(positionA.X-positionC.X) + (positionC.X-positionB.X)*(positionA.Y-positionC.Y))
+
+		beta := ((positionC.Y-positionA.Y)*(position.X-positionC.X) + (positionA.X-positionC.X)*(position.Y-positionC.Y)) /
+			((positionB.Y-positionC.Y)*(positionA.X-positionC.X) + (positionC.X-positionB.X)*(positionA.Y-positionC.Y))
+
+		gamma := 1.0 - alpha - beta
+
+		if alpha > 0 && beta > 0 && gamma > 0 {
+			collision = true
+			break
+		}
+	}
+
+	if collision {
+		count := vertexData.VertexCount
+		bodyPos := b.Position
+
+		vertices := make([]raylib.Vector2, count)
+		trans := vertexData.Transform
+		for i := 0; i < count; i++ {
+			vertices[i] = vertexData.Vertices[i]
+		}
+
+		// Destroy shattered physics body
+		DestroyBody(b)
+
+		for i := 0; i < count; i++ {
+			nextIndex := 0
+			if i+1 < count {
+				nextIndex = i + 1
+			}
+
+			center := triangleBarycenter(vertices[i], vertices[nextIndex], raylib.NewVector2(0, 0))
+			center = raymath.Vector2Add(bodyPos, center)
+			offset := raymath.Vector2Subtract(center, bodyPos)
+
+			newBody := NewBodyPolygon(center, 10, 3, 10) // Create polygon physics body with relevant values
+
+			newData := Polygon{}
+			newData.VertexCount = 3
+			newData.Transform = trans
+
+			newData.Vertices[0] = raymath.Vector2Subtract(vertices[i], offset)
+			newData.Vertices[1] = raymath.Vector2Subtract(vertices[nextIndex], offset)
+			newData.Vertices[2] = raymath.Vector2Subtract(position, center)
+
+			// Separate vertices to avoid unnecessary physics collisions
+			newData.Vertices[0].X *= 0.95
+			newData.Vertices[0].Y *= 0.95
+			newData.Vertices[1].X *= 0.95
+			newData.Vertices[1].Y *= 0.95
+			newData.Vertices[2].X *= 0.95
+			newData.Vertices[2].Y *= 0.95
+
+			// Calculate polygon faces normals
+			for j := 0; j < newData.VertexCount; j++ {
+				nextVertex := 0
+				if j+1 < newData.VertexCount {
+					nextIndex = j + 1
+				}
+
+				face := raymath.Vector2Subtract(newData.Vertices[nextVertex], newData.Vertices[j])
+
+				newData.Normals[j] = raylib.NewVector2(face.Y, -face.X)
+				normalize(&newData.Normals[j])
+			}
+
+			// Apply computed vertex data to new physics body shape
+			newBody.Shape.VertexData = newData
+
+			// Calculate centroid and moment of inertia
+			center = raylib.NewVector2(0, 0)
+			area := float32(0.0)
+			inertia := float32(0.0)
+			k := float32(1.0) / 3.0
+
+			for j := 0; j < newBody.Shape.VertexData.VertexCount; j++ {
+				// Triangle vertices, third vertex implied as (0, 0)
+				p1 := newBody.Shape.VertexData.Vertices[j]
+				nextVertex := 0
+				if j+1 < newBody.Shape.VertexData.VertexCount {
+					nextIndex = j + 1
+				}
+				p2 := newBody.Shape.VertexData.Vertices[nextVertex]
+
+				D := raymath.Vector2CrossProduct(p1, p2)
+				triangleArea := D / 2
+
+				area += triangleArea
+
+				// Use area to weight the centroid average, not just vertex position
+				center.X += triangleArea * k * (p1.X + p2.X)
+				center.Y += triangleArea * k * (p1.Y + p2.Y)
+
+				intx2 := p1.X*p1.X + p2.X*p1.X + p2.X*p2.X
+				inty2 := p1.Y*p1.Y + p2.Y*p1.Y + p2.Y*p2.Y
+				inertia += (0.25 * k * D) * (intx2 + inty2)
+			}
+
+			center.X *= 1.0 / area
+			center.Y *= 1.0 / area
+
+			newBody.Mass = area
+			newBody.Inertia = inertia
+
+			if newBody.Mass != 0 {
+				newBody.InverseMass = 1.0 / newBody.Mass
+			}
+
+			if newBody.Inertia != 0 {
+				newBody.InverseInertia = 1.0 / newBody.Inertia
+			}
+
+			// Calculate explosion force direction
+			pointA := newBody.Position
+			pointB := raymath.Vector2Subtract(newData.Vertices[1], newData.Vertices[0])
+			pointB.X /= 2
+			pointB.Y /= 2
+			forceDirection := raymath.Vector2Subtract(raymath.Vector2Add(pointA, raymath.Vector2Add(newData.Vertices[0], pointB)), newBody.Position)
+			normalize(&forceDirection)
+			forceDirection.X *= force
+			forceDirection.Y *= force
+
+			// Apply force to new physics body
+			newBody.AddForce(forceDirection)
+		}
+	}
+}
+
+// GetShapeVertex - Returns transformed position of a body shape (body position + vertex transformed position)
+func (b *Body) GetShapeVertex(vertex int) raylib.Vector2 {
+	position := raylib.Vector2{}
+
+	switch b.Shape.Type {
+	case CircleShape:
+		position.X = b.Position.X + float32(math.Cos(360/float64(circleVertices)*float64(vertex)*raylib.Deg2rad))*b.Shape.Radius
+		position.Y = b.Position.Y + float32(math.Sin(360/float64(circleVertices)*float64(vertex)*raylib.Deg2rad))*b.Shape.Radius
+		break
+	case PolygonShape:
+		position = raymath.Vector2Add(b.Position, raymath.Mat2MultiplyVector2(b.Shape.VertexData.Transform, b.Shape.VertexData.Vertices[vertex]))
+		break
+	}
+
+	return position
+}
+
+// SetRotation - Sets physics body shape transform based on radians parameter
+func (b *Body) SetRotation(radians float32) {
+	b.Orient = radians
+
+	if b.Shape.Type == PolygonShape {
+		b.Shape.VertexData.Transform = raymath.Mat2Radians(radians)
+	}
+}
+
+// integrateVelocity - Integrates physics velocity into position and forces
+func (b *Body) integrateVelocity() {
+	if !b.Enabled {
+		return
+	}
+
+	b.Position.X += b.Velocity.X * deltaTime
+	b.Position.Y += b.Velocity.Y * deltaTime
+
+	if !b.FreezeOrient {
+		b.Orient += b.AngularVelocity * deltaTime
+	}
+
+	raymath.Mat2Set(&b.Shape.VertexData.Transform, b.Orient)
+
+	b.integrateForces()
+}
+
+// integrateForces -  Integrates physics forces into velocity
+func (b *Body) integrateForces() {
+	if b.InverseMass == 0 || !b.Enabled {
+		return
+	}
+
+	b.Velocity.X += (b.Force.X * b.InverseMass) * (deltaTime / 2)
+	b.Velocity.Y += (b.Force.Y * b.InverseMass) * (deltaTime / 2)
+
+	if b.UseGravity {
+		b.Velocity.X += gravityForce.X * (deltaTime / 2)
+		b.Velocity.Y += gravityForce.Y * (deltaTime / 2)
+	}
+
+	if !b.FreezeOrient {
+		b.AngularVelocity += b.Torque * b.InverseInertia * (deltaTime / 2)
+	}
+}
+
+// newRandomPolygon - Creates a random polygon shape with max vertex distance from polygon pivot
+func newRandomPolygon(radius float32, sides int) Polygon {
+	data := Polygon{}
+	data.VertexCount = sides
 
 	orient := raylib.GetRandomValue(0, 360)
 	data.Transform = raymath.Mat2Radians(float32(orient) * raylib.Deg2rad)
@@ -557,21 +735,22 @@ func createRandomPolygon(radius float32, sides int32) *PolygonData {
 	// Calculate polygon faces normals
 	for i := 0; i < data.VertexCount; i++ {
 		nextIndex := 0
-		if i+1 < int(sides) {
+		if i+1 < sides {
 			nextIndex = i + 1
 		}
+
 		face := raymath.Vector2Subtract(data.Vertices[nextIndex], data.Vertices[i])
 
 		data.Normals[i] = raylib.NewVector2(face.Y, -face.X)
-		raymath.Vector2Normalize(&data.Normals[i])
+		normalize(&data.Normals[i])
 	}
 
 	return data
 }
 
-// createRectanglePolygon - Creates a rectangle polygon shape based on a min and max positions
-func createRectanglePolygon(pos, size raylib.Vector2) *PolygonData {
-	data := &PolygonData{}
+// newRectanglePolygon - Creates a rectangle polygon shape based on a min and max positions
+func newRectanglePolygon(pos, size raylib.Vector2) Polygon {
+	data := Polygon{}
 
 	data.VertexCount = 4
 	data.Transform = raymath.Mat2Radians(0)
@@ -591,15 +770,15 @@ func createRectanglePolygon(pos, size raylib.Vector2) *PolygonData {
 		face := raymath.Vector2Subtract(data.Vertices[nextIndex], data.Vertices[i])
 
 		data.Normals[i] = raylib.NewVector2(face.Y, -face.X)
-		raymath.Vector2Normalize(&data.Normals[i])
+		normalize(&data.Normals[i])
 	}
 
 	return data
 }
 
-// createManifold - Creates a new physics manifold to solve collision
-func createManifold(a, b *Body) *Manifold {
-	newManifold := &Manifold{}
+// newManifold - Creates a new physics manifold to solve collision
+func newManifold(a, b *Body) *manifold {
+	newManifold := &manifold{}
 
 	// Initialize new manifold with generic values
 	newManifold.BodyA = a
@@ -613,61 +792,58 @@ func createManifold(a, b *Body) *Manifold {
 	newManifold.DynamicFriction = 0
 	newManifold.StaticFriction = 0
 
-	// Add new body to bodies pointers array and update bodies count
+	// Add new manifold to manifolds pointers
 	manifolds = append(manifolds, newManifold)
-	manifoldsCount++
 
 	return newManifold
 }
 
 // destroyManifold - Unitializes and destroys a physics manifold
-func destroyManifold(index int) {
-	// Free manifold allocated memory
-	copy(manifolds[index:], manifolds[index+1:])
-	manifolds[len(manifolds)-1] = &Manifold{}
-	manifolds = manifolds[:len(manifolds)-1]
+func destroyManifold(manifold *manifold) bool {
+	for index, m := range manifolds {
+		if m == manifold {
+			// Free manifold allocated memory
+			manifolds = append(manifolds[:index], manifolds[index+1:]...)
+			return true
+		}
+	}
 
-	// Update physics manifolds count
-	manifoldsCount--
+	return false
 }
 
 // solveManifold - Solves a created physics manifold between two physics bodies
-func solveManifold(manifold *Manifold) {
-	fmt.Printf("%+v\n\n", manifold)
-	switch manifold.BodyA.Shape.Type {
-	case Circle:
-		switch manifold.BodyB.Shape.Type {
-		case Circle:
-			solveCircleToCircle(manifold)
+func (m *manifold) solveManifold() {
+	switch m.BodyA.Shape.Type {
+	case CircleShape:
+		switch m.BodyB.Shape.Type {
+		case CircleShape:
+			m.solveCircleToCircle()
 			break
-		case Polygon:
-			solveCircleToPolygon(manifold)
+		case PolygonShape:
+			m.solveCircleToPolygon()
 			break
 		}
-	case Polygon:
-		switch manifold.BodyB.Shape.Type {
-		case Circle:
-			solvePolygonToCircle(manifold)
+	case PolygonShape:
+		switch m.BodyB.Shape.Type {
+		case CircleShape:
+			m.solvePolygonToCircle()
 			break
-		case Polygon:
-			solvePolygonToPolygon(manifold)
+		case PolygonShape:
+			m.solvePolygonToPolygon()
 			break
 		}
 	}
-	fmt.Printf("%+v\n\n", manifold)
-	fmt.Println()
 
 	// Update physics body grounded state if normal direction is down and grounded state is not set yet in previous manifolds
-	if !manifold.BodyB.IsGrounded {
-		manifold.BodyB.IsGrounded = (manifold.Normal.Y < 0)
+	if !m.BodyB.IsGrounded {
+		m.BodyB.IsGrounded = (m.Normal.Y < 0)
 	}
 }
 
 // solveCircleToCircle - Solves collision between two circle shape physics bodies
-func solveCircleToCircle(manifold *Manifold) {
-	fmt.Println("solveCircleToCircle")
-	bodyA := manifold.BodyA
-	bodyB := manifold.BodyB
+func (m *manifold) solveCircleToCircle() {
+	bodyA := m.BodyA
+	bodyB := m.BodyB
 
 	// Calculate translational vector, which is normal
 	normal := raymath.Vector2Subtract(bodyB.Position, bodyA.Position)
@@ -677,51 +853,47 @@ func solveCircleToCircle(manifold *Manifold) {
 
 	// Check if circles are not in contact
 	if distSqr >= radius*radius {
-		manifold.ContactsCount = 0
+		m.ContactsCount = 0
 		return
 	}
 
 	distance := float32(math.Sqrt(float64(distSqr)))
-	manifold.ContactsCount = 1
+	m.ContactsCount = 1
 
 	if distance == 0 {
-		manifold.Penetration = bodyA.Shape.Radius
-		manifold.Normal = raylib.NewVector2(1, 0)
-		manifold.Contacts[0] = bodyA.Position
+		m.Penetration = bodyA.Shape.Radius
+		m.Normal = raylib.NewVector2(1, 0)
+		m.Contacts[0] = bodyA.Position
 	} else {
-		manifold.Penetration = radius - distance
-		manifold.Normal = raylib.NewVector2(normal.X/distance, normal.Y/distance) // Faster than using MathNormalize() due to sqrt is already performed
-		manifold.Contacts[0] = raylib.NewVector2(manifold.Normal.X*bodyA.Shape.Radius+bodyA.Position.X, manifold.Normal.Y*bodyA.Shape.Radius+bodyA.Position.Y)
+		m.Penetration = radius - distance
+		m.Normal = raylib.NewVector2(normal.X/distance, normal.Y/distance) // Faster than using normalize() due to sqrt is already performed
+		m.Contacts[0] = raylib.NewVector2(m.Normal.X*bodyA.Shape.Radius+bodyA.Position.X, m.Normal.Y*bodyA.Shape.Radius+bodyA.Position.Y)
 	}
 
 	// Update physics body grounded state if normal direction is down
 	if !bodyA.IsGrounded {
-		bodyA.IsGrounded = (manifold.Normal.Y < 0)
+		bodyA.IsGrounded = (m.Normal.Y < 0)
 	}
 }
 
 // solveCircleToPolygon - Solves collision between a circle to a polygon shape physics bodies
-func solveCircleToPolygon(manifold *Manifold) {
-	fmt.Println("solveCircleToPolygon")
-	bodyA := manifold.BodyA
-	bodyB := manifold.BodyB
-
-	manifold.ContactsCount = 0
+func (m *manifold) solveCircleToPolygon() {
+	m.ContactsCount = 0
 
 	// Transform circle center to polygon transform space
-	center := bodyA.Position
-	center = raymath.Mat2MultiplyVector2(raymath.Mat2Transpose(bodyB.Shape.VertexData.Transform), raymath.Vector2Subtract(center, bodyB.Position))
+	center := m.BodyA.Position
+	center = raymath.Mat2MultiplyVector2(raymath.Mat2Transpose(m.BodyB.Shape.VertexData.Transform), raymath.Vector2Subtract(center, m.BodyB.Position))
 
 	// Find edge with minimum penetration
 	// It is the same concept as using support points in solvePolygonToPolygon
 	separation := float32(-fltMax)
 	faceNormal := 0
-	vertexData := bodyB.Shape.VertexData
+	vertexData := m.BodyB.Shape.VertexData
 
 	for i := 0; i < vertexData.VertexCount; i++ {
 		currentSeparation := raymath.Vector2DotProduct(vertexData.Normals[i], raymath.Vector2Subtract(center, vertexData.Vertices[i]))
 
-		if currentSeparation > bodyA.Shape.Radius {
+		if currentSeparation > m.BodyA.Shape.Radius {
 			return
 		}
 
@@ -741,92 +913,87 @@ func solveCircleToPolygon(manifold *Manifold) {
 
 	// Check to see if center is within polygon
 	if separation < epsilon {
-		manifold.ContactsCount = 1
+		m.ContactsCount = 1
 		normal := raymath.Mat2MultiplyVector2(vertexData.Transform, vertexData.Normals[faceNormal])
-		manifold.Normal = raylib.NewVector2(-normal.X, -normal.Y)
-		manifold.Contacts[0] = raylib.NewVector2(manifold.Normal.X*bodyA.Shape.Radius+bodyA.Position.X, manifold.Normal.Y*bodyA.Shape.Radius+bodyA.Position.Y)
-		manifold.Penetration = bodyA.Shape.Radius
+		m.Normal = raylib.NewVector2(-normal.X, -normal.Y)
+		m.Contacts[0] = raylib.NewVector2(m.Normal.X*m.BodyA.Shape.Radius+m.BodyA.Position.X, m.Normal.Y*m.BodyA.Shape.Radius+m.BodyA.Position.Y)
+		m.Penetration = m.BodyA.Shape.Radius
 		return
 	}
 
 	// Determine which voronoi region of the edge center of circle lies within
 	dot1 := raymath.Vector2DotProduct(raymath.Vector2Subtract(center, v1), raymath.Vector2Subtract(v2, v1))
 	dot2 := raymath.Vector2DotProduct(raymath.Vector2Subtract(center, v2), raymath.Vector2Subtract(v1, v2))
-	manifold.Penetration = bodyA.Shape.Radius - separation
+	m.Penetration = m.BodyA.Shape.Radius - separation
 
 	if dot1 <= 0 { // Closest to v1
-		if raymath.Vector2Distance(center, v1) > bodyA.Shape.Radius*bodyA.Shape.Radius {
+		if raymath.Vector2Distance(center, v1) > m.BodyA.Shape.Radius*m.BodyA.Shape.Radius {
 			return
 		}
 
-		manifold.ContactsCount = 1
+		m.ContactsCount = 1
 		normal := raymath.Vector2Subtract(v1, center)
 		normal = raymath.Mat2MultiplyVector2(vertexData.Transform, normal)
-		raymath.Vector2Normalize(&normal)
-		manifold.Normal = normal
+		normalize(&normal)
+		m.Normal = normal
 		v1 = raymath.Mat2MultiplyVector2(vertexData.Transform, v1)
-		v1 = raymath.Vector2Add(v1, bodyB.Position)
-		manifold.Contacts[0] = v1
+		v1 = raymath.Vector2Add(v1, m.BodyB.Position)
+		m.Contacts[0] = v1
 	} else if dot2 <= 0 { // Closest to v2
-		if raymath.Vector2Distance(center, v2) > bodyA.Shape.Radius*bodyA.Shape.Radius {
+		if raymath.Vector2Distance(center, v2) > m.BodyA.Shape.Radius*m.BodyA.Shape.Radius {
 			return
 		}
 
-		manifold.ContactsCount = 1
+		m.ContactsCount = 1
 		normal := raymath.Vector2Subtract(v2, center)
 		v2 = raymath.Mat2MultiplyVector2(vertexData.Transform, v2)
-		v2 = raymath.Vector2Add(v2, bodyB.Position)
-		manifold.Contacts[0] = v2
+		v2 = raymath.Vector2Add(v2, m.BodyB.Position)
+		m.Contacts[0] = v2
 		normal = raymath.Mat2MultiplyVector2(vertexData.Transform, normal)
-		raymath.Vector2Normalize(&normal)
-		manifold.Normal = normal
+		normalize(&normal)
+		m.Normal = normal
 	} else { // Closest to face
 		normal := vertexData.Normals[faceNormal]
 
-		if raymath.Vector2DotProduct(raymath.Vector2Subtract(center, v1), normal) > bodyA.Shape.Radius {
+		if raymath.Vector2DotProduct(raymath.Vector2Subtract(center, v1), normal) > m.BodyA.Shape.Radius {
 			return
 		}
 
 		normal = raymath.Mat2MultiplyVector2(vertexData.Transform, normal)
-		manifold.Normal = raylib.NewVector2(-normal.X, -normal.Y)
-		manifold.Contacts[0] = raylib.NewVector2(manifold.Normal.X*bodyA.Shape.Radius+bodyA.Position.X, manifold.Normal.Y*bodyA.Shape.Radius+bodyA.Position.Y)
-		manifold.ContactsCount = 1
+		m.Normal = raylib.NewVector2(-normal.X, -normal.Y)
+		m.Contacts[0] = raylib.NewVector2(m.Normal.X*m.BodyA.Shape.Radius+m.BodyA.Position.X, m.Normal.Y*m.BodyA.Shape.Radius+m.BodyA.Position.Y)
+		m.ContactsCount = 1
 	}
 }
 
 // solvePolygonToCircle - Solves collision between a polygon to a circle shape physics bodies
-func solvePolygonToCircle(manifold *Manifold) {
-	fmt.Println("solvePolygonToCircle")
-	bodyA := manifold.BodyA
-	bodyB := manifold.BodyB
+func (m *manifold) solvePolygonToCircle() {
+	bodyA := m.BodyA
+	bodyB := m.BodyB
 
-	manifold.BodyA = bodyB
-	manifold.BodyB = bodyA
+	m.BodyA = bodyB
+	m.BodyB = bodyA
 
-	solveCircleToPolygon(manifold)
+	m.solveCircleToPolygon()
 
-	manifold.Normal.X *= -1
-	manifold.Normal.Y *= -1
+	m.Normal.X *= -1
+	m.Normal.Y *= -1
 }
 
 // solvePolygonToPolygon - Solves collision between two polygons shape physics bodies
-func solvePolygonToPolygon(manifold *Manifold) {
-	//fmt.Println("solvePolygonToPolygon")
-	shapeA := manifold.BodyA.Shape
-	shapeB := manifold.BodyB.Shape
-
-	manifold.ContactsCount = 0
+func (m *manifold) solvePolygonToPolygon() {
+	bodyA := m.BodyA.Shape
+	bodyB := m.BodyB.Shape
+	m.ContactsCount = 0
 
 	// Check for separating axis with A shape's face planes
-	faceA := 0
-	penetrationA := findAxisLeastPenetration(&faceA, shapeA, shapeB)
+	faceA, penetrationA := findAxisLeastPenetration(bodyA, bodyB)
 	if penetrationA >= 0 {
 		return
 	}
 
 	// Check for separating axis with B shape's face planes
-	faceB := 0
-	penetrationB := findAxisLeastPenetration(&faceB, shapeB, shapeA)
+	faceB, penetrationB := findAxisLeastPenetration(bodyB, bodyA)
 	if penetrationB >= 0 {
 		return
 	}
@@ -834,23 +1001,22 @@ func solvePolygonToPolygon(manifold *Manifold) {
 	referenceIndex := 0
 	flip := false // Always point from A shape to B shape
 
-	refPoly := &Shape{} // Reference
-	incPoly := &Shape{} // Incident
+	refPoly := Shape{} // Reference
+	incPoly := Shape{} // Incident
 
 	// Determine which shape contains reference face
 	if biasGreaterThan(penetrationA, penetrationB) {
-		refPoly = shapeA
-		incPoly = shapeB
+		refPoly = bodyA
+		incPoly = bodyB
 		referenceIndex = faceA
 	} else {
-		refPoly = shapeB
-		incPoly = shapeA
+		refPoly = bodyB
+		incPoly = bodyA
 		referenceIndex = faceB
 		flip = true
 	}
 
 	// World space incident face
-	//incidentFace := make([]raylib.Vector2, 2)
 	incidentFace0 := raylib.Vector2{}
 	incidentFace1 := raylib.Vector2{}
 	findIncidentFace(&incidentFace0, &incidentFace1, refPoly, incPoly, referenceIndex)
@@ -860,6 +1026,8 @@ func solvePolygonToPolygon(manifold *Manifold) {
 	v1 := refData.Vertices[referenceIndex]
 	if referenceIndex+1 < refData.VertexCount {
 		referenceIndex = referenceIndex + 1
+	} else {
+		referenceIndex = 0
 	}
 	v2 := refData.Vertices[referenceIndex]
 
@@ -871,7 +1039,7 @@ func solvePolygonToPolygon(manifold *Manifold) {
 
 	// Calculate reference face side normal in world space
 	sidePlaneNormal := raymath.Vector2Subtract(v2, v1)
-	raymath.Vector2Normalize(&sidePlaneNormal)
+	normalize(&sidePlaneNormal)
 
 	// Orthogonalize
 	refFaceNormal := raylib.NewVector2(sidePlaneNormal.Y, -sidePlaneNormal.X)
@@ -889,69 +1057,50 @@ func solvePolygonToPolygon(manifold *Manifold) {
 
 	// Flip normal if required
 	if flip {
-		manifold.Normal = raylib.NewVector2(-refFaceNormal.X, -refFaceNormal.Y)
+		m.Normal = raylib.NewVector2(-refFaceNormal.X, -refFaceNormal.Y)
 	} else {
-		manifold.Normal = refFaceNormal
+		m.Normal = refFaceNormal
 	}
 
 	// Keep points behind reference face
 	currentPoint := 0 // clipped points behind reference face
 	separation := raymath.Vector2DotProduct(refFaceNormal, incidentFace0) - refC
 	if separation <= 0 {
-		manifold.Contacts[currentPoint] = incidentFace0
-		manifold.Penetration = -separation
+		m.Contacts[currentPoint] = incidentFace0
+		m.Penetration = -separation
 		currentPoint++
 	} else {
-		manifold.Penetration = 0
+		m.Penetration = 0
 	}
 
 	separation = raymath.Vector2DotProduct(refFaceNormal, incidentFace1) - refC
 
 	if separation <= 0 {
-		manifold.Contacts[currentPoint] = incidentFace1
-		manifold.Penetration += -separation
+		m.Contacts[currentPoint] = incidentFace1
+		m.Penetration += -separation
 		currentPoint++
 
 		// Calculate total penetration average
-		manifold.Penetration /= float32(currentPoint)
+		m.Penetration /= float32(currentPoint)
 	}
 
-	manifold.ContactsCount = currentPoint
-}
-
-// integrateForces -  Integrates physics forces into velocity
-func integrateForces(body *Body) {
-	if body.InverseMass == 0 || !body.Enabled {
-		return
-	}
-
-	body.Velocity.X += (body.Force.X * body.InverseMass) * (deltaTime / 2)
-	body.Velocity.Y += (body.Force.Y * body.InverseMass) * (deltaTime / 2)
-
-	if body.UseGravity {
-		body.Velocity.X += gravityForce.X * (deltaTime / 2)
-		body.Velocity.Y += gravityForce.Y * (deltaTime / 2)
-	}
-
-	if !body.FreezeOrient {
-		body.AngularVelocity += body.Torque * body.InverseInertia * (deltaTime / 2)
-	}
+	m.ContactsCount = currentPoint
 }
 
 // initializeManifolds - Initializes physics manifolds to solve collisions
-func initializeManifolds(manifold *Manifold) {
-	bodyA := manifold.BodyA
-	bodyB := manifold.BodyB
+func (m *manifold) initializeManifolds() {
+	bodyA := m.BodyA
+	bodyB := m.BodyB
 
 	// Calculate average restitution, static and dynamic friction
-	manifold.Restitution = float32(math.Sqrt(float64(bodyA.Restitution * bodyB.Restitution)))
-	manifold.StaticFriction = float32(math.Sqrt(float64(bodyA.StaticFriction * bodyB.StaticFriction)))
-	manifold.DynamicFriction = float32(math.Sqrt(float64(bodyA.DynamicFriction * bodyB.DynamicFriction)))
+	m.Restitution = float32(math.Sqrt(float64(bodyA.Restitution * bodyB.Restitution)))
+	m.StaticFriction = float32(math.Sqrt(float64(bodyA.StaticFriction * bodyB.StaticFriction)))
+	m.DynamicFriction = float32(math.Sqrt(float64(bodyA.DynamicFriction * bodyB.DynamicFriction)))
 
 	for i := 0; i < 2; i++ {
 		// Caculate radius from center of mass to contact
-		radiusA := raymath.Vector2Subtract(manifold.Contacts[i], bodyA.Position)
-		radiusB := raymath.Vector2Subtract(manifold.Contacts[i], bodyB.Position)
+		radiusA := raymath.Vector2Subtract(m.Contacts[i], bodyA.Position)
+		radiusB := raymath.Vector2Subtract(m.Contacts[i], bodyB.Position)
 
 		crossA := raymath.Vector2Cross(bodyA.AngularVelocity, radiusA)
 		crossB := raymath.Vector2Cross(bodyB.AngularVelocity, radiusB)
@@ -963,27 +1112,27 @@ func initializeManifolds(manifold *Manifold) {
 		// Determine if we should perform a resting collision or not;
 		// The idea is if the only thing moving this object is gravity, then the collision should be performed without any restitution
 		if raymath.Vector2LenSqr(radiusV) < (raymath.Vector2LenSqr(raylib.NewVector2(gravityForce.X*deltaTime, gravityForce.Y*deltaTime)) + epsilon) {
-			manifold.Restitution = 0
+			m.Restitution = 0
 		}
 	}
 }
 
 // integrateImpulses - Integrates physics collisions impulses to solve collisions
-func integrateImpulses(manifold *Manifold) {
-	bodyA := manifold.BodyA
-	bodyB := manifold.BodyB
+func (m *manifold) integrateImpulses() {
+	bodyA := m.BodyA
+	bodyB := m.BodyB
 
 	// Early out and positional correct if both objects have infinite mass
-	if float32(math.Abs(float64(bodyA.InverseMass+bodyB.InverseMass))) <= epsilon {
+	if math.Abs(float64(bodyA.InverseMass+bodyB.InverseMass)) <= epsilon {
 		bodyA.Velocity = raylib.Vector2{}
 		bodyB.Velocity = raylib.Vector2{}
 		return
 	}
 
-	for i := 0; i < manifold.ContactsCount; i++ {
+	for i := 0; i < m.ContactsCount; i++ {
 		// Calculate radius from center of mass to contact
-		radiusA := raymath.Vector2Subtract(manifold.Contacts[i], bodyA.Position)
-		radiusB := raymath.Vector2Subtract(manifold.Contacts[i], bodyB.Position)
+		radiusA := raymath.Vector2Subtract(m.Contacts[i], bodyA.Position)
+		radiusB := raymath.Vector2Subtract(m.Contacts[i], bodyB.Position)
 
 		// Calculate relative velocity
 		radiusV := raylib.Vector2{}
@@ -991,25 +1140,25 @@ func integrateImpulses(manifold *Manifold) {
 		radiusV.Y = bodyB.Velocity.Y + raymath.Vector2Cross(bodyB.AngularVelocity, radiusB).Y - bodyA.Velocity.Y - raymath.Vector2Cross(bodyA.AngularVelocity, radiusA).Y
 
 		// Relative velocity along the normal
-		contactVelocity := raymath.Vector2DotProduct(radiusV, manifold.Normal)
+		contactVelocity := raymath.Vector2DotProduct(radiusV, m.Normal)
 
 		// Do not resolve if velocities are separating
 		if contactVelocity > 0 {
 			return
 		}
 
-		raCrossN := raymath.Vector2CrossProduct(radiusA, manifold.Normal)
-		rbCrossN := raymath.Vector2CrossProduct(radiusB, manifold.Normal)
+		raCrossN := raymath.Vector2CrossProduct(radiusA, m.Normal)
+		rbCrossN := raymath.Vector2CrossProduct(radiusB, m.Normal)
 
 		inverseMassSum := bodyA.InverseMass + bodyB.InverseMass + (raCrossN*raCrossN)*bodyA.InverseInertia + (rbCrossN*rbCrossN)*bodyB.InverseInertia
 
 		// Calculate impulse scalar value
-		impulse := -(1.0 + manifold.Restitution) * contactVelocity
+		impulse := -(1.0 + m.Restitution) * contactVelocity
 		impulse /= inverseMassSum
-		impulse /= float32(manifold.ContactsCount)
+		impulse /= float32(m.ContactsCount)
 
 		// Apply impulse to each physics body
-		impulseV := raylib.NewVector2(manifold.Normal.X*impulse, manifold.Normal.Y*impulse)
+		impulseV := raylib.NewVector2(m.Normal.X*impulse, m.Normal.Y*impulse)
 
 		if bodyA.Enabled {
 			bodyA.Velocity.X += bodyA.InverseMass * (-impulseV.X)
@@ -1031,13 +1180,13 @@ func integrateImpulses(manifold *Manifold) {
 		radiusV.X = bodyB.Velocity.X + raymath.Vector2Cross(bodyB.AngularVelocity, radiusB).X - bodyA.Velocity.X - raymath.Vector2Cross(bodyA.AngularVelocity, radiusA).X
 		radiusV.Y = bodyB.Velocity.Y + raymath.Vector2Cross(bodyB.AngularVelocity, radiusB).Y - bodyA.Velocity.Y - raymath.Vector2Cross(bodyA.AngularVelocity, radiusA).Y
 
-		tangent := raylib.NewVector2(radiusV.X-(manifold.Normal.X*raymath.Vector2DotProduct(radiusV, manifold.Normal)), radiusV.Y-(manifold.Normal.Y*raymath.Vector2DotProduct(radiusV, manifold.Normal)))
-		raymath.Vector2Normalize(&tangent)
+		tangent := raylib.NewVector2(radiusV.X-(m.Normal.X*raymath.Vector2DotProduct(radiusV, m.Normal)), radiusV.Y-(m.Normal.Y*raymath.Vector2DotProduct(radiusV, m.Normal)))
+		normalize(&tangent)
 
 		// Calculate impulse tangent magnitude
-		impulseTangent := -raymath.Vector2DotProduct(radiusV, tangent)
+		impulseTangent := -(raymath.Vector2DotProduct(radiusV, tangent))
 		impulseTangent /= inverseMassSum
-		impulseTangent /= float32(manifold.ContactsCount)
+		impulseTangent /= float32(m.ContactsCount)
 
 		absImpulseTangent := float32(math.Abs(float64(impulseTangent)))
 
@@ -1048,10 +1197,10 @@ func integrateImpulses(manifold *Manifold) {
 
 		// Apply coulumb's law
 		tangentImpulse := raylib.Vector2{}
-		if absImpulseTangent < impulse*manifold.StaticFriction {
+		if absImpulseTangent < impulse*m.StaticFriction {
 			tangentImpulse = raylib.NewVector2(tangent.X*impulseTangent, tangent.Y*impulseTangent)
 		} else {
-			tangentImpulse = raylib.NewVector2(tangent.X*-impulse*manifold.DynamicFriction, tangent.Y*-impulse*manifold.DynamicFriction)
+			tangentImpulse = raylib.NewVector2(tangent.X*-impulse*m.DynamicFriction, tangent.Y*-impulse*m.DynamicFriction)
 		}
 
 		// Apply friction impulse
@@ -1075,32 +1224,14 @@ func integrateImpulses(manifold *Manifold) {
 	}
 }
 
-// integrateVelocity - Integrates physics velocity into position and forces
-func integrateVelocity(body *Body) {
-	if !body.Enabled {
-		return
-	}
-
-	body.Position.X += body.Velocity.X * deltaTime
-	body.Position.Y += body.Velocity.Y * deltaTime
-
-	if !body.FreezeOrient {
-		body.Orient += body.AngularVelocity * deltaTime
-	}
-
-	raymath.Mat2Set(&body.Shape.VertexData.Transform, body.Orient)
-
-	integrateForces(body)
-}
-
 // correctPositions - Corrects physics bodies positions based on manifolds collision information
-func correctPositions(manifold *Manifold) {
-	bodyA := manifold.BodyA
-	bodyB := manifold.BodyB
+func (m *manifold) correctPositions() {
+	bodyA := m.BodyA
+	bodyB := m.BodyB
 
 	correction := raylib.Vector2{}
-	correction.X = float32(math.Max(float64(manifold.Penetration-penetrationAllowance), 0)) / (bodyA.InverseMass + bodyB.InverseMass) * manifold.Normal.X * penetrationCorrection
-	correction.Y = float32(math.Max(float64(manifold.Penetration-penetrationAllowance), 0)) / (bodyA.InverseMass + bodyB.InverseMass) * manifold.Normal.Y * penetrationCorrection
+	correction.X = float32(math.Max(float64(m.Penetration-penetrationAllowance), 0)) / (bodyA.InverseMass + bodyB.InverseMass) * m.Normal.X * penetrationCorrection
+	correction.Y = float32(math.Max(float64(m.Penetration-penetrationAllowance), 0)) / (bodyA.InverseMass + bodyB.InverseMass) * m.Normal.Y * penetrationCorrection
 
 	if bodyA.Enabled {
 		bodyA.Position.X -= correction.X * bodyA.InverseMass
@@ -1113,14 +1244,13 @@ func correctPositions(manifold *Manifold) {
 	}
 }
 
-// Returns the extreme point along a direction within a polygon
-func getSupport(shape *Shape, dir raylib.Vector2) raylib.Vector2 {
+// getSupport - Returns the extreme point along a direction within a polygon
+func getSupport(shape Shape, dir raylib.Vector2) raylib.Vector2 {
 	bestProjection := float32(-fltMax)
 	bestVertex := raylib.Vector2{}
-	data := shape.VertexData
 
-	for i := 0; i < data.VertexCount; i++ {
-		vertex := data.Vertices[i]
+	for i := 0; i < shape.VertexData.VertexCount; i++ {
+		vertex := shape.VertexData.Vertices[i]
 		projection := raymath.Vector2DotProduct(vertex, dir)
 
 		if projection > bestProjection {
@@ -1133,9 +1263,9 @@ func getSupport(shape *Shape, dir raylib.Vector2) raylib.Vector2 {
 }
 
 // findAxisLeastPenetration - Finds polygon shapes axis least penetration
-func findAxisLeastPenetration(faceIndex *int, shapeA, shapeB *Shape) float32 {
-	bestDistance := float32(-fltMax)
+func findAxisLeastPenetration(shapeA, shapeB Shape) (int, float32) {
 	bestIndex := 0
+	bestDistance := float32(-fltMax)
 
 	dataA := shapeA.VertexData
 	dataB := shapeB.VertexData
@@ -1169,13 +1299,11 @@ func findAxisLeastPenetration(faceIndex *int, shapeA, shapeB *Shape) float32 {
 		}
 	}
 
-	*faceIndex = bestIndex
-
-	return bestDistance
+	return bestIndex, bestDistance
 }
 
 // findIncidentFace - Finds two polygon shapes incident face
-func findIncidentFace(v0, v1 *raylib.Vector2, ref, inc *Shape, index int) {
+func findIncidentFace(v0, v1 *raylib.Vector2, ref, inc Shape, index int) {
 	refData := ref.VertexData
 	incData := inc.VertexData
 
@@ -1204,6 +1332,8 @@ func findIncidentFace(v0, v1 *raylib.Vector2, ref, inc *Shape, index int) {
 
 	if incidentFace+1 < incData.VertexCount {
 		incidentFace = incidentFace + 1
+	} else {
+		incidentFace = 0
 	}
 
 	*v1 = raymath.Mat2MultiplyVector2(incData.Transform, incData.Vertices[incidentFace])
@@ -1224,12 +1354,12 @@ func clip(normal raylib.Vector2, clip float32, faceA, faceB *raylib.Vector2) int
 
 	// If negative (behind plane)
 	if distanceA <= 0 {
-		spp := sp + 1
-		out[spp] = *faceA
+		out[sp] = *faceA
+		sp += 1
 	}
 	if distanceB <= 0 {
-		spp := sp + 1
-		out[spp] = *faceB
+		out[sp] = *faceB
+		sp += 1
 	}
 
 	// If the points are on different sides of the plane
@@ -1264,4 +1394,21 @@ func triangleBarycenter(v1, v2, v3 raylib.Vector2) raylib.Vector2 {
 	result.Y = (v1.Y + v2.Y + v3.Y) / 3
 
 	return result
+}
+
+// normalize - Normalize provided vector
+func normalize(v *raylib.Vector2) {
+	var length, ilength float32
+
+	aux := *v
+	length = float32(math.Sqrt(float64(aux.X*aux.X + aux.Y*aux.Y)))
+
+	if length == 0 {
+		length = 1.0
+	}
+
+	ilength = 1.0 / length
+
+	v.X *= ilength
+	v.Y *= ilength
 }
