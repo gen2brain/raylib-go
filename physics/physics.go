@@ -607,7 +607,7 @@ func (b *Body) Shatter(position raylib.Vector2, force float32) {
 				p1 := newBody.Shape.VertexData.Vertices[j]
 				nextVertex := 0
 				if j+1 < newBody.Shape.VertexData.VertexCount {
-					nextIndex = j + 1
+					nextVertex = j + 1
 				}
 				p2 := newBody.Shape.VertexData.Vertices[nextVertex]
 
