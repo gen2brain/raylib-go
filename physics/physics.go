@@ -584,7 +584,7 @@ func (b *Body) Shatter(position raylib.Vector2, force float32) {
 			for j := 0; j < newData.VertexCount; j++ {
 				nextVertex := 0
 				if j+1 < newData.VertexCount {
-					nextIndex = j + 1
+					nextVertex = j + 1
 				}
 
 				face := raymath.Vector2Subtract(newData.Vertices[nextVertex], newData.Vertices[j])
