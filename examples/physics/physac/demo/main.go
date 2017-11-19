@@ -1,8 +1,6 @@
 package main
 
 import (
-	//"fmt"
-
 	"github.com/gen2brain/raylib-go/physics"
 	"github.com/gen2brain/raylib-go/raylib"
 )
@@ -68,23 +66,6 @@ func main() {
 
 		// Draw created physics bodies
 		for i, body := range physics.GetBodies() {
-			//if body.Enabled && body.IsGrounded {
-			//fmt.Printf("%+v\n", body)
-			//fmt.Printf("Velocity: %.6f, %.6f\n", body.Velocity.X, body.Velocity.X)
-			//fmt.Printf("Force: %.6f, %.6f\n", body.Force.X, body.Force.X)
-			//fmt.Printf("AngularVelocity: %.6f\n", body.AngularVelocity)
-			//fmt.Printf("Torque: %.6f\n", body.Torque)
-			//fmt.Printf("Orient: %.6f\n", body.Orient)
-			//fmt.Printf("Inertia: %.6f\n", body.Inertia)
-			//fmt.Printf("InverseInertia: %.6f\n", body.InverseInertia)
-			//fmt.Printf("Mass: %.6f\n", body.Mass)
-			//fmt.Printf("InverseMass: %.6f\n", body.InverseMass)
-			//fmt.Printf("StaticF: %.6f\n", body.StaticFriction)
-			//fmt.Printf("DynamicF: %.6f\n", body.DynamicFriction)
-			//fmt.Printf("Restitution: %.6f\n\n", body.Restitution)
-			//fmt.Println()
-			//}
-
 			vertexCount := physics.GetShapeVerticesCount(i)
 			for j := 0; j < vertexCount; j++ {
 				// Get physics bodies shape vertices to draw lines
