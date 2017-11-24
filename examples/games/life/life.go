@@ -55,13 +55,14 @@ func (g *Game) Init() {
 	for i := int32(0); i <= g.ScreenWidth/squareSize; i++ {
 		g.Cells[i] = make([]*Cell, g.ScreenHeight/squareSize+1)
 	}
+	
+	rand.Seed(time.Now().UnixNano())
 
 	for x := int32(0); x <= g.ScreenWidth/squareSize; x++ {
 		for y := int32(0); y <= g.ScreenHeight/squareSize; y++ {
 			g.Cells[x][y] = &Cell{}
 			g.Cells[x][y].Position = raylib.NewVector2((float32(x) * squareSize), (float32(y)*squareSize)+1)
 			g.Cells[x][y].Size = raylib.NewVector2(squareSize-1, squareSize-1)
-			rand.Seed(time.Now().UnixNano())
 			if rand.Float64() < 0.1 {
 				g.Cells[x][y].Alive = true
 			}
