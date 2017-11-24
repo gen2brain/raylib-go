@@ -30,18 +30,24 @@ type Game struct {
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
 	game := Game{}
 	game.Init()
+
 	raylib.InitWindow(game.ScreenWidth, game.ScreenHeight, "Conway's Game of Life")
 	raylib.SetTargetFPS(20)
+
 	for !raylib.WindowShouldClose() {
 		if game.Playing {
 			game.Update()
 		}
+
 		game.Input()
 
 		game.Draw()
 	}
+
 	raylib.CloseWindow()
 }
 
@@ -61,7 +67,6 @@ func (g *Game) Init() {
 			g.Cells[x][y] = &Cell{}
 			g.Cells[x][y].Position = raylib.NewVector2((float32(x) * squareSize), (float32(y)*squareSize)+1)
 			g.Cells[x][y].Size = raylib.NewVector2(squareSize-1, squareSize-1)
-			rand.Seed(time.Now().UnixNano())
 			if rand.Float64() < 0.1 {
 				g.Cells[x][y].Alive = true
 			}
