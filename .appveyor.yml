@@ -18,6 +18,7 @@ install:
   - set PATH=%GOPATH%\bin;c:\go\bin;%MSYS_PATH%\usr\bin;%MSYS_PATH%\mingw32\bin;%PATH%
   - go version
   - go env
+  - go get -t ./...
 
 before_build:
   - bash -lc "pacman --noconfirm --needed -Sy mingw-w64-i686-openal"
