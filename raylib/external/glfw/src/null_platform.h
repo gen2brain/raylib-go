@@ -1,7 +1,8 @@
 //========================================================================
-// GLFW 3.3 macOS - www.glfw.org
+// GLFW 3.3 - www.glfw.org
 //------------------------------------------------------------------------
-// Copyright (c) 2009-2016 Camilla Löwy <elmindreda@glfw.org>
+// Copyright (c) 2016 Google Inc.
+// Copyright (c) 2006-2016 Camilla Löwy <elmindreda@glfw.org>
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -24,33 +25,38 @@
 //
 //========================================================================
 
-#define _GLFW_PLATFORM_CONTEXT_STATE            _GLFWcontextNSGL nsgl
-#define _GLFW_PLATFORM_LIBRARY_CONTEXT_STATE    _GLFWlibraryNSGL nsgl
+#include <dlfcn.h>
 
+#define _GLFW_PLATFORM_WINDOW_STATE _GLFWwindowNull null
 
-// NSGL-specific per-context data
+#define _GLFW_PLATFORM_CONTEXT_STATE
+#define _GLFW_PLATFORM_MONITOR_STATE
+#define _GLFW_PLATFORM_CURSOR_STATE
+#define _GLFW_PLATFORM_LIBRARY_WINDOW_STATE
+#define _GLFW_PLATFORM_LIBRARY_CONTEXT_STATE
+#define _GLFW_EGL_CONTEXT_STATE
+#define _GLFW_EGL_LIBRARY_CONTEXT_STATE
+
+#include "osmesa_context.h"
+#include "posix_time.h"
+#include "posix_thread.h"
+#include "null_joystick.h"
+
+#if defined(_GLFW_WIN32)
+ #define _glfw_dlopen(name) LoadLibraryA(name)
+ #define _glfw_dlclose(handle) FreeLibrary((HMODULE) handle)
+ #define _glfw_dlsym(handle, name) GetProcAddress((HMODULE) handle, name)
+#else
+ #define _glfw_dlopen(name) dlopen(name, RTLD_LAZY | RTLD_LOCAL)
+ #define _glfw_dlclose(handle) dlclose(handle)
+ #define _glfw_dlsym(handle, name) dlsym(handle, name)
+#endif
+
+// Null-specific per-window data
 //
-typedef struct _GLFWcontextNSGL
+typedef struct _GLFWwindowNull
 {
-    id           pixelFormat;
-    id	         object;
-
-} _GLFWcontextNSGL;
-
-// NSGL-specific global data
-//
-typedef struct _GLFWlibraryNSGL
-{
-    // dlopen handle for OpenGL.framework (for glfwGetProcAddress)
-    CFBundleRef     framework;
-
-} _GLFWlibraryNSGL;
-
-
-GLFWbool _glfwInitNSGL(void);
-void _glfwTerminateNSGL(void);
-GLFWbool _glfwCreateContextNSGL(_GLFWwindow* window,
-                                const _GLFWctxconfig* ctxconfig,
-                                const _GLFWfbconfig* fbconfig);
-void _glfwDestroyContextNSGL(_GLFWwindow* window);
+    int width;
+    int height;
+} _GLFWwindowNull;
 

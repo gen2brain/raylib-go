@@ -1,8 +1,8 @@
 //========================================================================
-// GLFW 3.2 - www.glfw.org
+// GLFW 3.3 - www.glfw.org
 //------------------------------------------------------------------------
 // Copyright (c) 2002-2006 Marcus Geelnard
-// Copyright (c) 2006-2016 Camilla Berglund <elmindreda@glfw.org>
+// Copyright (c) 2006-2016 Camilla Löwy <elmindreda@glfw.org>
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -41,10 +41,11 @@
 GLFWbool _glfwIsValidContextConfig(const _GLFWctxconfig* ctxconfig)
 {
     if (ctxconfig->source != GLFW_NATIVE_CONTEXT_API &&
-        ctxconfig->source != GLFW_EGL_CONTEXT_API)
+        ctxconfig->source != GLFW_EGL_CONTEXT_API &&
+        ctxconfig->source != GLFW_OSMESA_CONTEXT_API)
     {
         _glfwInputError(GLFW_INVALID_ENUM,
-                        "Invalid context creation API %i",
+                        "Invalid context creation API 0x%08X",
                         ctxconfig->source);
         return GLFW_FALSE;
     }
@@ -54,7 +55,7 @@ GLFWbool _glfwIsValidContextConfig(const _GLFWctxconfig* ctxconfig)
         ctxconfig->client != GLFW_OPENGL_ES_API)
     {
         _glfwInputError(GLFW_INVALID_ENUM,
-                        "Invalid client API %i",
+                        "Invalid client API 0x%08X",
                         ctxconfig->client);
         return GLFW_FALSE;
     }
@@ -84,7 +85,7 @@ GLFWbool _glfwIsValidContextConfig(const _GLFWctxconfig* ctxconfig)
                 ctxconfig->profile != GLFW_OPENGL_COMPAT_PROFILE)
             {
                 _glfwInputError(GLFW_INVALID_ENUM,
-                                "Invalid OpenGL profile %i",
+                                "Invalid OpenGL profile 0x%08X",
                                 ctxconfig->profile);
                 return GLFW_FALSE;
             }
@@ -133,7 +134,7 @@ GLFWbool _glfwIsValidContextConfig(const _GLFWctxconfig* ctxconfig)
             ctxconfig->robustness != GLFW_LOSE_CONTEXT_ON_RESET)
         {
             _glfwInputError(GLFW_INVALID_ENUM,
-                            "Invalid context robustness mode %i",
+                            "Invalid context robustness mode 0x%08X",
                             ctxconfig->robustness);
             return GLFW_FALSE;
         }
@@ -145,7 +146,7 @@ GLFWbool _glfwIsValidContextConfig(const _GLFWctxconfig* ctxconfig)
             ctxconfig->release != GLFW_RELEASE_BEHAVIOR_FLUSH)
         {
             _glfwInputError(GLFW_INVALID_ENUM,
-                            "Invalid context release behavior %i",
+                            "Invalid context release behavior 0x%08X",
                             ctxconfig->release);
             return GLFW_FALSE;
         }
@@ -207,6 +208,9 @@ const _GLFWfbconfig* _glfwChooseFBConfig(const _GLFWfbconfig* desired,
                 // not important to us here, so we count them as one
                 missing++;
             }
+
+            if (desired->transparent != current->transparent)
+                missing++;
         }
 
         // These polynomials make many small channel size differences matter
@@ -330,7 +334,7 @@ GLFWbool _glfwRefreshContextAttribs(const _GLFWctxconfig* ctxconfig)
         NULL
     };
 
-    window = _glfwPlatformGetCurrentContext();
+    window = _glfwPlatformGetTls(&_glfw.contextSlot);
 
     window->context.source = ctxconfig->source;
     window->context.client = GLFW_OPENGL_API;
@@ -577,7 +581,7 @@ GLFWbool _glfwStringInExtensionString(const char* string, const char* extensions
 GLFWAPI void glfwMakeContextCurrent(GLFWwindow* handle)
 {
     _GLFWwindow* window = (_GLFWwindow*) handle;
-    _GLFWwindow* previous = _glfwPlatformGetCurrentContext();
+    _GLFWwindow* previous = _glfwPlatformGetTls(&_glfw.contextSlot);
 
     _GLFW_REQUIRE_INIT();
 
@@ -600,7 +604,7 @@ GLFWAPI void glfwMakeContextCurrent(GLFWwindow* handle)
 GLFWAPI GLFWwindow* glfwGetCurrentContext(void)
 {
     _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
-    return (GLFWwindow*) _glfwPlatformGetCurrentContext();
+    return _glfwPlatformGetTls(&_glfw.contextSlot);
 }
 
 GLFWAPI void glfwSwapBuffers(GLFWwindow* handle)
@@ -625,7 +629,7 @@ GLFWAPI void glfwSwapInterval(int interval)
 
     _GLFW_REQUIRE_INIT();
 
-    window = _glfwPlatformGetCurrentContext();
+    window = _glfwPlatformGetTls(&_glfw.contextSlot);
     if (!window)
     {
         _glfwInputError(GLFW_NO_CURRENT_CONTEXT, NULL);
@@ -638,12 +642,11 @@ GLFWAPI void glfwSwapInterval(int interval)
 GLFWAPI int glfwExtensionSupported(const char* extension)
 {
     _GLFWwindow* window;
-
     assert(extension != NULL);
 
     _GLFW_REQUIRE_INIT_OR_RETURN(GLFW_FALSE);
 
-    window = _glfwPlatformGetCurrentContext();
+    window = _glfwPlatformGetTls(&_glfw.contextSlot);
     if (!window)
     {
         _glfwInputError(GLFW_NO_CURRENT_CONTEXT, NULL);
@@ -708,7 +711,7 @@ GLFWAPI GLFWglproc glfwGetProcAddress(const char* procname)
 
     _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
 
-    window = _glfwPlatformGetCurrentContext();
+    window = _glfwPlatformGetTls(&_glfw.contextSlot);
     if (!window)
     {
         _glfwInputError(GLFW_NO_CURRENT_CONTEXT, NULL);

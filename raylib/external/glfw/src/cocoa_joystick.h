@@ -1,7 +1,7 @@
 //========================================================================
-// GLFW 3.2 Cocoa - www.glfw.org
+// GLFW 3.3 Cocoa - www.glfw.org
 //------------------------------------------------------------------------
-// Copyright (c) 2006-2016 Camilla Berglund <elmindreda@glfw.org>
+// Copyright (c) 2006-2016 Camilla Löwy <elmindreda@glfw.org>
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -24,37 +24,27 @@
 //
 //========================================================================
 
-#ifndef _glfw3_cocoa_joystick_h_
-#define _glfw3_cocoa_joystick_h_
-
 #include <IOKit/IOKitLib.h>
 #include <IOKit/IOCFPlugIn.h>
 #include <IOKit/hid/IOHIDLib.h>
 #include <IOKit/hid/IOHIDKeys.h>
 
-#define _GLFW_PLATFORM_LIBRARY_JOYSTICK_STATE \
-    _GLFWjoystickNS ns_js[GLFW_JOYSTICK_LAST + 1]
+#define _GLFW_PLATFORM_JOYSTICK_STATE         _GLFWjoystickNS ns
+#define _GLFW_PLATFORM_LIBRARY_JOYSTICK_STATE
 
+#define _GLFW_PLATFORM_MAPPING_NAME "Mac OS X"
 
 // Cocoa-specific per-joystick data
 //
 typedef struct _GLFWjoystickNS
 {
-    GLFWbool        present;
-    char            name[256];
-
-    IOHIDDeviceRef deviceRef;
-
-    CFMutableArrayRef axisElements;
-    CFMutableArrayRef buttonElements;
-    CFMutableArrayRef hatElements;
-
-    float*          axes;
-    unsigned char*  buttons;
+    IOHIDDeviceRef      device;
+    CFMutableArrayRef   axes;
+    CFMutableArrayRef   buttons;
+    CFMutableArrayRef   hats;
 } _GLFWjoystickNS;
 
 
 void _glfwInitJoysticksNS(void);
 void _glfwTerminateJoysticksNS(void);
 
-#endif // _glfw3_cocoa_joystick_h_

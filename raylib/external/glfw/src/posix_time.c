@@ -1,8 +1,8 @@
 //========================================================================
-// GLFW 3.2 POSIX - www.glfw.org
+// GLFW 3.3 POSIX - www.glfw.org
 //------------------------------------------------------------------------
 // Copyright (c) 2002-2006 Marcus Geelnard
-// Copyright (c) 2006-2016 Camilla Berglund <elmindreda@glfw.org>
+// Copyright (c) 2006-2016 Camilla Löwy <elmindreda@glfw.org>
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -44,14 +44,14 @@ void _glfwInitTimerPOSIX(void)
 
     if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0)
     {
-        _glfw.posix_time.monotonic = GLFW_TRUE;
-        _glfw.posix_time.frequency = 1000000000;
+        _glfw.timer.posix.monotonic = GLFW_TRUE;
+        _glfw.timer.posix.frequency = 1000000000;
     }
     else
 #endif
     {
-        _glfw.posix_time.monotonic = GLFW_FALSE;
-        _glfw.posix_time.frequency = 1000000;
+        _glfw.timer.posix.monotonic = GLFW_FALSE;
+        _glfw.timer.posix.frequency = 1000000;
     }
 }
 
@@ -63,7 +63,7 @@ void _glfwInitTimerPOSIX(void)
 uint64_t _glfwPlatformGetTimerValue(void)
 {
 #if defined(CLOCK_MONOTONIC)
-    if (_glfw.posix_time.monotonic)
+    if (_glfw.timer.posix.monotonic)
     {
         struct timespec ts;
         clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -80,6 +80,6 @@ uint64_t _glfwPlatformGetTimerValue(void)
 
 uint64_t _glfwPlatformGetTimerFrequency(void)
 {
-    return _glfw.posix_time.frequency;
+    return _glfw.timer.posix.frequency;
 }
 

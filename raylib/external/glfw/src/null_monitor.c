@@ -1,8 +1,8 @@
 //========================================================================
-// GLFW 3.2 POSIX - www.glfw.org
+// GLFW 3.3 - www.glfw.org
 //------------------------------------------------------------------------
-// Copyright (c) 2002-2006 Marcus Geelnard
-// Copyright (c) 2006-2016 Camilla Berglund <elmindreda@glfw.org>
+// Copyright (c) 2016 Google Inc.
+// Copyright (c) 2006-2016 Camilla Löwy <elmindreda@glfw.org>
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -25,25 +25,40 @@
 //
 //========================================================================
 
-#ifndef _glfw3_posix_tls_h_
-#define _glfw3_posix_tls_h_
-
-#include <pthread.h>
-
-#define _GLFW_PLATFORM_LIBRARY_TLS_STATE _GLFWtlsPOSIX posix_tls
+#include "internal.h"
 
 
-// POSIX-specific global TLS data
-//
-typedef struct _GLFWtlsPOSIX
+//////////////////////////////////////////////////////////////////////////
+//////                       GLFW platform API                      //////
+//////////////////////////////////////////////////////////////////////////
+
+void _glfwPlatformGetMonitorPos(_GLFWmonitor* monitor, int* xpos, int* ypos)
 {
-    GLFWbool        allocated;
-    pthread_key_t   context;
+}
 
-} _GLFWtlsPOSIX;
+void _glfwPlatformGetMonitorContentScale(_GLFWmonitor* monitor,
+                                         float* xscale, float* yscale)
+{
+    if (xscale)
+        *xscale = 1.f;
+    if (yscale)
+        *yscale = 1.f;
+}
 
+GLFWvidmode* _glfwPlatformGetVideoModes(_GLFWmonitor* monitor, int* found)
+{
+    return NULL;
+}
 
-GLFWbool _glfwInitThreadLocalStoragePOSIX(void);
-void _glfwTerminateThreadLocalStoragePOSIX(void);
+void _glfwPlatformGetVideoMode(_GLFWmonitor* monitor, GLFWvidmode* mode)
+{
+}
 
-#endif // _glfw3_posix_tls_h_
+void _glfwPlatformGetGammaRamp(_GLFWmonitor* monitor, GLFWgammaramp* ramp)
+{
+}
+
+void _glfwPlatformSetGammaRamp(_GLFWmonitor* monitor, const GLFWgammaramp* ramp)
+{
+}
+
