@@ -18,6 +18,8 @@ Usage of ./rrem:
     	Generate C header (.h file)
   -key string
     	Encryption key
+  -source
+    	Generate C source (.c file)
 ```
 
 ### Example
