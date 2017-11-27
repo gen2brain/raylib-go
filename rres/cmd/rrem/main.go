@@ -37,6 +37,8 @@ import (
 	"github.com/pierrec/lz4"
 	"github.com/rootlch/encrypt"
 	"github.com/ulikunitz/xz"
+	"golang.org/x/crypto/blowfish"
+	"golang.org/x/crypto/xtea"
 
 	"github.com/gen2brain/raylib-go/rres"
 )
@@ -47,8 +49,8 @@ func init() {
 
 func main() {
 	base := flag.String("base", "data", "Resources file basename")
-	comp := flag.Int("comp", rres.CompLZMA2, "Compression type, 0=None, 1=Deflate, 2=LZ4, 5=LZMA2 (XZ), 6=BZIP2")
-	enc := flag.Int("enc", rres.CryptoNone, "Encryption type, 0=None, 1=XOR, 2=AES, 3=3DES")
+	comp := flag.Int("comp", rres.CompLZMA2, "Compression type, 0=NONE, 1=DEFLATE, 2=LZ4, 5=LZMA2 (XZ), 6=BZIP2")
+	enc := flag.Int("enc", rres.CryptoNone, "Encryption type, 0=NONE, 1=XOR, 2=AES, 3=3DES, 4=Blowfish, 5=XTEA")
 	key := flag.String("key", "", "Encryption key")
 	header := flag.Bool("header", false, "Generate C header (.h file)")
 	bin := flag.Bool("bin", false, "Generate Go bindata (.go file)")
@@ -75,6 +77,8 @@ func main() {
 	case rres.CryptoXOR:
 	case rres.CryptoAES:
 	case rres.Crypto3DES:
+	case rres.CryptoBlowfish:
+	case rres.CryptoXTEA:
 	default:
 		fmt.Printf("encryption type %d not implemented\n", *enc)
 		os.Exit(1)
@@ -259,6 +263,20 @@ func main() {
 			}
 
 			data = b
+		case rres.CryptoBlowfish:
+			b, err := encryptBlowfish([]byte(*key), data)
+			if err != nil {
+				fmt.Printf("%v\n", err)
+			}
+
+			data = b
+		case rres.CryptoXTEA:
+			b, err := encryptXTEA([]byte(*key), data)
+			if err != nil {
+				fmt.Printf("%v\n", err)
+			}
+
+			data = b
 		}
 
 		infoHeader.UncompSize = uint32(len(data))
@@ -434,7 +452,7 @@ func encryptAES(key, text []byte) ([]byte, error) {
 
 // encrypt3DES
 func encrypt3DES(key, text []byte) ([]byte, error) {
-	block, err := des.NewTripleDESCipher([]byte(key))
+	block, err := des.NewTripleDESCipher(key)
 	if err != nil {
 		return nil, err
 	}
@@ -448,6 +466,46 @@ func encrypt3DES(key, text []byte) ([]byte, error) {
 
 	cbc := cipher.NewCBCEncrypter(block, iv)
 	cbc.CryptBlocks(ciphertext[des.BlockSize:], msg)
+
+	return ciphertext, nil
+}
+
+// encryptBlowfish
+func encryptBlowfish(key, text []byte) ([]byte, error) {
+	block, err := blowfish.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := pad(text, blowfish.BlockSize)
+	ciphertext := make([]byte, blowfish.BlockSize+len(msg))
+	iv := ciphertext[:blowfish.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return nil, err
+	}
+
+	cbc := cipher.NewCBCEncrypter(block, iv)
+	cbc.CryptBlocks(ciphertext[blowfish.BlockSize:], msg)
+
+	return ciphertext, nil
+}
+
+// encryptXTEA
+func encryptXTEA(key, text []byte) ([]byte, error) {
+	block, err := xtea.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := pad(text, xtea.BlockSize)
+	ciphertext := make([]byte, xtea.BlockSize+len(msg))
+	iv := ciphertext[:xtea.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return nil, err
+	}
+
+	cbc := cipher.NewCBCEncrypter(block, iv)
+	cbc.CryptBlocks(ciphertext[xtea.BlockSize:], msg)
 
 	return ciphertext, nil
 }

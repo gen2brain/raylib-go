@@ -16,6 +16,8 @@ import (
 	"github.com/pierrec/lz4"
 	"github.com/rootlch/encrypt"
 	"github.com/ulikunitz/xz"
+	"golang.org/x/crypto/blowfish"
+	"golang.org/x/crypto/xtea"
 
 	"github.com/gen2brain/raylib-go/rres"
 )
@@ -129,6 +131,18 @@ func LoadResource(reader io.ReadSeeker, rresID int, key []byte) (data rres.Data)
 					TraceLog(LogWarning, "[ID %d] %v", infoHeader.ID, err)
 				}
 				data.Data = b
+			case rres.CryptoBlowfish:
+				b, err := decryptBlowfish(key, data.Data)
+				if err != nil {
+					TraceLog(LogWarning, "[ID %d] %v", infoHeader.ID, err)
+				}
+				data.Data = b
+			case rres.CryptoXTEA:
+				b, err := decryptXTEA(key, data.Data)
+				if err != nil {
+					TraceLog(LogWarning, "[ID %d] %v", infoHeader.ID, err)
+				}
+				data.Data = b
 			}
 
 			if data.Data != nil {
@@ -197,6 +211,56 @@ func decrypt3DES(key, text []byte) ([]byte, error) {
 
 	iv := text[:des.BlockSize]
 	msg := text[des.BlockSize:]
+
+	cbc := cipher.NewCBCDecrypter(block, iv)
+	cbc.CryptBlocks(msg, msg)
+
+	unpadMsg, err := unpad(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return unpadMsg, nil
+}
+
+// decryptBlowfish
+func decryptBlowfish(key, text []byte) ([]byte, error) {
+	block, err := blowfish.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	if (len(text) % blowfish.BlockSize) != 0 {
+		return nil, fmt.Errorf("blocksize must be multiple of decoded message length")
+	}
+
+	iv := text[:blowfish.BlockSize]
+	msg := text[blowfish.BlockSize:]
+
+	cbc := cipher.NewCBCDecrypter(block, iv)
+	cbc.CryptBlocks(msg, msg)
+
+	unpadMsg, err := unpad(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return unpadMsg, nil
+}
+
+// decryptXTEA
+func decryptXTEA(key, text []byte) ([]byte, error) {
+	block, err := xtea.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	if (len(text) % xtea.BlockSize) != 0 {
+		return nil, fmt.Errorf("blocksize must be multiple of decoded message length")
+	}
+
+	iv := text[:xtea.BlockSize]
+	msg := text[xtea.BlockSize:]
 
 	cbc := cipher.NewCBCDecrypter(block, iv)
 	cbc.CryptBlocks(msg, msg)
