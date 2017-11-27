@@ -1,4 +1,4 @@
-// +build !android,!arm,!wayland
+// +build wayland
 
 package raylib
 
@@ -34,19 +34,17 @@ func SetCallbackFunc(func(unsafe.Pointer)) {
 
 // ShowCursor - Shows cursor
 func ShowCursor() {
-	C.ShowCursor()
+	return
 }
 
 // HideCursor - Hides cursor
 func HideCursor() {
-	C.HideCursor()
+	return
 }
 
 // IsCursorHidden - Returns true if cursor is not visible
 func IsCursorHidden() bool {
-	ret := C.IsCursorHidden()
-	v := bool(int(ret) == 1)
-	return v
+	return false
 }
 
 // EnableCursor - Enables cursor
