@@ -25,14 +25,15 @@ package raylib
 #endif
 
 #include "external/glfw/src/linux_joystick.c"
+#include "external/glfw/src/posix_thread.c"
 #include "external/glfw/src/posix_time.c"
-#include "external/glfw/src/posix_tls.c"
 #include "external/glfw/src/xkb_unicode.c"
 #include "external/glfw/src/egl_context.c"
+#include "external/glfw/src/osmesa_context.c"
 
 #cgo linux CFLAGS: -Iexternal/glfw/include -DPLATFORM_DESKTOP
 
-#cgo linux,!wayland LDFLAGS: -lGL -lm -pthread -ldl -lrt -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor
+#cgo linux,!wayland LDFLAGS: -lGL -lm -pthread -ldl -lrt -lX11
 #cgo linux,wayland LDFLAGS: -lGL -lm -pthread -ldl -lrt -lwayland-client -lwayland-cursor -lwayland-egl -lxkbcommon
 
 #cgo linux,!wayland CFLAGS: -D_GLFW_X11
