@@ -132,12 +132,13 @@ func LoadWave(fileName string) Wave {
 }
 
 // LoadWaveEx - Load wave data from float array data (32bit)
-func LoadWaveEx(data unsafe.Pointer, sampleCount int32, sampleRate int32, sampleSize int32, channels int32) Wave {
+func LoadWaveEx(data []byte, sampleCount int32, sampleRate int32, sampleSize int32, channels int32) Wave {
+	cdata := unsafe.Pointer(&data[0])
 	csampleCount := (C.int)(sampleCount)
 	csampleRate := (C.int)(sampleRate)
 	csampleSize := (C.int)(sampleSize)
 	cchannels := (C.int)(channels)
-	ret := C.LoadWaveEx(data, csampleCount, csampleRate, csampleSize, cchannels)
+	ret := C.LoadWaveEx(cdata, csampleCount, csampleRate, csampleSize, cchannels)
 	v := NewWaveFromPointer(unsafe.Pointer(&ret))
 	return v
 }
