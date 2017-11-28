@@ -1,4 +1,4 @@
-// +build !android,!arm,!wayland
+// +build !android,!arm
 
 package raylib
 
