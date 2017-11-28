@@ -21,4 +21,6 @@ wayland-scanner code ./unstable/idle-inhibit/idle-inhibit-unstable-v1.xml "$GLGL
 wayland-scanner client-header ./unstable/idle-inhibit/idle-inhibit-unstable-v1.xml "$GLGLFW_PATH"/wayland-idle-inhibit-unstable-v1-client-protocol.h
 
 # Patch for cgo
-sed -i "s|types|types2|g" "$GLGLFW_PATH"/wayland-relative-pointer-unstable-v1-client-protocol.c
+sed -i "s|types|wl_pc_types|g" "$GLGLFW_PATH"/wayland-pointer-constraints-unstable-v1-client-protocol.c
+sed -i "s|types|wl_rp_types|g" "$GLGLFW_PATH"/wayland-relative-pointer-unstable-v1-client-protocol.c
+sed -i "s|types|wl_ii_types|g" "$GLGLFW_PATH"/wayland-idle-inhibit-unstable-v1-client-protocol.c
