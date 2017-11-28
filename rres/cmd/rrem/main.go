@@ -35,7 +35,7 @@ import (
 	"github.com/klauspost/compress/flate"
 	"github.com/moutend/go-wav"
 	"github.com/pierrec/lz4"
-	"github.com/rootlch/encrypt"
+	xor "github.com/rootlch/encrypt"
 	"github.com/ulikunitz/xz"
 	"golang.org/x/crypto/blowfish"
 	"golang.org/x/crypto/xtea"
@@ -62,25 +62,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	switch *comp {
-	case rres.CompNone:
-	case rres.CompDeflate:
-	case rres.CompLZ4:
-	case rres.CompLZMA2:
-	case rres.CompBZIP2:
-	default:
+	if !validComp(*comp) {
 		fmt.Printf("compression type %d not implemented\n", *comp)
 		os.Exit(1)
 	}
 
-	switch *enc {
-	case rres.CryptoNone:
-	case rres.CryptoXOR:
-	case rres.CryptoAES:
-	case rres.Crypto3DES:
-	case rres.CryptoBlowfish:
-	case rres.CryptoXTEA:
-	default:
+	if !validEnc(*enc) {
 		fmt.Printf("encryption type %d not implemented\n", *enc)
 		os.Exit(1)
 	}
@@ -101,8 +88,6 @@ func main() {
 		fmt.Printf("%v\n", err)
 		os.Exit(1)
 	}
-
-	defer rresFile.Close()
 
 	var headerFile *os.File
 	if *header {
@@ -175,197 +160,26 @@ func main() {
 		infoHeader.PartsCount = uint8(1)
 
 		// Params
-		switch infoHeader.DataType {
-		case rres.TypeImage:
-			img, _, err := image.Decode(bytes.NewReader(data))
-			if err != nil {
-				fmt.Printf("%s: %v\n", filename, err)
-				continue
-			}
-
-			rect := img.Bounds()
-			width, height := rect.Dx(), rect.Dy()
-
-			infoHeader.Param1 = uint32(width)
-			infoHeader.Param2 = uint32(height)
-
-			switch img.ColorModel() {
-			case color.GrayModel:
-				infoHeader.Param3 = rres.ImUncompGrayscale
-
-				i := image.NewGray(rect)
-				draw.Draw(i, rect, img, rect.Min, draw.Src)
-				data = i.Pix
-			case color.Gray16Model:
-				infoHeader.Param3 = rres.ImUncompGrayAlpha
-
-				i := image.NewGray16(rect)
-				draw.Draw(i, rect, img, rect.Min, draw.Src)
-				data = i.Pix
-			default:
-				infoHeader.Param3 = rres.ImUncompR8g8b8a8
-
-				i := image.NewNRGBA(rect)
-				draw.Draw(i, rect, img, rect.Min, draw.Src)
-				data = i.Pix
-			}
-
-		case rres.TypeWave:
-			a := &wav.File{}
-			err := wav.Unmarshal(data, a)
-			if err != nil {
-				fmt.Printf("%s: %v\n", filename, err)
-			}
-
-			data, err = ioutil.ReadAll(a)
-			if err != nil {
-				fmt.Printf("%s: %v\n", filename, err)
-			}
-
-			infoHeader.Param1 = uint32(a.Samples())
-			infoHeader.Param2 = uint32(a.SamplesPerSec())
-			infoHeader.Param3 = uint32(a.BitsPerSample())
-			infoHeader.Param4 = uint32(a.Channels())
-		case rres.TypeVorbis:
-			r, err := oggvorbis.NewReader(bytes.NewReader(data))
-			if err != nil {
-				fmt.Printf("%s: %v\n", filename, err)
-			}
-
-			d, _, err := oggvorbis.ReadAll(bytes.NewReader(data))
-			if err != nil {
-				fmt.Printf("%s: %v\n", filename, err)
-			}
-
-			// Convert []float32 to []byte
-			header := *(*reflect.SliceHeader)(unsafe.Pointer(&d))
-			header.Len *= 4
-			header.Cap *= 4
-			data = *(*[]byte)(unsafe.Pointer(&header))
-
-			infoHeader.Param1 = uint32(r.SampleRate())
-			infoHeader.Param2 = uint32(r.Bitrate().Nominal)
-			infoHeader.Param3 = uint32(r.Channels())
-		case rres.TypeVertex:
-			// TODO https://github.com/sheenobu/go-obj
-		case rres.TypeText, rres.TypeRaw:
+		data, infoHeader.Param1, infoHeader.Param2, infoHeader.Param3, infoHeader.Param4, err = params(data, int(infoHeader.DataType))
+		if err != nil {
+			fmt.Printf("%s: %v\n", filename, err)
 		}
 
 		// Encryption
-		switch infoHeader.CryptoType {
-		case rres.CryptoXOR:
-			c, err := encrypt.NewXor(*key)
-			if err != nil {
-				fmt.Printf("%v\n", err)
-			}
-
-			b := c.Encode(data)
-			data = b
-		case rres.CryptoAES:
-			b, err := encryptAES([]byte(*key), data)
-			if err != nil {
-				fmt.Printf("%v\n", err)
-			}
-
-			data = b
-		case rres.Crypto3DES:
-			b, err := encrypt3DES([]byte(*key), data)
-			if err != nil {
-				fmt.Printf("%v\n", err)
-			}
-
-			data = b
-		case rres.CryptoBlowfish:
-			b, err := encryptBlowfish([]byte(*key), data)
-			if err != nil {
-				fmt.Printf("%v\n", err)
-			}
-
-			data = b
-		case rres.CryptoXTEA:
-			b, err := encryptXTEA([]byte(*key), data)
-			if err != nil {
-				fmt.Printf("%v\n", err)
-			}
-
-			data = b
+		data, err = encrypt([]byte(*key), data, int(infoHeader.CryptoType))
+		if err != nil {
+			fmt.Printf("%v\n", err)
 		}
 
 		infoHeader.UncompSize = uint32(len(data))
 
 		// Compression
-		switch infoHeader.CompType {
-		case rres.CompNone:
-			infoHeader.DataSize = uint32(len(data))
-		case rres.CompDeflate:
-			buf := new(bytes.Buffer)
-
-			w, err := flate.NewWriter(buf, flate.BestCompression)
-			if err != nil {
-				fmt.Printf("%v\n", err)
-			}
-
-			_, err = w.Write(data)
-			if err != nil {
-				fmt.Printf("%v\n", err)
-			}
-
-			w.Close()
-
-			infoHeader.DataSize = uint32(len(buf.Bytes()))
-			data = buf.Bytes()
-		case rres.CompLZ4:
-			buf := new(bytes.Buffer)
-
-			w := lz4.NewWriter(buf)
-			if err != nil {
-				fmt.Printf("%v\n", err)
-			}
-
-			_, err = w.Write(data)
-			if err != nil {
-				fmt.Printf("%v\n", err)
-			}
-
-			w.Close()
-
-			infoHeader.DataSize = uint32(len(buf.Bytes()))
-			data = buf.Bytes()
-		case rres.CompLZMA2:
-			buf := new(bytes.Buffer)
-
-			w, err := xz.NewWriter(buf)
-			if err != nil {
-				fmt.Printf("%v\n", err)
-			}
-
-			_, err = w.Write(data)
-			if err != nil {
-				fmt.Printf("%v\n", err)
-			}
-
-			w.Close()
-
-			infoHeader.DataSize = uint32(len(buf.Bytes()))
-			data = buf.Bytes()
-		case rres.CompBZIP2:
-			buf := new(bytes.Buffer)
-
-			w, err := bzip2.NewWriter(buf, &bzip2.WriterConfig{Level: bzip2.BestCompression})
-			if err != nil {
-				fmt.Printf("%v\n", err)
-			}
-
-			_, err = w.Write(data)
-			if err != nil {
-				fmt.Printf("%v\n", err)
-			}
-
-			w.Close()
-
-			infoHeader.DataSize = uint32(len(buf.Bytes()))
-			data = buf.Bytes()
+		data, err = compress(data, int(infoHeader.CompType))
+		if err != nil {
+			fmt.Printf("%v\n", err)
 		}
+
+		infoHeader.DataSize = uint32(len(data))
 
 		// Write resource info and parameters
 		err = binary.Write(rresFile, binary.LittleEndian, &infoHeader)
@@ -381,80 +195,47 @@ func main() {
 			fmt.Printf("%v\n", err)
 		}
 
-		var typeName string
-		switch infoHeader.DataType {
-		case rres.TypeImage:
-			typeName = "IMAGE"
-		case rres.TypeWave:
-			typeName = "WAVE"
-		case rres.TypeVorbis:
-			typeName = "VORBIS"
-		case rres.TypeText:
-			typeName = "TEXT"
-		default:
-			typeName = "RAW"
-		}
-
-		fmt.Printf("%s %d // Embedded as %s\n", filepath.Base(filename), id, typeName)
+		fmt.Printf("%s %d // Embedded as %s\n", filepath.Base(filename), id, typeName(int(infoHeader.DataType)))
 
 		if *header {
-			headerFile.Write([]byte(fmt.Sprintf("#define RES_%s 0x%08x\t\t// Embedded as %s\n", filepath.Base(filename), id, typeName)))
+			headerFile.Write([]byte(fmt.Sprintf("#define RES_%s 0x%08x\t\t// Embedded as %s\n", filepath.Base(filename), id, typeName(int(infoHeader.DataType)))))
 		}
+	}
+
+	err = rresFile.Sync()
+	if err != nil {
+		fmt.Printf("%v\n", err)
+	}
+
+	err = rresFile.Close()
+	if err != nil {
+		fmt.Printf("%v\n", err)
 	}
 
 	// Generate C source
 	if *source {
-		rresFile.Seek(0, 0)
-		d, err := ioutil.ReadAll(rresFile)
+		fname := fmt.Sprintf("%s.rres", *base)
+		file, err := os.Open(fname)
 		if err != nil {
-			fmt.Printf("%v\n", err)
+			fmt.Printf("%s: %v\n", fname, err)
 		}
 
-		_, err = sourceFile.Write([]byte("// This file has been automatically generated by rREM - raylib Resource Embedder\n\n"))
+		d, err := ioutil.ReadAll(file)
 		if err != nil {
-			fmt.Printf("%v\n", err)
+			fmt.Printf("%s: %v\n", fname, err)
 		}
 
-		_, err = sourceFile.Write([]byte(fmt.Sprintf("const unsigned char data[%d] = {\n    ", len(d))))
-		if err != nil {
-			fmt.Printf("%v\n", err)
-		}
+		file.Close()
 
-		blCounter := 0 // break line counter
-
-		for i := 0; i < len(d)-1; i++ {
-			blCounter++
-
-			_, err = sourceFile.Write([]byte(fmt.Sprintf("0x%.2x, ", d[i])))
-			if err != nil {
-				fmt.Printf("%v\n", err)
-			}
-
-			if blCounter >= 24 {
-				_, err = sourceFile.Write([]byte("\n    "))
-				if err != nil {
-					fmt.Printf("%v\n", err)
-				}
-
-				blCounter = 0
-			}
-		}
-
-		_, err = sourceFile.Write([]byte(fmt.Sprintf("0x%.2x };\n", d[len(d)-1])))
+		err = genSource(sourceFile, d)
 		if err != nil {
 			fmt.Printf("%v\n", err)
 		}
 	}
 
-	// Generate bindata
+	// Generate Go bindata
 	if *bin {
-		cfg := bindata.NewConfig()
-		cfg.NoCompress = true
-		cfg.Output = fmt.Sprintf("%s.go", *base)
-		cfg.Input = make([]bindata.InputConfig, 1)
-		cfg.Input[0] = bindata.InputConfig{Path: fmt.Sprintf("%s.rres", *base), Recursive: false}
-
-		err := bindata.Translate(cfg)
+		err = genBin(*base)
 		if err != nil {
 			fmt.Printf("%v\n", err)
 		}
@@ -477,6 +258,304 @@ func fileType(f string) int {
 	default:
 		return rres.TypeRaw
 	}
+}
+
+// typeName returns data type name
+func typeName(dataType int) string {
+	switch dataType {
+	case rres.TypeImage:
+		return "IMAGE"
+	case rres.TypeWave:
+		return "WAVE"
+	case rres.TypeVorbis:
+		return "VORBIS"
+	case rres.TypeText:
+		return "TEXT"
+	default:
+		return "RAW"
+	}
+}
+
+// validEnc checks if encryption type is valid
+func validEnc(encType int) bool {
+	switch encType {
+	case rres.CryptoNone, rres.CryptoXOR:
+		return true
+	case rres.CryptoAES, rres.Crypto3DES:
+		return true
+	case rres.CryptoBlowfish, rres.CryptoXTEA:
+		return true
+	}
+	return false
+}
+
+// validComp checks if compression type is valid
+func validComp(compType int) bool {
+	switch compType {
+	case rres.CompNone, rres.CompDeflate:
+		return true
+	case rres.CompLZ4, rres.CompLZMA2:
+		return true
+	case rres.CompBZIP2:
+		return true
+	}
+	return false
+}
+
+// params returns data params
+func params(data []byte, dataType int) (d []byte, p1, p2, p3, p4 uint32, err error) {
+	switch dataType {
+	case rres.TypeImage:
+		var img image.Image
+
+		img, _, err = image.Decode(bytes.NewReader(data))
+		if err != nil {
+			return
+		}
+
+		rect := img.Bounds()
+		width, height := rect.Dx(), rect.Dy()
+
+		p1 = uint32(width)
+		p2 = uint32(height)
+
+		switch img.ColorModel() {
+		case color.GrayModel:
+			p3 = rres.ImUncompGrayscale
+
+			i := image.NewGray(rect)
+			draw.Draw(i, rect, img, rect.Min, draw.Src)
+			d = i.Pix
+			return
+		case color.Gray16Model:
+			p3 = rres.ImUncompGrayAlpha
+
+			i := image.NewGray16(rect)
+			draw.Draw(i, rect, img, rect.Min, draw.Src)
+			d = i.Pix
+			return
+		default:
+			p3 = rres.ImUncompR8g8b8a8
+
+			i := image.NewNRGBA(rect)
+			draw.Draw(i, rect, img, rect.Min, draw.Src)
+			d = i.Pix
+			return
+		}
+
+	case rres.TypeWave:
+		a := &wav.File{}
+		err = wav.Unmarshal(data, a)
+		if err != nil {
+			return
+		}
+
+		d, err = ioutil.ReadAll(a)
+		if err != nil {
+			return
+		}
+
+		p1 = uint32(a.Samples())
+		p2 = uint32(a.SamplesPerSec())
+		p3 = uint32(a.BitsPerSample())
+		p4 = uint32(a.Channels())
+		return
+	case rres.TypeVorbis:
+		r, e := oggvorbis.NewReader(bytes.NewReader(data))
+		if e != nil {
+			err = e
+			return
+		}
+
+		o, _, e := oggvorbis.ReadAll(bytes.NewReader(data))
+		if e != nil {
+			err = e
+			return
+		}
+
+		// Convert []float32 to []byte
+		header := *(*reflect.SliceHeader)(unsafe.Pointer(&o))
+		header.Len *= 4
+		header.Cap *= 4
+		d = *(*[]byte)(unsafe.Pointer(&header))
+
+		p1 = uint32(r.SampleRate())
+		p2 = uint32(r.Bitrate().Nominal)
+		p3 = uint32(r.Channels())
+		return
+	case rres.TypeVertex:
+		// TODO https://github.com/sheenobu/go-obj
+	case rres.TypeText, rres.TypeRaw:
+	}
+
+	return
+}
+
+// encrypt data
+func encrypt(key, data []byte, cryptoType int) ([]byte, error) {
+	switch cryptoType {
+	case rres.CryptoXOR:
+		c, err := xor.NewXor(string(key))
+		if err != nil {
+			return nil, err
+		}
+
+		return c.Encode(data), nil
+	case rres.CryptoAES:
+		b, err := encryptAES(key, data)
+		if err != nil {
+			return nil, err
+		}
+
+		return b, nil
+	case rres.Crypto3DES:
+		b, err := encrypt3DES(key, data)
+		if err != nil {
+			return nil, err
+		}
+
+		return b, nil
+	case rres.CryptoBlowfish:
+		b, err := encryptBlowfish(key, data)
+		if err != nil {
+			return nil, err
+		}
+
+		return b, nil
+	case rres.CryptoXTEA:
+		b, err := encryptXTEA(key, data)
+		if err != nil {
+			fmt.Printf("%v\n", err)
+		}
+
+		return b, nil
+	default:
+		return data, nil
+	}
+}
+
+// compress data
+func compress(data []byte, compType int) ([]byte, error) {
+	switch compType {
+	case rres.CompNone:
+		return data, nil
+	case rres.CompDeflate:
+		buf := new(bytes.Buffer)
+
+		w, err := flate.NewWriter(buf, flate.BestCompression)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = w.Write(data)
+		if err != nil {
+			return nil, err
+		}
+
+		w.Close()
+
+		return buf.Bytes(), nil
+	case rres.CompLZ4:
+		buf := new(bytes.Buffer)
+
+		w := lz4.NewWriter(buf)
+
+		_, err := w.Write(data)
+		if err != nil {
+			return nil, err
+		}
+
+		w.Close()
+
+		return buf.Bytes(), nil
+	case rres.CompLZMA2:
+		buf := new(bytes.Buffer)
+
+		w, err := xz.NewWriter(buf)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = w.Write(data)
+		if err != nil {
+			return nil, err
+		}
+
+		w.Close()
+
+		return buf.Bytes(), nil
+	case rres.CompBZIP2:
+		buf := new(bytes.Buffer)
+
+		w, err := bzip2.NewWriter(buf, &bzip2.WriterConfig{Level: bzip2.BestCompression})
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = w.Write(data)
+		if err != nil {
+			return nil, err
+		}
+
+		w.Close()
+
+		return buf.Bytes(), nil
+	default:
+		return data, nil
+	}
+}
+
+// genSource generates C source file
+func genSource(w io.Writer, data []byte) error {
+	length := len(data)
+
+	_, err := w.Write([]byte("// This file has been automatically generated by rREM - raylib Resource Embedder\n\n"))
+	if err != nil {
+		return err
+	}
+
+	_, err = w.Write([]byte(fmt.Sprintf("const unsigned char data[%d] = {\n    ", length)))
+	if err != nil {
+		fmt.Printf("%v\n", err)
+	}
+
+	blCounter := 0 // break line counter
+
+	for i := 0; i < len(data)-1; i++ {
+		blCounter++
+
+		_, err = w.Write([]byte(fmt.Sprintf("0x%.2x, ", data[i])))
+		if err != nil {
+			return err
+		}
+
+		if blCounter >= 24 {
+			_, err = w.Write([]byte("\n    "))
+			if err != nil {
+				return err
+			}
+
+			blCounter = 0
+		}
+	}
+
+	_, err = w.Write([]byte(fmt.Sprintf("0x%.2x };\n", data[length-1])))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//genBin generates go-bindata file
+func genBin(base string) error {
+	cfg := bindata.NewConfig()
+	cfg.NoCompress = true
+	cfg.Output = fmt.Sprintf("%s.go", base)
+	cfg.Input = make([]bindata.InputConfig, 1)
+	cfg.Input[0] = bindata.InputConfig{Path: fmt.Sprintf("%s.rres", base), Recursive: false}
+
+	return bindata.Translate(cfg)
 }
 
 // pad to block size
