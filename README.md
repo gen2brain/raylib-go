@@ -49,11 +49,11 @@ On Windows, build binary in MSYS2 shell.
 
 ### Build tags
 
-* `noaudio` - disable audio functions and doesn't link against OpenAL libraries
-* `opengl21` - use OpenGL 2.1 backend (default is 3.3 on desktop)
-* `opengl11` - use OpenGL 1.1 backend (pseudo OpenGL 1.1 style)
-* `wayland` - build against Wayland libraries
-* `static` - link against OpenAL static libraries
+* `noaudio` - disables audio functions and doesn't link against OpenAL libraries
+* `opengl21` - uses OpenGL 2.1 backend (default is 3.3 on desktop)
+* `opengl11` - uses OpenGL 1.1 backend (pseudo OpenGL 1.1 style)
+* `wayland` - builds against Wayland libraries
+* `static` - links against OpenAL static libraries
 
 ### Documentation
 
