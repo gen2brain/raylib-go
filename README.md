@@ -47,6 +47,14 @@ On Windows, build binary in MSYS2 shell.
 
     go get -v -u github.com/gen2brain/raylib-go/raylib
 
+### Build tags
+
+* `noaudio` - disables audio functions and doesn't link against OpenAL libraries
+* `opengl21` - use OpenGL 2.1 backend (default is 3.3 on desktop)
+* `opengl11` - use OpenGL 1.1 backend (pseudo OpenGL 1.1 style)
+* `wayland` - builds against Wayland libraries
+* `static` - link against OpenAL static libraries
+
 ### Documentation
 
 Documentation on [GoDoc](https://godoc.org/github.com/gen2brain/raylib-go/raylib). Also check raylib [cheatsheet](http://www.raylib.com/cheatsheet/cheatsheet.html).
