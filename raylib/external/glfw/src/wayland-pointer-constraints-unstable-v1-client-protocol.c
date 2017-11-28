@@ -34,7 +34,7 @@ extern const struct wl_interface wl_surface_interface;
 extern const struct wl_interface zwp_confined_pointer_v1_interface;
 extern const struct wl_interface zwp_locked_pointer_v1_interface;
 
-static const struct wl_interface *types[] = {
+static const struct wl_interface *wl_pc_types[] = {
 	NULL,
 	NULL,
 	&zwp_locked_pointer_v1_interface,
@@ -52,9 +52,9 @@ static const struct wl_interface *types[] = {
 };
 
 static const struct wl_message zwp_pointer_constraints_v1_requests[] = {
-	{ "destroy", "", types + 0 },
-	{ "lock_pointer", "noo?ou", types + 2 },
-	{ "confine_pointer", "noo?ou", types + 7 },
+	{ "destroy", "", wl_pc_types + 0 },
+	{ "lock_pointer", "noo?ou", wl_pc_types + 2 },
+	{ "confine_pointer", "noo?ou", wl_pc_types + 7 },
 };
 
 WL_EXPORT const struct wl_interface zwp_pointer_constraints_v1_interface = {
@@ -64,14 +64,14 @@ WL_EXPORT const struct wl_interface zwp_pointer_constraints_v1_interface = {
 };
 
 static const struct wl_message zwp_locked_pointer_v1_requests[] = {
-	{ "destroy", "", types + 0 },
-	{ "set_cursor_position_hint", "ff", types + 0 },
-	{ "set_region", "?o", types + 12 },
+	{ "destroy", "", wl_pc_types + 0 },
+	{ "set_cursor_position_hint", "ff", wl_pc_types + 0 },
+	{ "set_region", "?o", wl_pc_types + 12 },
 };
 
 static const struct wl_message zwp_locked_pointer_v1_events[] = {
-	{ "locked", "", types + 0 },
-	{ "unlocked", "", types + 0 },
+	{ "locked", "", wl_pc_types + 0 },
+	{ "unlocked", "", wl_pc_types + 0 },
 };
 
 WL_EXPORT const struct wl_interface zwp_locked_pointer_v1_interface = {
@@ -81,13 +81,13 @@ WL_EXPORT const struct wl_interface zwp_locked_pointer_v1_interface = {
 };
 
 static const struct wl_message zwp_confined_pointer_v1_requests[] = {
-	{ "destroy", "", types + 0 },
-	{ "set_region", "?o", types + 13 },
+	{ "destroy", "", wl_pc_types + 0 },
+	{ "set_region", "?o", wl_pc_types + 13 },
 };
 
 static const struct wl_message zwp_confined_pointer_v1_events[] = {
-	{ "confined", "", types + 0 },
-	{ "unconfined", "", types + 0 },
+	{ "confined", "", wl_pc_types + 0 },
+	{ "unconfined", "", wl_pc_types + 0 },
 };
 
 WL_EXPORT const struct wl_interface zwp_confined_pointer_v1_interface = {

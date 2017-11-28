@@ -30,14 +30,14 @@
 extern const struct wl_interface wl_surface_interface;
 extern const struct wl_interface zwp_idle_inhibitor_v1_interface;
 
-static const struct wl_interface *types[] = {
+static const struct wl_interface *wl_ii_types[] = {
 	&zwp_idle_inhibitor_v1_interface,
 	&wl_surface_interface,
 };
 
 static const struct wl_message zwp_idle_inhibit_manager_v1_requests[] = {
-	{ "destroy", "", types + 0 },
-	{ "create_inhibitor", "no", types + 0 },
+	{ "destroy", "", wl_ii_types + 0 },
+	{ "create_inhibitor", "no", wl_ii_types + 0 },
 };
 
 WL_EXPORT const struct wl_interface zwp_idle_inhibit_manager_v1_interface = {
@@ -47,7 +47,7 @@ WL_EXPORT const struct wl_interface zwp_idle_inhibit_manager_v1_interface = {
 };
 
 static const struct wl_message zwp_idle_inhibitor_v1_requests[] = {
-	{ "destroy", "", types + 0 },
+	{ "destroy", "", wl_ii_types + 0 },
 };
 
 WL_EXPORT const struct wl_interface zwp_idle_inhibitor_v1_interface = {
