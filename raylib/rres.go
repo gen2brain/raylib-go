@@ -68,84 +68,18 @@ func LoadResource(reader io.ReadSeeker, rresID int, key []byte) (data rres.Data)
 			reader.Read(b)
 
 			// Uncompress data
-			switch infoHeader.CompType {
-			case rres.CompNone:
-				data.Data = b
-			case rres.CompDeflate:
-				r := flate.NewReader(bytes.NewReader(b))
-
-				u := make([]byte, infoHeader.UncompSize)
-				r.Read(u)
-
-				data.Data = u
-
-				r.Close()
-			case rres.CompLZ4:
-				r := lz4.NewReader(bytes.NewReader(b))
-
-				u := make([]byte, infoHeader.UncompSize)
-				r.Read(u)
-
-				data.Data = u
-			case rres.CompLZMA2:
-				r, err := xz.NewReader(bytes.NewReader(b))
-				if err != nil {
-					TraceLog(LogWarning, "[ID %d] %v", infoHeader.ID, err)
-				}
-
-				u := make([]byte, infoHeader.UncompSize)
-				r.Read(u)
-
-				data.Data = u
-			case rres.CompBZIP2:
-				r, err := bzip2.NewReader(bytes.NewReader(b), &bzip2.ReaderConfig{})
-				if err != nil {
-					TraceLog(LogWarning, "[ID %d] %v", infoHeader.ID, err)
-				}
-
-				u := make([]byte, infoHeader.UncompSize)
-				r.Read(u)
-
-				data.Data = u
+			data.Data, err = uncompress(b, int(infoHeader.CompType), int(infoHeader.UncompSize))
+			if err != nil {
+				TraceLog(LogWarning, "[ID %d] %v", infoHeader.ID, err)
 			}
 
 			// Decrypt data
-			switch infoHeader.CryptoType {
-			case rres.CryptoXOR:
-				c, err := encrypt.NewXor(string(key))
-				if err != nil {
-					TraceLog(LogWarning, "[ID %d] %v", infoHeader.ID, err)
-				}
-
-				b := c.Encode(data.Data)
-				data.Data = b
-			case rres.CryptoAES:
-				b, err := decryptAES(key, data.Data)
-				if err != nil {
-					TraceLog(LogWarning, "[ID %d] %v", infoHeader.ID, err)
-				}
-				data.Data = b
-			case rres.Crypto3DES:
-				b, err := decrypt3DES(key, data.Data)
-				if err != nil {
-					TraceLog(LogWarning, "[ID %d] %v", infoHeader.ID, err)
-				}
-				data.Data = b
-			case rres.CryptoBlowfish:
-				b, err := decryptBlowfish(key, data.Data)
-				if err != nil {
-					TraceLog(LogWarning, "[ID %d] %v", infoHeader.ID, err)
-				}
-				data.Data = b
-			case rres.CryptoXTEA:
-				b, err := decryptXTEA(key, data.Data)
-				if err != nil {
-					TraceLog(LogWarning, "[ID %d] %v", infoHeader.ID, err)
-				}
-				data.Data = b
+			data.Data, err = decrypt(key, data.Data, int(infoHeader.CryptoType))
+			if err != nil {
+				TraceLog(LogWarning, "[ID %d] %v", infoHeader.ID, err)
 			}
 
-			if data.Data != nil {
+			if data.Data != nil && len(data.Data) == int(infoHeader.UncompSize) {
 				TraceLog(LogInfo, "[ID %d] Resource data loaded successfully", infoHeader.ID)
 			}
 		} else {
@@ -159,6 +93,92 @@ func LoadResource(reader io.ReadSeeker, rresID int, key []byte) (data rres.Data)
 	}
 
 	return
+}
+
+// decrypt data
+func decrypt(key, data []byte, cryptoType int) ([]byte, error) {
+	switch cryptoType {
+	case rres.CryptoXOR:
+		c, err := encrypt.NewXor(string(key))
+		if err != nil {
+			return nil, err
+		}
+
+		b := c.Encode(data)
+		return b, nil
+	case rres.CryptoAES:
+		b, err := decryptAES(key, data)
+		if err != nil {
+			return nil, err
+		}
+		return b, nil
+	case rres.Crypto3DES:
+		b, err := decrypt3DES(key, data)
+		if err != nil {
+			return nil, err
+		}
+		return b, nil
+	case rres.CryptoBlowfish:
+		b, err := decryptBlowfish(key, data)
+		if err != nil {
+			return nil, err
+		}
+		return b, nil
+	case rres.CryptoXTEA:
+		b, err := decryptXTEA(key, data)
+		if err != nil {
+			return nil, err
+		}
+		return b, nil
+	default:
+		return data, nil
+	}
+}
+
+// uncompress data
+func uncompress(data []byte, compType, uncompSize int) ([]byte, error) {
+	switch compType {
+	case rres.CompNone:
+		return data, nil
+	case rres.CompDeflate:
+		r := flate.NewReader(bytes.NewReader(data))
+
+		u := make([]byte, uncompSize)
+		r.Read(u)
+
+		r.Close()
+
+		return u, nil
+	case rres.CompLZ4:
+		r := lz4.NewReader(bytes.NewReader(data))
+
+		u := make([]byte, uncompSize)
+		r.Read(u)
+
+		return u, nil
+	case rres.CompLZMA2:
+		r, err := xz.NewReader(bytes.NewReader(data))
+		if err != nil {
+			return nil, err
+		}
+
+		u := make([]byte, uncompSize)
+		r.Read(u)
+
+		return u, nil
+	case rres.CompBZIP2:
+		r, err := bzip2.NewReader(bytes.NewReader(data), &bzip2.ReaderConfig{})
+		if err != nil {
+			return nil, err
+		}
+
+		u := make([]byte, uncompSize)
+		r.Read(u)
+
+		return u, nil
+	default:
+		return data, nil
+	}
 }
 
 // unpad

@@ -442,7 +442,7 @@ func compress(data []byte, compType int) ([]byte, error) {
 	case rres.CompDeflate:
 		buf := new(bytes.Buffer)
 
-		w, err := flate.NewWriter(buf, flate.BestCompression)
+		w, err := flate.NewWriter(buf, flate.DefaultCompression)
 		if err != nil {
 			return nil, err
 		}
