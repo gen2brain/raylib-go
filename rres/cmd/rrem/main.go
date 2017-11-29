@@ -49,7 +49,7 @@ func init() {
 
 func main() {
 	base := flag.String("base", "data", "Resources file basename")
-	comp := flag.Int("comp", rres.CompLZMA2, "Compression type, 0=NONE, 1=DEFLATE, 2=LZ4, 5=LZMA2 (XZ), 6=BZIP2")
+	comp := flag.Int("comp", rres.CompDeflate, "Compression type, 0=NONE, 1=DEFLATE, 2=LZ4, 5=LZMA2 (XZ), 6=BZIP2")
 	enc := flag.Int("enc", rres.CryptoNone, "Encryption type, 0=NONE, 1=XOR, 2=AES, 3=3DES, 4=Blowfish, 5=XTEA")
 	key := flag.String("key", "", "Encryption key")
 	header := flag.Bool("header", false, "Generate C header (.h file)")

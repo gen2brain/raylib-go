@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"unsafe"
 
@@ -68,7 +69,7 @@ func LoadResource(reader io.ReadSeeker, rresID int, key []byte) (data rres.Data)
 			reader.Read(b)
 
 			// Uncompress data
-			data.Data, err = uncompress(b, int(infoHeader.CompType), int(infoHeader.UncompSize))
+			data.Data, err = uncompress(b, int(infoHeader.CompType))
 			if err != nil {
 				TraceLog(LogWarning, "[ID %d] %v", infoHeader.ID, err)
 			}
@@ -136,15 +137,17 @@ func decrypt(key, data []byte, cryptoType int) ([]byte, error) {
 }
 
 // uncompress data
-func uncompress(data []byte, compType, uncompSize int) ([]byte, error) {
+func uncompress(data []byte, compType int) ([]byte, error) {
 	switch compType {
 	case rres.CompNone:
 		return data, nil
 	case rres.CompDeflate:
 		r := flate.NewReader(bytes.NewReader(data))
 
-		u := make([]byte, uncompSize)
-		r.Read(u)
+		u, err := ioutil.ReadAll(r)
+		if err != nil {
+			return nil, err
+		}
 
 		r.Close()
 
@@ -152,8 +155,10 @@ func uncompress(data []byte, compType, uncompSize int) ([]byte, error) {
 	case rres.CompLZ4:
 		r := lz4.NewReader(bytes.NewReader(data))
 
-		u := make([]byte, uncompSize)
-		r.Read(u)
+		u, err := ioutil.ReadAll(r)
+		if err != nil {
+			return nil, err
+		}
 
 		return u, nil
 	case rres.CompLZMA2:
@@ -162,8 +167,10 @@ func uncompress(data []byte, compType, uncompSize int) ([]byte, error) {
 			return nil, err
 		}
 
-		u := make([]byte, uncompSize)
-		r.Read(u)
+		u, err := ioutil.ReadAll(r)
+		if err != nil {
+			return nil, err
+		}
 
 		return u, nil
 	case rres.CompBZIP2:
@@ -172,8 +179,10 @@ func uncompress(data []byte, compType, uncompSize int) ([]byte, error) {
 			return nil, err
 		}
 
-		u := make([]byte, uncompSize)
-		r.Read(u)
+		u, err := ioutil.ReadAll(r)
+		if err != nil {
+			return nil, err
+		}
 
 		return u, nil
 	default:
