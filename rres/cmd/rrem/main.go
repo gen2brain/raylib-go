@@ -3,10 +3,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/des"
-	"crypto/rand"
 	"encoding/binary"
 	"flag"
 	"fmt"
@@ -29,18 +25,12 @@ import (
 	_ "github.com/jbuchbinder/gopnm"
 	_ "golang.org/x/image/bmp"
 
-	"github.com/dsnet/compress/bzip2"
 	"github.com/jfreymuth/oggvorbis"
 	"github.com/jteeuwen/go-bindata"
-	"github.com/klauspost/compress/flate"
 	"github.com/moutend/go-wav"
-	"github.com/pierrec/lz4"
-	xor "github.com/rootlch/encrypt"
-	"github.com/ulikunitz/xz"
-	"golang.org/x/crypto/blowfish"
-	"golang.org/x/crypto/xtea"
 
 	"github.com/gen2brain/raylib-go/rres"
+	"github.com/gen2brain/raylib-go/rres/rlib"
 )
 
 func init() {
@@ -166,7 +156,7 @@ func main() {
 		}
 
 		// Encryption
-		data, err = encrypt([]byte(*key), data, int(infoHeader.CryptoType))
+		data, err = rlib.Encrypt([]byte(*key), data, int(infoHeader.CryptoType))
 		if err != nil {
 			fmt.Printf("%v\n", err)
 		}
@@ -174,7 +164,7 @@ func main() {
 		infoHeader.UncompSize = uint32(len(data))
 
 		// Compression
-		data, err = compress(data, int(infoHeader.CompType))
+		data, err = rlib.Compress(data, int(infoHeader.CompType))
 		if err != nil {
 			fmt.Printf("%v\n", err)
 		}
@@ -391,120 +381,6 @@ func params(data []byte, dataType int) (d []byte, p1, p2, p3, p4 uint32, err err
 	return
 }
 
-// encrypt data
-func encrypt(key, data []byte, cryptoType int) ([]byte, error) {
-	switch cryptoType {
-	case rres.CryptoXOR:
-		c, err := xor.NewXor(string(key))
-		if err != nil {
-			return nil, err
-		}
-
-		return c.Encode(data), nil
-	case rres.CryptoAES:
-		b, err := encryptAES(key, data)
-		if err != nil {
-			return nil, err
-		}
-
-		return b, nil
-	case rres.Crypto3DES:
-		b, err := encrypt3DES(key, data)
-		if err != nil {
-			return nil, err
-		}
-
-		return b, nil
-	case rres.CryptoBlowfish:
-		b, err := encryptBlowfish(key, data)
-		if err != nil {
-			return nil, err
-		}
-
-		return b, nil
-	case rres.CryptoXTEA:
-		b, err := encryptXTEA(key, data)
-		if err != nil {
-			fmt.Printf("%v\n", err)
-		}
-
-		return b, nil
-	default:
-		return data, nil
-	}
-}
-
-// compress data
-func compress(data []byte, compType int) ([]byte, error) {
-	switch compType {
-	case rres.CompNone:
-		return data, nil
-	case rres.CompDeflate:
-		buf := new(bytes.Buffer)
-
-		w, err := flate.NewWriter(buf, flate.DefaultCompression)
-		if err != nil {
-			return nil, err
-		}
-
-		_, err = w.Write(data)
-		if err != nil {
-			return nil, err
-		}
-
-		w.Close()
-
-		return buf.Bytes(), nil
-	case rres.CompLZ4:
-		buf := new(bytes.Buffer)
-
-		w := lz4.NewWriter(buf)
-
-		_, err := w.Write(data)
-		if err != nil {
-			return nil, err
-		}
-
-		w.Close()
-
-		return buf.Bytes(), nil
-	case rres.CompLZMA2:
-		buf := new(bytes.Buffer)
-
-		w, err := xz.NewWriter(buf)
-		if err != nil {
-			return nil, err
-		}
-
-		_, err = w.Write(data)
-		if err != nil {
-			return nil, err
-		}
-
-		w.Close()
-
-		return buf.Bytes(), nil
-	case rres.CompBZIP2:
-		buf := new(bytes.Buffer)
-
-		w, err := bzip2.NewWriter(buf, &bzip2.WriterConfig{Level: bzip2.BestCompression})
-		if err != nil {
-			return nil, err
-		}
-
-		_, err = w.Write(data)
-		if err != nil {
-			return nil, err
-		}
-
-		w.Close()
-
-		return buf.Bytes(), nil
-	default:
-		return data, nil
-	}
-}
-
 // genSource generates C source file
 func genSource(w io.Writer, data []byte) error {
 	length := len(data)
@@ -556,91 +432,4 @@ func genBin(base string) error {
 	cfg.Input[0] = bindata.InputConfig{Path: fmt.Sprintf("%s.rres", base), Recursive: false}
 
 	return bindata.Translate(cfg)
-}
-
-// pad to block size
-func pad(src []byte, blockSize int) []byte {
-	padding := blockSize - len(src)%blockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(src, padtext...)
-}
-
-// encryptAES
-func encryptAES(key, text []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-
-	msg := pad(text, aes.BlockSize)
-	ciphertext := make([]byte, aes.BlockSize+len(msg))
-	iv := ciphertext[:aes.BlockSize]
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		return nil, err
-	}
-
-	cfb := cipher.NewCFBEncrypter(block, iv)
-	cfb.XORKeyStream(ciphertext[aes.BlockSize:], msg)
-
-	return ciphertext, nil
-}
-
-// encrypt3DES
-func encrypt3DES(key, text []byte) ([]byte, error) {
-	block, err := des.NewTripleDESCipher(key)
-	if err != nil {
-		return nil, err
-	}
-
-	msg := pad(text, des.BlockSize)
-	ciphertext := make([]byte, des.BlockSize+len(msg))
-	iv := ciphertext[:des.BlockSize]
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		return nil, err
-	}
-
-	cbc := cipher.NewCBCEncrypter(block, iv)
-	cbc.CryptBlocks(ciphertext[des.BlockSize:], msg)
-
-	return ciphertext, nil
-}
-
-// encryptBlowfish
-func encryptBlowfish(key, text []byte) ([]byte, error) {
-	block, err := blowfish.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-
-	msg := pad(text, blowfish.BlockSize)
-	ciphertext := make([]byte, blowfish.BlockSize+len(msg))
-	iv := ciphertext[:blowfish.BlockSize]
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		return nil, err
-	}
-
-	cbc := cipher.NewCBCEncrypter(block, iv)
-	cbc.CryptBlocks(ciphertext[blowfish.BlockSize:], msg)
-
-	return ciphertext, nil
-}
-
-// encryptXTEA
-func encryptXTEA(key, text []byte) ([]byte, error) {
-	block, err := xtea.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-
-	msg := pad(text, xtea.BlockSize)
-	ciphertext := make([]byte, xtea.BlockSize+len(msg))
-	iv := ciphertext[:xtea.BlockSize]
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		return nil, err
-	}
-
-	cbc := cipher.NewCBCEncrypter(block, iv)
-	cbc.CryptBlocks(ciphertext[xtea.BlockSize:], msg)
-
-	return ciphertext, nil
 }
