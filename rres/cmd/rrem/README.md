@@ -11,7 +11,7 @@ Usage of ./rrem:
   -bin
     	Generate Go bindata (.go file)
   -comp int
-    	Compression type, 0=NONE, 1=DEFLATE, 2=LZ4, 5=LZMA2 (XZ), 6=BZIP2 (default 5)
+    	Compression type, 0=NONE, 1=DEFLATE, 2=LZ4, 5=LZMA2 (XZ), 6=BZIP2, 7=Snappy (default 1)
   -enc int
     	Encryption type, 0=NONE, 1=XOR, 2=AES, 3=3DES, 4=Blowfish, 5=XTEA
   -header
