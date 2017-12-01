@@ -82,6 +82,8 @@ const (
 	CompLZMA2
 	// BZIP2 compression
 	CompBZIP2
+	// Snappy compression
+	CompSnappy
 )
 
 // Encryption types

@@ -15,6 +15,7 @@ import (
 	"golang.org/x/crypto/xtea"
 
 	"github.com/dsnet/compress/bzip2"
+	"github.com/golang/snappy"
 	"github.com/klauspost/compress/flate"
 	"github.com/pierrec/lz4"
 	xor "github.com/rootlch/encrypt"
@@ -172,6 +173,19 @@ func Compress(data []byte, compType int) ([]byte, error) {
 		w.Close()
 
 		return buf.Bytes(), nil
+	case rres.CompSnappy:
+		buf := new(bytes.Buffer)
+
+		w := snappy.NewWriter(buf)
+
+		_, err := w.Write(data)
+		if err != nil {
+			return nil, err
+		}
+
+		w.Close()
+
+		return buf.Bytes(), nil
 	default:
 		return data, nil
 	}
@@ -219,6 +233,15 @@ func Decompress(data []byte, compType int) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		u, err := ioutil.ReadAll(r)
+		if err != nil {
+			return nil, err
+		}
+
+		return u, nil
+	case rres.CompSnappy:
+		r := snappy.NewReader(bytes.NewReader(data))
 
 		u, err := ioutil.ReadAll(r)
 		if err != nil {
