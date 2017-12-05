@@ -5,5 +5,5 @@ go:
 
 install:
   - sudo apt-get update -y
-  - sudo apt-get install libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev libxrandr-dev -y
+  - sudo apt-get install libasound2-dev libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev libxrandr-dev -y
   - go get -t ./...
