@@ -4,13 +4,13 @@ To compile example to shared library you will need [Android NDK](https://develop
 To build Android apk you will need [Android SDK](http://developer.android.com/sdk/index.html#Other).
 Download and unpack archives somewhere.
 
-Go must be cross compiled for android. There is a bootstrap.sh script that you can use to compile Go and OpenAL for android/arm and android/arm64.
+Go must be cross compiled for android. There is a bootstrap.sh script that you can use to compile Go for android/arm and android/arm64.
 
 Export path to Android NDK, point to location where you have unpacked archive:
 
     export ANDROID_NDK_HOME=/opt/android-ndk
 
-Compile Go, OpenAL and android_native_app_glue, /usr/local is prefix where Go and Android toolchains will be installed:
+Compile Go and android_native_app_glue, /usr/local is prefix where Go and Android toolchains will be installed:
 
     ./bootstrap.sh /usr/local
 

@@ -42,11 +42,11 @@ func NewWaveFromPointer(ptr unsafe.Pointer) Wave {
 
 // Sound source type
 type Sound struct {
-	// OpenAL audio source id
+	// Audio source id
 	Source uint32
-	// OpenAL audio buffer id
+	// Audio buffer id
 	Buffer uint32
-	// OpenAL audio format specifier
+	// Audio format specifier
 	Format int32
 }
 
@@ -77,11 +77,11 @@ type AudioStream struct {
 	SampleSize uint32
 	// Number of channels (1-mono, 2-stereo)
 	Channels uint32
-	// OpenAL audio format specifier
+	// Audio format specifier
 	Format int32
-	// OpenAL audio source id
+	// Audio source id
 	Source uint32
-	// OpenAL audio buffers (double buffering)
+	// Audio buffers (double buffering)
 	Buffers [2]uint32
 }
 
@@ -334,9 +334,9 @@ func SetMusicPitch(music Music, pitch float32) {
 
 // SetMusicLoopCount - Set music loop count (loop repeats)
 // NOTE: If set to -1, means infinite loop
-func SetMusicLoopCount(music Music, count float32) {
+func SetMusicLoopCount(music Music, count int32) {
 	cmusic := *(*C.Music)(unsafe.Pointer(&music))
-	ccount := (C.float)(count)
+	ccount := (C.int)(count)
 	C.SetMusicLoopCount(cmusic, ccount)
 }
 

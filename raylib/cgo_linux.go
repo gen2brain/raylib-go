@@ -16,7 +16,6 @@ package raylib
 #include "external/glfw/src/wl_window.c"
 #include "external/glfw/src/wayland-pointer-constraints-unstable-v1-client-protocol.c"
 #include "external/glfw/src/wayland-relative-pointer-unstable-v1-client-protocol.c"
-#include "external/glfw/src/wayland-idle-inhibit-unstable-v1-client-protocol.c"
 #endif
 #ifdef _GLFW_X11
 #include "external/glfw/src/x11_init.c"
@@ -32,18 +31,13 @@ package raylib
 #include "external/glfw/src/egl_context.c"
 #include "external/glfw/src/osmesa_context.c"
 
-#cgo linux CFLAGS: -Iexternal/glfw/include -DPLATFORM_DESKTOP
+#cgo linux CFLAGS: -Iexternal -Iexternal/glfw/include -DPLATFORM_DESKTOP
 
 #cgo linux,!wayland LDFLAGS: -lGL -lm -pthread -ldl -lrt -lX11
 #cgo linux,wayland LDFLAGS: -lGL -lm -pthread -ldl -lrt -lwayland-client -lwayland-cursor -lwayland-egl -lxkbcommon
 
 #cgo linux,!wayland CFLAGS: -D_GLFW_X11
 #cgo linux,wayland CFLAGS: -D_GLFW_WAYLAND
-
-#cgo linux,!noaudio LDFLAGS: -lopenal
-
-#cgo linux,!static CFLAGS: -DSHARED_OPENAL
-#cgo linux,static CFLAGS: -DAL_LIBTYPE_STATIC
 
 #cgo linux,opengl11 CFLAGS: -DGRAPHICS_API_OPENGL_11
 #cgo linux,opengl21 CFLAGS: -DGRAPHICS_API_OPENGL_21
