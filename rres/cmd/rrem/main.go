@@ -30,7 +30,7 @@ import (
 	"github.com/moutend/go-wav"
 
 	"github.com/gen2brain/raylib-go/rres"
-	"github.com/gen2brain/raylib-go/rres/rlib"
+	"github.com/gen2brain/raylib-go/rres/rreslib"
 )
 
 func init() {
@@ -156,7 +156,7 @@ func main() {
 		}
 
 		// Encryption
-		data, err = rlib.Encrypt([]byte(*key), data, int(infoHeader.CryptoType))
+		data, err = rreslib.Encrypt([]byte(*key), data, int(infoHeader.CryptoType))
 		if err != nil {
 			fmt.Printf("%v\n", err)
 		}
@@ -164,7 +164,7 @@ func main() {
 		infoHeader.UncompSize = uint32(len(data))
 
 		// Compression
-		data, err = rlib.Compress(data, int(infoHeader.CompType))
+		data, err = rreslib.Compress(data, int(infoHeader.CompType))
 		if err != nil {
 			fmt.Printf("%v\n", err)
 		}

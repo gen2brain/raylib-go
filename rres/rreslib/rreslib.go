@@ -1,5 +1,5 @@
-// Package rlib provides Encrypt/Decrypt and Compress/Uncompress functions
-package rlib
+// Package rreslib provides Encrypt/Decrypt and Compress/Uncompress functions
+package rreslib
 
 import (
 	"bytes"

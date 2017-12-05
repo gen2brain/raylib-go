@@ -5,14 +5,14 @@ import "C"
 import (
 	"unsafe"
 
-	"github.com/gen2brain/raylib-go/rres/rlib"
+	"github.com/gen2brain/raylib-go/rres/rreslib"
 )
 
 //export Compress
 func Compress(compType C.int, data *C.uchar, uncompSize C.ulong, outCompSize *C.ulong) *C.uchar {
 	d := C.GoBytes(unsafe.Pointer(data), C.int(uncompSize))
 
-	c, err := rlib.Compress(d, int(compType))
+	c, err := rreslib.Compress(d, int(compType))
 	if err != nil {
 		return nil
 	}
@@ -25,7 +25,7 @@ func Compress(compType C.int, data *C.uchar, uncompSize C.ulong, outCompSize *C.
 func Decompress(compType C.int, data *C.uchar, uncompSize C.ulong, compSize C.ulong) *C.uchar {
 	d := C.GoBytes(unsafe.Pointer(data), C.int(compSize))
 
-	c, err := rlib.Decompress(d, int(compType))
+	c, err := rreslib.Decompress(d, int(compType))
 	if err != nil {
 		return nil
 	}
@@ -42,7 +42,7 @@ func Encrypt(cryptoType C.int, key *C.char, data *C.uchar, dataSize C.ulong, out
 	k := []byte(C.GoString(key))
 	d := C.GoBytes(unsafe.Pointer(data), C.int(dataSize))
 
-	c, err := rlib.Encrypt(k, d, int(cryptoType))
+	c, err := rreslib.Encrypt(k, d, int(cryptoType))
 	if err != nil {
 		return nil
 	}
@@ -56,7 +56,7 @@ func Decrypt(cryptoType C.int, key *C.char, data *C.uchar, dataSize C.ulong) *C.
 	k := []byte(C.GoString(key))
 	d := C.GoBytes(unsafe.Pointer(data), C.int(dataSize))
 
-	c, err := rlib.Decrypt(k, d, int(cryptoType))
+	c, err := rreslib.Decrypt(k, d, int(cryptoType))
 	if err != nil {
 		return nil
 	}

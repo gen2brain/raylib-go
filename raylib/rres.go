@@ -8,7 +8,7 @@ import (
 	"unsafe"
 
 	"github.com/gen2brain/raylib-go/rres"
-	"github.com/gen2brain/raylib-go/rres/rlib"
+	"github.com/gen2brain/raylib-go/rres/rreslib"
 )
 
 // LoadResource - Load resource from file by id
@@ -57,13 +57,13 @@ func LoadResource(reader io.ReadSeeker, rresID int, key []byte) (data rres.Data)
 			reader.Read(b)
 
 			// Decompress data
-			data.Data, err = rlib.Decompress(b, int(infoHeader.CompType))
+			data.Data, err = rreslib.Decompress(b, int(infoHeader.CompType))
 			if err != nil {
 				TraceLog(LogWarning, "[ID %d] %v", infoHeader.ID, err)
 			}
 
 			// Decrypt data
-			data.Data, err = rlib.Decrypt(key, data.Data, int(infoHeader.CryptoType))
+			data.Data, err = rreslib.Decrypt(key, data.Data, int(infoHeader.CryptoType))
 			if err != nil {
 				TraceLog(LogWarning, "[ID %d] %v", infoHeader.ID, err)
 			}
