@@ -66,7 +66,18 @@ func newSoundFromPointer(ptr unsafe.Pointer) Sound {
 
 // Music type (file streaming from memory)
 // NOTE: Anything longer than ~10 seconds should be streamed
-type Music C.Music
+type Music struct {
+	CtxType      uint32
+	_            [4]byte
+	ctxOgg       unsafe.Pointer
+	ctxFlac      unsafe.Pointer
+	ctxXm        unsafe.Pointer
+	ctxMod       unsafe.Pointer
+	Stream       AudioStream
+	LoopCount    int32
+	TotalSamples uint32
+	SamplesLeft  uint32
+}
 
 // AudioStream type
 // NOTE: Useful to create custom audio streams not bound to a specific file
