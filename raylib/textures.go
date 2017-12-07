@@ -112,7 +112,7 @@ func (i *Image) ToImage() image.Image {
 	// Get pixel data from image (RGBA 32bit)
 	pixels := GetImageData(i)
 
-	img.Pix = (*[1 << 30]uint8)(pixels)[:]
+	img.Pix = pixels
 
 	return img
 }
@@ -284,10 +284,10 @@ func UnloadRenderTexture(target RenderTexture2D) {
 }
 
 // GetImageData - Get pixel data from image
-func GetImageData(image *Image) unsafe.Pointer {
+func GetImageData(image *Image) []byte {
 	cimage := image.cptr()
 	ret := C.GetImageData(*cimage)
-	return unsafe.Pointer(ret)
+	return (*[1 << 30]uint8)(unsafe.Pointer(ret))[:]
 }
 
 // GetTextureData - Get pixel data from GPU texture and return an Image
@@ -299,9 +299,9 @@ func GetTextureData(texture Texture2D) *Image {
 }
 
 // UpdateTexture - Update GPU texture with new data
-func UpdateTexture(texture Texture2D, pixels unsafe.Pointer) {
+func UpdateTexture(texture Texture2D, pixels []byte) {
 	ctexture := texture.cptr()
-	cpixels := (unsafe.Pointer)(unsafe.Pointer(pixels))
+	cpixels := unsafe.Pointer(&pixels[0])
 	C.UpdateTexture(*ctexture, cpixels)
 }
 
