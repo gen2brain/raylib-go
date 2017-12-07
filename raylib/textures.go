@@ -90,7 +90,7 @@ const (
 // NOTE: Data stored in CPU memory (RAM)
 type Image struct {
 	// Image raw data
-	Data unsafe.Pointer
+	data unsafe.Pointer
 	// Image base width
 	Width int32
 	// Image base height
@@ -118,8 +118,9 @@ func (i *Image) ToImage() image.Image {
 }
 
 // NewImage - Returns new Image
-func NewImage(data unsafe.Pointer, width, height, mipmaps int32, format TextureFormat) *Image {
-	return &Image{data, width, height, mipmaps, format}
+func NewImage(data []byte, width, height, mipmaps int32, format TextureFormat) *Image {
+	d := unsafe.Pointer(&data[0])
+	return &Image{d, width, height, mipmaps, format}
 }
 
 // newImageFromPointer - Returns new Image from pointer

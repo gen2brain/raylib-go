@@ -23,7 +23,7 @@ type Wave struct {
 	// Number of channels (1-mono, 2-stereo)
 	Channels uint32
 	// Buffer data pointer
-	Data unsafe.Pointer
+	data unsafe.Pointer
 }
 
 func (w *Wave) cptr() *C.Wave {
@@ -31,8 +31,9 @@ func (w *Wave) cptr() *C.Wave {
 }
 
 // NewWave - Returns new Wave
-func NewWave(sampleCount, sampleRate, sampleSize, channels uint32, data unsafe.Pointer) Wave {
-	return Wave{sampleCount, sampleRate, sampleSize, channels, data}
+func NewWave(sampleCount, sampleRate, sampleSize, channels uint32, data []byte) Wave {
+	d := unsafe.Pointer(&data[0])
+	return Wave{sampleCount, sampleRate, sampleSize, channels, d}
 }
 
 // newWaveFromPointer - Returns new Wave from pointer
@@ -172,9 +173,9 @@ func LoadSoundFromWave(wave Wave) Sound {
 }
 
 // UpdateSound - Update sound buffer with new data
-func UpdateSound(sound Sound, data unsafe.Pointer, samplesCount int32) {
+func UpdateSound(sound Sound, data []byte, samplesCount int32) {
 	csound := sound.cptr()
-	cdata := (unsafe.Pointer)(unsafe.Pointer(data))
+	cdata := unsafe.Pointer(&data[0])
 	csamplesCount := (C.int)(samplesCount)
 	C.UpdateSound(*csound, cdata, csamplesCount)
 }
@@ -378,9 +379,9 @@ func InitAudioStream(sampleRate uint32, sampleSize uint32, channels uint32) Audi
 }
 
 // UpdateAudioStream - Update audio stream buffers with data
-func UpdateAudioStream(stream AudioStream, data unsafe.Pointer, samplesCount int32) {
+func UpdateAudioStream(stream AudioStream, data []float32, samplesCount int32) {
 	cstream := stream.cptr()
-	cdata := (unsafe.Pointer)(unsafe.Pointer(data))
+	cdata := unsafe.Pointer(&data[0])
 	csamplesCount := (C.int)(samplesCount)
 	C.UpdateAudioStream(*cstream, cdata, csamplesCount)
 }
