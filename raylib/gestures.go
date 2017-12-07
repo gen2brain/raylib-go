@@ -12,17 +12,17 @@ type Gestures int32
 // Gestures types
 // NOTE: It could be used as flags to enable only some gestures
 const (
-	GestureNone       Gestures = C.GESTURE_NONE
-	GestureTap        Gestures = C.GESTURE_TAP
-	GestureDoubletap  Gestures = C.GESTURE_DOUBLETAP
-	GestureHold       Gestures = C.GESTURE_HOLD
-	GestureDrag       Gestures = C.GESTURE_DRAG
-	GestureSwipeRight Gestures = C.GESTURE_SWIPE_RIGHT
-	GestureSwipeLeft  Gestures = C.GESTURE_SWIPE_LEFT
-	GestureSwipeUp    Gestures = C.GESTURE_SWIPE_UP
-	GestureSwipeDown  Gestures = C.GESTURE_SWIPE_DOWN
-	GesturePinchIn    Gestures = C.GESTURE_PINCH_IN
-	GesturePinchOut   Gestures = C.GESTURE_PINCH_OUT
+	GestureNone       Gestures = 0
+	GestureTap        Gestures = 1
+	GestureDoubletap  Gestures = 2
+	GestureHold       Gestures = 4
+	GestureDrag       Gestures = 8
+	GestureSwipeRight Gestures = 16
+	GestureSwipeLeft  Gestures = 32
+	GestureSwipeUp    Gestures = 64
+	GestureSwipeDown  Gestures = 128
+	GesturePinchIn    Gestures = 256
+	GesturePinchOut   Gestures = 512
 )
 
 // SetGesturesEnabled - Enable a set of gestures using flags

@@ -67,9 +67,9 @@ type BlendMode int32
 
 // Color blending modes (pre-defined)
 const (
-	BlendAlpha      BlendMode = C.BLEND_ALPHA
-	BlendAdditive   BlendMode = C.BLEND_ADDITIVE
-	BlendMultiplied BlendMode = C.BLEND_MULTIPLIED
+	BlendAlpha BlendMode = iota
+	BlendAdditive
+	BlendMultiplied
 )
 
 // Shader type (generic shader)

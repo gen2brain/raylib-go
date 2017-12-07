@@ -18,41 +18,41 @@ type TextureFormat int32
 // NOTE: Support depends on OpenGL version and platform
 const (
 	// 8 bit per pixel (no alpha)
-	UncompressedGrayscale TextureFormat = C.UNCOMPRESSED_GRAYSCALE
+	UncompressedGrayscale TextureFormat = iota + 1
 	// 16 bpp (2 channels)
-	UncompressedGrayAlpha TextureFormat = C.UNCOMPRESSED_GRAY_ALPHA
+	UncompressedGrayAlpha
 	// 16 bpp
-	UncompressedR5g6b5 TextureFormat = C.UNCOMPRESSED_R5G6B5
+	UncompressedR5g6b5
 	// 24 bpp
-	UncompressedR8g8b8 TextureFormat = C.UNCOMPRESSED_R8G8B8
+	UncompressedR8g8b8
 	// 16 bpp (1 bit alpha)
-	UncompressedR5g5b5a1 TextureFormat = C.UNCOMPRESSED_R5G5B5A1
+	UncompressedR5g5b5a1
 	// 16 bpp (4 bit alpha)
-	UncompressedR4g4b4a4 TextureFormat = C.UNCOMPRESSED_R4G4B4A4
+	UncompressedR4g4b4a4
 	// 32 bpp
-	UncompressedR8g8b8a8 TextureFormat = C.UNCOMPRESSED_R8G8B8A8
+	UncompressedR8g8b8a8
 	// 4 bpp (no alpha)
-	CompressedDxt1Rgb TextureFormat = C.COMPRESSED_DXT1_RGB
+	CompressedDxt1Rgb
 	// 4 bpp (1 bit alpha)
-	CompressedDxt1Rgba TextureFormat = C.COMPRESSED_DXT1_RGBA
+	CompressedDxt1Rgba
 	// 8 bpp
-	CompressedDxt3Rgba TextureFormat = C.COMPRESSED_DXT3_RGBA
+	CompressedDxt3Rgba
 	// 8 bpp
-	CompressedDxt5Rgba TextureFormat = C.COMPRESSED_DXT5_RGBA
+	CompressedDxt5Rgba
 	// 4 bpp
-	CompressedEtc1Rgb TextureFormat = C.COMPRESSED_ETC1_RGB
+	CompressedEtc1Rgb
 	// 4 bpp
-	CompressedEtc2Rgb TextureFormat = C.COMPRESSED_ETC2_RGB
+	CompressedEtc2Rgb
 	// 8 bpp
-	CompressedEtc2EacRgba TextureFormat = C.COMPRESSED_ETC2_EAC_RGBA
+	CompressedEtc2EacRgba
 	// 4 bpp
-	CompressedPvrtRgb TextureFormat = C.COMPRESSED_PVRT_RGB
+	CompressedPvrtRgb
 	// 4 bpp
-	CompressedPvrtRgba TextureFormat = C.COMPRESSED_PVRT_RGBA
+	CompressedPvrtRgba
 	// 8 bpp
-	CompressedAstc4x4Rgba TextureFormat = C.COMPRESSED_ASTC_4x4_RGBA
+	CompressedAstc4x4Rgba
 	// 2 bpp
-	CompressedAstc8x8Rgba TextureFormat = C.COMPRESSED_ASTC_8x8_RGBA
+	CompressedAstc8x8Rgba
 )
 
 // TextureFilterMode - Texture filter mode
@@ -63,17 +63,17 @@ type TextureFilterMode int32
 // NOTE 2: Filter is accordingly set for minification and magnification
 const (
 	// No filter, just pixel aproximation
-	FilterPoint TextureFilterMode = C.FILTER_POINT
+	FilterPoint TextureFilterMode = iota
 	// Linear filtering
-	FilterBilinear TextureFilterMode = C.FILTER_BILINEAR
+	FilterBilinear
 	// Trilinear filtering (linear with mipmaps)
-	FilterTrilinear TextureFilterMode = C.FILTER_TRILINEAR
+	FilterTrilinear
 	// Anisotropic filtering 4x
-	FilterAnisotropic4x TextureFilterMode = C.FILTER_ANISOTROPIC_4X
+	FilterAnisotropic4x
 	// Anisotropic filtering 8x
-	FilterAnisotropic8x TextureFilterMode = C.FILTER_ANISOTROPIC_8X
+	FilterAnisotropic8x
 	// Anisotropic filtering 16x
-	FilterAnisotropic16x TextureFilterMode = C.FILTER_ANISOTROPIC_16X
+	FilterAnisotropic16x
 )
 
 // TextureWrapMode - Texture wrap mode
@@ -81,9 +81,9 @@ type TextureWrapMode int32
 
 // Texture parameters: wrap mode
 const (
-	WrapRepeat TextureWrapMode = C.WRAP_REPEAT
-	WrapClamp  TextureWrapMode = C.WRAP_CLAMP
-	WrapMirror TextureWrapMode = C.WRAP_MIRROR
+	WrapRepeat TextureWrapMode = iota
+	WrapClamp
+	WrapMirror
 )
 
 // Image type, bpp always RGBA (32bit)
