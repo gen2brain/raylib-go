@@ -106,8 +106,8 @@ func NewMesh(vertexCount, triangleCount int32, vertices, texcoords, texcoords2, 
 	return Mesh{vertexCount, triangleCount, vertices, texcoords, texcoords2, normals, tangents, colors, indices, vaoID, vboID}
 }
 
-// NewMeshFromPointer - Returns new Mesh from pointer
-func NewMeshFromPointer(ptr unsafe.Pointer) Mesh {
+// newMeshFromPointer - Returns new Mesh from pointer
+func newMeshFromPointer(ptr unsafe.Pointer) Mesh {
 	return *(*Mesh)(ptr)
 }
 
@@ -132,8 +132,8 @@ func NewMaterial(shader Shader, maps [MaxMaterialMaps]MaterialMap, params *[]flo
 	return Material{shader, maps, [4]byte{}, params}
 }
 
-// NewMaterialFromPointer - Returns new Material from pointer
-func NewMaterialFromPointer(ptr unsafe.Pointer) Material {
+// newMaterialFromPointer - Returns new Material from pointer
+func newMaterialFromPointer(ptr unsafe.Pointer) Material {
 	return *(*Material)(ptr)
 }
 
@@ -168,8 +168,8 @@ func NewModel(mesh Mesh, transform Matrix, material Material) Model {
 	return Model{mesh, transform, material, [4]byte{}}
 }
 
-// NewModelFromPointer - Returns new Model from pointer
-func NewModelFromPointer(ptr unsafe.Pointer) Model {
+// newModelFromPointer - Returns new Model from pointer
+func newModelFromPointer(ptr unsafe.Pointer) Model {
 	return *(*Model)(ptr)
 }
 
@@ -190,8 +190,8 @@ func NewRay(position, direction Vector3) Ray {
 	return Ray{position, direction}
 }
 
-// NewRayFromPointer - Returns new Ray from pointer
-func NewRayFromPointer(ptr unsafe.Pointer) Ray {
+// newRayFromPointer - Returns new Ray from pointer
+func newRayFromPointer(ptr unsafe.Pointer) Ray {
 	return *(*Ray)(ptr)
 }
 
@@ -335,7 +335,7 @@ func LoadMesh(fileName string) Mesh {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	ret := C.LoadMesh(cfileName)
-	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	v := newMeshFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -344,7 +344,7 @@ func LoadModel(fileName string) Model {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	ret := C.LoadModel(cfileName)
-	v := NewModelFromPointer(unsafe.Pointer(&ret))
+	v := newModelFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -352,7 +352,7 @@ func LoadModel(fileName string) Model {
 func LoadModelFromMesh(data Mesh) Model {
 	cdata := data.cptr()
 	ret := C.LoadModelFromMesh(*cdata)
-	v := NewModelFromPointer(unsafe.Pointer(&ret))
+	v := newModelFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -376,7 +376,7 @@ func GenMeshPlane(width, length float32, resX, resZ int) Mesh {
 	cresZ := (C.int)(resZ)
 
 	ret := C.GenMeshPlane(cwidth, clength, cresX, cresZ)
-	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	v := newMeshFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -387,7 +387,7 @@ func GenMeshCube(width, height, length float32) Mesh {
 	clength := (C.float)(length)
 
 	ret := C.GenMeshCube(cwidth, cheight, clength)
-	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	v := newMeshFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -398,7 +398,7 @@ func GenMeshSphere(radius float32, rings, slices int) Mesh {
 	cslices := (C.int)(slices)
 
 	ret := C.GenMeshSphere(cradius, crings, cslices)
-	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	v := newMeshFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -409,7 +409,7 @@ func GenMeshHemiSphere(radius float32, rings, slices int) Mesh {
 	cslices := (C.int)(slices)
 
 	ret := C.GenMeshHemiSphere(cradius, crings, cslices)
-	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	v := newMeshFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -420,7 +420,7 @@ func GenMeshCylinder(radius, height float32, slices int) Mesh {
 	cslices := (C.int)(slices)
 
 	ret := C.GenMeshCylinder(cradius, cheight, cslices)
-	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	v := newMeshFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -432,7 +432,7 @@ func GenMeshTorus(radius, size float32, radSeg, sides int) Mesh {
 	csides := (C.int)(sides)
 
 	ret := C.GenMeshTorus(cradius, csize, cradSeg, csides)
-	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	v := newMeshFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -444,7 +444,7 @@ func GenMeshKnot(radius, size float32, radSeg, sides int) Mesh {
 	csides := (C.int)(sides)
 
 	ret := C.GenMeshKnot(cradius, csize, cradSeg, csides)
-	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	v := newMeshFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -454,7 +454,7 @@ func GenMeshHeightmap(heightmap Image, size Vector3) Mesh {
 	csize := size.cptr()
 
 	ret := C.GenMeshHeightmap(*cheightmap, *csize)
-	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	v := newMeshFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -464,7 +464,7 @@ func GenMeshCubicmap(cubicmap Image, size Vector3) Mesh {
 	csize := size.cptr()
 
 	ret := C.GenMeshCubicmap(*ccubicmap, *csize)
-	v := NewMeshFromPointer(unsafe.Pointer(&ret))
+	v := newMeshFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -473,14 +473,14 @@ func LoadMaterial(fileName string) Material {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	ret := C.LoadMaterial(cfileName)
-	v := NewMaterialFromPointer(unsafe.Pointer(&ret))
+	v := newMaterialFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
 // LoadMaterialDefault - Load default material (Supports: DIFFUSE, SPECULAR, NORMAL maps)
 func LoadMaterialDefault() Material {
 	ret := C.LoadMaterialDefault()
-	v := NewMaterialFromPointer(unsafe.Pointer(&ret))
+	v := newMaterialFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -562,7 +562,7 @@ func DrawBillboardRec(camera Camera, texture Texture2D, sourceRec Rectangle, cen
 func CalculateBoundingBox(mesh Mesh) BoundingBox {
 	cmesh := mesh.cptr()
 	ret := C.CalculateBoundingBox(*cmesh)
-	v := NewBoundingBoxFromPointer(unsafe.Pointer(&ret))
+	v := newBoundingBoxFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 

@@ -57,8 +57,8 @@ func NewVrDeviceInfo(hResolution, vResolution int, hScreenSize, vScreenSize, vSc
 		lensSeparationDistance, interpupillaryDistance, lensDistortionValues, chromaAbCorrection}
 }
 
-// NewVrDeviceInfoFromPointer - Returns new VrDeviceInfo from pointer
-func NewVrDeviceInfoFromPointer(ptr unsafe.Pointer) VrDeviceInfo {
+// newVrDeviceInfoFromPointer - Returns new VrDeviceInfo from pointer
+func newVrDeviceInfoFromPointer(ptr unsafe.Pointer) VrDeviceInfo {
 	return *(*VrDeviceInfo)(ptr)
 }
 
@@ -89,8 +89,8 @@ func NewShader(id uint32, locs [MaxShaderLocations]int32) Shader {
 	return Shader{id, locs}
 }
 
-// NewShaderFromPointer - Returns new Shader from pointer
-func NewShaderFromPointer(ptr unsafe.Pointer) Shader {
+// newShaderFromPointer - Returns new Shader from pointer
+func newShaderFromPointer(ptr unsafe.Pointer) Shader {
 	return *(*Shader)(ptr)
 }
 
@@ -105,10 +105,10 @@ func LoadShader(vsFileName string, fsFileName string) Shader {
 	var v Shader
 	if vsFileName == "" {
 		ret := C.LoadShader(nil, cfsFileName)
-		v = NewShaderFromPointer(unsafe.Pointer(&ret))
+		v = newShaderFromPointer(unsafe.Pointer(&ret))
 	} else {
 		ret := C.LoadShader(cvsFileName, cfsFileName)
-		v = NewShaderFromPointer(unsafe.Pointer(&ret))
+		v = newShaderFromPointer(unsafe.Pointer(&ret))
 	}
 
 	return v
@@ -123,14 +123,14 @@ func UnloadShader(shader Shader) {
 // GetShaderDefault - Get default shader
 func GetShaderDefault() Shader {
 	ret := C.GetShaderDefault()
-	v := NewShaderFromPointer(unsafe.Pointer(&ret))
+	v := newShaderFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
 // GetTextureDefault - Get default texture
 func GetTextureDefault() *Texture2D {
 	ret := C.GetTextureDefault()
-	v := NewTexture2DFromPointer(unsafe.Pointer(&ret))
+	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
 	return &v
 }
 
@@ -190,7 +190,7 @@ func GenTextureCubemap(shader Shader, skyHDR Texture2D, size int) Texture2D {
 	csize := (C.int)(size)
 
 	ret := C.GenTextureCubemap(*cshader, *cskyHDR, csize)
-	v := NewTexture2DFromPointer(unsafe.Pointer(&ret))
+	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -201,7 +201,7 @@ func GenTextureIrradiance(shader Shader, cubemap Texture2D, size int) Texture2D 
 	csize := (C.int)(size)
 
 	ret := C.GenTextureIrradiance(*cshader, *ccubemap, csize)
-	v := NewTexture2DFromPointer(unsafe.Pointer(&ret))
+	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -212,7 +212,7 @@ func GenTexturePrefilter(shader Shader, cubemap Texture2D, size int) Texture2D {
 	csize := (C.int)(size)
 
 	ret := C.GenTexturePrefilter(*cshader, *ccubemap, csize)
-	v := NewTexture2DFromPointer(unsafe.Pointer(&ret))
+	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -223,7 +223,7 @@ func GenTextureBRDF(shader Shader, cubemap Texture2D, size int) Texture2D {
 	csize := (C.int)(size)
 
 	ret := C.GenTextureBRDF(*cshader, *ccubemap, csize)
-	v := NewTexture2DFromPointer(unsafe.Pointer(&ret))
+	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -253,7 +253,7 @@ func EndBlendMode() {
 func GetVrDeviceInfo(vrDevice VrDevice) VrDeviceInfo {
 	cvrDevice := (C.int)(vrDevice)
 	ret := C.GetVrDeviceInfo(cvrDevice)
-	v := NewVrDeviceInfoFromPointer(unsafe.Pointer(&ret))
+	v := newVrDeviceInfoFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 

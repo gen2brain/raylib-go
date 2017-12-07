@@ -30,8 +30,8 @@ func NewCharInfo(value int32, rec Rectangle, offsetX, offsetY, advanceX int32) C
 	return CharInfo{value, rec, offsetX, offsetY, advanceX}
 }
 
-// NewCharInfoFromPointer - Returns new SpriteFont from pointer
-func NewCharInfoFromPointer(ptr unsafe.Pointer) CharInfo {
+// newCharInfoFromPointer - Returns new SpriteFont from pointer
+func newCharInfoFromPointer(ptr unsafe.Pointer) CharInfo {
 	return *(*CharInfo)(ptr)
 }
 
@@ -56,15 +56,15 @@ func NewSpriteFont(texture Texture2D, baseSize, charsCount int32, chars *CharInf
 	return SpriteFont{texture, baseSize, charsCount, chars}
 }
 
-// NewSpriteFontFromPointer - Returns new SpriteFont from pointer
-func NewSpriteFontFromPointer(ptr unsafe.Pointer) SpriteFont {
+// newSpriteFontFromPointer - Returns new SpriteFont from pointer
+func newSpriteFontFromPointer(ptr unsafe.Pointer) SpriteFont {
 	return *(*SpriteFont)(ptr)
 }
 
 // GetDefaultFont - Get the default SpriteFont
 func GetDefaultFont() SpriteFont {
 	ret := C.GetDefaultFont()
-	v := NewSpriteFontFromPointer(unsafe.Pointer(&ret))
+	v := newSpriteFontFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -73,7 +73,7 @@ func LoadSpriteFont(fileName string) SpriteFont {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	ret := C.LoadSpriteFont(cfileName)
-	v := NewSpriteFontFromPointer(unsafe.Pointer(&ret))
+	v := newSpriteFontFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -85,7 +85,7 @@ func LoadSpriteFontEx(fileName string, fontSize int32, charsCount int32, fontCha
 	ccharsCount := (C.int)(charsCount)
 	cfontChars := (*C.int)(unsafe.Pointer(fontChars))
 	ret := C.LoadSpriteFontEx(cfileName, cfontSize, ccharsCount, cfontChars)
-	v := NewSpriteFontFromPointer(unsafe.Pointer(&ret))
+	v := newSpriteFontFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -136,7 +136,7 @@ func MeasureTextEx(spriteFont SpriteFont, text string, fontSize float32, spacing
 	cfontSize := (C.float)(fontSize)
 	cspacing := (C.int)(spacing)
 	ret := C.MeasureTextEx(*cspriteFont, ctext, cfontSize, cspacing)
-	v := NewVector2FromPointer(unsafe.Pointer(&ret))
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
 	return v
 }
 

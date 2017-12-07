@@ -251,8 +251,8 @@ func NewVector2(x, y float32) Vector2 {
 	return Vector2{x, y}
 }
 
-// NewVector2FromPointer - Returns new Vector2 from pointer
-func NewVector2FromPointer(ptr unsafe.Pointer) Vector2 {
+// newVector2FromPointer - Returns new Vector2 from pointer
+func newVector2FromPointer(ptr unsafe.Pointer) Vector2 {
 	return *(*Vector2)(ptr)
 }
 
@@ -272,8 +272,8 @@ func NewVector3(X, Y, Z float32) Vector3 {
 	return Vector3{X, Y, Z}
 }
 
-// NewVector3FromPointer - Returns new Vector3 from pointer
-func NewVector3FromPointer(ptr unsafe.Pointer) Vector3 {
+// newVector3FromPointer - Returns new Vector3 from pointer
+func newVector3FromPointer(ptr unsafe.Pointer) Vector3 {
 	return *(*Vector3)(ptr)
 }
 
@@ -294,8 +294,8 @@ func NewMatrix(m0, m4, m8, m12, m1, m5, m9, m13, m2, m6, m10, m14, m3, m7, m11, 
 	return Matrix{m0, m4, m8, m12, m1, m5, m9, m13, m2, m6, m10, m14, m3, m7, m11, m15}
 }
 
-// NewMatrixFromPointer - Returns new Matrix from pointer
-func NewMatrixFromPointer(ptr unsafe.Pointer) Matrix {
+// newMatrixFromPointer - Returns new Matrix from pointer
+func newMatrixFromPointer(ptr unsafe.Pointer) Matrix {
 	return *(*Matrix)(ptr)
 }
 
@@ -342,8 +342,8 @@ func NewColor(r, g, b, a uint8) Color {
 	return Color{r, g, b, a}
 }
 
-// NewColorFromPointer - Returns new Color from pointer
-func NewColorFromPointer(ptr unsafe.Pointer) Color {
+// newColorFromPointer - Returns new Color from pointer
+func newColorFromPointer(ptr unsafe.Pointer) Color {
 	return *(*Color)(ptr)
 }
 
@@ -364,8 +364,8 @@ func NewRectangle(x, y, width, height int32) Rectangle {
 	return Rectangle{x, y, width, height}
 }
 
-// NewRectangleFromPointer - Returns new Rectangle from pointer
-func NewRectangleFromPointer(ptr unsafe.Pointer) Rectangle {
+// newRectangleFromPointer - Returns new Rectangle from pointer
+func newRectangleFromPointer(ptr unsafe.Pointer) Rectangle {
 	return *(*Rectangle)(ptr)
 }
 
@@ -390,8 +390,8 @@ func NewCamera(pos, target, up Vector3, fovy float32) Camera {
 	return Camera{pos, target, up, fovy}
 }
 
-// NewCameraFromPointer - Returns new Camera from pointer
-func NewCameraFromPointer(ptr unsafe.Pointer) Camera {
+// newCameraFromPointer - Returns new Camera from pointer
+func newCameraFromPointer(ptr unsafe.Pointer) Camera {
 	return *(*Camera)(ptr)
 }
 
@@ -416,8 +416,8 @@ func NewCamera2D(offset, target Vector2, rotation, zoom float32) Camera2D {
 	return Camera2D{offset, target, rotation, zoom}
 }
 
-// NewCamera2DFromPointer - Returns new Camera2D from pointer
-func NewCamera2DFromPointer(ptr unsafe.Pointer) Camera2D {
+// newCamera2DFromPointer - Returns new Camera2D from pointer
+func newCamera2DFromPointer(ptr unsafe.Pointer) Camera2D {
 	return *(*Camera2D)(ptr)
 }
 
@@ -438,8 +438,8 @@ func NewBoundingBox(min, max Vector3) BoundingBox {
 	return BoundingBox{min, max}
 }
 
-// NewBoundingBoxFromPointer - Returns new BoundingBox from pointer
-func NewBoundingBoxFromPointer(ptr unsafe.Pointer) BoundingBox {
+// newBoundingBoxFromPointer - Returns new BoundingBox from pointer
+func newBoundingBoxFromPointer(ptr unsafe.Pointer) BoundingBox {
 	return *(*BoundingBox)(ptr)
 }
 
@@ -567,7 +567,7 @@ func GetMouseRay(mousePosition Vector2, camera Camera) Ray {
 	cmousePosition := mousePosition.cptr()
 	ccamera := camera.cptr()
 	ret := C.GetMouseRay(*cmousePosition, *ccamera)
-	v := NewRayFromPointer(unsafe.Pointer(&ret))
+	v := newRayFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -576,7 +576,7 @@ func GetWorldToScreen(position Vector3, camera Camera) Vector2 {
 	cposition := position.cptr()
 	ccamera := camera.cptr()
 	ret := C.GetWorldToScreen(*cposition, *ccamera)
-	v := NewVector2FromPointer(unsafe.Pointer(&ret))
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -584,7 +584,7 @@ func GetWorldToScreen(position Vector3, camera Camera) Vector2 {
 func GetCameraMatrix(camera Camera) Matrix {
 	ccamera := camera.cptr()
 	ret := C.GetCameraMatrix(*ccamera)
-	v := NewMatrixFromPointer(unsafe.Pointer(&ret))
+	v := newMatrixFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -612,7 +612,7 @@ func GetFrameTime() float32 {
 func GetColor(hexValue int32) Color {
 	chexValue := (C.int)(hexValue)
 	ret := C.GetColor(chexValue)
-	v := NewColorFromPointer(unsafe.Pointer(&ret))
+	v := newColorFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -683,7 +683,7 @@ func Fade(color Color, alpha float32) Color {
 	ccolor := color.cptr()
 	calpha := (C.float)(alpha)
 	ret := C.Fade(*ccolor, calpha)
-	v := NewColorFromPointer(unsafe.Pointer(&ret))
+	v := newColorFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -900,7 +900,7 @@ func GetMouseY() int32 {
 // GetMousePosition - Returns mouse position XY
 func GetMousePosition() Vector2 {
 	ret := C.GetMousePosition()
-	v := NewVector2FromPointer(unsafe.Pointer(&ret))
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -935,6 +935,6 @@ func GetTouchY() int32 {
 func GetTouchPosition(index int32) Vector2 {
 	cindex := (C.int)(index)
 	ret := C.GetTouchPosition(cindex)
-	v := NewVector2FromPointer(unsafe.Pointer(&ret))
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
 	return v
 }

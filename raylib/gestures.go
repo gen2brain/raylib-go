@@ -63,7 +63,7 @@ func GetGestureHoldDuration() float32 {
 // GetGestureDragVector - Get gesture drag vector
 func GetGestureDragVector() Vector2 {
 	ret := C.GetGestureDragVector()
-	v := NewVector2FromPointer(unsafe.Pointer(&ret))
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -77,7 +77,7 @@ func GetGestureDragAngle() float32 {
 // GetGesturePinchVector - Get gesture pinch delta
 func GetGesturePinchVector() Vector2 {
 	ret := C.GetGesturePinchVector()
-	v := NewVector2FromPointer(unsafe.Pointer(&ret))
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
 	return v
 }
 

@@ -35,8 +35,8 @@ func NewWave(sampleCount, sampleRate, sampleSize, channels uint32, data unsafe.P
 	return Wave{sampleCount, sampleRate, sampleSize, channels, data}
 }
 
-// NewWaveFromPointer - Returns new Wave from pointer
-func NewWaveFromPointer(ptr unsafe.Pointer) Wave {
+// newWaveFromPointer - Returns new Wave from pointer
+func newWaveFromPointer(ptr unsafe.Pointer) Wave {
 	return *(*Wave)(ptr)
 }
 
@@ -59,8 +59,8 @@ func NewSound(source, buffer uint32, format int32) Sound {
 	return Sound{source, buffer, format}
 }
 
-// NewSoundFromPointer - Returns new Sound from pointer
-func NewSoundFromPointer(ptr unsafe.Pointer) Sound {
+// newSoundFromPointer - Returns new Sound from pointer
+func newSoundFromPointer(ptr unsafe.Pointer) Sound {
 	return *(*Sound)(ptr)
 }
 
@@ -94,8 +94,8 @@ func NewAudioStream(sampleRate, sampleSize, channels uint32, format int32, sourc
 	return AudioStream{sampleRate, sampleSize, channels, format, source, buffers}
 }
 
-// NewAudioStreamFromPointer - Returns new AudioStream from pointer
-func NewAudioStreamFromPointer(ptr unsafe.Pointer) AudioStream {
+// newAudioStreamFromPointer - Returns new AudioStream from pointer
+func newAudioStreamFromPointer(ptr unsafe.Pointer) AudioStream {
 	return *(*AudioStream)(ptr)
 }
 
@@ -127,7 +127,7 @@ func LoadWave(fileName string) Wave {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	ret := C.LoadWave(cfileName)
-	v := NewWaveFromPointer(unsafe.Pointer(&ret))
+	v := newWaveFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -139,7 +139,7 @@ func LoadWaveEx(data []byte, sampleCount int32, sampleRate int32, sampleSize int
 	csampleSize := (C.int)(sampleSize)
 	cchannels := (C.int)(channels)
 	ret := C.LoadWaveEx(cdata, csampleCount, csampleRate, csampleSize, cchannels)
-	v := NewWaveFromPointer(unsafe.Pointer(&ret))
+	v := newWaveFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -148,7 +148,7 @@ func LoadSound(fileName string) Sound {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	ret := C.LoadSound(cfileName)
-	v := NewSoundFromPointer(unsafe.Pointer(&ret))
+	v := newSoundFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -156,7 +156,7 @@ func LoadSound(fileName string) Sound {
 func LoadSoundFromWave(wave Wave) Sound {
 	cwave := wave.cptr()
 	ret := C.LoadSoundFromWave(*cwave)
-	v := NewSoundFromPointer(unsafe.Pointer(&ret))
+	v := newSoundFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -239,7 +239,7 @@ func WaveFormat(wave Wave, sampleRate int32, sampleSize int32, channels int32) {
 func WaveCopy(wave Wave) Wave {
 	cwave := wave.cptr()
 	ret := C.WaveCopy(*cwave)
-	v := NewWaveFromPointer(unsafe.Pointer(&ret))
+	v := newWaveFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -362,7 +362,7 @@ func InitAudioStream(sampleRate uint32, sampleSize uint32, channels uint32) Audi
 	csampleSize := (C.uint)(sampleSize)
 	cchannels := (C.uint)(channels)
 	ret := C.InitAudioStream(csampleRate, csampleSize, cchannels)
-	v := NewAudioStreamFromPointer(unsafe.Pointer(&ret))
+	v := newAudioStreamFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
