@@ -1,3 +1,5 @@
+// +build !js
+
 /**********************************************************************************************
 *
 *   raylib.text - Basic functions to load SpriteFonts and draw Text

@@ -1,4 +1,4 @@
-// +build android
+// +build android,!js
 
 #include "_cgo_export.h"
 

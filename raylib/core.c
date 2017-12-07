@@ -1,3 +1,5 @@
+// +build !js
+
 /**********************************************************************************************
 *
 *   raylib.core - Basic functions to manage windows, OpenGL context and input on multiple platforms

@@ -1,4 +1,4 @@
-// +build !android
+// +build !android,!js
 
 package raylib
 

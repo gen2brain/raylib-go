@@ -1,3 +1,5 @@
+// +build !js
+
 /**********************************************************************************************
 *
 *   raylib.textures - Basic functions to load and draw Textures (2d)

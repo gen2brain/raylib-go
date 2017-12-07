@@ -1,3 +1,5 @@
+// +build !js
+
 /**********************************************************************************************
 *
 *   raylib.shapes - Basic functions to draw 2d Shapes and check collisions
