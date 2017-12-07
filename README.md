@@ -28,7 +28,7 @@ On macOS you need Xcode or Command Line Tools for Xcode.
 
 ##### Windows
 
-On Windows you need C compiler, like [https://mingw-w64.org](Mingw-w64) or [http://tdm-gcc.tdragon.net/](TDM-GCC).
+On Windows you need C compiler, like [Mingw-w64](https://mingw-w64.org) or [TDM-GCC](http://tdm-gcc.tdragon.net/).
 You can also build binary in [MSYS2](https://msys2.github.io/) shell.
 
 ##### Android
