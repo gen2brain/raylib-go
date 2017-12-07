@@ -12,28 +12,9 @@ import "C"
 import "unsafe"
 import "reflect"
 
-// Wave type, defines audio wave data
-type Wave struct {
-	// Number of samples
-	SampleCount uint32
-	// Frequency (samples per second)
-	SampleRate uint32
-	// Bit depth (bits per sample): 8, 16, 32 (24 not supported)
-	SampleSize uint32
-	// Number of channels (1-mono, 2-stereo)
-	Channels uint32
-	// Buffer data pointer
-	data unsafe.Pointer
-}
-
+// cptr returns C pointer
 func (w *Wave) cptr() *C.Wave {
 	return (*C.Wave)(unsafe.Pointer(w))
-}
-
-// NewWave - Returns new Wave
-func NewWave(sampleCount, sampleRate, sampleSize, channels uint32, data []byte) Wave {
-	d := unsafe.Pointer(&data[0])
-	return Wave{sampleCount, sampleRate, sampleSize, channels, d}
 }
 
 // newWaveFromPointer - Returns new Wave from pointer
@@ -41,23 +22,8 @@ func newWaveFromPointer(ptr unsafe.Pointer) Wave {
 	return *(*Wave)(ptr)
 }
 
-// Sound source type
-type Sound struct {
-	// Audio source id
-	Source uint32
-	// Audio buffer id
-	Buffer uint32
-	// Audio format specifier
-	Format int32
-}
-
 func (s *Sound) cptr() *C.Sound {
 	return (*C.Sound)(unsafe.Pointer(s))
-}
-
-// NewSound - Returns new Sound
-func NewSound(source, buffer uint32, format int32) Sound {
-	return Sound{source, buffer, format}
 }
 
 // newSoundFromPointer - Returns new Sound from pointer
@@ -65,45 +31,9 @@ func newSoundFromPointer(ptr unsafe.Pointer) Sound {
 	return *(*Sound)(ptr)
 }
 
-// Music type (file streaming from memory)
-// NOTE: Anything longer than ~10 seconds should be streamed
-type Music struct {
-	CtxType      uint32
-	_            [4]byte
-	ctxOgg       unsafe.Pointer
-	ctxFlac      unsafe.Pointer
-	ctxXm        unsafe.Pointer
-	ctxMod       unsafe.Pointer
-	Stream       AudioStream
-	LoopCount    int32
-	TotalSamples uint32
-	SamplesLeft  uint32
-}
-
-// AudioStream type
-// NOTE: Useful to create custom audio streams not bound to a specific file
-type AudioStream struct {
-	// Frequency (samples per second)
-	SampleRate uint32
-	// Bit depth (bits per sample): 8, 16, 32 (24 not supported)
-	SampleSize uint32
-	// Number of channels (1-mono, 2-stereo)
-	Channels uint32
-	// Audio format specifier
-	Format int32
-	// Audio source id
-	Source uint32
-	// Audio buffers (double buffering)
-	Buffers [2]uint32
-}
-
+// cptr returns C pointer
 func (a *AudioStream) cptr() *C.AudioStream {
 	return (*C.AudioStream)(unsafe.Pointer(a))
-}
-
-// NewAudioStream - Returns new AudioStream
-func NewAudioStream(sampleRate, sampleSize, channels uint32, format int32, source uint32, buffers [2]uint32) AudioStream {
-	return AudioStream{sampleRate, sampleSize, channels, format, source, buffers}
 }
 
 // newAudioStreamFromPointer - Returns new AudioStream from pointer

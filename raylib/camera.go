@@ -7,18 +7,6 @@ package raylib
 */
 import "C"
 
-// CameraMode type
-type CameraMode int32
-
-// Camera system modes
-const (
-	CameraCustom CameraMode = iota
-	CameraFree
-	CameraOrbital
-	CameraFirstPerson
-	CameraThirdPerson
-)
-
 // SetCameraMode - Set camera mode (multiple camera modes available)
 func SetCameraMode(camera Camera, mode CameraMode) {
 	ccamera := camera.cptr()

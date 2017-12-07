@@ -8,53 +8,9 @@ import "C"
 import "unsafe"
 import "reflect"
 
-// VrDevice type
-type VrDevice int32
-
-// Head Mounted Display devices
-const (
-	HmdDefaultDevice VrDevice = iota
-	HmdOculusRiftDk2
-	HmdOculusRiftCv1
-	HmdOculusGo
-	HmdValveHtcVive
-	HmdSonyPsvr
-)
-
-// VrDeviceInfo - Head-Mounted-Display device parameters
-type VrDeviceInfo struct {
-	// HMD horizontal resolution in pixels
-	hResolution int
-	// HMD vertical resolution in pixels
-	vResolution int
-	// HMD horizontal size in meters
-	hScreenSize float32
-	// HMD vertical size in meters
-	vScreenSize float32
-	// HMD screen center in meters
-	vScreenCenter float32
-	// HMD distance between eye and display in meters
-	eyeToScreenDistance float32
-	// HMD lens separation distance in meters
-	lensSeparationDistance float32
-	// HMD IPD (distance between pupils) in meters
-	interpupillaryDistance float32
-	// HMD lens distortion constant parameters
-	lensDistortionValues [4]float32
-	// HMD chromatic aberration correction parameters
-	chromaAbCorrection [4]float32
-}
-
+// cptr returns C pointer
 func (v *VrDeviceInfo) cptr() *C.VrDeviceInfo {
 	return (*C.VrDeviceInfo)(unsafe.Pointer(v))
-}
-
-// NewVrDeviceInfo - Returns new VrDeviceInfo
-func NewVrDeviceInfo(hResolution, vResolution int, hScreenSize, vScreenSize, vScreenCenter, eyeToScreenDistance,
-	lensSeparationDistance, interpupillaryDistance float32, lensDistortionValues, chromaAbCorrection [4]float32) VrDeviceInfo {
-
-	return VrDeviceInfo{hResolution, vResolution, hScreenSize, vScreenSize, vScreenCenter, eyeToScreenDistance,
-		lensSeparationDistance, interpupillaryDistance, lensDistortionValues, chromaAbCorrection}
 }
 
 // newVrDeviceInfoFromPointer - Returns new VrDeviceInfo from pointer
@@ -62,31 +18,9 @@ func newVrDeviceInfoFromPointer(ptr unsafe.Pointer) VrDeviceInfo {
 	return *(*VrDeviceInfo)(ptr)
 }
 
-// BlendMode type
-type BlendMode int32
-
-// Color blending modes (pre-defined)
-const (
-	BlendAlpha BlendMode = iota
-	BlendAdditive
-	BlendMultiplied
-)
-
-// Shader type (generic shader)
-type Shader struct {
-	// Shader program id
-	ID uint32
-	// Shader locations array
-	Locs [MaxShaderLocations]int32
-}
-
+// cptr returns C pointer
 func (s *Shader) cptr() *C.Shader {
 	return (*C.Shader)(unsafe.Pointer(s))
-}
-
-// NewShader - Returns new Shader
-func NewShader(id uint32, locs [MaxShaderLocations]int32) Shader {
-	return Shader{id, locs}
 }
 
 // newShaderFromPointer - Returns new Shader from pointer

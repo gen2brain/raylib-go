@@ -7,27 +7,9 @@ package raylib
 import "C"
 import "unsafe"
 
-// CharInfo - SpriteFont character info
-type CharInfo struct {
-	// Character value (Unicode)
-	Value int32
-	// Character rectangle in sprite font
-	Rec Rectangle
-	// Character offset X when drawing
-	OffsetX int32
-	// Character offset Y when drawing
-	OffsetY int32
-	// Character advance position X
-	AdvanceX int32
-}
-
+// cptr returns C pointer
 func (c *CharInfo) cptr() *C.CharInfo {
 	return (*C.CharInfo)(unsafe.Pointer(c))
-}
-
-// NewCharInfo - Returns new SpriteFont
-func NewCharInfo(value int32, rec Rectangle, offsetX, offsetY, advanceX int32) CharInfo {
-	return CharInfo{value, rec, offsetX, offsetY, advanceX}
 }
 
 // newCharInfoFromPointer - Returns new SpriteFont from pointer
@@ -35,25 +17,9 @@ func newCharInfoFromPointer(ptr unsafe.Pointer) CharInfo {
 	return *(*CharInfo)(ptr)
 }
 
-// SpriteFont type, includes texture and charSet array data
-type SpriteFont struct {
-	// Font texture
-	Texture Texture2D
-	// Base size (default chars height)
-	BaseSize int32
-	// Number of characters
-	CharsCount int32
-	// Characters info data
-	Chars *CharInfo
-}
-
+// cptr returns C pointer
 func (s *SpriteFont) cptr() *C.SpriteFont {
 	return (*C.SpriteFont)(unsafe.Pointer(s))
-}
-
-// NewSpriteFont - Returns new SpriteFont
-func NewSpriteFont(texture Texture2D, baseSize, charsCount int32, chars *CharInfo) SpriteFont {
-	return SpriteFont{texture, baseSize, charsCount, chars}
 }
 
 // newSpriteFontFromPointer - Returns new SpriteFont from pointer

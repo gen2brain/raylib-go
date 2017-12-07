@@ -7,120 +7,12 @@ package raylib
 import "C"
 
 import (
-	"image"
 	"unsafe"
 )
 
-// TextureFormat - Texture format
-type TextureFormat int32
-
-// Texture formats
-// NOTE: Support depends on OpenGL version and platform
-const (
-	// 8 bit per pixel (no alpha)
-	UncompressedGrayscale TextureFormat = iota + 1
-	// 16 bpp (2 channels)
-	UncompressedGrayAlpha
-	// 16 bpp
-	UncompressedR5g6b5
-	// 24 bpp
-	UncompressedR8g8b8
-	// 16 bpp (1 bit alpha)
-	UncompressedR5g5b5a1
-	// 16 bpp (4 bit alpha)
-	UncompressedR4g4b4a4
-	// 32 bpp
-	UncompressedR8g8b8a8
-	// 4 bpp (no alpha)
-	CompressedDxt1Rgb
-	// 4 bpp (1 bit alpha)
-	CompressedDxt1Rgba
-	// 8 bpp
-	CompressedDxt3Rgba
-	// 8 bpp
-	CompressedDxt5Rgba
-	// 4 bpp
-	CompressedEtc1Rgb
-	// 4 bpp
-	CompressedEtc2Rgb
-	// 8 bpp
-	CompressedEtc2EacRgba
-	// 4 bpp
-	CompressedPvrtRgb
-	// 4 bpp
-	CompressedPvrtRgba
-	// 8 bpp
-	CompressedAstc4x4Rgba
-	// 2 bpp
-	CompressedAstc8x8Rgba
-)
-
-// TextureFilterMode - Texture filter mode
-type TextureFilterMode int32
-
-// Texture parameters: filter mode
-// NOTE 1: Filtering considers mipmaps if available in the texture
-// NOTE 2: Filter is accordingly set for minification and magnification
-const (
-	// No filter, just pixel aproximation
-	FilterPoint TextureFilterMode = iota
-	// Linear filtering
-	FilterBilinear
-	// Trilinear filtering (linear with mipmaps)
-	FilterTrilinear
-	// Anisotropic filtering 4x
-	FilterAnisotropic4x
-	// Anisotropic filtering 8x
-	FilterAnisotropic8x
-	// Anisotropic filtering 16x
-	FilterAnisotropic16x
-)
-
-// TextureWrapMode - Texture wrap mode
-type TextureWrapMode int32
-
-// Texture parameters: wrap mode
-const (
-	WrapRepeat TextureWrapMode = iota
-	WrapClamp
-	WrapMirror
-)
-
-// Image type, bpp always RGBA (32bit)
-// NOTE: Data stored in CPU memory (RAM)
-type Image struct {
-	// Image raw data
-	data unsafe.Pointer
-	// Image base width
-	Width int32
-	// Image base height
-	Height int32
-	// Mipmap levels, 1 by default
-	Mipmaps int32
-	// Data format (TextureFormat)
-	Format TextureFormat
-}
-
+// cptr returns C pointer
 func (i *Image) cptr() *C.Image {
 	return (*C.Image)(unsafe.Pointer(i))
-}
-
-// ToImage converts a Image to Go image.Image
-func (i *Image) ToImage() image.Image {
-	img := image.NewRGBA(image.Rect(0, 0, int(i.Width), int(i.Height)))
-
-	// Get pixel data from image (RGBA 32bit)
-	pixels := GetImageData(i)
-
-	img.Pix = pixels
-
-	return img
-}
-
-// NewImage - Returns new Image
-func NewImage(data []byte, width, height, mipmaps int32, format TextureFormat) *Image {
-	d := unsafe.Pointer(&data[0])
-	return &Image{d, width, height, mipmaps, format}
 }
 
 // newImageFromPointer - Returns new Image from pointer
@@ -128,44 +20,9 @@ func newImageFromPointer(ptr unsafe.Pointer) *Image {
 	return (*Image)(ptr)
 }
 
-// NewImageFromImage - Returns new Image from Go image.Image
-func NewImageFromImage(img image.Image) *Image {
-	size := img.Bounds().Size()
-	pixels := make([]Color, size.X*size.Y)
-
-	for y := 0; y < size.Y; y++ {
-		for x := 0; x < size.X; x++ {
-			color := img.At(x, y)
-			r, g, b, a := color.RGBA()
-			pixels[x+y*size.Y] = NewColor(uint8(r), uint8(g), uint8(b), uint8(a))
-		}
-	}
-
-	return LoadImageEx(pixels, int32(size.X), int32(size.Y))
-}
-
-// Texture2D type, bpp always RGBA (32bit)
-// NOTE: Data stored in GPU memory
-type Texture2D struct {
-	// OpenGL texture id
-	ID uint32
-	// Texture base width
-	Width int32
-	// Texture base height
-	Height int32
-	// Mipmap levels, 1 by default
-	Mipmaps int32
-	// Data format (TextureFormat)
-	Format TextureFormat
-}
-
+// cptr returns C pointer
 func (t *Texture2D) cptr() *C.Texture2D {
 	return (*C.Texture2D)(unsafe.Pointer(t))
-}
-
-// NewTexture2D - Returns new Texture2D
-func NewTexture2D(id uint32, width, height, mipmaps int32, format TextureFormat) Texture2D {
-	return Texture2D{id, width, height, mipmaps, format}
 }
 
 // newTexture2DFromPointer - Returns new Texture2D from pointer
@@ -173,23 +30,9 @@ func newTexture2DFromPointer(ptr unsafe.Pointer) Texture2D {
 	return *(*Texture2D)(ptr)
 }
 
-// RenderTexture2D type, for texture rendering
-type RenderTexture2D struct {
-	// Render texture (fbo) id
-	ID uint32
-	// Color buffer attachment texture
-	Texture Texture2D
-	// Depth buffer attachment texture
-	Depth Texture2D
-}
-
+// cptr returns C pointer
 func (r *RenderTexture2D) cptr() *C.RenderTexture2D {
 	return (*C.RenderTexture2D)(unsafe.Pointer(r))
-}
-
-// NewRenderTexture2D - Returns new RenderTexture2D
-func NewRenderTexture2D(id uint32, texture, depth Texture2D) RenderTexture2D {
-	return RenderTexture2D{id, texture, depth}
 }
 
 // newRenderTexture2DFromPointer - Returns new RenderTexture2D from pointer

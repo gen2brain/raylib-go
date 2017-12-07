@@ -7,14 +7,6 @@ import (
 	"os"
 )
 
-// Log message types
-const (
-	LogInfo = iota
-	LogError
-	LogWarning
-	LogDebug
-)
-
 var traceDebugMsgs = false
 
 // SetDebug - Set debug messages
