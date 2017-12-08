@@ -32,6 +32,10 @@ func SetCallbackFunc(func(unsafe.Pointer)) {
 	return
 }
 
+// SetMainLoop - Sets main loop function
+func SetMainLoop(f func(), fps, simulateInfiniteLoop int) {
+}
+
 // ShowCursor - Shows cursor
 func ShowCursor() {
 	C.ShowCursor()

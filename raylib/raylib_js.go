@@ -19,6 +19,11 @@ func InitWindow(width int32, height int32, t interface{}) {
 func SetCallbackFunc(func(unsafe.Pointer)) {
 }
 
+// SetMainLoop - Sets main loop function
+func SetMainLoop(f func(), fps, simulateInfiniteLoop int) {
+	js.Global.Get("Module").Call("_emscripten_set_main_loop", f, fps, simulateInfiniteLoop)
+}
+
 // ShowCursor - Shows cursor
 func ShowCursor() {
 }

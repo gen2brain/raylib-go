@@ -41,6 +41,10 @@ func SetCallbackFunc(callback func(unsafe.Pointer)) {
 	callbackHolder = callback
 }
 
+// SetMainLoop - Sets main loop function
+func SetMainLoop(f func(), fps, simulateInfiniteLoop int) {
+}
+
 //export androidMain
 func androidMain(app *C.struct_android_app) {
 	if callbackHolder != nil {
