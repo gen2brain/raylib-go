@@ -67,6 +67,11 @@ func NewWave(sampleCount, sampleRate, sampleSize, channels uint32, data []byte) 
 	return Wave{sampleCount, sampleRate, sampleSize, channels, d}
 }
 
+// newWaveFromPointer - Returns new Wave from pointer
+func newWaveFromPointer(ptr unsafe.Pointer) Wave {
+	return *(*Wave)(ptr)
+}
+
 // Sound source type
 type Sound struct {
 	// Audio source id
@@ -82,6 +87,11 @@ func NewSound(source, buffer uint32, format int32) Sound {
 	return Sound{source, buffer, format}
 }
 
+// newSoundFromPointer - Returns new Sound from pointer
+func newSoundFromPointer(ptr unsafe.Pointer) Sound {
+	return *(*Sound)(ptr)
+}
+
 // Music type (file streaming from memory)
 // NOTE: Anything longer than ~10 seconds should be streamed
 type Music struct {
@@ -95,6 +105,11 @@ type Music struct {
 	LoopCount    int32
 	TotalSamples uint32
 	SamplesLeft  uint32
+}
+
+// newMusicFromPointer - Returns new Music from pointer
+func newMusicFromPointer(ptr unsafe.Pointer) Music {
+	return *(*Music)(ptr)
 }
 
 // AudioStream type
@@ -117,6 +132,11 @@ type AudioStream struct {
 // NewAudioStream - Returns new AudioStream
 func NewAudioStream(sampleRate, sampleSize, channels uint32, format int32, source uint32, buffers [2]uint32) AudioStream {
 	return AudioStream{sampleRate, sampleSize, channels, format, source, buffers}
+}
+
+// newAudioStreamFromPointer - Returns new AudioStream from pointer
+func newAudioStreamFromPointer(ptr unsafe.Pointer) AudioStream {
+	return *(*AudioStream)(ptr)
 }
 
 // CameraMode type
@@ -367,6 +387,11 @@ func NewVector2(x, y float32) Vector2 {
 	return Vector2{x, y}
 }
 
+// newVector2FromPointer - Returns new Vector2 from pointer
+func newVector2FromPointer(ptr unsafe.Pointer) Vector2 {
+	return *(*Vector2)(ptr)
+}
+
 // Vector3 type
 type Vector3 struct {
 	X float32
@@ -377,6 +402,11 @@ type Vector3 struct {
 // NewVector3 - Returns new Vector3
 func NewVector3(X, Y, Z float32) Vector3 {
 	return Vector3{X, Y, Z}
+}
+
+// newVector3FromPointer - Returns new Vector3 from pointer
+func newVector3FromPointer(ptr unsafe.Pointer) Vector3 {
+	return *(*Vector3)(ptr)
 }
 
 // Matrix type (OpenGL style 4x4 - right handed, column major)
@@ -390,6 +420,11 @@ type Matrix struct {
 // NewMatrix - Returns new Matrix
 func NewMatrix(m0, m4, m8, m12, m1, m5, m9, m13, m2, m6, m10, m14, m3, m7, m11, m15 float32) Matrix {
 	return Matrix{m0, m4, m8, m12, m1, m5, m9, m13, m2, m6, m10, m14, m3, m7, m11, m15}
+}
+
+// newMatrixFromPointer - Returns new Matrix from pointer
+func newMatrixFromPointer(ptr unsafe.Pointer) Matrix {
+	return *(*Matrix)(ptr)
 }
 
 // Mat2 type (used for polygon shape rotation matrix)
@@ -431,6 +466,11 @@ func NewColor(r, g, b, a uint8) Color {
 	return Color{r, g, b, a}
 }
 
+// newColorFromPointer - Returns new Color from pointer
+func newColorFromPointer(ptr unsafe.Pointer) Color {
+	return *(*Color)(ptr)
+}
+
 // Rectangle type
 type Rectangle struct {
 	X      int32
@@ -442,6 +482,11 @@ type Rectangle struct {
 // NewRectangle - Returns new Rectangle
 func NewRectangle(x, y, width, height int32) Rectangle {
 	return Rectangle{x, y, width, height}
+}
+
+// newRectangleFromPointer - Returns new Rectangle from pointer
+func newRectangleFromPointer(ptr unsafe.Pointer) Rectangle {
+	return *(*Rectangle)(ptr)
 }
 
 // Camera type, defines a camera position/orientation in 3d space
@@ -461,6 +506,11 @@ func NewCamera(pos, target, up Vector3, fovy float32) Camera {
 	return Camera{pos, target, up, fovy}
 }
 
+// newCameraFromPointer - Returns new Camera from pointer
+func newCameraFromPointer(ptr unsafe.Pointer) Camera {
+	return *(*Camera)(ptr)
+}
+
 // Camera2D type, defines a 2d camera
 type Camera2D struct {
 	// Camera offset (displacement from target)
@@ -478,6 +528,11 @@ func NewCamera2D(offset, target Vector2, rotation, zoom float32) Camera2D {
 	return Camera2D{offset, target, rotation, zoom}
 }
 
+// newCamera2DFromPointer - Returns new Camera2D from pointer
+func newCamera2DFromPointer(ptr unsafe.Pointer) Camera2D {
+	return *(*Camera2D)(ptr)
+}
+
 // BoundingBox type
 type BoundingBox struct {
 	// Minimum vertex box-corner
@@ -489,6 +544,11 @@ type BoundingBox struct {
 // NewBoundingBox - Returns new BoundingBox
 func NewBoundingBox(min, max Vector3) BoundingBox {
 	return BoundingBox{min, max}
+}
+
+// newBoundingBoxFromPointer - Returns new BoundingBox from pointer
+func newBoundingBoxFromPointer(ptr unsafe.Pointer) BoundingBox {
+	return *(*BoundingBox)(ptr)
 }
 
 // Asset file
@@ -611,6 +671,11 @@ func NewMesh(vertexCount, triangleCount int32, vertices, texcoords, texcoords2, 
 	return Mesh{vertexCount, triangleCount, vertices, texcoords, texcoords2, normals, tangents, colors, indices, vaoID, vboID}
 }
 
+// newMeshFromPointer - Returns new Mesh from pointer
+func newMeshFromPointer(ptr unsafe.Pointer) Mesh {
+	return *(*Mesh)(ptr)
+}
+
 // Material type
 type Material struct {
 	// Shader
@@ -626,6 +691,11 @@ type Material struct {
 // NewMaterial - Returns new Material
 func NewMaterial(shader Shader, maps [MaxMaterialMaps]MaterialMap, params *[]float32) Material {
 	return Material{shader, maps, [4]byte{}, params}
+}
+
+// newMaterialFromPointer - Returns new Material from pointer
+func newMaterialFromPointer(ptr unsafe.Pointer) Material {
+	return *(*Material)(ptr)
 }
 
 // MaterialMap type
@@ -655,6 +725,11 @@ func NewModel(mesh Mesh, transform Matrix, material Material) Model {
 	return Model{mesh, transform, material, [4]byte{}}
 }
 
+// newModelFromPointer - Returns new Model from pointer
+func newModelFromPointer(ptr unsafe.Pointer) Model {
+	return *(*Model)(ptr)
+}
+
 // Ray type (useful for raycast)
 type Ray struct {
 	// Ray position (origin)
@@ -666,6 +741,11 @@ type Ray struct {
 // NewRay - Returns new Ray
 func NewRay(position, direction Vector3) Ray {
 	return Ray{position, direction}
+}
+
+// newRayFromPointer - Returns new Ray from pointer
+func newRayFromPointer(ptr unsafe.Pointer) Ray {
+	return *(*Ray)(ptr)
 }
 
 // VrDevice type
@@ -713,6 +793,11 @@ func NewVrDeviceInfo(hResolution, vResolution int, hScreenSize, vScreenSize, vSc
 		lensSeparationDistance, interpupillaryDistance, lensDistortionValues, chromaAbCorrection}
 }
 
+// newVrDeviceInfoFromPointer - Returns new VrDeviceInfo from pointer
+func newVrDeviceInfoFromPointer(ptr unsafe.Pointer) VrDeviceInfo {
+	return *(*VrDeviceInfo)(ptr)
+}
+
 // BlendMode type
 type BlendMode int32
 
@@ -736,6 +821,11 @@ func NewShader(id uint32, locs [MaxShaderLocations]int32) Shader {
 	return Shader{id, locs}
 }
 
+// newShaderFromPointer - Returns new Shader from pointer
+func newShaderFromPointer(ptr unsafe.Pointer) Shader {
+	return *(*Shader)(ptr)
+}
+
 // CharInfo - SpriteFont character info
 type CharInfo struct {
 	// Character value (Unicode)
@@ -755,6 +845,11 @@ func NewCharInfo(value int32, rec Rectangle, offsetX, offsetY, advanceX int32) C
 	return CharInfo{value, rec, offsetX, offsetY, advanceX}
 }
 
+// newCharInfoFromPointer - Returns new SpriteFont from pointer
+func newCharInfoFromPointer(ptr unsafe.Pointer) CharInfo {
+	return *(*CharInfo)(ptr)
+}
+
 // SpriteFont type, includes texture and charSet array data
 type SpriteFont struct {
 	// Font texture
@@ -770,6 +865,11 @@ type SpriteFont struct {
 // NewSpriteFont - Returns new SpriteFont
 func NewSpriteFont(texture Texture2D, baseSize, charsCount int32, chars *CharInfo) SpriteFont {
 	return SpriteFont{texture, baseSize, charsCount, chars}
+}
+
+// newSpriteFontFromPointer - Returns new SpriteFont from pointer
+func newSpriteFontFromPointer(ptr unsafe.Pointer) SpriteFont {
+	return *(*SpriteFont)(ptr)
 }
 
 // TextureFormat - Texture format
@@ -880,6 +980,11 @@ func NewImage(data []byte, width, height, mipmaps int32, format TextureFormat) *
 	return &Image{d, width, height, mipmaps, format}
 }
 
+// newImageFromPointer - Returns new Image from pointer
+func newImageFromPointer(ptr unsafe.Pointer) *Image {
+	return (*Image)(ptr)
+}
+
 // NewImageFromImage - Returns new Image from Go image.Image
 func NewImageFromImage(img image.Image) *Image {
 	size := img.Bounds().Size()
@@ -916,6 +1021,11 @@ func NewTexture2D(id uint32, width, height, mipmaps int32, format TextureFormat)
 	return Texture2D{id, width, height, mipmaps, format}
 }
 
+// newTexture2DFromPointer - Returns new Texture2D from pointer
+func newTexture2DFromPointer(ptr unsafe.Pointer) Texture2D {
+	return *(*Texture2D)(ptr)
+}
+
 // RenderTexture2D type, for texture rendering
 type RenderTexture2D struct {
 	// Render texture (fbo) id
@@ -929,6 +1039,11 @@ type RenderTexture2D struct {
 // NewRenderTexture2D - Returns new RenderTexture2D
 func NewRenderTexture2D(id uint32, texture, depth Texture2D) RenderTexture2D {
 	return RenderTexture2D{id, texture, depth}
+}
+
+// newRenderTexture2DFromPointer - Returns new RenderTexture2D from pointer
+func newRenderTexture2DFromPointer(ptr unsafe.Pointer) RenderTexture2D {
+	return *(*RenderTexture2D)(ptr)
 }
 
 // Log message types

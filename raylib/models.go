@@ -14,19 +14,9 @@ func (m *Mesh) cptr() *C.Mesh {
 	return (*C.Mesh)(unsafe.Pointer(m))
 }
 
-// newMeshFromPointer - Returns new Mesh from pointer
-func newMeshFromPointer(ptr unsafe.Pointer) Mesh {
-	return *(*Mesh)(ptr)
-}
-
 // cptr returns C pointer
 func (m *Material) cptr() *C.Material {
 	return (*C.Material)(unsafe.Pointer(m))
-}
-
-// newMaterialFromPointer - Returns new Material from pointer
-func newMaterialFromPointer(ptr unsafe.Pointer) Material {
-	return *(*Material)(ptr)
 }
 
 // cptr returns C pointer
@@ -34,19 +24,9 @@ func (m *Model) cptr() *C.Model {
 	return (*C.Model)(unsafe.Pointer(m))
 }
 
-// newModelFromPointer - Returns new Model from pointer
-func newModelFromPointer(ptr unsafe.Pointer) Model {
-	return *(*Model)(ptr)
-}
-
 // cptr returns C pointer
 func (r *Ray) cptr() *C.Ray {
 	return (*C.Ray)(unsafe.Pointer(r))
-}
-
-// newRayFromPointer - Returns new Ray from pointer
-func newRayFromPointer(ptr unsafe.Pointer) Ray {
-	return *(*Ray)(ptr)
 }
 
 // DrawLine3D - Draw a line in 3D world space

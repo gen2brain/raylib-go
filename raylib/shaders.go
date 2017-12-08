@@ -15,19 +15,9 @@ func (v *VrDeviceInfo) cptr() *C.VrDeviceInfo {
 	return (*C.VrDeviceInfo)(unsafe.Pointer(v))
 }
 
-// newVrDeviceInfoFromPointer - Returns new VrDeviceInfo from pointer
-func newVrDeviceInfoFromPointer(ptr unsafe.Pointer) VrDeviceInfo {
-	return *(*VrDeviceInfo)(ptr)
-}
-
 // cptr returns C pointer
 func (s *Shader) cptr() *C.Shader {
 	return (*C.Shader)(unsafe.Pointer(s))
-}
-
-// newShaderFromPointer - Returns new Shader from pointer
-func newShaderFromPointer(ptr unsafe.Pointer) Shader {
-	return *(*Shader)(ptr)
 }
 
 // LoadShader - Load a custom shader and bind default locations

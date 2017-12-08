@@ -14,19 +14,9 @@ func (c *CharInfo) cptr() *C.CharInfo {
 	return (*C.CharInfo)(unsafe.Pointer(c))
 }
 
-// newCharInfoFromPointer - Returns new SpriteFont from pointer
-func newCharInfoFromPointer(ptr unsafe.Pointer) CharInfo {
-	return *(*CharInfo)(ptr)
-}
-
 // cptr returns C pointer
 func (s *SpriteFont) cptr() *C.SpriteFont {
 	return (*C.SpriteFont)(unsafe.Pointer(s))
-}
-
-// newSpriteFontFromPointer - Returns new SpriteFont from pointer
-func newSpriteFontFromPointer(ptr unsafe.Pointer) SpriteFont {
-	return *(*SpriteFont)(ptr)
 }
 
 // GetDefaultFont - Get the default SpriteFont

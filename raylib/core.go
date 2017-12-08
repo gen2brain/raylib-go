@@ -17,19 +17,9 @@ func (v *Vector2) cptr() *C.Vector2 {
 	return (*C.Vector2)(unsafe.Pointer(v))
 }
 
-// newVector2FromPointer - Returns new Vector2 from pointer
-func newVector2FromPointer(ptr unsafe.Pointer) Vector2 {
-	return *(*Vector2)(ptr)
-}
-
 // cptr returns C pointer
 func (v *Vector3) cptr() *C.Vector3 {
 	return (*C.Vector3)(unsafe.Pointer(v))
-}
-
-// newVector3FromPointer - Returns new Vector3 from pointer
-func newVector3FromPointer(ptr unsafe.Pointer) Vector3 {
-	return *(*Vector3)(ptr)
 }
 
 // cptr returns C pointer
@@ -37,19 +27,9 @@ func (m *Matrix) cptr() *C.Matrix {
 	return (*C.Matrix)(unsafe.Pointer(m))
 }
 
-// newMatrixFromPointer - Returns new Matrix from pointer
-func newMatrixFromPointer(ptr unsafe.Pointer) Matrix {
-	return *(*Matrix)(ptr)
-}
-
 // cptr returns C pointer
 func (color *Color) cptr() *C.Color {
 	return (*C.Color)(unsafe.Pointer(color))
-}
-
-// newColorFromPointer - Returns new Color from pointer
-func newColorFromPointer(ptr unsafe.Pointer) Color {
-	return *(*Color)(ptr)
 }
 
 // cptr returns C pointer
@@ -57,19 +37,9 @@ func (r *Rectangle) cptr() *C.Rectangle {
 	return (*C.Rectangle)(unsafe.Pointer(r))
 }
 
-// newRectangleFromPointer - Returns new Rectangle from pointer
-func newRectangleFromPointer(ptr unsafe.Pointer) Rectangle {
-	return *(*Rectangle)(ptr)
-}
-
 // cptr returns C pointer
 func (c *Camera) cptr() *C.Camera {
 	return (*C.Camera)(unsafe.Pointer(c))
-}
-
-// newCameraFromPointer - Returns new Camera from pointer
-func newCameraFromPointer(ptr unsafe.Pointer) Camera {
-	return *(*Camera)(ptr)
 }
 
 // cptr returns C pointer
@@ -77,19 +47,9 @@ func (c *Camera2D) cptr() *C.Camera2D {
 	return (*C.Camera2D)(unsafe.Pointer(c))
 }
 
-// newCamera2DFromPointer - Returns new Camera2D from pointer
-func newCamera2DFromPointer(ptr unsafe.Pointer) Camera2D {
-	return *(*Camera2D)(ptr)
-}
-
 // cptr returns C pointer
 func (b *BoundingBox) cptr() *C.BoundingBox {
 	return (*C.BoundingBox)(unsafe.Pointer(b))
-}
-
-// newBoundingBoxFromPointer - Returns new BoundingBox from pointer
-func newBoundingBoxFromPointer(ptr unsafe.Pointer) BoundingBox {
-	return *(*BoundingBox)(ptr)
 }
 
 // CloseWindow - Close Window and Terminate Context

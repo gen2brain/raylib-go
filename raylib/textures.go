@@ -17,29 +17,14 @@ func (i *Image) cptr() *C.Image {
 	return (*C.Image)(unsafe.Pointer(i))
 }
 
-// newImageFromPointer - Returns new Image from pointer
-func newImageFromPointer(ptr unsafe.Pointer) *Image {
-	return (*Image)(ptr)
-}
-
 // cptr returns C pointer
 func (t *Texture2D) cptr() *C.Texture2D {
 	return (*C.Texture2D)(unsafe.Pointer(t))
 }
 
-// newTexture2DFromPointer - Returns new Texture2D from pointer
-func newTexture2DFromPointer(ptr unsafe.Pointer) Texture2D {
-	return *(*Texture2D)(ptr)
-}
-
 // cptr returns C pointer
 func (r *RenderTexture2D) cptr() *C.RenderTexture2D {
 	return (*C.RenderTexture2D)(unsafe.Pointer(r))
-}
-
-// newRenderTexture2DFromPointer - Returns new RenderTexture2D from pointer
-func newRenderTexture2DFromPointer(ptr unsafe.Pointer) RenderTexture2D {
-	return *(*RenderTexture2D)(ptr)
 }
 
 // LoadImage - Load an image into CPU memory (RAM)

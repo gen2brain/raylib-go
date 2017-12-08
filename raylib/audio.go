@@ -17,28 +17,13 @@ func (w *Wave) cptr() *C.Wave {
 	return (*C.Wave)(unsafe.Pointer(w))
 }
 
-// newWaveFromPointer - Returns new Wave from pointer
-func newWaveFromPointer(ptr unsafe.Pointer) Wave {
-	return *(*Wave)(ptr)
-}
-
 func (s *Sound) cptr() *C.Sound {
 	return (*C.Sound)(unsafe.Pointer(s))
-}
-
-// newSoundFromPointer - Returns new Sound from pointer
-func newSoundFromPointer(ptr unsafe.Pointer) Sound {
-	return *(*Sound)(ptr)
 }
 
 // cptr returns C pointer
 func (a *AudioStream) cptr() *C.AudioStream {
 	return (*C.AudioStream)(unsafe.Pointer(a))
-}
-
-// newAudioStreamFromPointer - Returns new AudioStream from pointer
-func newAudioStreamFromPointer(ptr unsafe.Pointer) AudioStream {
-	return *(*AudioStream)(ptr)
 }
 
 // InitAudioDevice - Initialize audio device and context
