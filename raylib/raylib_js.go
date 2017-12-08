@@ -10,55 +10,6 @@ import (
 	"github.com/gopherjs/gopherjs/js"
 )
 
-// InitWindow - Initialize Window and OpenGL Graphics
-func InitWindow(width int32, height int32, t interface{}) {
-	js.Global.Get("Module").Call("_InitWindow", width, height, t.(string))
-}
-
-// SetCallbackFunc - Sets callback function
-func SetCallbackFunc(func(unsafe.Pointer)) {
-}
-
-// SetMainLoop - Sets main loop function
-func SetMainLoop(f func(), fps, simulateInfiniteLoop int) {
-	js.Global.Get("Module").Call("_emscripten_set_main_loop", f, fps, simulateInfiniteLoop)
-}
-
-// ShowCursor - Shows cursor
-func ShowCursor() {
-}
-
-// HideCursor - Hides cursor
-func HideCursor() {
-}
-
-// IsCursorHidden - Returns true if cursor is not visible
-func IsCursorHidden() bool {
-	return false
-}
-
-// EnableCursor - Enables cursor
-func EnableCursor() {
-}
-
-// DisableCursor - Disables cursor
-func DisableCursor() {
-}
-
-// IsFileDropped - Check if a file have been dropped into window
-func IsFileDropped() bool {
-	return false
-}
-
-// GetDroppedFiles - Retrieve dropped files into window
-func GetDroppedFiles(count *int32) (f []string) {
-	return
-}
-
-// ClearDroppedFiles - Clear dropped files paths buffer
-func ClearDroppedFiles() {
-}
-
 // InitAudioDevice - Initialize audio device and context
 func InitAudioDevice() {
 	js.Global.Get("Module").Call("_InitAudioDevice")
