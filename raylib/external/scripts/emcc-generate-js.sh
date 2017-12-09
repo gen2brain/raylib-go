@@ -11,7 +11,7 @@ done
 
 emcc `echo "${RAYLIB_OBJ[*]}"` -o raylib.js -g3 -s USE_GLFW=3 -s EXPORTED_FUNCTIONS=$EMCC_EXPORT
 
-sed --quiet -i "/Module\['dynCall_vi'\]/c\          func(arg);" raylib.js
-sed --quiet -i "/Module\['dynCall_v'\]/c\          func();" raylib.js
+sed -i "/Module\['dynCall_vi'\]/c\          func(arg);" raylib.js
+sed -i "/Module\['dynCall_v'\]/c\          func();" raylib.js
 
 rm -f "${BASE_DIR}"/*.o "${BASE_DIR}"/external/*.o
