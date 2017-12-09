@@ -20,8 +20,7 @@ func SetCallbackFunc(func(unsafe.Pointer)) {
 
 // SetMainLoop - Sets main loop function
 func SetMainLoop(fn func(), fps int, infinite bool) {
-	js.Global.Set("_go_update_function", fn)
-	js.Global.Get("Module").Call("_emscripten_set_main_loop_go", fps, infinite)
+	js.Global.Get("Module").Call("_emscripten_set_main_loop", fn, fps, infinite)
 }
 
 // ShowCursor - Shows cursor
