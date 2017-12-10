@@ -2,7 +2,6 @@ package raylib
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
 	"os"
 	"unsafe"
@@ -27,8 +26,7 @@ func LoadResource(reader io.ReadSeeker, rresID int, key []byte) (data rres.Data)
 	}
 
 	// Verify "rRES" identifier
-	id := fmt.Sprintf("%c", fileHeader.ID)
-	if id != "[r R E S]" {
+	if string(fileHeader.ID[:]) != "rRES" {
 		TraceLog(LogWarning, "not a valid raylib resource file")
 		return
 	}
@@ -78,7 +76,7 @@ func LoadResource(reader io.ReadSeeker, rresID int, key []byte) (data rres.Data)
 	}
 
 	if data.Data == nil {
-		TraceLog(LogInfo, "[ID %d] Requested resource could not be found", rresID)
+		TraceLog(LogWarning, "[ID %d] Requested resource could not be found", rresID)
 	}
 
 	return

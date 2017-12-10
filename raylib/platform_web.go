@@ -3,7 +3,6 @@
 package raylib
 
 import (
-	"os"
 	"unsafe"
 
 	"github.com/gopherjs/gopherjs/js"
@@ -59,10 +58,87 @@ func ClearDroppedFiles() {
 }
 
 // OpenAsset - Open asset
-func OpenAsset(name string) (Asset, error) {
-	f, err := os.Open(name)
-	if err != nil {
-		return nil, err
-	}
-	return f, nil
+func OpenAsset(name string) (a Asset, err error) {
+	defer func() {
+		e := recover()
+
+		if e == nil {
+			return
+		}
+
+		if e, ok := e.(*js.Error); ok {
+			err = e
+		} else {
+			panic(e)
+		}
+	}()
+
+	ptr := js.Global.Get("FS").Call("open", name, "r")
+	a = &asset{ptr, 0}
+
+	return
+}
+
+type asset struct {
+	ptr    *js.Object
+	offset int64
+}
+
+func (a *asset) Read(p []byte) (n int, err error) {
+	defer func() {
+		e := recover()
+
+		if e == nil {
+			return
+		}
+
+		if e, ok := e.(*js.Error); ok {
+			err = e
+		} else {
+			panic(e)
+		}
+	}()
+
+	js.Global.Get("FS").Call("read", a.ptr, p, 0, cap(p), a.offset)
+	n = len(p)
+	return
+}
+
+func (a *asset) Seek(offset int64, whence int) (off int64, err error) {
+	defer func() {
+		e := recover()
+
+		if e == nil {
+			return
+		}
+
+		if e, ok := e.(*js.Error); ok {
+			err = e
+		} else {
+			panic(e)
+		}
+	}()
+
+	off = js.Global.Get("FS").Call("llseek", a.ptr, int(offset), int(whence)).Int64()
+	a.offset = off
+	return
+}
+
+func (a *asset) Close() (err error) {
+	defer func() {
+		e := recover()
+
+		if e == nil {
+			return
+		}
+
+		if e, ok := e.(*js.Error); ok {
+			err = e
+		} else {
+			panic(e)
+		}
+	}()
+
+	js.Global.Get("FS").Call("close", a.ptr)
+	return nil
 }

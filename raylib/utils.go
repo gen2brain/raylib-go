@@ -1,4 +1,4 @@
-// +build !android,!windows
+// +build !android,!windows,!js
 
 package raylib
 
@@ -6,13 +6,6 @@ import (
 	"fmt"
 	"os"
 )
-
-var traceDebugMsgs = false
-
-// SetDebug - Set debug messages
-func SetDebug(enabled bool) {
-	traceDebugMsgs = enabled
-}
 
 // TraceLog - Show trace log messages (INFO, WARNING, ERROR, DEBUG)
 func TraceLog(msgType int, text string, v ...interface{}) {

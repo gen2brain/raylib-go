@@ -20,13 +20,6 @@ import (
 	"unsafe"
 )
 
-var traceDebugMsgs = false
-
-// SetDebug - Set debug messages
-func SetDebug(enabled bool) {
-	traceDebugMsgs = enabled
-}
-
 // TraceLog - Trace log messages showing (INFO, WARNING, ERROR, DEBUG)
 func TraceLog(msgType int, text string, v ...interface{}) {
 	switch msgType {

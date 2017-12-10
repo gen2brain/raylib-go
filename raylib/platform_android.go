@@ -16,7 +16,6 @@ const char* internal_storage_path;
 import "C"
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"unsafe"
@@ -100,7 +99,7 @@ func OpenAsset(name string) (Asset, error) {
 	a := &asset{C.AAssetManager_open(C.asset_manager, cname, C.AASSET_MODE_UNKNOWN)}
 
 	if a.ptr == nil {
-		return nil, errors.New("asset file could not be opened")
+		return nil, fmt.Errorf("asset file could not be opened")
 	}
 
 	return a, nil
@@ -121,7 +120,7 @@ func (a *asset) Read(p []byte) (n int, err error) {
 func (a *asset) Seek(offset int64, whence int) (int64, error) {
 	off := C.AAsset_seek(a.ptr, C.off_t(offset), C.int(whence))
 	if off == -1 {
-		return 0, errors.New(fmt.Sprintf("bad result for offset=%d, whence=%d", offset, whence))
+		return 0, fmt.Errorf("bad result for offset=%d, whence=%d", offset, whence)
 	}
 	return int64(off), nil
 }

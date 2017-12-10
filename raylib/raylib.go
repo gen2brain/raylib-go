@@ -1053,3 +1053,10 @@ const (
 	LogError
 	LogDebug
 )
+
+var traceDebugMsgs = false
+
+// SetDebug - Set debug messages
+func SetDebug(enabled bool) {
+	traceDebugMsgs = enabled
+}
