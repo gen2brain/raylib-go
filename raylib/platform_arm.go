@@ -1,4 +1,4 @@
-// +build !android,arm
+// +build !android,arm,!js
 
 package raylib
 
@@ -30,6 +30,10 @@ func InitWindow(width int32, height int32, t interface{}) {
 // SetCallbackFunc - Sets callback function
 func SetCallbackFunc(func(unsafe.Pointer)) {
 	return
+}
+
+// SetMainLoop - Sets main loop function
+func SetMainLoop(f func(), fps, simulateInfiniteLoop int) {
 }
 
 // ShowCursor - Shows cursor

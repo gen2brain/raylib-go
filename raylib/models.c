@@ -1,3 +1,5 @@
+// +build !js
+
 /**********************************************************************************************
 *
 *   raylib.models - Basic functions to deal with 3d shapes and 3d models

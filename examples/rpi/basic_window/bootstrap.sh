@@ -9,8 +9,6 @@ GO_OS="linux"
 GO_ARCH="amd64"
 GO_VERSION=`curl -s https://golang.org/dl/ | grep 'id="go' | head -n1 | awk -F'"' '{print $4}'`
 
-OPENAL_VERSION="1.17.2"
-
 INSTALL_PREFIX="$1"
 export PATH=${INSTALL_PREFIX}/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin:${PATH}
 
@@ -38,24 +36,6 @@ echo "##### Compile Go for arm-linux-gnueabihf"
 GOROOT_BOOTSTRAP=${BUILD_DIR}/bootstrap/go CC_FOR_TARGET=arm-linux-gnueabihf-gcc GOOS=linux GOARCH=arm GOARM=6 CGO_ENABLED=1 ./make.bash --no-clean || exit 1
 
 cp -r -f ${BUILD_DIR}/go ${INSTALL_PREFIX}
-
-echo "##### Compile OpenAL"
-
-cd ${BUILD_DIR} && curl -s -L  http://kcat.strangesoft.net/openal-releases/openal-soft-${OPENAL_VERSION}.tar.bz2 | tar -xj
-
-cat << EOF > ${BUILD_DIR}/openal-soft-${OPENAL_VERSION}/linux-rpi.cmake
-set(TOOLCHAIN_PREFIX arm-linux-gnueabihf)
-set(CMAKE_C_COMPILER \${TOOLCHAIN_PREFIX}-gcc)
-set(CMAKE_FIND_ROOT_PATH \${INSTALL_PREFIX}/gcc-linaro-arm-linux-gnueabihf-raspbian-x64)
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-EOF
-
-mkdir -p ${BUILD_DIR}/openal-soft-${OPENAL_VERSION}/build-rpi
-cd ${BUILD_DIR}/openal-soft-${OPENAL_VERSION}/build-rpi
-cmake -DLIBTYPE=STATIC -DCMAKE_TOOLCHAIN_FILE=../linux-rpi.cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}/gcc-linaro-arm-linux-gnueabihf-raspbian-x64 ..
-make -j $(nproc) && make install
 
 echo "##### Remove build directory"
 rm -rf ${BUILD_DIR}

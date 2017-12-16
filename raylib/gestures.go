@@ -1,3 +1,5 @@
+// +build !js
+
 package raylib
 
 /*
@@ -5,25 +7,6 @@ package raylib
 */
 import "C"
 import "unsafe"
-
-// Gestures type
-type Gestures int32
-
-// Gestures types
-// NOTE: It could be used as flags to enable only some gestures
-const (
-	GestureNone       Gestures = C.GESTURE_NONE
-	GestureTap        Gestures = C.GESTURE_TAP
-	GestureDoubletap  Gestures = C.GESTURE_DOUBLETAP
-	GestureHold       Gestures = C.GESTURE_HOLD
-	GestureDrag       Gestures = C.GESTURE_DRAG
-	GestureSwipeRight Gestures = C.GESTURE_SWIPE_RIGHT
-	GestureSwipeLeft  Gestures = C.GESTURE_SWIPE_LEFT
-	GestureSwipeUp    Gestures = C.GESTURE_SWIPE_UP
-	GestureSwipeDown  Gestures = C.GESTURE_SWIPE_DOWN
-	GesturePinchIn    Gestures = C.GESTURE_PINCH_IN
-	GesturePinchOut   Gestures = C.GESTURE_PINCH_OUT
-)
 
 // SetGesturesEnabled - Enable a set of gestures using flags
 func SetGesturesEnabled(gestureFlags uint32) {
@@ -63,7 +46,7 @@ func GetGestureHoldDuration() float32 {
 // GetGestureDragVector - Get gesture drag vector
 func GetGestureDragVector() Vector2 {
 	ret := C.GetGestureDragVector()
-	v := NewVector2FromPointer(unsafe.Pointer(&ret))
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -77,7 +60,7 @@ func GetGestureDragAngle() float32 {
 // GetGesturePinchVector - Get gesture pinch delta
 func GetGesturePinchVector() Vector2 {
 	ret := C.GetGesturePinchVector()
-	v := NewVector2FromPointer(unsafe.Pointer(&ret))
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
 	return v
 }
 

@@ -1,3 +1,5 @@
+// +build !js
+
 package raylib
 
 /*
@@ -7,193 +9,22 @@ package raylib
 import "C"
 
 import (
-	"image"
 	"unsafe"
 )
 
-// TextureFormat - Texture format
-type TextureFormat int32
-
-// Texture formats
-// NOTE: Support depends on OpenGL version and platform
-const (
-	// 8 bit per pixel (no alpha)
-	UncompressedGrayscale TextureFormat = C.UNCOMPRESSED_GRAYSCALE
-	// 16 bpp (2 channels)
-	UncompressedGrayAlpha TextureFormat = C.UNCOMPRESSED_GRAY_ALPHA
-	// 16 bpp
-	UncompressedR5g6b5 TextureFormat = C.UNCOMPRESSED_R5G6B5
-	// 24 bpp
-	UncompressedR8g8b8 TextureFormat = C.UNCOMPRESSED_R8G8B8
-	// 16 bpp (1 bit alpha)
-	UncompressedR5g5b5a1 TextureFormat = C.UNCOMPRESSED_R5G5B5A1
-	// 16 bpp (4 bit alpha)
-	UncompressedR4g4b4a4 TextureFormat = C.UNCOMPRESSED_R4G4B4A4
-	// 32 bpp
-	UncompressedR8g8b8a8 TextureFormat = C.UNCOMPRESSED_R8G8B8A8
-	// 4 bpp (no alpha)
-	CompressedDxt1Rgb TextureFormat = C.COMPRESSED_DXT1_RGB
-	// 4 bpp (1 bit alpha)
-	CompressedDxt1Rgba TextureFormat = C.COMPRESSED_DXT1_RGBA
-	// 8 bpp
-	CompressedDxt3Rgba TextureFormat = C.COMPRESSED_DXT3_RGBA
-	// 8 bpp
-	CompressedDxt5Rgba TextureFormat = C.COMPRESSED_DXT5_RGBA
-	// 4 bpp
-	CompressedEtc1Rgb TextureFormat = C.COMPRESSED_ETC1_RGB
-	// 4 bpp
-	CompressedEtc2Rgb TextureFormat = C.COMPRESSED_ETC2_RGB
-	// 8 bpp
-	CompressedEtc2EacRgba TextureFormat = C.COMPRESSED_ETC2_EAC_RGBA
-	// 4 bpp
-	CompressedPvrtRgb TextureFormat = C.COMPRESSED_PVRT_RGB
-	// 4 bpp
-	CompressedPvrtRgba TextureFormat = C.COMPRESSED_PVRT_RGBA
-	// 8 bpp
-	CompressedAstc4x4Rgba TextureFormat = C.COMPRESSED_ASTC_4x4_RGBA
-	// 2 bpp
-	CompressedAstc8x8Rgba TextureFormat = C.COMPRESSED_ASTC_8x8_RGBA
-)
-
-// TextureFilterMode - Texture filter mode
-type TextureFilterMode int32
-
-// Texture parameters: filter mode
-// NOTE 1: Filtering considers mipmaps if available in the texture
-// NOTE 2: Filter is accordingly set for minification and magnification
-const (
-	// No filter, just pixel aproximation
-	FilterPoint TextureFilterMode = C.FILTER_POINT
-	// Linear filtering
-	FilterBilinear TextureFilterMode = C.FILTER_BILINEAR
-	// Trilinear filtering (linear with mipmaps)
-	FilterTrilinear TextureFilterMode = C.FILTER_TRILINEAR
-	// Anisotropic filtering 4x
-	FilterAnisotropic4x TextureFilterMode = C.FILTER_ANISOTROPIC_4X
-	// Anisotropic filtering 8x
-	FilterAnisotropic8x TextureFilterMode = C.FILTER_ANISOTROPIC_8X
-	// Anisotropic filtering 16x
-	FilterAnisotropic16x TextureFilterMode = C.FILTER_ANISOTROPIC_16X
-)
-
-// TextureWrapMode - Texture wrap mode
-type TextureWrapMode int32
-
-// Texture parameters: wrap mode
-const (
-	WrapRepeat TextureWrapMode = C.WRAP_REPEAT
-	WrapClamp  TextureWrapMode = C.WRAP_CLAMP
-	WrapMirror TextureWrapMode = C.WRAP_MIRROR
-)
-
-// Image type, bpp always RGBA (32bit)
-// NOTE: Data stored in CPU memory (RAM)
-type Image struct {
-	// Image raw data
-	Data unsafe.Pointer
-	// Image base width
-	Width int32
-	// Image base height
-	Height int32
-	// Mipmap levels, 1 by default
-	Mipmaps int32
-	// Data format (TextureFormat)
-	Format TextureFormat
-}
-
+// cptr returns C pointer
 func (i *Image) cptr() *C.Image {
 	return (*C.Image)(unsafe.Pointer(i))
 }
 
-// ToImage converts a Image to Go image.Image
-func (i *Image) ToImage() image.Image {
-	img := image.NewRGBA(image.Rect(0, 0, int(i.Width), int(i.Height)))
-
-	// Get pixel data from image (RGBA 32bit)
-	pixels := GetImageData(i)
-
-	img.Pix = (*[1 << 30]uint8)(pixels)[:]
-
-	return img
-}
-
-// NewImage - Returns new Image
-func NewImage(data unsafe.Pointer, width, height, mipmaps int32, format TextureFormat) *Image {
-	return &Image{data, width, height, mipmaps, format}
-}
-
-// NewImageFromPointer - Returns new Image from pointer
-func NewImageFromPointer(ptr unsafe.Pointer) *Image {
-	return (*Image)(ptr)
-}
-
-// NewImageFromImage - Returns new Image from Go image.Image
-func NewImageFromImage(img image.Image) *Image {
-	size := img.Bounds().Size()
-	pixels := make([]Color, size.X*size.Y)
-
-	for y := 0; y < size.Y; y++ {
-		for x := 0; x < size.X; x++ {
-			color := img.At(x, y)
-			r, g, b, a := color.RGBA()
-			pixels[x+y*size.Y] = NewColor(uint8(r), uint8(g), uint8(b), uint8(a))
-		}
-	}
-
-	return LoadImageEx(pixels, int32(size.X), int32(size.Y))
-}
-
-// Texture2D type, bpp always RGBA (32bit)
-// NOTE: Data stored in GPU memory
-type Texture2D struct {
-	// OpenGL texture id
-	ID uint32
-	// Texture base width
-	Width int32
-	// Texture base height
-	Height int32
-	// Mipmap levels, 1 by default
-	Mipmaps int32
-	// Data format (TextureFormat)
-	Format TextureFormat
-}
-
+// cptr returns C pointer
 func (t *Texture2D) cptr() *C.Texture2D {
 	return (*C.Texture2D)(unsafe.Pointer(t))
 }
 
-// NewTexture2D - Returns new Texture2D
-func NewTexture2D(id uint32, width, height, mipmaps int32, format TextureFormat) Texture2D {
-	return Texture2D{id, width, height, mipmaps, format}
-}
-
-// NewTexture2DFromPointer - Returns new Texture2D from pointer
-func NewTexture2DFromPointer(ptr unsafe.Pointer) Texture2D {
-	return *(*Texture2D)(ptr)
-}
-
-// RenderTexture2D type, for texture rendering
-type RenderTexture2D struct {
-	// Render texture (fbo) id
-	ID uint32
-	// Color buffer attachment texture
-	Texture Texture2D
-	// Depth buffer attachment texture
-	Depth Texture2D
-}
-
+// cptr returns C pointer
 func (r *RenderTexture2D) cptr() *C.RenderTexture2D {
 	return (*C.RenderTexture2D)(unsafe.Pointer(r))
-}
-
-// NewRenderTexture2D - Returns new RenderTexture2D
-func NewRenderTexture2D(id uint32, texture, depth Texture2D) RenderTexture2D {
-	return RenderTexture2D{id, texture, depth}
-}
-
-// NewRenderTexture2DFromPointer - Returns new RenderTexture2D from pointer
-func NewRenderTexture2DFromPointer(ptr unsafe.Pointer) RenderTexture2D {
-	return *(*RenderTexture2D)(ptr)
 }
 
 // LoadImage - Load an image into CPU memory (RAM)
@@ -201,7 +32,7 @@ func LoadImage(fileName string) *Image {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	ret := C.LoadImage(cfileName)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -211,7 +42,7 @@ func LoadImageEx(pixels []Color, width, height int32) *Image {
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
 	ret := C.LoadImageEx(cpixels, cwidth, cheight)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -222,7 +53,7 @@ func LoadImagePro(data []byte, width, height int32, format TextureFormat) *Image
 	cheight := (C.int)(height)
 	cformat := (C.int)(format)
 	ret := C.LoadImagePro(cdata, cwidth, cheight, cformat)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -235,7 +66,7 @@ func LoadImageRaw(fileName string, width, height int32, format TextureFormat, he
 	cformat := (C.int)(format)
 	cheaderSize := (C.int)(headerSize)
 	ret := C.LoadImageRaw(cfileName, cwidth, cheight, cformat, cheaderSize)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -244,7 +75,7 @@ func LoadTexture(fileName string) Texture2D {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	ret := C.LoadTexture(cfileName)
-	v := NewTexture2DFromPointer(unsafe.Pointer(&ret))
+	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -252,7 +83,7 @@ func LoadTexture(fileName string) Texture2D {
 func LoadTextureFromImage(image *Image) Texture2D {
 	cimage := image.cptr()
 	ret := C.LoadTextureFromImage(*cimage)
-	v := NewTexture2DFromPointer(unsafe.Pointer(&ret))
+	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -261,7 +92,7 @@ func LoadRenderTexture(width, height int32) RenderTexture2D {
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
 	ret := C.LoadRenderTexture(cwidth, cheight)
-	v := NewRenderTexture2DFromPointer(unsafe.Pointer(&ret))
+	v := newRenderTexture2DFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -284,24 +115,24 @@ func UnloadRenderTexture(target RenderTexture2D) {
 }
 
 // GetImageData - Get pixel data from image
-func GetImageData(image *Image) unsafe.Pointer {
+func GetImageData(image *Image) []byte {
 	cimage := image.cptr()
 	ret := C.GetImageData(*cimage)
-	return unsafe.Pointer(ret)
+	return (*[1 << 30]uint8)(unsafe.Pointer(ret))[:]
 }
 
 // GetTextureData - Get pixel data from GPU texture and return an Image
 func GetTextureData(texture Texture2D) *Image {
 	ctexture := texture.cptr()
 	ret := C.GetTextureData(*ctexture)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
 // UpdateTexture - Update GPU texture with new data
-func UpdateTexture(texture Texture2D, pixels unsafe.Pointer) {
+func UpdateTexture(texture Texture2D, pixels []byte) {
 	ctexture := texture.cptr()
-	cpixels := (unsafe.Pointer)(unsafe.Pointer(pixels))
+	cpixels := unsafe.Pointer(&pixels[0])
 	C.UpdateTexture(*ctexture, cpixels)
 }
 
@@ -349,7 +180,7 @@ func ImageDither(image *Image, rBpp, gBpp, bBpp, aBpp int32) {
 func ImageCopy(image *Image) *Image {
 	cimage := image.cptr()
 	ret := C.ImageCopy(*cimage)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -383,7 +214,7 @@ func ImageText(text string, fontSize int32, color Color) *Image {
 	cfontSize := (C.int)(fontSize)
 	ccolor := color.cptr()
 	ret := C.ImageText(ctext, cfontSize, *ccolor)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -396,7 +227,7 @@ func ImageTextEx(font SpriteFont, text string, fontSize float32, spacing int32, 
 	cspacing := (C.int)(spacing)
 	ctint := tint.cptr()
 	ret := C.ImageTextEx(*cfont, ctext, cfontSize, cspacing, *ctint)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -485,7 +316,7 @@ func GenImageColor(width, height int, color Color) *Image {
 	ccolor := color.cptr()
 
 	ret := C.GenImageColor(cwidth, cheight, *ccolor)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -497,7 +328,7 @@ func GenImageGradientV(width, height int, top, bottom Color) *Image {
 	cbottom := bottom.cptr()
 
 	ret := C.GenImageGradientV(cwidth, cheight, *ctop, *cbottom)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -509,7 +340,7 @@ func GenImageGradientH(width, height int, left, right Color) *Image {
 	cright := right.cptr()
 
 	ret := C.GenImageGradientH(cwidth, cheight, *cleft, *cright)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -522,7 +353,7 @@ func GenImageGradientRadial(width, height int, density float32, inner, outer Col
 	couter := outer.cptr()
 
 	ret := C.GenImageGradientRadial(cwidth, cheight, cdensity, *cinner, *couter)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -536,7 +367,7 @@ func GenImageChecked(width, height, checksX, checksY int, col1, col2 Color) *Ima
 	ccol2 := col2.cptr()
 
 	ret := C.GenImageChecked(cwidth, cheight, cchecksX, cchecksY, *ccol1, *ccol2)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -547,7 +378,7 @@ func GenImageWhiteNoise(width, height int, factor float32) *Image {
 	cfactor := (C.float)(factor)
 
 	ret := C.GenImageWhiteNoise(cwidth, cheight, cfactor)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -558,7 +389,7 @@ func GenImagePerlinNoise(width, height int, scale float32) *Image {
 	cscale := (C.float)(scale)
 
 	ret := C.GenImagePerlinNoise(cwidth, cheight, cscale)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -569,7 +400,7 @@ func GenImageCellular(width, height, tileSize int) *Image {
 	ctileSize := (C.int)(tileSize)
 
 	ret := C.GenImageCellular(cwidth, cheight, ctileSize)
-	v := NewImageFromPointer(unsafe.Pointer(&ret))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 

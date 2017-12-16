@@ -1,5 +1,5 @@
 //========================================================================
-// GLFW 3.2 Wayland - www.glfw.org
+// GLFW 3.3 Wayland - www.glfw.org
 //------------------------------------------------------------------------
 // Copyright (c) 2014 Jonas Ådahl <jadahl@gmail.com>
 //
@@ -26,6 +26,7 @@
 
 #include "internal.h"
 
+#include <assert.h>
 #include <linux/input.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -109,6 +110,8 @@ static void pointerHandleButton(void* data,
     if (!window)
         return;
 
+    _glfw.wl.pointerSerial = serial;
+
     /* Makes left, right and middle 0, 1 and 2. Overall order follows evdev
      * codes. */
     glfwButton = button - BTN_LEFT;
@@ -128,7 +131,7 @@ static void pointerHandleAxis(void* data,
                               wl_fixed_t value)
 {
     _GLFWwindow* window = _glfw.wl.pointerFocus;
-    double scroll_factor;
+    double scrollFactor;
     double x, y;
 
     if (!window)
@@ -137,19 +140,20 @@ static void pointerHandleAxis(void* data,
     /* Wayland scroll events are in pointer motion coordinate space (think
      * two finger scroll). The factor 10 is commonly used to convert to
      * "scroll step means 1.0. */
-    scroll_factor = 1.0/10.0;
+    scrollFactor = 1.0/10.0;
 
     switch (axis)
     {
         case WL_POINTER_AXIS_HORIZONTAL_SCROLL:
-            x = wl_fixed_to_double(value) * scroll_factor;
+            x = wl_fixed_to_double(value) * scrollFactor;
             y = 0.0;
             break;
         case WL_POINTER_AXIS_VERTICAL_SCROLL:
             x = 0.0;
-            y = wl_fixed_to_double(value) * scroll_factor;
+            y = wl_fixed_to_double(value) * scrollFactor;
             break;
         default:
+            assert(GLFW_FALSE);
             break;
     }
 
@@ -172,7 +176,14 @@ static void keyboardHandleKeymap(void* data,
 {
     struct xkb_keymap* keymap;
     struct xkb_state* state;
+
+#ifdef HAVE_XKBCOMMON_COMPOSE_H
+    struct xkb_compose_table* composeTable;
+    struct xkb_compose_state* composeState;
+#endif
+
     char* mapStr;
+    const char* locale;
 
     if (format != WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1)
     {
@@ -186,10 +197,10 @@ static void keyboardHandleKeymap(void* data,
         return;
     }
 
-    keymap = xkb_map_new_from_string(_glfw.wl.xkb.context,
-                                     mapStr,
-                                     XKB_KEYMAP_FORMAT_TEXT_V1,
-                                     0);
+    keymap = xkb_keymap_new_from_string(_glfw.wl.xkb.context,
+                                        mapStr,
+                                        XKB_KEYMAP_FORMAT_TEXT_V1,
+                                        0);
     munmap(mapStr, size);
     close(fd);
 
@@ -205,23 +216,54 @@ static void keyboardHandleKeymap(void* data,
     {
         _glfwInputError(GLFW_PLATFORM_ERROR,
                         "Wayland: Failed to create XKB state");
-        xkb_map_unref(keymap);
+        xkb_keymap_unref(keymap);
         return;
     }
+
+    // Look up the preferred locale, falling back to "C" as default.
+    locale = getenv("LC_ALL");
+    if (!locale)
+        locale = getenv("LC_CTYPE");
+    if (!locale)
+        locale = getenv("LANG");
+    if (!locale)
+        locale = "C";
+
+#ifdef HAVE_XKBCOMMON_COMPOSE_H
+    composeTable =
+        xkb_compose_table_new_from_locale(_glfw.wl.xkb.context, locale,
+                                          XKB_COMPOSE_COMPILE_NO_FLAGS);
+    if (composeTable)
+    {
+        composeState =
+            xkb_compose_state_new(composeTable, XKB_COMPOSE_STATE_NO_FLAGS);
+        xkb_compose_table_unref(composeTable);
+        if (composeState)
+            _glfw.wl.xkb.composeState = composeState;
+        else
+            _glfwInputError(GLFW_PLATFORM_ERROR,
+                            "Wayland: Failed to create XKB compose state");
+    }
+    else
+    {
+        _glfwInputError(GLFW_PLATFORM_ERROR,
+                        "Wayland: Failed to create XKB compose table");
+    }
+#endif
 
     xkb_keymap_unref(_glfw.wl.xkb.keymap);
     xkb_state_unref(_glfw.wl.xkb.state);
     _glfw.wl.xkb.keymap = keymap;
     _glfw.wl.xkb.state = state;
 
-    _glfw.wl.xkb.control_mask =
-        1 << xkb_map_mod_get_index(_glfw.wl.xkb.keymap, "Control");
-    _glfw.wl.xkb.alt_mask =
-        1 << xkb_map_mod_get_index(_glfw.wl.xkb.keymap, "Mod1");
-    _glfw.wl.xkb.shift_mask =
-        1 << xkb_map_mod_get_index(_glfw.wl.xkb.keymap, "Shift");
-    _glfw.wl.xkb.super_mask =
-        1 << xkb_map_mod_get_index(_glfw.wl.xkb.keymap, "Mod4");
+    _glfw.wl.xkb.controlMask =
+        1 << xkb_keymap_mod_get_index(_glfw.wl.xkb.keymap, "Control");
+    _glfw.wl.xkb.altMask =
+        1 << xkb_keymap_mod_get_index(_glfw.wl.xkb.keymap, "Mod1");
+    _glfw.wl.xkb.shiftMask =
+        1 << xkb_keymap_mod_get_index(_glfw.wl.xkb.keymap, "Shift");
+    _glfw.wl.xkb.superMask =
+        1 << xkb_keymap_mod_get_index(_glfw.wl.xkb.keymap, "Mod4");
 }
 
 static void keyboardHandleEnter(void* data,
@@ -252,10 +294,59 @@ static void keyboardHandleLeave(void* data,
 
 static int toGLFWKeyCode(uint32_t key)
 {
-    if (key < sizeof(_glfw.wl.publicKeys) / sizeof(_glfw.wl.publicKeys[0]))
-        return _glfw.wl.publicKeys[key];
+    if (key < sizeof(_glfw.wl.keycodes) / sizeof(_glfw.wl.keycodes[0]))
+        return _glfw.wl.keycodes[key];
 
     return GLFW_KEY_UNKNOWN;
+}
+
+#ifdef HAVE_XKBCOMMON_COMPOSE_H
+static xkb_keysym_t composeSymbol(xkb_keysym_t sym)
+{
+    if (sym == XKB_KEY_NoSymbol || !_glfw.wl.xkb.composeState)
+        return sym;
+    if (xkb_compose_state_feed(_glfw.wl.xkb.composeState, sym)
+            != XKB_COMPOSE_FEED_ACCEPTED)
+        return sym;
+    switch (xkb_compose_state_get_status(_glfw.wl.xkb.composeState))
+    {
+        case XKB_COMPOSE_COMPOSED:
+            return xkb_compose_state_get_one_sym(_glfw.wl.xkb.composeState);
+        case XKB_COMPOSE_COMPOSING:
+        case XKB_COMPOSE_CANCELLED:
+            return XKB_KEY_NoSymbol;
+        case XKB_COMPOSE_NOTHING:
+        default:
+            return sym;
+    }
+}
+#endif
+
+static void inputChar(_GLFWwindow* window, uint32_t key)
+{
+    uint32_t code, numSyms;
+    long cp;
+    const xkb_keysym_t *syms;
+    xkb_keysym_t sym;
+
+    code = key + 8;
+    numSyms = xkb_state_key_get_syms(_glfw.wl.xkb.state, code, &syms);
+
+    if (numSyms == 1)
+    {
+#ifdef HAVE_XKBCOMMON_COMPOSE_H
+        sym = composeSymbol(syms[0]);
+#else
+        sym = syms[0];
+#endif
+        cp = _glfwKeySym2Unicode(sym);
+        if (cp != -1)
+        {
+            const int mods = _glfw.wl.xkb.modifiers;
+            const int plain = !(mods & (GLFW_MOD_CONTROL | GLFW_MOD_ALT));
+            _glfwInputChar(window, cp, mods, plain);
+        }
+    }
 }
 
 static void keyboardHandleKey(void* data,
@@ -265,11 +356,8 @@ static void keyboardHandleKey(void* data,
                               uint32_t key,
                               uint32_t state)
 {
-    uint32_t code, num_syms;
-    long cp;
     int keyCode;
     int action;
-    const xkb_keysym_t *syms;
     _GLFWwindow* window = _glfw.wl.keyboardFocus;
 
     if (!window)
@@ -282,19 +370,8 @@ static void keyboardHandleKey(void* data,
     _glfwInputKey(window, keyCode, key, action,
                   _glfw.wl.xkb.modifiers);
 
-    code = key + 8;
-    num_syms = xkb_key_get_syms(_glfw.wl.xkb.state, code, &syms);
-
-    if (num_syms == 1)
-    {
-        cp = _glfwKeySym2Unicode(syms[0]);
-        if (cp != -1)
-        {
-            const int mods = _glfw.wl.xkb.modifiers;
-            const int plain = !(mods & (GLFW_MOD_CONTROL | GLFW_MOD_ALT));
-            _glfwInputChar(window, cp, mods, plain);
-        }
-    }
+    if (action == GLFW_PRESS)
+        inputChar(window, key);
 }
 
 static void keyboardHandleModifiers(void* data,
@@ -320,15 +397,17 @@ static void keyboardHandleModifiers(void* data,
                           group);
 
     mask = xkb_state_serialize_mods(_glfw.wl.xkb.state,
-                                    XKB_STATE_DEPRESSED |
-                                    XKB_STATE_LATCHED);
-    if (mask & _glfw.wl.xkb.control_mask)
+                                    XKB_STATE_MODS_DEPRESSED |
+                                    XKB_STATE_LAYOUT_DEPRESSED |
+                                    XKB_STATE_MODS_LATCHED |
+                                    XKB_STATE_LAYOUT_LATCHED);
+    if (mask & _glfw.wl.xkb.controlMask)
         modifiers |= GLFW_MOD_CONTROL;
-    if (mask & _glfw.wl.xkb.alt_mask)
+    if (mask & _glfw.wl.xkb.altMask)
         modifiers |= GLFW_MOD_ALT;
-    if (mask & _glfw.wl.xkb.shift_mask)
+    if (mask & _glfw.wl.xkb.shiftMask)
         modifiers |= GLFW_MOD_SHIFT;
-    if (mask & _glfw.wl.xkb.super_mask)
+    if (mask & _glfw.wl.xkb.superMask)
         modifiers |= GLFW_MOD_SUPER;
     _glfw.wl.xkb.modifiers = modifiers;
 }
@@ -380,10 +459,10 @@ static void registryHandleGlobal(void* data,
 {
     if (strcmp(interface, "wl_compositor") == 0)
     {
-        _glfw.wl.wl_compositor_version = min(3, version);
+        _glfw.wl.compositorVersion = min(3, version);
         _glfw.wl.compositor =
             wl_registry_bind(registry, name, &wl_compositor_interface,
-                             _glfw.wl.wl_compositor_version);
+                             _glfw.wl.compositorVersion);
     }
     else if (strcmp(interface, "wl_shm") == 0)
     {
@@ -422,6 +501,13 @@ static void registryHandleGlobal(void* data,
                              &zwp_pointer_constraints_v1_interface,
                              1);
     }
+    else if (strcmp(interface, "zwp_idle_inhibit_manager_v1") == 0)
+    {
+        _glfw.wl.idleInhibitManager =
+            wl_registry_bind(registry, name,
+                             &zwp_idle_inhibit_manager_v1_interface,
+                             1);
+    }
 }
 
 static void registryHandleGlobalRemove(void *data,
@@ -440,124 +526,134 @@ static const struct wl_registry_listener registryListener = {
 //
 static void createKeyTables(void)
 {
-    memset(_glfw.wl.publicKeys, -1, sizeof(_glfw.wl.publicKeys));
+    int scancode;
 
-    _glfw.wl.publicKeys[KEY_GRAVE]      = GLFW_KEY_GRAVE_ACCENT;
-    _glfw.wl.publicKeys[KEY_1]          = GLFW_KEY_1;
-    _glfw.wl.publicKeys[KEY_2]          = GLFW_KEY_2;
-    _glfw.wl.publicKeys[KEY_3]          = GLFW_KEY_3;
-    _glfw.wl.publicKeys[KEY_4]          = GLFW_KEY_4;
-    _glfw.wl.publicKeys[KEY_5]          = GLFW_KEY_5;
-    _glfw.wl.publicKeys[KEY_6]          = GLFW_KEY_6;
-    _glfw.wl.publicKeys[KEY_7]          = GLFW_KEY_7;
-    _glfw.wl.publicKeys[KEY_8]          = GLFW_KEY_8;
-    _glfw.wl.publicKeys[KEY_9]          = GLFW_KEY_9;
-    _glfw.wl.publicKeys[KEY_0]          = GLFW_KEY_0;
-    _glfw.wl.publicKeys[KEY_MINUS]      = GLFW_KEY_MINUS;
-    _glfw.wl.publicKeys[KEY_EQUAL]      = GLFW_KEY_EQUAL;
-    _glfw.wl.publicKeys[KEY_Q]          = GLFW_KEY_Q;
-    _glfw.wl.publicKeys[KEY_W]          = GLFW_KEY_W;
-    _glfw.wl.publicKeys[KEY_E]          = GLFW_KEY_E;
-    _glfw.wl.publicKeys[KEY_R]          = GLFW_KEY_R;
-    _glfw.wl.publicKeys[KEY_T]          = GLFW_KEY_T;
-    _glfw.wl.publicKeys[KEY_Y]          = GLFW_KEY_Y;
-    _glfw.wl.publicKeys[KEY_U]          = GLFW_KEY_U;
-    _glfw.wl.publicKeys[KEY_I]          = GLFW_KEY_I;
-    _glfw.wl.publicKeys[KEY_O]          = GLFW_KEY_O;
-    _glfw.wl.publicKeys[KEY_P]          = GLFW_KEY_P;
-    _glfw.wl.publicKeys[KEY_LEFTBRACE]  = GLFW_KEY_LEFT_BRACKET;
-    _glfw.wl.publicKeys[KEY_RIGHTBRACE] = GLFW_KEY_RIGHT_BRACKET;
-    _glfw.wl.publicKeys[KEY_A]          = GLFW_KEY_A;
-    _glfw.wl.publicKeys[KEY_S]          = GLFW_KEY_S;
-    _glfw.wl.publicKeys[KEY_D]          = GLFW_KEY_D;
-    _glfw.wl.publicKeys[KEY_F]          = GLFW_KEY_F;
-    _glfw.wl.publicKeys[KEY_G]          = GLFW_KEY_G;
-    _glfw.wl.publicKeys[KEY_H]          = GLFW_KEY_H;
-    _glfw.wl.publicKeys[KEY_J]          = GLFW_KEY_J;
-    _glfw.wl.publicKeys[KEY_K]          = GLFW_KEY_K;
-    _glfw.wl.publicKeys[KEY_L]          = GLFW_KEY_L;
-    _glfw.wl.publicKeys[KEY_SEMICOLON]  = GLFW_KEY_SEMICOLON;
-    _glfw.wl.publicKeys[KEY_APOSTROPHE] = GLFW_KEY_APOSTROPHE;
-    _glfw.wl.publicKeys[KEY_Z]          = GLFW_KEY_Z;
-    _glfw.wl.publicKeys[KEY_X]          = GLFW_KEY_X;
-    _glfw.wl.publicKeys[KEY_C]          = GLFW_KEY_C;
-    _glfw.wl.publicKeys[KEY_V]          = GLFW_KEY_V;
-    _glfw.wl.publicKeys[KEY_B]          = GLFW_KEY_B;
-    _glfw.wl.publicKeys[KEY_N]          = GLFW_KEY_N;
-    _glfw.wl.publicKeys[KEY_M]          = GLFW_KEY_M;
-    _glfw.wl.publicKeys[KEY_COMMA]      = GLFW_KEY_COMMA;
-    _glfw.wl.publicKeys[KEY_DOT]        = GLFW_KEY_PERIOD;
-    _glfw.wl.publicKeys[KEY_SLASH]      = GLFW_KEY_SLASH;
-    _glfw.wl.publicKeys[KEY_BACKSLASH]  = GLFW_KEY_BACKSLASH;
-    _glfw.wl.publicKeys[KEY_ESC]        = GLFW_KEY_ESCAPE;
-    _glfw.wl.publicKeys[KEY_TAB]        = GLFW_KEY_TAB;
-    _glfw.wl.publicKeys[KEY_LEFTSHIFT]  = GLFW_KEY_LEFT_SHIFT;
-    _glfw.wl.publicKeys[KEY_RIGHTSHIFT] = GLFW_KEY_RIGHT_SHIFT;
-    _glfw.wl.publicKeys[KEY_LEFTCTRL]   = GLFW_KEY_LEFT_CONTROL;
-    _glfw.wl.publicKeys[KEY_RIGHTCTRL]  = GLFW_KEY_RIGHT_CONTROL;
-    _glfw.wl.publicKeys[KEY_LEFTALT]    = GLFW_KEY_LEFT_ALT;
-    _glfw.wl.publicKeys[KEY_RIGHTALT]   = GLFW_KEY_RIGHT_ALT;
-    _glfw.wl.publicKeys[KEY_LEFTMETA]   = GLFW_KEY_LEFT_SUPER;
-    _glfw.wl.publicKeys[KEY_RIGHTMETA]  = GLFW_KEY_RIGHT_SUPER;
-    _glfw.wl.publicKeys[KEY_MENU]       = GLFW_KEY_MENU;
-    _glfw.wl.publicKeys[KEY_NUMLOCK]    = GLFW_KEY_NUM_LOCK;
-    _glfw.wl.publicKeys[KEY_CAPSLOCK]   = GLFW_KEY_CAPS_LOCK;
-    _glfw.wl.publicKeys[KEY_PRINT]      = GLFW_KEY_PRINT_SCREEN;
-    _glfw.wl.publicKeys[KEY_SCROLLLOCK] = GLFW_KEY_SCROLL_LOCK;
-    _glfw.wl.publicKeys[KEY_PAUSE]      = GLFW_KEY_PAUSE;
-    _glfw.wl.publicKeys[KEY_DELETE]     = GLFW_KEY_DELETE;
-    _glfw.wl.publicKeys[KEY_BACKSPACE]  = GLFW_KEY_BACKSPACE;
-    _glfw.wl.publicKeys[KEY_ENTER]      = GLFW_KEY_ENTER;
-    _glfw.wl.publicKeys[KEY_HOME]       = GLFW_KEY_HOME;
-    _glfw.wl.publicKeys[KEY_END]        = GLFW_KEY_END;
-    _glfw.wl.publicKeys[KEY_PAGEUP]     = GLFW_KEY_PAGE_UP;
-    _glfw.wl.publicKeys[KEY_PAGEDOWN]   = GLFW_KEY_PAGE_DOWN;
-    _glfw.wl.publicKeys[KEY_INSERT]     = GLFW_KEY_INSERT;
-    _glfw.wl.publicKeys[KEY_LEFT]       = GLFW_KEY_LEFT;
-    _glfw.wl.publicKeys[KEY_RIGHT]      = GLFW_KEY_RIGHT;
-    _glfw.wl.publicKeys[KEY_DOWN]       = GLFW_KEY_DOWN;
-    _glfw.wl.publicKeys[KEY_UP]         = GLFW_KEY_UP;
-    _glfw.wl.publicKeys[KEY_F1]         = GLFW_KEY_F1;
-    _glfw.wl.publicKeys[KEY_F2]         = GLFW_KEY_F2;
-    _glfw.wl.publicKeys[KEY_F3]         = GLFW_KEY_F3;
-    _glfw.wl.publicKeys[KEY_F4]         = GLFW_KEY_F4;
-    _glfw.wl.publicKeys[KEY_F5]         = GLFW_KEY_F5;
-    _glfw.wl.publicKeys[KEY_F6]         = GLFW_KEY_F6;
-    _glfw.wl.publicKeys[KEY_F7]         = GLFW_KEY_F7;
-    _glfw.wl.publicKeys[KEY_F8]         = GLFW_KEY_F8;
-    _glfw.wl.publicKeys[KEY_F9]         = GLFW_KEY_F9;
-    _glfw.wl.publicKeys[KEY_F10]        = GLFW_KEY_F10;
-    _glfw.wl.publicKeys[KEY_F11]        = GLFW_KEY_F11;
-    _glfw.wl.publicKeys[KEY_F12]        = GLFW_KEY_F12;
-    _glfw.wl.publicKeys[KEY_F13]        = GLFW_KEY_F13;
-    _glfw.wl.publicKeys[KEY_F14]        = GLFW_KEY_F14;
-    _glfw.wl.publicKeys[KEY_F15]        = GLFW_KEY_F15;
-    _glfw.wl.publicKeys[KEY_F16]        = GLFW_KEY_F16;
-    _glfw.wl.publicKeys[KEY_F17]        = GLFW_KEY_F17;
-    _glfw.wl.publicKeys[KEY_F18]        = GLFW_KEY_F18;
-    _glfw.wl.publicKeys[KEY_F19]        = GLFW_KEY_F19;
-    _glfw.wl.publicKeys[KEY_F20]        = GLFW_KEY_F20;
-    _glfw.wl.publicKeys[KEY_F21]        = GLFW_KEY_F21;
-    _glfw.wl.publicKeys[KEY_F22]        = GLFW_KEY_F22;
-    _glfw.wl.publicKeys[KEY_F23]        = GLFW_KEY_F23;
-    _glfw.wl.publicKeys[KEY_F24]        = GLFW_KEY_F24;
-    _glfw.wl.publicKeys[KEY_KPSLASH]    = GLFW_KEY_KP_DIVIDE;
-    _glfw.wl.publicKeys[KEY_KPDOT]      = GLFW_KEY_KP_MULTIPLY;
-    _glfw.wl.publicKeys[KEY_KPMINUS]    = GLFW_KEY_KP_SUBTRACT;
-    _glfw.wl.publicKeys[KEY_KPPLUS]     = GLFW_KEY_KP_ADD;
-    _glfw.wl.publicKeys[KEY_KP0]        = GLFW_KEY_KP_0;
-    _glfw.wl.publicKeys[KEY_KP1]        = GLFW_KEY_KP_1;
-    _glfw.wl.publicKeys[KEY_KP2]        = GLFW_KEY_KP_2;
-    _glfw.wl.publicKeys[KEY_KP3]        = GLFW_KEY_KP_3;
-    _glfw.wl.publicKeys[KEY_KP4]        = GLFW_KEY_KP_4;
-    _glfw.wl.publicKeys[KEY_KP5]        = GLFW_KEY_KP_5;
-    _glfw.wl.publicKeys[KEY_KP6]        = GLFW_KEY_KP_6;
-    _glfw.wl.publicKeys[KEY_KP7]        = GLFW_KEY_KP_7;
-    _glfw.wl.publicKeys[KEY_KP8]        = GLFW_KEY_KP_8;
-    _glfw.wl.publicKeys[KEY_KP9]        = GLFW_KEY_KP_9;
-    _glfw.wl.publicKeys[KEY_KPCOMMA]    = GLFW_KEY_KP_DECIMAL;
-    _glfw.wl.publicKeys[KEY_KPEQUAL]    = GLFW_KEY_KP_EQUAL;
-    _glfw.wl.publicKeys[KEY_KPENTER]    = GLFW_KEY_KP_ENTER;
+    memset(_glfw.wl.keycodes, -1, sizeof(_glfw.wl.keycodes));
+    memset(_glfw.wl.scancodes, -1, sizeof(_glfw.wl.scancodes));
+
+    _glfw.wl.keycodes[KEY_GRAVE]      = GLFW_KEY_GRAVE_ACCENT;
+    _glfw.wl.keycodes[KEY_1]          = GLFW_KEY_1;
+    _glfw.wl.keycodes[KEY_2]          = GLFW_KEY_2;
+    _glfw.wl.keycodes[KEY_3]          = GLFW_KEY_3;
+    _glfw.wl.keycodes[KEY_4]          = GLFW_KEY_4;
+    _glfw.wl.keycodes[KEY_5]          = GLFW_KEY_5;
+    _glfw.wl.keycodes[KEY_6]          = GLFW_KEY_6;
+    _glfw.wl.keycodes[KEY_7]          = GLFW_KEY_7;
+    _glfw.wl.keycodes[KEY_8]          = GLFW_KEY_8;
+    _glfw.wl.keycodes[KEY_9]          = GLFW_KEY_9;
+    _glfw.wl.keycodes[KEY_0]          = GLFW_KEY_0;
+    _glfw.wl.keycodes[KEY_SPACE]      = GLFW_KEY_SPACE;
+    _glfw.wl.keycodes[KEY_MINUS]      = GLFW_KEY_MINUS;
+    _glfw.wl.keycodes[KEY_EQUAL]      = GLFW_KEY_EQUAL;
+    _glfw.wl.keycodes[KEY_Q]          = GLFW_KEY_Q;
+    _glfw.wl.keycodes[KEY_W]          = GLFW_KEY_W;
+    _glfw.wl.keycodes[KEY_E]          = GLFW_KEY_E;
+    _glfw.wl.keycodes[KEY_R]          = GLFW_KEY_R;
+    _glfw.wl.keycodes[KEY_T]          = GLFW_KEY_T;
+    _glfw.wl.keycodes[KEY_Y]          = GLFW_KEY_Y;
+    _glfw.wl.keycodes[KEY_U]          = GLFW_KEY_U;
+    _glfw.wl.keycodes[KEY_I]          = GLFW_KEY_I;
+    _glfw.wl.keycodes[KEY_O]          = GLFW_KEY_O;
+    _glfw.wl.keycodes[KEY_P]          = GLFW_KEY_P;
+    _glfw.wl.keycodes[KEY_LEFTBRACE]  = GLFW_KEY_LEFT_BRACKET;
+    _glfw.wl.keycodes[KEY_RIGHTBRACE] = GLFW_KEY_RIGHT_BRACKET;
+    _glfw.wl.keycodes[KEY_A]          = GLFW_KEY_A;
+    _glfw.wl.keycodes[KEY_S]          = GLFW_KEY_S;
+    _glfw.wl.keycodes[KEY_D]          = GLFW_KEY_D;
+    _glfw.wl.keycodes[KEY_F]          = GLFW_KEY_F;
+    _glfw.wl.keycodes[KEY_G]          = GLFW_KEY_G;
+    _glfw.wl.keycodes[KEY_H]          = GLFW_KEY_H;
+    _glfw.wl.keycodes[KEY_J]          = GLFW_KEY_J;
+    _glfw.wl.keycodes[KEY_K]          = GLFW_KEY_K;
+    _glfw.wl.keycodes[KEY_L]          = GLFW_KEY_L;
+    _glfw.wl.keycodes[KEY_SEMICOLON]  = GLFW_KEY_SEMICOLON;
+    _glfw.wl.keycodes[KEY_APOSTROPHE] = GLFW_KEY_APOSTROPHE;
+    _glfw.wl.keycodes[KEY_Z]          = GLFW_KEY_Z;
+    _glfw.wl.keycodes[KEY_X]          = GLFW_KEY_X;
+    _glfw.wl.keycodes[KEY_C]          = GLFW_KEY_C;
+    _glfw.wl.keycodes[KEY_V]          = GLFW_KEY_V;
+    _glfw.wl.keycodes[KEY_B]          = GLFW_KEY_B;
+    _glfw.wl.keycodes[KEY_N]          = GLFW_KEY_N;
+    _glfw.wl.keycodes[KEY_M]          = GLFW_KEY_M;
+    _glfw.wl.keycodes[KEY_COMMA]      = GLFW_KEY_COMMA;
+    _glfw.wl.keycodes[KEY_DOT]        = GLFW_KEY_PERIOD;
+    _glfw.wl.keycodes[KEY_SLASH]      = GLFW_KEY_SLASH;
+    _glfw.wl.keycodes[KEY_BACKSLASH]  = GLFW_KEY_BACKSLASH;
+    _glfw.wl.keycodes[KEY_ESC]        = GLFW_KEY_ESCAPE;
+    _glfw.wl.keycodes[KEY_TAB]        = GLFW_KEY_TAB;
+    _glfw.wl.keycodes[KEY_LEFTSHIFT]  = GLFW_KEY_LEFT_SHIFT;
+    _glfw.wl.keycodes[KEY_RIGHTSHIFT] = GLFW_KEY_RIGHT_SHIFT;
+    _glfw.wl.keycodes[KEY_LEFTCTRL]   = GLFW_KEY_LEFT_CONTROL;
+    _glfw.wl.keycodes[KEY_RIGHTCTRL]  = GLFW_KEY_RIGHT_CONTROL;
+    _glfw.wl.keycodes[KEY_LEFTALT]    = GLFW_KEY_LEFT_ALT;
+    _glfw.wl.keycodes[KEY_RIGHTALT]   = GLFW_KEY_RIGHT_ALT;
+    _glfw.wl.keycodes[KEY_LEFTMETA]   = GLFW_KEY_LEFT_SUPER;
+    _glfw.wl.keycodes[KEY_RIGHTMETA]  = GLFW_KEY_RIGHT_SUPER;
+    _glfw.wl.keycodes[KEY_MENU]       = GLFW_KEY_MENU;
+    _glfw.wl.keycodes[KEY_NUMLOCK]    = GLFW_KEY_NUM_LOCK;
+    _glfw.wl.keycodes[KEY_CAPSLOCK]   = GLFW_KEY_CAPS_LOCK;
+    _glfw.wl.keycodes[KEY_PRINT]      = GLFW_KEY_PRINT_SCREEN;
+    _glfw.wl.keycodes[KEY_SCROLLLOCK] = GLFW_KEY_SCROLL_LOCK;
+    _glfw.wl.keycodes[KEY_PAUSE]      = GLFW_KEY_PAUSE;
+    _glfw.wl.keycodes[KEY_DELETE]     = GLFW_KEY_DELETE;
+    _glfw.wl.keycodes[KEY_BACKSPACE]  = GLFW_KEY_BACKSPACE;
+    _glfw.wl.keycodes[KEY_ENTER]      = GLFW_KEY_ENTER;
+    _glfw.wl.keycodes[KEY_HOME]       = GLFW_KEY_HOME;
+    _glfw.wl.keycodes[KEY_END]        = GLFW_KEY_END;
+    _glfw.wl.keycodes[KEY_PAGEUP]     = GLFW_KEY_PAGE_UP;
+    _glfw.wl.keycodes[KEY_PAGEDOWN]   = GLFW_KEY_PAGE_DOWN;
+    _glfw.wl.keycodes[KEY_INSERT]     = GLFW_KEY_INSERT;
+    _glfw.wl.keycodes[KEY_LEFT]       = GLFW_KEY_LEFT;
+    _glfw.wl.keycodes[KEY_RIGHT]      = GLFW_KEY_RIGHT;
+    _glfw.wl.keycodes[KEY_DOWN]       = GLFW_KEY_DOWN;
+    _glfw.wl.keycodes[KEY_UP]         = GLFW_KEY_UP;
+    _glfw.wl.keycodes[KEY_F1]         = GLFW_KEY_F1;
+    _glfw.wl.keycodes[KEY_F2]         = GLFW_KEY_F2;
+    _glfw.wl.keycodes[KEY_F3]         = GLFW_KEY_F3;
+    _glfw.wl.keycodes[KEY_F4]         = GLFW_KEY_F4;
+    _glfw.wl.keycodes[KEY_F5]         = GLFW_KEY_F5;
+    _glfw.wl.keycodes[KEY_F6]         = GLFW_KEY_F6;
+    _glfw.wl.keycodes[KEY_F7]         = GLFW_KEY_F7;
+    _glfw.wl.keycodes[KEY_F8]         = GLFW_KEY_F8;
+    _glfw.wl.keycodes[KEY_F9]         = GLFW_KEY_F9;
+    _glfw.wl.keycodes[KEY_F10]        = GLFW_KEY_F10;
+    _glfw.wl.keycodes[KEY_F11]        = GLFW_KEY_F11;
+    _glfw.wl.keycodes[KEY_F12]        = GLFW_KEY_F12;
+    _glfw.wl.keycodes[KEY_F13]        = GLFW_KEY_F13;
+    _glfw.wl.keycodes[KEY_F14]        = GLFW_KEY_F14;
+    _glfw.wl.keycodes[KEY_F15]        = GLFW_KEY_F15;
+    _glfw.wl.keycodes[KEY_F16]        = GLFW_KEY_F16;
+    _glfw.wl.keycodes[KEY_F17]        = GLFW_KEY_F17;
+    _glfw.wl.keycodes[KEY_F18]        = GLFW_KEY_F18;
+    _glfw.wl.keycodes[KEY_F19]        = GLFW_KEY_F19;
+    _glfw.wl.keycodes[KEY_F20]        = GLFW_KEY_F20;
+    _glfw.wl.keycodes[KEY_F21]        = GLFW_KEY_F21;
+    _glfw.wl.keycodes[KEY_F22]        = GLFW_KEY_F22;
+    _glfw.wl.keycodes[KEY_F23]        = GLFW_KEY_F23;
+    _glfw.wl.keycodes[KEY_F24]        = GLFW_KEY_F24;
+    _glfw.wl.keycodes[KEY_KPSLASH]    = GLFW_KEY_KP_DIVIDE;
+    _glfw.wl.keycodes[KEY_KPDOT]      = GLFW_KEY_KP_MULTIPLY;
+    _glfw.wl.keycodes[KEY_KPMINUS]    = GLFW_KEY_KP_SUBTRACT;
+    _glfw.wl.keycodes[KEY_KPPLUS]     = GLFW_KEY_KP_ADD;
+    _glfw.wl.keycodes[KEY_KP0]        = GLFW_KEY_KP_0;
+    _glfw.wl.keycodes[KEY_KP1]        = GLFW_KEY_KP_1;
+    _glfw.wl.keycodes[KEY_KP2]        = GLFW_KEY_KP_2;
+    _glfw.wl.keycodes[KEY_KP3]        = GLFW_KEY_KP_3;
+    _glfw.wl.keycodes[KEY_KP4]        = GLFW_KEY_KP_4;
+    _glfw.wl.keycodes[KEY_KP5]        = GLFW_KEY_KP_5;
+    _glfw.wl.keycodes[KEY_KP6]        = GLFW_KEY_KP_6;
+    _glfw.wl.keycodes[KEY_KP7]        = GLFW_KEY_KP_7;
+    _glfw.wl.keycodes[KEY_KP8]        = GLFW_KEY_KP_8;
+    _glfw.wl.keycodes[KEY_KP9]        = GLFW_KEY_KP_9;
+    _glfw.wl.keycodes[KEY_KPCOMMA]    = GLFW_KEY_KP_DECIMAL;
+    _glfw.wl.keycodes[KEY_KPEQUAL]    = GLFW_KEY_KP_EQUAL;
+    _glfw.wl.keycodes[KEY_KPENTER]    = GLFW_KEY_KP_ENTER;
+
+    for (scancode = 0;  scancode < 256;  scancode++)
+    {
+        if (_glfw.wl.keycodes[scancode] > 0)
+            _glfw.wl.scancodes[_glfw.wl.keycodes[scancode]] = scancode;
+    }
 }
 
 
@@ -567,6 +663,52 @@ static void createKeyTables(void)
 
 int _glfwPlatformInit(void)
 {
+    _glfw.wl.xkb.handle = dlopen("libxkbcommon.so.0", RTLD_LAZY | RTLD_GLOBAL);
+    if (!_glfw.wl.xkb.handle)
+    {
+        _glfwInputError(GLFW_PLATFORM_ERROR,
+                        "Wayland: Failed to open libxkbcommon.");
+        return GLFW_FALSE;
+    }
+
+    _glfw.wl.xkb.context_new = (PFN_xkb_context_new)
+        dlsym(_glfw.wl.xkb.handle, "xkb_context_new");
+    _glfw.wl.xkb.context_unref = (PFN_xkb_context_unref)
+        dlsym(_glfw.wl.xkb.handle, "xkb_context_unref");
+    _glfw.wl.xkb.keymap_new_from_string = (PFN_xkb_keymap_new_from_string)
+        dlsym(_glfw.wl.xkb.handle, "xkb_keymap_new_from_string");
+    _glfw.wl.xkb.keymap_unref = (PFN_xkb_keymap_unref)
+        dlsym(_glfw.wl.xkb.handle, "xkb_keymap_unref");
+    _glfw.wl.xkb.keymap_mod_get_index = (PFN_xkb_keymap_mod_get_index)
+        dlsym(_glfw.wl.xkb.handle, "xkb_keymap_mod_get_index");
+    _glfw.wl.xkb.state_new = (PFN_xkb_state_new)
+        dlsym(_glfw.wl.xkb.handle, "xkb_state_new");
+    _glfw.wl.xkb.state_unref = (PFN_xkb_state_unref)
+        dlsym(_glfw.wl.xkb.handle, "xkb_state_unref");
+    _glfw.wl.xkb.state_key_get_syms = (PFN_xkb_state_key_get_syms)
+        dlsym(_glfw.wl.xkb.handle, "xkb_state_key_get_syms");
+    _glfw.wl.xkb.state_update_mask = (PFN_xkb_state_update_mask)
+        dlsym(_glfw.wl.xkb.handle, "xkb_state_update_mask");
+    _glfw.wl.xkb.state_serialize_mods = (PFN_xkb_state_serialize_mods)
+        dlsym(_glfw.wl.xkb.handle, "xkb_state_serialize_mods");
+
+#ifdef HAVE_XKBCOMMON_COMPOSE_H
+    _glfw.wl.xkb.compose_table_new_from_locale = (PFN_xkb_compose_table_new_from_locale)
+        dlsym(_glfw.wl.xkb.handle, "xkb_compose_table_new_from_locale");
+    _glfw.wl.xkb.compose_table_unref = (PFN_xkb_compose_table_unref)
+        dlsym(_glfw.wl.xkb.handle, "xkb_compose_table_unref");
+    _glfw.wl.xkb.compose_state_new = (PFN_xkb_compose_state_new)
+        dlsym(_glfw.wl.xkb.handle, "xkb_compose_state_new");
+    _glfw.wl.xkb.compose_state_unref = (PFN_xkb_compose_state_unref)
+        dlsym(_glfw.wl.xkb.handle, "xkb_compose_state_unref");
+    _glfw.wl.xkb.compose_state_feed = (PFN_xkb_compose_state_feed)
+        dlsym(_glfw.wl.xkb.handle, "xkb_compose_state_feed");
+    _glfw.wl.xkb.compose_state_get_status = (PFN_xkb_compose_state_get_status)
+        dlsym(_glfw.wl.xkb.handle, "xkb_compose_state_get_status");
+    _glfw.wl.xkb.compose_state_get_one_sym = (PFN_xkb_compose_state_get_one_sym)
+        dlsym(_glfw.wl.xkb.handle, "xkb_compose_state_get_one_sym");
+#endif
+
     _glfw.wl.display = wl_display_connect(NULL);
     if (!_glfw.wl.display)
     {
@@ -577,9 +719,6 @@ int _glfwPlatformInit(void)
 
     _glfw.wl.registry = wl_display_get_registry(_glfw.wl.display);
     wl_registry_add_listener(_glfw.wl.registry, &registryListener, NULL);
-
-    _glfw.wl.monitors = calloc(4, sizeof(_GLFWmonitor*));
-    _glfw.wl.monitorsSize = 4;
 
     createKeyTables();
 
@@ -596,9 +735,6 @@ int _glfwPlatformInit(void)
 
     // Sync so we got all initial output events
     wl_display_roundtrip(_glfw.wl.display);
-
-    if (!_glfwInitThreadLocalStoragePOSIX())
-        return GLFW_FALSE;
 
     if (!_glfwInitJoysticksLinux())
         return GLFW_FALSE;
@@ -625,18 +761,47 @@ void _glfwPlatformTerminate(void)
 {
     _glfwTerminateEGL();
     _glfwTerminateJoysticksLinux();
-    _glfwTerminateThreadLocalStoragePOSIX();
+
+#ifdef HAVE_XKBCOMMON_COMPOSE_H
+    xkb_compose_state_unref(_glfw.wl.xkb.composeState);
+#endif
+
+    xkb_keymap_unref(_glfw.wl.xkb.keymap);
+    xkb_state_unref(_glfw.wl.xkb.state);
+    xkb_context_unref(_glfw.wl.xkb.context);
+
+    dlclose(_glfw.wl.xkb.handle);
+    _glfw.wl.xkb.handle = NULL;
 
     if (_glfw.wl.cursorTheme)
         wl_cursor_theme_destroy(_glfw.wl.cursorTheme);
     if (_glfw.wl.cursorSurface)
         wl_surface_destroy(_glfw.wl.cursorSurface);
+    if (_glfw.wl.compositor)
+        wl_compositor_destroy(_glfw.wl.compositor);
+    if (_glfw.wl.shm)
+        wl_shm_destroy(_glfw.wl.shm);
+    if (_glfw.wl.shell)
+        wl_shell_destroy(_glfw.wl.shell);
+    if (_glfw.wl.pointer)
+        wl_pointer_destroy(_glfw.wl.pointer);
+    if (_glfw.wl.keyboard)
+        wl_keyboard_destroy(_glfw.wl.keyboard);
+    if (_glfw.wl.seat)
+        wl_seat_destroy(_glfw.wl.seat);
+    if (_glfw.wl.relativePointerManager)
+        zwp_relative_pointer_manager_v1_destroy(_glfw.wl.relativePointerManager);
+    if (_glfw.wl.pointerConstraints)
+        zwp_pointer_constraints_v1_destroy(_glfw.wl.pointerConstraints);
+    if (_glfw.wl.idleInhibitManager)
+        zwp_idle_inhibit_manager_v1_destroy(_glfw.wl.idleInhibitManager);
     if (_glfw.wl.registry)
         wl_registry_destroy(_glfw.wl.registry);
     if (_glfw.wl.display)
+    {
         wl_display_flush(_glfw.wl.display);
-    if (_glfw.wl.display)
         wl_display_disconnect(_glfw.wl.display);
+    }
 }
 
 const char* _glfwPlatformGetVersionString(void)
@@ -647,9 +812,7 @@ const char* _glfwPlatformGetVersionString(void)
 #else
         " gettimeofday"
 #endif
-#if defined(__linux__)
-        " /dev/js"
-#endif
+        " evdev"
 #if defined(_GLFW_BUILD_DLL)
         " shared"
 #endif

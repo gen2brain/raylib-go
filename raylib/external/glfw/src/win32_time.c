@@ -1,8 +1,8 @@
 //========================================================================
-// GLFW 3.2 Win32 - www.glfw.org
+// GLFW 3.3 Win32 - www.glfw.org
 //------------------------------------------------------------------------
 // Copyright (c) 2002-2006 Marcus Geelnard
-// Copyright (c) 2006-2016 Camilla Berglund <elmindreda@glfw.org>
+// Copyright (c) 2006-2016 Camilla Löwy <elmindreda@glfw.org>
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -40,13 +40,13 @@ void _glfwInitTimerWin32(void)
 
     if (QueryPerformanceFrequency((LARGE_INTEGER*) &frequency))
     {
-        _glfw.win32_time.hasPC = GLFW_TRUE;
-        _glfw.win32_time.frequency = frequency;
+        _glfw.timer.win32.hasPC = GLFW_TRUE;
+        _glfw.timer.win32.frequency = frequency;
     }
     else
     {
-        _glfw.win32_time.hasPC = GLFW_FALSE;
-        _glfw.win32_time.frequency = 1000;
+        _glfw.timer.win32.hasPC = GLFW_FALSE;
+        _glfw.timer.win32.frequency = 1000;
     }
 }
 
@@ -57,18 +57,18 @@ void _glfwInitTimerWin32(void)
 
 uint64_t _glfwPlatformGetTimerValue(void)
 {
-    if (_glfw.win32_time.hasPC)
+    if (_glfw.timer.win32.hasPC)
     {
         uint64_t value;
         QueryPerformanceCounter((LARGE_INTEGER*) &value);
         return value;
     }
     else
-        return (uint64_t) _glfw_timeGetTime();
+        return (uint64_t) timeGetTime();
 }
 
 uint64_t _glfwPlatformGetTimerFrequency(void)
 {
-    return _glfw.win32_time.frequency;
+    return _glfw.timer.win32.frequency;
 }
 

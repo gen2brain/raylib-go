@@ -2,7 +2,6 @@ package main
 
 import (
 	"math"
-	"unsafe"
 
 	"github.com/gen2brain/raylib-go/raylib"
 )
@@ -48,7 +47,7 @@ func main() {
 				numSamples = samplesLeft
 			}
 
-			raylib.UpdateAudioStream(stream, unsafe.Pointer(&data[totalSamples-samplesLeft]), numSamples)
+			raylib.UpdateAudioStream(stream, data[totalSamples-samplesLeft:], numSamples)
 
 			samplesLeft -= numSamples
 

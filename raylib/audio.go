@@ -1,4 +1,4 @@
-// +build !noaudio
+// +build !noaudio,!js
 
 package raylib
 
@@ -12,91 +12,18 @@ import "C"
 import "unsafe"
 import "reflect"
 
-// Wave type, defines audio wave data
-type Wave struct {
-	// Number of samples
-	SampleCount uint32
-	// Frequency (samples per second)
-	SampleRate uint32
-	// Bit depth (bits per sample): 8, 16, 32 (24 not supported)
-	SampleSize uint32
-	// Number of channels (1-mono, 2-stereo)
-	Channels uint32
-	// Buffer data pointer
-	Data unsafe.Pointer
-}
-
+// cptr returns C pointer
 func (w *Wave) cptr() *C.Wave {
 	return (*C.Wave)(unsafe.Pointer(w))
-}
-
-// NewWave - Returns new Wave
-func NewWave(sampleCount, sampleRate, sampleSize, channels uint32, data unsafe.Pointer) Wave {
-	return Wave{sampleCount, sampleRate, sampleSize, channels, data}
-}
-
-// NewWaveFromPointer - Returns new Wave from pointer
-func NewWaveFromPointer(ptr unsafe.Pointer) Wave {
-	return *(*Wave)(ptr)
-}
-
-// Sound source type
-type Sound struct {
-	// OpenAL audio source id
-	Source uint32
-	// OpenAL audio buffer id
-	Buffer uint32
-	// OpenAL audio format specifier
-	Format int32
 }
 
 func (s *Sound) cptr() *C.Sound {
 	return (*C.Sound)(unsafe.Pointer(s))
 }
 
-// NewSound - Returns new Sound
-func NewSound(source, buffer uint32, format int32) Sound {
-	return Sound{source, buffer, format}
-}
-
-// NewSoundFromPointer - Returns new Sound from pointer
-func NewSoundFromPointer(ptr unsafe.Pointer) Sound {
-	return *(*Sound)(ptr)
-}
-
-// Music type (file streaming from memory)
-// NOTE: Anything longer than ~10 seconds should be streamed
-type Music C.Music
-
-// AudioStream type
-// NOTE: Useful to create custom audio streams not bound to a specific file
-type AudioStream struct {
-	// Frequency (samples per second)
-	SampleRate uint32
-	// Bit depth (bits per sample): 8, 16, 32 (24 not supported)
-	SampleSize uint32
-	// Number of channels (1-mono, 2-stereo)
-	Channels uint32
-	// OpenAL audio format specifier
-	Format int32
-	// OpenAL audio source id
-	Source uint32
-	// OpenAL audio buffers (double buffering)
-	Buffers [2]uint32
-}
-
+// cptr returns C pointer
 func (a *AudioStream) cptr() *C.AudioStream {
 	return (*C.AudioStream)(unsafe.Pointer(a))
-}
-
-// NewAudioStream - Returns new AudioStream
-func NewAudioStream(sampleRate, sampleSize, channels uint32, format int32, source uint32, buffers [2]uint32) AudioStream {
-	return AudioStream{sampleRate, sampleSize, channels, format, source, buffers}
-}
-
-// NewAudioStreamFromPointer - Returns new AudioStream from pointer
-func NewAudioStreamFromPointer(ptr unsafe.Pointer) AudioStream {
-	return *(*AudioStream)(ptr)
 }
 
 // InitAudioDevice - Initialize audio device and context
@@ -127,18 +54,19 @@ func LoadWave(fileName string) Wave {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	ret := C.LoadWave(cfileName)
-	v := NewWaveFromPointer(unsafe.Pointer(&ret))
+	v := newWaveFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
 // LoadWaveEx - Load wave data from float array data (32bit)
-func LoadWaveEx(data unsafe.Pointer, sampleCount int32, sampleRate int32, sampleSize int32, channels int32) Wave {
+func LoadWaveEx(data []byte, sampleCount int32, sampleRate int32, sampleSize int32, channels int32) Wave {
+	cdata := unsafe.Pointer(&data[0])
 	csampleCount := (C.int)(sampleCount)
 	csampleRate := (C.int)(sampleRate)
 	csampleSize := (C.int)(sampleSize)
 	cchannels := (C.int)(channels)
-	ret := C.LoadWaveEx(data, csampleCount, csampleRate, csampleSize, cchannels)
-	v := NewWaveFromPointer(unsafe.Pointer(&ret))
+	ret := C.LoadWaveEx(cdata, csampleCount, csampleRate, csampleSize, cchannels)
+	v := newWaveFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -147,7 +75,7 @@ func LoadSound(fileName string) Sound {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	ret := C.LoadSound(cfileName)
-	v := NewSoundFromPointer(unsafe.Pointer(&ret))
+	v := newSoundFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -155,14 +83,14 @@ func LoadSound(fileName string) Sound {
 func LoadSoundFromWave(wave Wave) Sound {
 	cwave := wave.cptr()
 	ret := C.LoadSoundFromWave(*cwave)
-	v := NewSoundFromPointer(unsafe.Pointer(&ret))
+	v := newSoundFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
 // UpdateSound - Update sound buffer with new data
-func UpdateSound(sound Sound, data unsafe.Pointer, samplesCount int32) {
+func UpdateSound(sound Sound, data []byte, samplesCount int32) {
 	csound := sound.cptr()
-	cdata := (unsafe.Pointer)(unsafe.Pointer(data))
+	cdata := unsafe.Pointer(&data[0])
 	csamplesCount := (C.int)(samplesCount)
 	C.UpdateSound(*csound, cdata, csamplesCount)
 }
@@ -238,7 +166,7 @@ func WaveFormat(wave Wave, sampleRate int32, sampleSize int32, channels int32) {
 func WaveCopy(wave Wave) Wave {
 	cwave := wave.cptr()
 	ret := C.WaveCopy(*cwave)
-	v := NewWaveFromPointer(unsafe.Pointer(&ret))
+	v := newWaveFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -333,9 +261,9 @@ func SetMusicPitch(music Music, pitch float32) {
 
 // SetMusicLoopCount - Set music loop count (loop repeats)
 // NOTE: If set to -1, means infinite loop
-func SetMusicLoopCount(music Music, count float32) {
+func SetMusicLoopCount(music Music, count int32) {
 	cmusic := *(*C.Music)(unsafe.Pointer(&music))
-	ccount := (C.float)(count)
+	ccount := (C.int)(count)
 	C.SetMusicLoopCount(cmusic, ccount)
 }
 
@@ -361,14 +289,14 @@ func InitAudioStream(sampleRate uint32, sampleSize uint32, channels uint32) Audi
 	csampleSize := (C.uint)(sampleSize)
 	cchannels := (C.uint)(channels)
 	ret := C.InitAudioStream(csampleRate, csampleSize, cchannels)
-	v := NewAudioStreamFromPointer(unsafe.Pointer(&ret))
+	v := newAudioStreamFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
 // UpdateAudioStream - Update audio stream buffers with data
-func UpdateAudioStream(stream AudioStream, data unsafe.Pointer, samplesCount int32) {
+func UpdateAudioStream(stream AudioStream, data []float32, samplesCount int32) {
 	cstream := stream.cptr()
-	cdata := (unsafe.Pointer)(unsafe.Pointer(data))
+	cdata := unsafe.Pointer(&data[0])
 	csamplesCount := (C.int)(samplesCount)
 	C.UpdateAudioStream(*cstream, cdata, csamplesCount)
 }

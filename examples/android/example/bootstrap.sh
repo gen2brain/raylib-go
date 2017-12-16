@@ -37,10 +37,6 @@ if [[ -z "$GO_VERSION" ]]; then
     # go1.9.2
     GO_VERSION=`curl -s https://golang.org/dl/ | grep 'id="go' | head -n1 | awk -F'"' '{print $4}'`
 fi
-if [[ -z "$OPENAL_VERSION" ]]; then
-    # 1.18.2
-    OPENAL_VERSION=`curl -s http://kcat.strangesoft.net/openal.html | grep 'tar.bz2' | awk -F'"' '{print $2}' | awk -F'-' '{print $4}' | sed 's/.tar.bz2//'`
-fi
 if [[ -z "$NDK_VERSION" ]]; then
     # r15c
     NDK_VERSION=`curl -s https://developer.android.com/ndk/downloads/index.html | grep 'id="stable-downloads"' | awk -F'(' '{print $2}' | awk -F')' '{print $1}'`
@@ -111,50 +107,6 @@ echo; echo "##### Compile Go ${GO_VERSION} for aarch64-linux-android"
 GOROOT_BOOTSTRAP=${BUILD_DIR}/bootstrap/go CC_FOR_TARGET=aarch64-linux-android-${MYCC} GOOS=android GOARCH=arm64 CGO_ENABLED=1 ./make.bash --no-clean || exit 1
 
 cp -r -f ${BUILD_DIR}/go ${INSTALL_PREFIX}
-
-###################################################
-
-echo; echo "##### Download OpenAL ${OPENAL_VERSION}"
-
-cd ${BUILD_DIR} && curl -L --progress-bar http://kcat.strangesoft.net/openal-releases/openal-soft-${OPENAL_VERSION}.tar.bz2 | tar -xj || exit 1
-
-echo; echo "##### Compile OpenAL ${OPENAL_VERSION}"
-
-cat << EOF > ${BUILD_DIR}/openal-soft-${OPENAL_VERSION}/android-arm.cmake
-set(CMAKE_SYSTEM_NAME Android)
-set(CMAKE_ANDROID_ARCH arm)
-set(CMAKE_ANDROID_ARCH_ABI armeabi-v7a)
-set(TOOLCHAIN_PREFIX arm-linux-androideabi)
-set(CMAKE_C_COMPILER \${TOOLCHAIN_PREFIX}-${MYCC})
-set(CMAKE_CXX_COMPILER \${TOOLCHAIN_PREFIX}-${MYCXX})
-set(CMAKE_FIND_ROOT_PATH \${INSTALL_PREFIX}/android-arm)
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-EOF
-
-cat << EOF > ${BUILD_DIR}/openal-soft-${OPENAL_VERSION}/android-arm64.cmake
-set(CMAKE_SYSTEM_NAME Android)
-set(CMAKE_ANDROID_ARCH arm64)
-set(CMAKE_ANDROID_ARCH_ABI arm64-v8a)
-set(TOOLCHAIN_PREFIX aarch64-linux-android)
-set(CMAKE_C_COMPILER \${TOOLCHAIN_PREFIX}-${MYCC})
-set(CMAKE_CXX_COMPILER \${TOOLCHAIN_PREFIX}-${MYCXX})
-set(CMAKE_FIND_ROOT_PATH \${INSTALL_PREFIX}/android-arm64)
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-EOF
-
-mkdir -p ${BUILD_DIR}/openal-soft-${OPENAL_VERSION}/build-arm
-cd ${BUILD_DIR}/openal-soft-${OPENAL_VERSION}/build-arm
-cmake -DLIBTYPE=STATIC -DCMAKE_TOOLCHAIN_FILE=../android-arm.cmake -DCMAKE_C_FLAGS="-DANDROID -D__ANDROID_API__=${API_VERSION_ARM}" -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}/android-arm -DCMAKE_ANDROID_STANDALONE_TOOLCHAIN=${INSTALL_PREFIX}/android-arm -DALSOFT_NO_CONFIG_UTIL=ON -DALSOFT_UTILS=OFF -DALSOFT_EXAMPLES=OFF -DALSOFT_TESTS=OFF -DALSOFT_CONFIG=OFF -DALSOFT_HRTF_DEFS=OFF -DALSOFT_AMBDEC_PRESETS=OFF .. || exit 1
-make -j $(nproc) VERBOSE=1 && make install || exit 1
-
-mkdir -p ${BUILD_DIR}/openal-soft-${OPENAL_VERSION}/build-arm64
-cd ${BUILD_DIR}/openal-soft-${OPENAL_VERSION}/build-arm64
-cmake -DLIBTYPE=STATIC -DCMAKE_TOOLCHAIN_FILE=../android-arm64.cmake -DCMAKE_C_FLAGS="-DANDROID -D__ANDROID_API__=${API_VERSION_ARM64}" -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}/android-arm64 -DCMAKE_ANDROID_STANDALONE_TOOLCHAIN=${INSTALL_PREFIX}/android-arm64 -DALSOFT_NO_CONFIG_UTIL=ON -DALSOFT_UTILS=OFF -DALSOFT_EXAMPLES=OFF -DALSOFT_TESTS=OFF -DALSOFT_CONFIG=OFF -DALSOFT_HRTF_DEFS=OFF -DALSOFT_AMBDEC_PRESETS=OFF .. || exit 1
-make -j $(nproc) VERBOSE=1 && make install || exit 1
 
 ###################################################
 

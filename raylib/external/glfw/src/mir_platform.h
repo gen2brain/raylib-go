@@ -1,7 +1,7 @@
 //========================================================================
-// GLFW 3.2 Mir - www.glfw.org
+// GLFW 3.3 Mir - www.glfw.org
 //------------------------------------------------------------------------
-// Copyright (c) 2014-2015 Brandon Schaefer <brandon.schaefer@canonical.com>
+// Copyright (c) 2014-2017 Brandon Schaefer <brandon.schaefer@canonical.com>
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -24,40 +24,38 @@
 //
 //========================================================================
 
-#ifndef _glfw3_mir_platform_h_
-#define _glfw3_mir_platform_h_
-
 #include <sys/queue.h>
 #include <pthread.h>
 #include <dlfcn.h>
 
 #include <mir_toolkit/mir_client_library.h>
 
-typedef VkFlags VkMirSurfaceCreateFlagsKHR;
+typedef VkFlags VkMirWindowCreateFlagsKHR;
 
-typedef struct VkMirSurfaceCreateInfoKHR
+typedef struct VkMirWindowCreateInfoKHR
 {
     VkStructureType             sType;
     const void*                 pNext;
-    VkMirSurfaceCreateFlagsKHR  flags;
+    VkMirWindowCreateFlagsKHR   flags;
     MirConnection*              connection;
-    MirSurface*                 mirSurface;
-} VkMirSurfaceCreateInfoKHR;
+    MirWindow*                  mirWindow;
+} VkMirWindowCreateInfoKHR;
 
-typedef VkResult (APIENTRY *PFN_vkCreateMirSurfaceKHR)(VkInstance,const VkMirSurfaceCreateInfoKHR*,const VkAllocationCallbacks*,VkSurfaceKHR*);
+typedef VkResult (APIENTRY *PFN_vkCreateMirWindowKHR)(VkInstance,const VkMirWindowCreateInfoKHR*,const VkAllocationCallbacks*,VkSurfaceKHR*);
 typedef VkBool32 (APIENTRY *PFN_vkGetPhysicalDeviceMirPresentationSupportKHR)(VkPhysicalDevice,uint32_t,MirConnection*);
 
-#include "posix_tls.h"
+#include "posix_thread.h"
 #include "posix_time.h"
 #include "linux_joystick.h"
 #include "xkb_unicode.h"
 #include "egl_context.h"
+#include "osmesa_context.h"
 
 #define _glfw_dlopen(name) dlopen(name, RTLD_LAZY | RTLD_LOCAL)
 #define _glfw_dlclose(handle) dlclose(handle)
 #define _glfw_dlsym(handle, name) dlsym(handle, name)
 
-#define _GLFW_EGL_NATIVE_WINDOW  ((EGLNativeWindowType) window->mir.window)
+#define _GLFW_EGL_NATIVE_WINDOW  ((EGLNativeWindowType) window->mir.nativeWindow)
 #define _GLFW_EGL_NATIVE_DISPLAY ((EGLNativeDisplayType) _glfw.mir.display)
 
 #define _GLFW_PLATFORM_WINDOW_STATE         _GLFWwindowMir  mir
@@ -80,10 +78,11 @@ typedef struct EventQueue
 //
 typedef struct _GLFWwindowMir
 {
-    MirSurface*             surface;
+    MirWindow*              window;
     int                     width;
     int                     height;
-    MirEGLNativeWindowType  window;
+    MirEGLNativeWindowType  nativeWindow;
+    _GLFWcursor*            currentCursor;
 
 } _GLFWwindowMir;
 
@@ -91,8 +90,8 @@ typedef struct _GLFWwindowMir
 //
 typedef struct _GLFWmonitorMir
 {
-    int cur_mode;
-    int output_id;
+    int curMode;
+    int outputId;
     int x;
     int y;
 
@@ -104,13 +103,16 @@ typedef struct _GLFWlibraryMir
 {
     MirConnection*          connection;
     MirEGLNativeDisplayType display;
-    MirCursorConfiguration* default_conf;
-    EventQueue* event_queue;
+    EventQueue* eventQueue;
 
-    short int       publicKeys[256];
+    short int keycodes[256];
+    short int scancodes[GLFW_KEY_LAST + 1];
 
-    pthread_mutex_t event_mutex;
-    pthread_cond_t  event_cond;
+    pthread_mutex_t eventMutex;
+    pthread_cond_t  eventCond;
+
+    // The window whose disabled cursor mode is active
+    _GLFWwindow* disabledCursorWindow;
 
 } _GLFWlibraryMir;
 
@@ -120,11 +122,12 @@ typedef struct _GLFWlibraryMir
 typedef struct _GLFWcursorMir
 {
     MirCursorConfiguration* conf;
-    MirBufferStream*        custom_cursor;
+    MirBufferStream*        customCursor;
+    char const*             cursorName; // only needed for system cursors
 } _GLFWcursorMir;
 
 
+extern void _glfwPollMonitorsMir(void);
 extern void _glfwInitEventQueueMir(EventQueue* queue);
 extern void _glfwDeleteEventQueueMir(EventQueue* queue);
 
-#endif // _glfw3_mir_platform_h_

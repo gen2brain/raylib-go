@@ -12,28 +12,24 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
 ### Requirements
 
-* [OpenAL Soft](http://kcat.strangesoft.net/openal.html)
-NOTE: if you don't need audio you can use `-tags noaudio` during build, OpenAL will not be linked to binary, though none of the audio functions will be available.
-
 * [GLFW](http://www.glfw.org/) is included as part of the Go package, but you need to make sure you have dependencies installed, see below.
 
 ##### Ubuntu
 
-    apt-get install libopenal-dev libgl1-mesa-dev libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev libxrandr-dev
+    apt-get install libasound2-dev libgl1-mesa-dev libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev libxrandr-dev
 
 ##### Fedora
 
-    dnf install openal-soft-devel mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel
+    dnf install alsa-lib-devel mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel
 
-##### OS X
+##### macOS
 
-On OS X system OpenAL framework is used, you need Xcode or Command Line Tools for Xcode.
+On macOS you need Xcode or Command Line Tools for Xcode.
 
-##### Windows ([MSYS2](https://msys2.github.io/))
+##### Windows
 
-    pacman -S mingw-w64-x86_64-openal mingw-w64-x86_64-gcc mingw-w64-x86_64-go git
-
-On Windows, build binary in MSYS2 shell.
+On Windows you need C compiler, like [Mingw-w64](https://mingw-w64.org) or [TDM-GCC](http://tdm-gcc.tdragon.net/).
+You can also build binary in [MSYS2](https://msys2.github.io/) shell.
 
 ##### Android
 
@@ -46,6 +42,13 @@ On Windows, build binary in MSYS2 shell.
 ### Installation
 
     go get -v -u github.com/gen2brain/raylib-go/raylib
+
+### Build tags
+
+* `noaudio` - disables audio functions
+* `opengl21` - uses OpenGL 2.1 backend (default is 3.3 on desktop)
+* `opengl11` - uses OpenGL 1.1 backend (pseudo OpenGL 1.1 style)
+* `wayland` - builds against Wayland libraries
 
 ### Documentation
 
