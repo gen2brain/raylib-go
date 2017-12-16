@@ -55,8 +55,8 @@ func main() {
 
 // Init - Initialize game
 func (g *Game) Init(clear bool) {
-	g.ScreenWidth = 1920
-	g.ScreenHeight = 1100
+	g.ScreenWidth = 1024
+	g.ScreenHeight = 768
 	g.FramesCounter = 0
 
 	g.Cols = g.ScreenWidth / squareSize
