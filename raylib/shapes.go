@@ -172,6 +172,11 @@ func DrawRectangleLines(posX, posY, width, height int32, color Color) {
 	C.DrawRectangleLines(cposX, cposY, cwidth, cheight, *ccolor)
 }
 
+// DrawRectangleLinesV - Draw rectangle outline (Vector version)
+func DrawRectangleLinesV(position Vector2, size Vector2, color Color) {
+	DrawRectangleLines(int32(position.X), int32(position.Y), int32(size.X), int32(size.X), color)
+}
+
 // DrawRectangleT - Draw rectangle using text character
 func DrawRectangleT(posX, posY, width, height int32, color Color) {
 	cposX := (C.int)(posX)
