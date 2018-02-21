@@ -178,11 +178,23 @@ const (
 	KeySpace        = 32
 	KeyEscape       = 256
 	KeyEnter        = 257
+	KeyTab          = 258
 	KeyBackspace    = 259
+	KeyInsert       = 260
+	KeyDelete       = 261
 	KeyRight        = 262
 	KeyLeft         = 263
 	KeyDown         = 264
 	KeyUp           = 265
+	KeyPageUp       = 266
+	KeyPageDown     = 267
+	KeyHome         = 268
+	KeyEnd          = 269
+	KeyCapsLock     = 280
+	KeyScrollLock   = 281
+	KeyNumLock      = 282
+	KeyPrintScreen  = 283
+	KeyPause        = 284
 	KeyF1           = 290
 	KeyF2           = 291
 	KeyF3           = 292
@@ -872,15 +884,15 @@ func newSpriteFontFromPointer(ptr unsafe.Pointer) SpriteFont {
 	return *(*SpriteFont)(ptr)
 }
 
-// TextureFormat - Texture format
-type TextureFormat int32
+// PixelFormat - Texture format
+type PixelFormat int32
 
 // Texture formats
 // NOTE: Support depends on OpenGL version and platform
 const (
 	// 8 bit per pixel (no alpha)
-	UncompressedGrayscale TextureFormat = iota + 1
-	// 16 bpp (2 channels)
+	UncompressedGrayscale PixelFormat = iota + 1
+	// 8*2 bpp (2 channels)
 	UncompressedGrayAlpha
 	// 16 bpp
 	UncompressedR5g6b5
@@ -892,6 +904,12 @@ const (
 	UncompressedR4g4b4a4
 	// 32 bpp
 	UncompressedR8g8b8a8
+	// 32 bpp (1 channel - float)
+	UncompressedR32
+	// 32*3 bpp (3 channels - float)
+	UncompressedR32g32b32
+	// 32*4 bpp (4 channels - float)
+	UncompressedR32g32b32a32
 	// 4 bpp (no alpha)
 	CompressedDxt1Rgb
 	// 4 bpp (1 bit alpha)
@@ -958,8 +976,8 @@ type Image struct {
 	Height int32
 	// Mipmap levels, 1 by default
 	Mipmaps int32
-	// Data format (TextureFormat)
-	Format TextureFormat
+	// Data format (PixelFormat)
+	Format PixelFormat
 }
 
 // ToImage converts a Image to Go image.Image
@@ -975,7 +993,7 @@ func (i *Image) ToImage() image.Image {
 }
 
 // NewImage - Returns new Image
-func NewImage(data []byte, width, height, mipmaps int32, format TextureFormat) *Image {
+func NewImage(data []byte, width, height, mipmaps int32, format PixelFormat) *Image {
 	d := unsafe.Pointer(&data[0])
 	return &Image{d, width, height, mipmaps, format}
 }
@@ -1012,12 +1030,12 @@ type Texture2D struct {
 	Height int32
 	// Mipmap levels, 1 by default
 	Mipmaps int32
-	// Data format (TextureFormat)
-	Format TextureFormat
+	// Data format (PixelFormat)
+	Format PixelFormat
 }
 
 // NewTexture2D - Returns new Texture2D
-func NewTexture2D(id uint32, width, height, mipmaps int32, format TextureFormat) Texture2D {
+func NewTexture2D(id uint32, width, height, mipmaps int32, format PixelFormat) Texture2D {
 	return Texture2D{id, width, height, mipmaps, format}
 }
 
@@ -1048,15 +1066,11 @@ func newRenderTexture2DFromPointer(ptr unsafe.Pointer) RenderTexture2D {
 
 // Log message types
 const (
-	LogInfo = iota
+	LogInfo = 1 << iota
 	LogWarning
 	LogError
 	LogDebug
+	LogOther
 )
 
-var traceDebugMsgs = false
-
-// SetDebug - Set debug messages
-func SetDebug(enabled bool) {
-	traceDebugMsgs = enabled
-}
+var logTypeFlags = LogInfo | LogWarning | LogError

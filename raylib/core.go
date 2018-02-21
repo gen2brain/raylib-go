@@ -211,6 +211,13 @@ func GetFrameTime() float32 {
 	return v
 }
 
+// GetTime - Return time in seconds
+func GetTime() float32 {
+	ret := C.GetTime()
+	v := (float32)(ret)
+	return v
+}
+
 // GetColor - Returns a Color struct from hexadecimal value
 func GetColor(hexValue int32) Color {
 	chexValue := (C.int)(hexValue)
@@ -219,11 +226,20 @@ func GetColor(hexValue int32) Color {
 	return v
 }
 
-// GetHexValue - Returns hexadecimal value for a Color
-func GetHexValue(color Color) int32 {
+// ColorToInt - Returns hexadecimal value for a Color
+func ColorToInt(color Color) int32 {
 	ccolor := color.cptr()
-	ret := C.GetHexValue(*ccolor)
+	ret := C.ColorToInt(*ccolor)
 	v := (int32)(ret)
+	return v
+}
+
+// ColorToHSV - Returns HSV values for a Color
+// NOTE: Hue is returned as degrees [0..360]
+func ColorToHSV(color Color) Vector3 {
+	ccolor := color.cptr()
+	ret := C.ColorToHSV(*ccolor)
+	v := newVector3FromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -297,7 +313,7 @@ func ShowLogo() {
 
 // SetConfigFlags - Setup some window configuration flags
 func SetConfigFlags(flags byte) {
-	cflags := (C.char)(flags)
+	cflags := (C.uchar)(flags)
 	C.SetConfigFlags(cflags)
 }
 

@@ -1,5 +1,3 @@
-// +build !js
-
 /**********************************************************************************************
 *
 *   rlgl - raylib OpenGL abstraction layer
@@ -37,7 +35,7 @@
 *
 *   LICENSE: zlib/libpng
 *
-*   Copyright (c) 2014-2017 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2014-2018 Ramon Santamaria (@raysan5)
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -76,8 +74,24 @@
 #if defined(GRAPHICS_API_OPENGL_11)
     #if defined(__APPLE__)
         #include <OpenGL/gl.h>      // OpenGL 1.1 library for OSX
+        #include <OpenGL/glext.h>
     #else
-        #include <GL/gl.h>          // OpenGL 1.1 library
+		#if defined(_MSC_VER)		// Using MSVC compiler, requires some additional definitions
+			// APIENTRY for OpenGL function pointer declarations is required
+			#ifndef APIENTRY
+				#ifdef _WIN32
+					#define APIENTRY __stdcall
+				#else
+					#define APIENTRY
+				#endif
+			#endif
+			// WINGDIAPI definition. Some Windows OpenGL headers need it
+			#if !defined(WINGDIAPI) && defined(_WIN32)
+				#define WINGDIAPI __declspec(dllimport)
+			#endif
+		#endif
+
+		#include <GL/gl.h>          // OpenGL 1.1 library
     #endif
 #endif
 
@@ -88,6 +102,7 @@
 #if defined(GRAPHICS_API_OPENGL_33)
     #if defined(__APPLE__)
         #include <OpenGL/gl3.h>     // OpenGL 3 library for OSX
+        #include <OpenGL/gl3ext.h>
     #else
         #define GLAD_IMPLEMENTATION
         #if defined(RLGL_STANDALONE)
@@ -111,6 +126,7 @@
 #if !defined(GRAPHICS_API_OPENGL_11) && defined(SUPPORT_DISTORTION_SHADER)
     #include "shader_distortion.h"  // Distortion shader to be embedded
 #endif
+
 
 //----------------------------------------------------------------------------------
 // Defines and Macros
@@ -272,6 +288,7 @@ static bool useTempBuffer = false;
 // Shaders
 static unsigned int defaultVShaderId;       // Default vertex shader id (used by default shader program)
 static unsigned int defaultFShaderId;       // Default fragment shader Id (used by default shader program)
+
 static Shader defaultShader;                // Basic shader, support vertex color and diffuse texture
 static Shader currentShader;                // Shader to be used on rendering (by default, defaultShader)
 
@@ -309,6 +326,8 @@ static PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArrays;
 //static PFNGLISVERTEXARRAYOESPROC glIsVertexArray;        // NOTE: Fails in WebGL, omitted
 #endif
 
+static bool debugMarkerSupported = false;
+
 // Compressed textures support flags
 static bool texCompDXTSupported = false;    // DDS texture compression support
 static bool texNPOTSupported = false;       // NPOT textures full support
@@ -327,8 +346,6 @@ static int screenHeight;    // Default framebuffer height
 // Module specific Functions Declaration
 //----------------------------------------------------------------------------------
 #if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
-static void LoadTextureCompressed(unsigned char *data, int width, int height, int compressedFormat, int mipmapCount);
-
 static unsigned int CompileShader(const char *shaderStr, int type);     // Compile custom shader and return shader id
 static unsigned int LoadShaderProgram(unsigned int vShaderId, unsigned int fShaderId);  // Load custom shader program
 
@@ -343,6 +360,9 @@ static void UnloadBuffersDefault(void);     // Unload default internal buffers v
 
 static void GenDrawCube(void);              // Generate and draw cube
 static void GenDrawQuad(void);              // Generate and draw quad
+
+// Get OpenGL internal formats and data type from raylib PixelFormat
+static void GetGlFormats(int format, int *glInternalFormat, int *glFormat, int *glType);
 
 #if defined(SUPPORT_VR_SIMULATOR)
 static void SetStereoConfig(VrDeviceInfo info); // Configure stereo rendering (including distortion shader) with HMD device parameters
@@ -414,7 +434,7 @@ void rlPushMatrix(void)
     }
 
     stack[stackCounter] = *currentMatrix;
-    rlLoadIdentity();
+    rlLoadIdentity();       // TODO: Review matrix stack logic!
     stackCounter++;
 
     if (currentMatrixMode == RL_MODELVIEW) useTempBuffer = true;
@@ -644,6 +664,14 @@ void rlEnd(void)
     // as well as depth buffer bit-depth (16bit or 24bit or 32bit)
     // Correct increment formula would be: depthInc = (zfar - znear)/pow(2, bits)
     currentDepth += (1.0f/20000.0f);
+    
+    // TODO: Verify internal buffers limits
+    // NOTE: Before launching draw, verify no matrix are left in the stack!
+    // NOTE: Probably a lines/triangles margin should be left, rlEnd could be called
+    // after an undetermined number of triangles buffered (check shapes::DrawPoly())
+    if ((lines.vCounter/2 >= MAX_LINES_BATCH - 2) ||
+        (triangles.vCounter/3 >= MAX_TRIANGLES_BATCH - 16) ||
+        (quads.vCounter/4 >= MAX_QUADS_BATCH - 2)) rlglDraw();
 }
 
 // Define one vertex (position)
@@ -1109,7 +1137,7 @@ void rlglInit(int width, int height)
         if (strcmp(extList[i], (const char *)"GL_OES_texture_npot") == 0) texNPOTSupported = true;
         
         // Check texture float support
-        if (strcmp(extList[i], (const char *)"OES_texture_float") == 0) texFloatSupported = true;
+        if (strcmp(extList[i], (const char *)"GL_OES_texture_float") == 0) texFloatSupported = true;
 #endif
 
         // DDS texture compression support
@@ -1139,10 +1167,13 @@ void rlglInit(int width, int height)
 
         // Clamp mirror wrap mode supported
         if (strcmp(extList[i], (const char *)"GL_EXT_texture_mirror_clamp") == 0) texClampMirrorSupported = true;
+        
+        // Debug marker support
+        if(strcmp(extList[i], (const char *)"GL_EXT_debug_marker") == 0) debugMarkerSupported = true;
     }
 
-#ifdef _MSC_VER
-    free(extList);
+#if defined(_MSC_VER)
+    //free(extList);
 #endif
 
 #if defined(GRAPHICS_API_OPENGL_ES2)
@@ -1161,6 +1192,8 @@ void rlglInit(int width, int height)
 
     if (texAnisotropicFilterSupported) TraceLog(LOG_INFO, "[EXTENSION] Anisotropic textures filtering supported (max: %.0fX)", maxAnisotropicLevel);
     if (texClampMirrorSupported) TraceLog(LOG_INFO, "[EXTENSION] Clamp mirror wrap texture mode supported");
+
+    if (debugMarkerSupported) TraceLog(LOG_INFO, "[EXTENSION] Debug Marker supported");
 
     // Initialize buffers, default shaders and default textures
     //----------------------------------------------------------
@@ -1287,6 +1320,14 @@ int rlGetVersion(void)
 #endif
 }
 
+// Set debug marker
+void rlSetDebugMarker(const char *text)
+{
+#if defined(GRAPHICS_API_OPENGL_33)
+    if (debugMarkerSupported) glInsertEventMarkerEXT(0, text);
+#endif
+}
+
 // Load OpenGL extensions
 // NOTE: External loader function could be passed as a pointer
 void rlLoadExtensions(void *loader)
@@ -1381,6 +1422,8 @@ unsigned int rlLoadTexture(void *data, int width, int height, int format, int mi
     }
 #endif
 
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
     glGenTextures(1, &id);              // Generate Pointer to the texture
 
 #if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
@@ -1388,94 +1431,50 @@ unsigned int rlLoadTexture(void *data, int width, int height, int format, int mi
 #endif
 
     glBindTexture(GL_TEXTURE_2D, id);
-
-#if defined(GRAPHICS_API_OPENGL_11) || defined(GRAPHICS_API_OPENGL_21) || defined(GRAPHICS_API_OPENGL_ES2)
-    // NOTE: on OpenGL ES 2.0 (WebGL), internalFormat must match format and options allowed are: GL_LUMINANCE, GL_RGB, GL_RGBA
-    switch (format)
+    
+    int mipWidth = width;
+    int mipHeight = height;
+    int mipOffset = 0;          // Mipmap data offset
+    
+    TraceLog(LOG_DEBUG, "Load texture from data memory address: 0x%x", data);
+    
+    // Load the different mipmap levels
+    for (int i = 0; i < mipmapCount; i++)
     {
-        case UNCOMPRESSED_GRAYSCALE: glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        case UNCOMPRESSED_GRAY_ALPHA: glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        case UNCOMPRESSED_R5G6B5: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, (unsigned short *)data); break;
-        case UNCOMPRESSED_R8G8B8: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        case UNCOMPRESSED_R5G5B5A1: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, (unsigned short *)data); break;
-        case UNCOMPRESSED_R4G4B4A4: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, (unsigned short *)data); break;
-        case UNCOMPRESSED_R8G8B8A8: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-    #if defined(GRAPHICS_API_OPENGL_21)
-        case COMPRESSED_DXT1_RGB: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, mipmapCount); break;
-        case COMPRESSED_DXT1_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, mipmapCount); break;
-        case COMPRESSED_DXT3_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, mipmapCount); break;
-        case COMPRESSED_DXT5_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, mipmapCount); break;
-    #endif
-    #if defined(GRAPHICS_API_OPENGL_ES2)
-        case UNCOMPRESSED_R32G32B32: if (texFloatSupported) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, (float *)data); break;  // NOTE: Requires extension OES_texture_float
-        case COMPRESSED_DXT1_RGB: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, mipmapCount); break;
-        case COMPRESSED_DXT1_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, mipmapCount); break;
-        case COMPRESSED_DXT3_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, mipmapCount); break;      // NOTE: Not supported by WebGL
-        case COMPRESSED_DXT5_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, mipmapCount); break;      // NOTE: Not supported by WebGL
-        case COMPRESSED_ETC1_RGB: if (texCompETC1Supported) LoadTextureCompressed((unsigned char *)data, width, height, GL_ETC1_RGB8_OES, mipmapCount); break;                      // NOTE: Requires OpenGL ES 2.0 or OpenGL 4.3
-        case COMPRESSED_ETC2_RGB: if (texCompETC2Supported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGB8_ETC2, mipmapCount); break;               // NOTE: Requires OpenGL ES 3.0 or OpenGL 4.3
-        case COMPRESSED_ETC2_EAC_RGBA: if (texCompETC2Supported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA8_ETC2_EAC, mipmapCount); break;     // NOTE: Requires OpenGL ES 3.0 or OpenGL 4.3
-        case COMPRESSED_PVRT_RGB: if (texCompPVRTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG, mipmapCount); break;    // NOTE: Requires PowerVR GPU
-        case COMPRESSED_PVRT_RGBA: if (texCompPVRTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG, mipmapCount); break;  // NOTE: Requires PowerVR GPU
-        case COMPRESSED_ASTC_4x4_RGBA: if (texCompASTCSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_ASTC_4x4_KHR, mipmapCount); break;  // NOTE: Requires OpenGL ES 3.1 or OpenGL 4.3
-        case COMPRESSED_ASTC_8x8_RGBA: if (texCompASTCSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_ASTC_8x8_KHR, mipmapCount); break;  // NOTE: Requires OpenGL ES 3.1 or OpenGL 4.3
-    #endif
-        default: TraceLog(LOG_WARNING, "Texture format not supported"); break;
-    }
-#elif defined(GRAPHICS_API_OPENGL_33)
-    // NOTE: We define internal (GPU) format as GL_RGBA8 (probably BGRA8 in practice, driver takes care)
-    // NOTE: On embedded systems, we let the driver choose the best internal format
-
-    // Support for multiple color modes (16bit color modes and grayscale)
-    // (sized)internalFormat    format          type
-    // GL_R                     GL_RED      GL_UNSIGNED_BYTE
-    // GL_RGB565                GL_RGB      GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT_5_6_5
-    // GL_RGB5_A1               GL_RGBA     GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT_5_5_5_1
-    // GL_RGBA4                 GL_RGBA     GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT_4_4_4_4
-    // GL_RGBA8                 GL_RGBA     GL_UNSIGNED_BYTE
-    // GL_RGB8                  GL_RGB      GL_UNSIGNED_BYTE
-
-    switch (format)
-    {
-        case UNCOMPRESSED_GRAYSCALE:
+        unsigned int mipSize = GetPixelDataSize(mipWidth, mipHeight, format);
+        
+        int glInternalFormat, glFormat, glType;
+        GetGlFormats(format, &glInternalFormat, &glFormat, &glType);
+        
+        TraceLog(LOG_DEBUG, "Load mipmap level %i (%i x %i), size: %i, offset: %i", i, mipWidth, mipHeight, mipSize, mipOffset);
+        
+        if (glInternalFormat != -1)
         {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, (unsigned char *)data);
-
-            // With swizzleMask we define how a one channel texture will be mapped to RGBA
-            // Required GL >= 3.3 or EXT_texture_swizzle/ARB_texture_swizzle
-            GLint swizzleMask[] = { GL_RED, GL_RED, GL_RED, GL_ONE };
-            glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
-
-            TraceLog(LOG_INFO, "[TEX ID %i] Grayscale texture loaded and swizzled", id);
-        } break;
-        case UNCOMPRESSED_GRAY_ALPHA:
-        {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, width, height, 0, GL_RG, GL_UNSIGNED_BYTE, (unsigned char *)data);
-
-            GLint swizzleMask[] = { GL_RED, GL_RED, GL_RED, GL_GREEN };
-            glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
-        } break;
-
-        case UNCOMPRESSED_R5G6B5: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB565, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, (unsigned short *)data); break;
-        case UNCOMPRESSED_R8G8B8: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        case UNCOMPRESSED_R5G5B5A1: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB5_A1, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, (unsigned short *)data); break;
-        case UNCOMPRESSED_R4G4B4A4: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA4, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, (unsigned short *)data); break;
-        case UNCOMPRESSED_R8G8B8A8: glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        case UNCOMPRESSED_R32G32B32: if (texFloatSupported) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, (float *)data); break;
-        case COMPRESSED_DXT1_RGB: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, mipmapCount); break;
-        case COMPRESSED_DXT1_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, mipmapCount); break;
-        case COMPRESSED_DXT3_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, mipmapCount); break;
-        case COMPRESSED_DXT5_RGBA: if (texCompDXTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, mipmapCount); break;
-        case COMPRESSED_ETC1_RGB: if (texCompETC1Supported) LoadTextureCompressed((unsigned char *)data, width, height, GL_ETC1_RGB8_OES, mipmapCount); break;                      // NOTE: Requires OpenGL ES 2.0 or OpenGL 4.3
-        case COMPRESSED_ETC2_RGB: if (texCompETC2Supported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGB8_ETC2, mipmapCount); break;               // NOTE: Requires OpenGL ES 3.0 or OpenGL 4.3
-        case COMPRESSED_ETC2_EAC_RGBA: if (texCompETC2Supported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA8_ETC2_EAC, mipmapCount); break;     // NOTE: Requires OpenGL ES 3.0 or OpenGL 4.3
-        case COMPRESSED_PVRT_RGB: if (texCompPVRTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG, mipmapCount); break;    // NOTE: Requires PowerVR GPU
-        case COMPRESSED_PVRT_RGBA: if (texCompPVRTSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG, mipmapCount); break;  // NOTE: Requires PowerVR GPU
-        case COMPRESSED_ASTC_4x4_RGBA: if (texCompASTCSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_ASTC_4x4_KHR, mipmapCount); break;  // NOTE: Requires OpenGL ES 3.1 or OpenGL 4.3
-        case COMPRESSED_ASTC_8x8_RGBA: if (texCompASTCSupported) LoadTextureCompressed((unsigned char *)data, width, height, GL_COMPRESSED_RGBA_ASTC_8x8_KHR, mipmapCount); break;  // NOTE: Requires OpenGL ES 3.1 or OpenGL 4.3
-        default: TraceLog(LOG_WARNING, "Texture format not recognized"); break;
+            if (format < COMPRESSED_DXT1_RGB) glTexImage2D(GL_TEXTURE_2D, i, glInternalFormat, mipWidth, mipHeight, 0, glFormat, glType, (unsigned char *)data + mipOffset);
+            else glCompressedTexImage2D(GL_TEXTURE_2D, i, glInternalFormat, mipWidth, mipHeight, 0, mipSize, (unsigned char *)data + mipOffset);
+        
+        #if defined(GRAPHICS_API_OPENGL_33)
+            if (format == UNCOMPRESSED_GRAYSCALE)
+            {
+                GLint swizzleMask[] = { GL_RED, GL_RED, GL_RED, GL_ONE };
+                glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
+            }
+            else if (format == UNCOMPRESSED_GRAY_ALPHA)
+            {
+                GLint swizzleMask[] = { GL_RED, GL_RED, GL_RED, GL_GREEN };
+                glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
+            }
+        #endif
+        }
+    
+        mipWidth /= 2;
+        mipHeight /= 2;
+        mipOffset += mipSize;
+        
+        // Security check for NPOT textures
+        if (mipWidth < 1) mipWidth = 1;
+        if (mipHeight < 1) mipHeight = 1;
     }
-#endif
 
     // Texture parameters configuration
     // NOTE: glTexParameteri does NOT affect texture uploading, just the way it's used
@@ -1504,8 +1503,9 @@ unsigned int rlLoadTexture(void *data, int width, int height, int format, int mi
 #if defined(GRAPHICS_API_OPENGL_33)
     if (mipmapCount > 1)
     {
+        // Activate Trilinear filtering if mipmaps are available
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);   // Activate Trilinear filtering for mipmaps (must be available)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     }
 #endif
 
@@ -1516,7 +1516,7 @@ unsigned int rlLoadTexture(void *data, int width, int height, int format, int mi
     // Unbind current texture
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    if (id > 0) TraceLog(LOG_INFO, "[TEX ID %i] Texture created successfully (%ix%i)", id, width, height);
+    if (id > 0) TraceLog(LOG_INFO, "[TEX ID %i] Texture created successfully (%ix%i - %i mipmaps)", id, width, height, mipmapCount);
     else TraceLog(LOG_WARNING, "Texture could not be created");
 
     return id;
@@ -1526,33 +1526,15 @@ unsigned int rlLoadTexture(void *data, int width, int height, int format, int mi
 void rlUpdateTexture(unsigned int id, int width, int height, int format, const void *data)
 {
     glBindTexture(GL_TEXTURE_2D, id);
+   
+    int glInternalFormat, glFormat, glType;
+    GetGlFormats(format, &glInternalFormat, &glFormat, &glType);
 
-#if defined(GRAPHICS_API_OPENGL_33)
-    switch (format)
+    if ((glInternalFormat != -1) && (format < COMPRESSED_DXT1_RGB))
     {
-        case UNCOMPRESSED_GRAYSCALE: glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RED, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        case UNCOMPRESSED_GRAY_ALPHA: glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RG, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        case UNCOMPRESSED_R5G6B5: glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, (unsigned short *)data); break;
-        case UNCOMPRESSED_R8G8B8: glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        case UNCOMPRESSED_R5G5B5A1: glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, (unsigned short *)data); break;
-        case UNCOMPRESSED_R4G4B4A4: glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, (unsigned short *)data); break;
-        case UNCOMPRESSED_R8G8B8A8: glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        default: TraceLog(LOG_WARNING, "Texture format updating not supported"); break;
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, glFormat, glType, (unsigned char *)data);
     }
-#elif defined(GRAPHICS_API_OPENGL_11) || defined(GRAPHICS_API_OPENGL_ES2)
-    // NOTE: on OpenGL ES 2.0 (WebGL), internalFormat must match format and options allowed are: GL_LUMINANCE, GL_RGB, GL_RGBA
-    switch (format)
-    {
-        case UNCOMPRESSED_GRAYSCALE: glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        case UNCOMPRESSED_GRAY_ALPHA: glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        case UNCOMPRESSED_R5G6B5: glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, (unsigned short *)data); break;
-        case UNCOMPRESSED_R8G8B8: glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        case UNCOMPRESSED_R5G5B5A1: glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, (unsigned short *)data); break;
-        case UNCOMPRESSED_R4G4B4A4: glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, (unsigned short *)data); break;
-        case UNCOMPRESSED_R8G8B8A8: glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char *)data); break;
-        default: TraceLog(LOG_WARNING, "Texture format updating not supported"); break;
-    }
-#endif
+    else TraceLog(LOG_WARNING, "Texture format updating not supported");
 }
 
 // Unload texture from GPU memory
@@ -1687,7 +1669,7 @@ void rlGenerateMipmaps(Texture2D *texture)
         // Load the mipmaps
         for (int level = 1; level < mipmapCount; level++)
         {
-            glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA8, mipWidth, mipHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + offset);
+            glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA8, mipWidth, mipHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char *)data + offset);
 
             size = mipWidth*mipHeight*4;
             offset += size;
@@ -2170,44 +2152,28 @@ void *rlReadTexturePixels(Texture2D texture)
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &format);
     // Other texture info: GL_TEXTURE_RED_SIZE, GL_TEXTURE_GREEN_SIZE, GL_TEXTURE_BLUE_SIZE, GL_TEXTURE_ALPHA_SIZE
     */
-
-    int glFormat = 0, glType = 0;
-
-    unsigned int size = texture.width*texture.height;
-
-    // NOTE: GL_LUMINANCE and GL_LUMINANCE_ALPHA are removed since OpenGL 3.1
-    // Must be replaced by GL_RED and GL_RG on Core OpenGL 3.3
-
-    switch (texture.format)
-    {
-#if defined(GRAPHICS_API_OPENGL_11)
-        case UNCOMPRESSED_GRAYSCALE: pixels = (unsigned char *)malloc(size); glFormat = GL_LUMINANCE; glType = GL_UNSIGNED_BYTE; break;            // 8 bit per pixel (no alpha)
-        case UNCOMPRESSED_GRAY_ALPHA: pixels = (unsigned char *)malloc(size*2); glFormat = GL_LUMINANCE_ALPHA; glType = GL_UNSIGNED_BYTE; break;   // 16 bpp (2 channels)
-#elif defined(GRAPHICS_API_OPENGL_33)
-        case UNCOMPRESSED_GRAYSCALE: pixels = (unsigned char *)malloc(size); glFormat = GL_RED; glType = GL_UNSIGNED_BYTE; break;
-        case UNCOMPRESSED_GRAY_ALPHA: pixels = (unsigned char *)malloc(size*2); glFormat = GL_RG; glType = GL_UNSIGNED_BYTE; break;
-#endif
-        case UNCOMPRESSED_R5G6B5: pixels = (unsigned short *)malloc(size); glFormat = GL_RGB; glType = GL_UNSIGNED_SHORT_5_6_5; break;             // 16 bpp
-        case UNCOMPRESSED_R8G8B8: pixels = (unsigned char *)malloc(size*3); glFormat = GL_RGB; glType = GL_UNSIGNED_BYTE; break;                   // 24 bpp
-        case UNCOMPRESSED_R5G5B5A1: pixels = (unsigned short *)malloc(size); glFormat = GL_RGBA; glType = GL_UNSIGNED_SHORT_5_5_5_1; break;        // 16 bpp (1 bit alpha)
-        case UNCOMPRESSED_R4G4B4A4: pixels = (unsigned short *)malloc(size); glFormat = GL_RGBA; glType = GL_UNSIGNED_SHORT_4_4_4_4; break;        // 16 bpp (4 bit alpha)
-        case UNCOMPRESSED_R8G8B8A8: pixels = (unsigned char *)malloc(size*4); glFormat = GL_RGBA; glType = GL_UNSIGNED_BYTE; break;                // 32 bpp
-        default: TraceLog(LOG_WARNING, "Texture data retrieval, format not suported"); break;
-    }
-
+    
     // NOTE: Each row written to or read from by OpenGL pixel operations like glGetTexImage are aligned to a 4 byte boundary by default, which may add some padding.
     // Use glPixelStorei to modify padding with the GL_[UN]PACK_ALIGNMENT setting.
     // GL_PACK_ALIGNMENT affects operations that read from OpenGL memory (glReadPixels, glGetTexImage, etc.)
     // GL_UNPACK_ALIGNMENT affects operations that write to OpenGL memory (glTexImage, etc.)
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-    glGetTexImage(GL_TEXTURE_2D, 0, glFormat, glType, pixels);
+    int glInternalFormat, glFormat, glType;
+	GetGlFormats(texture.format, &glInternalFormat, &glFormat, &glType);
+    unsigned int size = GetPixelDataSize(texture.width, texture.height, texture.format);
+    
+    if ((glInternalFormat != -1) && (texture.format < COMPRESSED_DXT1_RGB))
+    {
+        pixels = (unsigned char *)malloc(size);
+        glGetTexImage(GL_TEXTURE_2D, 0, glFormat, glType, pixels);
+    }
+    else TraceLog(LOG_WARNING, "Texture data retrieval not suported for pixel format");
 
     glBindTexture(GL_TEXTURE_2D, 0);
 #endif
 
 #if defined(GRAPHICS_API_OPENGL_ES2)
-
     RenderTexture2D fbo = rlLoadRenderTexture(texture.width, texture.height);
 
     // NOTE: Two possible Options:
@@ -2358,46 +2324,57 @@ char *LoadText(const char *fileName)
 
 // Load shader from files and bind default locations
 // NOTE: If shader string is NULL, using default vertex/fragment shaders
-Shader LoadShader(char *vsFileName, char *fsFileName)
+Shader LoadShader(const char *vsFileName, const char *fsFileName)
 {
     Shader shader = { 0 };
+
+    char *vShaderStr = NULL;
+    char *fShaderStr = NULL;
+
+    if (vsFileName != NULL) vShaderStr = LoadText(vsFileName);
+    if (fsFileName != NULL) fShaderStr = LoadText(fsFileName);
     
+    shader = LoadShaderCode(vShaderStr, fShaderStr);
+        
+    if (vShaderStr != NULL) free(vShaderStr);
+    if (fShaderStr != NULL) free(fShaderStr);
+
+    return shader;
+}
+
+// Load shader from code strings
+// NOTE: If shader string is NULL, using default vertex/fragment shaders
+Shader LoadShaderCode(char *vsCode, char *fsCode)
+{
+    Shader shader = { 0 };
+
     // NOTE: All locations must be reseted to -1 (no location)
     for (int i = 0; i < MAX_SHADER_LOCATIONS; i++) shader.locs[i] = -1;
-
-#if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
-
-    unsigned int vertexShaderId, fragmentShaderId;
-
-    if (vsFileName == NULL) vertexShaderId = defaultVShaderId;
-    else 
-    {
-        char *vShaderStr = LoadText(vsFileName);
-        vertexShaderId = CompileShader(vShaderStr, GL_VERTEX_SHADER);
-        free(vShaderStr);
-    }
-
-    if (fsFileName == NULL) fragmentShaderId = defaultVShaderId;
-    else 
-    {
-        char* fShaderStr = LoadText(fsFileName);
-        fragmentShaderId = CompileShader(fShaderStr, GL_FRAGMENT_SHADER);
-        free(fShaderStr);
-    }
-
-    shader.id = LoadShaderProgram(vertexShaderId, fragmentShaderId);
-
-    if (vertexShaderId != defaultVShaderId) glDeleteShader(vertexShaderId);
-    if (fragmentShaderId != defaultFShaderId) glDeleteShader(fragmentShaderId);
-
-    if (shader.id == 0)
-    {
-        TraceLog(LOG_WARNING, "Custom shader could not be loaded");
-        shader = defaultShader;
-    }
     
-    // After shader loading, we TRY to set default location names
-    if (shader.id > 0) SetShaderDefaultLocations(&shader);
+#if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
+    unsigned int vertexShaderId = defaultVShaderId;
+    unsigned int fragmentShaderId = defaultFShaderId;
+    
+    if (vsCode != NULL) vertexShaderId = CompileShader(vsCode, GL_VERTEX_SHADER);
+    if (fsCode != NULL) fragmentShaderId = CompileShader(fsCode, GL_FRAGMENT_SHADER);
+    
+    if ((vertexShaderId == defaultVShaderId) && (fragmentShaderId == defaultFShaderId)) shader = defaultShader;
+    else 
+    {
+        shader.id = LoadShaderProgram(vertexShaderId, fragmentShaderId);
+
+        if (vertexShaderId != defaultVShaderId) glDeleteShader(vertexShaderId);
+        if (fragmentShaderId != defaultFShaderId) glDeleteShader(fragmentShaderId);
+
+        if (shader.id == 0)
+        {
+            TraceLog(LOG_WARNING, "Custom shader could not be loaded");
+            shader = defaultShader;
+        }
+        
+        // After shader loading, we TRY to set default location names
+        if (shader.id > 0) SetShaderDefaultLocations(&shader);
+    }
     
     // Get available shader uniforms
     // NOTE: This information is useful for debug...
@@ -2423,7 +2400,7 @@ Shader LoadShader(char *vsFileName, char *fsFileName)
         TraceLog(LOG_DEBUG, "[SHDR ID %i] Active uniform [%s] set at location: %i", shader.id, name, location);
     }
 #endif
-
+    
     return shader;
 }
 
@@ -2528,6 +2505,19 @@ void SetMatrixModelview(Matrix view)
 #if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
     modelview = view;
 #endif
+}
+
+// Return internal modelview matrix
+Matrix GetMatrixModelview() 
+{
+    Matrix matrix = MatrixIdentity();
+#if defined(GRAPHICS_API_OPENGL_11)
+    float mat[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, mat);
+#else
+    matrix = modelview;
+#endif
+    return matrix;
 }
 
 // Generate cubemap texture from HDR texture
@@ -2975,9 +2965,11 @@ bool IsVrSimulatorReady(void)
 // TODO: Review VR system to be more flexible, move distortion shader to user side
 void SetVrDistortionShader(Shader shader)
 {
+#if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
     vrConfig.distortionShader = shader;
 
     //SetStereoConfig(info);  // TODO: Must be reviewed to set new distortion shader uniform values...
+#endif
 }
 
 // Enable/Disable VR experience (device or simulator)
@@ -3108,42 +3100,6 @@ void EndVrDrawing(void)
 //----------------------------------------------------------------------------------
 
 #if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
-// Convert image data to OpenGL texture (returns OpenGL valid Id)
-// NOTE: Expected compressed image data and POT image
-static void LoadTextureCompressed(unsigned char *data, int width, int height, int compressedFormat, int mipmapCount)
-{
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    int blockSize = 0;      // Bytes every block
-    int offset = 0;
-
-    if ((compressedFormat == GL_COMPRESSED_RGB_S3TC_DXT1_EXT) ||
-        (compressedFormat == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT) ||
-#if defined(GRAPHICS_API_OPENGL_ES2)
-        (compressedFormat == GL_ETC1_RGB8_OES) ||
-#endif
-        (compressedFormat == GL_COMPRESSED_RGB8_ETC2)) blockSize = 8;
-    else blockSize = 16;
-
-    // Load the mipmap levels
-    for (int level = 0; level < mipmapCount && (width || height); level++)
-    {
-        unsigned int size = 0;
-
-        size = ((width + 3)/4)*((height + 3)/4)*blockSize;
-
-        glCompressedTexImage2D(GL_TEXTURE_2D, level, compressedFormat, width, height, 0, size, data + offset);
-
-        offset += size;
-        width  /= 2;
-        height /= 2;
-
-        // Security check for NPOT textures
-        if (width < 1) width = 1;
-        if (height < 1) height = 1;
-    }
-}
-
 // Compile custom shader and return shader id
 static unsigned int CompileShader(const char *shaderStr, int type)
 {
@@ -3161,7 +3117,7 @@ static unsigned int CompileShader(const char *shaderStr, int type)
         int length;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
         char *log = malloc(maxLength);
 #else
         char log[maxLength];
@@ -3170,7 +3126,7 @@ static unsigned int CompileShader(const char *shaderStr, int type)
 
         TraceLog(LOG_INFO, "%s", log);
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
         free(log);
 #endif
     }
@@ -3377,6 +3333,7 @@ static void UnloadShaderDefault(void)
     glDetachShader(defaultShader.id, defaultFShaderId);
     glDeleteShader(defaultVShaderId);
     glDeleteShader(defaultFShaderId);
+  
     glDeleteProgram(defaultShader.id);
 }
 
@@ -3956,6 +3913,58 @@ static void GenDrawCube(void)
     
     glDeleteBuffers(1, &cubeVBO);
     glDeleteVertexArrays(1, &cubeVAO);
+}
+
+// Get OpenGL internal formats and data type from raylib PixelFormat
+static void GetGlFormats(int format, int *glInternalFormat, int *glFormat, int *glType)
+{
+    *glInternalFormat = -1;
+    *glFormat = -1;
+    *glType = -1;
+    
+    switch (format)
+    {
+    #if defined(GRAPHICS_API_OPENGL_11) || defined(GRAPHICS_API_OPENGL_21) || defined(GRAPHICS_API_OPENGL_ES2)
+        // NOTE: on OpenGL ES 2.0 (WebGL), internalFormat must match format and options allowed are: GL_LUMINANCE, GL_RGB, GL_RGBA
+        case UNCOMPRESSED_GRAYSCALE: *glInternalFormat = GL_LUMINANCE; *glFormat = GL_LUMINANCE; *glType = GL_UNSIGNED_BYTE; break;
+        case UNCOMPRESSED_GRAY_ALPHA: *glInternalFormat = GL_LUMINANCE_ALPHA; *glFormat = GL_LUMINANCE_ALPHA; *glType = GL_UNSIGNED_BYTE; break;
+        case UNCOMPRESSED_R5G6B5: *glInternalFormat = GL_RGB; *glFormat = GL_RGB; *glType = GL_UNSIGNED_SHORT_5_6_5; break;
+        case UNCOMPRESSED_R8G8B8: *glInternalFormat = GL_RGB; *glFormat = GL_RGB; *glType = GL_UNSIGNED_BYTE; break;
+        case UNCOMPRESSED_R5G5B5A1: *glInternalFormat = GL_RGBA; *glFormat = GL_RGBA; *glType = GL_UNSIGNED_SHORT_5_5_5_1; break;
+        case UNCOMPRESSED_R4G4B4A4: *glInternalFormat = GL_RGBA; *glFormat = GL_RGBA; *glType = GL_UNSIGNED_SHORT_4_4_4_4; break;
+        case UNCOMPRESSED_R8G8B8A8: *glInternalFormat = GL_RGBA; *glFormat = GL_RGBA; *glType = GL_UNSIGNED_BYTE; break;
+        #if !defined(GRAPHICS_API_OPENGL_11)
+        case UNCOMPRESSED_R32: if (texFloatSupported) *glInternalFormat = GL_LUMINANCE; *glFormat = GL_LUMINANCE; *glType = GL_FLOAT; break;   // NOTE: Requires extension OES_texture_float
+        case UNCOMPRESSED_R32G32B32: if (texFloatSupported) *glInternalFormat = GL_RGB; *glFormat = GL_RGB; *glType = GL_FLOAT; break;         // NOTE: Requires extension OES_texture_float
+        case UNCOMPRESSED_R32G32B32A32: if (texFloatSupported) *glInternalFormat = GL_RGBA; *glFormat = GL_RGBA; *glType = GL_FLOAT; break;    // NOTE: Requires extension OES_texture_float
+        #endif
+    #elif defined(GRAPHICS_API_OPENGL_33)
+        case UNCOMPRESSED_GRAYSCALE: *glInternalFormat = GL_R8; *glFormat = GL_RED; *glType = GL_UNSIGNED_BYTE; break;
+        case UNCOMPRESSED_GRAY_ALPHA: *glInternalFormat = GL_RG8; *glFormat = GL_RG; *glType = GL_UNSIGNED_BYTE; break;
+        case UNCOMPRESSED_R5G6B5: *glInternalFormat = GL_RGB565; *glFormat = GL_RGB; *glType = GL_UNSIGNED_SHORT_5_6_5; break;
+        case UNCOMPRESSED_R8G8B8: *glInternalFormat = GL_RGB8; *glFormat = GL_RGB; *glType = GL_UNSIGNED_BYTE; break;
+        case UNCOMPRESSED_R5G5B5A1: *glInternalFormat = GL_RGB5_A1; *glFormat = GL_RGBA; *glType = GL_UNSIGNED_SHORT_5_5_5_1; break;
+        case UNCOMPRESSED_R4G4B4A4: *glInternalFormat = GL_RGBA4; *glFormat = GL_RGBA; *glType = GL_UNSIGNED_SHORT_4_4_4_4; break;
+        case UNCOMPRESSED_R8G8B8A8: *glInternalFormat = GL_RGBA8; *glFormat = GL_RGBA; *glType = GL_UNSIGNED_BYTE; break;
+        case UNCOMPRESSED_R32: if (texFloatSupported) *glInternalFormat = GL_R32F; *glFormat = GL_RED; *glType = GL_FLOAT; break;
+        case UNCOMPRESSED_R32G32B32: if (texFloatSupported) *glInternalFormat = GL_RGB32F; *glFormat = GL_RGB; *glType = GL_FLOAT; break;
+        case UNCOMPRESSED_R32G32B32A32: if (texFloatSupported) *glInternalFormat = GL_RGBA32F; *glFormat = GL_RGBA; *glType = GL_FLOAT; break;
+    #endif
+        #if !defined(GRAPHICS_API_OPENGL_11)
+        case COMPRESSED_DXT1_RGB: if (texCompDXTSupported) *glInternalFormat = GL_COMPRESSED_RGB_S3TC_DXT1_EXT; break;
+        case COMPRESSED_DXT1_RGBA: if (texCompDXTSupported) *glInternalFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT; break;
+        case COMPRESSED_DXT3_RGBA: if (texCompDXTSupported) *glInternalFormat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT; break;
+        case COMPRESSED_DXT5_RGBA: if (texCompDXTSupported) *glInternalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT; break;
+        case COMPRESSED_ETC1_RGB: if (texCompETC1Supported) *glInternalFormat = GL_ETC1_RGB8_OES; break;                      // NOTE: Requires OpenGL ES 2.0 or OpenGL 4.3
+        case COMPRESSED_ETC2_RGB: if (texCompETC2Supported) *glInternalFormat = GL_COMPRESSED_RGB8_ETC2; break;               // NOTE: Requires OpenGL ES 3.0 or OpenGL 4.3
+        case COMPRESSED_ETC2_EAC_RGBA: if (texCompETC2Supported) *glInternalFormat = GL_COMPRESSED_RGBA8_ETC2_EAC; break;     // NOTE: Requires OpenGL ES 3.0 or OpenGL 4.3
+        case COMPRESSED_PVRT_RGB: if (texCompPVRTSupported) *glInternalFormat = GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG; break;    // NOTE: Requires PowerVR GPU
+        case COMPRESSED_PVRT_RGBA: if (texCompPVRTSupported) *glInternalFormat = GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG; break;  // NOTE: Requires PowerVR GPU
+        case COMPRESSED_ASTC_4x4_RGBA: if (texCompASTCSupported) *glInternalFormat = GL_COMPRESSED_RGBA_ASTC_4x4_KHR; break;  // NOTE: Requires OpenGL ES 3.1 or OpenGL 4.3
+        case COMPRESSED_ASTC_8x8_RGBA: if (texCompASTCSupported) *glInternalFormat = GL_COMPRESSED_RGBA_ASTC_8x8_KHR; break;  // NOTE: Requires OpenGL ES 3.1 or OpenGL 4.3
+        #endif
+        default: TraceLog(LOG_WARNING, "Texture format not supported"); break;
+    }
 }
 
 #if defined(SUPPORT_VR_SIMULATOR)

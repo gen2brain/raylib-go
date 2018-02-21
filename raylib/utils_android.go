@@ -3,6 +3,7 @@
 package raylib
 
 /*
+#include "raylib.h"
 #include <stdlib.h>
 
 void log_info(const char *msg);
@@ -16,28 +17,40 @@ import "C"
 
 import (
 	"fmt"
-	"os"
 	"unsafe"
 )
+
+// SetTraceLog - Enable trace log message types (bit flags based)
+func SetTraceLog(typeFlags int) {
+	logTypeFlags = typeFlags
+
+	ctypeFlags := (C.uchar)(typeFlags)
+	C.SetTraceLog(ctypeFlags)
+}
 
 // TraceLog - Trace log messages showing (INFO, WARNING, ERROR, DEBUG)
 func TraceLog(msgType int, text string, v ...interface{}) {
 	switch msgType {
 	case LogInfo:
-		msg := C.CString(fmt.Sprintf("INFO: "+text, v...))
-		defer C.free(unsafe.Pointer(msg))
-		C.log_info(msg)
-	case LogError:
-		msg := C.CString(fmt.Sprintf("ERROR: "+text, v...))
-		defer C.free(unsafe.Pointer(msg))
-		C.log_error(msg)
-		os.Exit(1)
+		if logTypeFlags&LogInfo == 0 {
+			msg := C.CString(fmt.Sprintf("INFO: "+text, v...))
+			defer C.free(unsafe.Pointer(msg))
+			C.log_info(msg)
+		}
 	case LogWarning:
-		msg := C.CString(fmt.Sprintf("WARNING: "+text, v...))
-		defer C.free(unsafe.Pointer(msg))
-		C.log_warn(msg)
+		if logTypeFlags&LogWarning == 0 {
+			msg := C.CString(fmt.Sprintf("WARNING: "+text, v...))
+			defer C.free(unsafe.Pointer(msg))
+			C.log_warn(msg)
+		}
+	case LogError:
+		if logTypeFlags&LogError == 0 {
+			msg := C.CString(fmt.Sprintf("ERROR: "+text, v...))
+			defer C.free(unsafe.Pointer(msg))
+			C.log_error(msg)
+		}
 	case LogDebug:
-		if traceDebugMsgs {
+		if logTypeFlags&LogDebug == 0 {
 			msg := C.CString(fmt.Sprintf("DEBUG: "+text, v...))
 			defer C.free(unsafe.Pointer(msg))
 			C.log_debug(msg)

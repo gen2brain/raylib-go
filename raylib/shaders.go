@@ -40,6 +40,20 @@ func LoadShader(vsFileName string, fsFileName string) Shader {
 	return v
 }
 
+// LoadShaderCode - Load shader from code strings and bind default locations
+func LoadShaderCode(vsCode string, fsCode string) Shader {
+	cvsCode := C.CString(vsCode)
+	defer C.free(unsafe.Pointer(cvsCode))
+
+	cfsCode := C.CString(fsCode)
+	defer C.free(unsafe.Pointer(cfsCode))
+
+	ret := C.LoadShaderCode(cvsCode, cfsCode)
+	v := newShaderFromPointer(unsafe.Pointer(&ret))
+
+	return v
+}
+
 // UnloadShader - Unload a custom shader from memory
 func UnloadShader(shader Shader) {
 	cshader := shader.cptr()

@@ -169,7 +169,7 @@ typedef unsigned char byte;
         int width;              // Texture base width
         int height;             // Texture base height
         int mipmaps;            // Mipmap levels, 1 by default
-        int format;             // Data format (TextureFormat)
+        int format;             // Data format (PixelFormat)
     } Texture2D;
 
     // RenderTexture2D type, for texture rendering
@@ -259,7 +259,9 @@ typedef unsigned char byte;
         UNCOMPRESSED_R5G5B5A1,          // 16 bpp (1 bit alpha)
         UNCOMPRESSED_R4G4B4A4,          // 16 bpp (4 bit alpha)
         UNCOMPRESSED_R8G8B8A8,          // 32 bpp
-        UNCOMPRESSED_R32G32B32,         // 32 bit per channel (float) - HDR
+        UNCOMPRESSED_R32,               // 32 bpp (1 channel - float)
+        UNCOMPRESSED_R32G32B32,         // 32*3 bpp (3 channels - float)
+        UNCOMPRESSED_R32G32B32A32,      // 32*4 bpp (4 channels - float)
         COMPRESSED_DXT1_RGB,            // 4 bpp (no alpha)
         COMPRESSED_DXT1_RGBA,           // 4 bpp (1 bit alpha)
         COMPRESSED_DXT3_RGBA,           // 8 bpp
@@ -271,7 +273,7 @@ typedef unsigned char byte;
         COMPRESSED_PVRT_RGBA,           // 4 bpp
         COMPRESSED_ASTC_4x4_RGBA,       // 8 bpp
         COMPRESSED_ASTC_8x8_RGBA        // 2 bpp
-    } TextureFormat;
+    } PixelFormat;
 
     // Texture parameters: filter mode
     // NOTE 1: Filtering considers mipmaps if available in the texture
@@ -422,6 +424,7 @@ void rlglClose(void);                           // De-inititialize rlgl (buffers
 void rlglDraw(void);                            // Update and Draw default buffers (lines, triangles, quads)
 
 int rlGetVersion(void);                         // Returns current OpenGL version
+void rlSetDebugMarker(const char *text);        // Set debug marker for analysis
 void rlLoadExtensions(void *loader);            // Load OpenGL extensions
 Vector3 rlUnproject(Vector3 source, Matrix proj, Matrix view);  // Get world coordinates from screen coordinates
 
@@ -456,11 +459,13 @@ Texture2D GetTextureDefault(void);                      // Get default texture
 
 // Shader configuration functions
 int GetShaderLocation(Shader shader, const char *uniformName);              // Get shader uniform location
-void SetShaderValue(Shader shader, int uniformLoc, float *value, int size); // Set shader uniform value (float)
-void SetShaderValuei(Shader shader, int uniformLoc, int *value, int size);  // Set shader uniform value (int)
+void SetShaderValue(Shader shader, int uniformLoc, const float *value, int size); // Set shader uniform value (float)
+void SetShaderValuei(Shader shader, int uniformLoc, const int *value, int size);  // Set shader uniform value (int)
 void SetShaderValueMatrix(Shader shader, int uniformLoc, Matrix mat);       // Set shader uniform value (matrix 4x4)
-void SetMatrixProjection(Matrix proj);                              // Set a custom projection matrix (replaces internal projection matrix)
-void SetMatrixModelview(Matrix view);                               // Set a custom modelview matrix (replaces internal modelview matrix)
+void SetMatrixProjection(Matrix proj);                  // Set a custom projection matrix (replaces internal projection matrix)
+void SetMatrixModelview(Matrix view);                   // Set a custom modelview matrix (replaces internal modelview matrix)
+Matrix GetMatrixModelview();                            // Get internal modelview matrix            
+
 
 // Texture maps generation (PBR)
 // NOTE: Required shaders should be provided

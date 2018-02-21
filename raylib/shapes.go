@@ -172,14 +172,12 @@ func DrawRectangleLines(posX, posY, width, height int32, color Color) {
 	C.DrawRectangleLines(cposX, cposY, cwidth, cheight, *ccolor)
 }
 
-// DrawRectangleT - Draw rectangle using text character
-func DrawRectangleT(posX, posY, width, height int32, color Color) {
-	cposX := (C.int)(posX)
-	cposY := (C.int)(posY)
-	cwidth := (C.int)(width)
-	cheight := (C.int)(height)
+// DrawRectangleLinesEx - Draw rectangle outline with extended parameters
+func DrawRectangleLinesEx(rec Rectangle, lineThick int32, color Color) {
+	crec := rec.cptr()
+	clineThick := (C.int)(lineThick)
 	ccolor := color.cptr()
-	C.DrawRectangleT(cposX, cposY, cwidth, cheight, *ccolor)
+	C.DrawRectangleLinesEx(*crec, clineThick, *ccolor)
 }
 
 // DrawTriangle - Draw a color-filled triangle

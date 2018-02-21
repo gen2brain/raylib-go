@@ -24,7 +24,7 @@
 *
 *   LICENSE: zlib/libpng
 *
-*   Copyright (c) 2014-2017 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2014-2018 Ramon Santamaria (@raysan5)
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -522,7 +522,7 @@ static double GetCurrentTime(void)
 #if defined(_WIN32)
     unsigned long long int clockFrequency, currentTime;
     
-    QueryPerformanceFrequency(&clockFrequency);
+    QueryPerformanceFrequency(&clockFrequency);     // BE CAREFUL: Costly operation!
     QueryPerformanceCounter(&currentTime);
     
     time = (double)currentTime/clockFrequency*1000.0f;  // Time in miliseconds
@@ -538,8 +538,8 @@ static double GetCurrentTime(void)
 #endif
 
 #if defined(__APPLE__)
-    //#define CLOCK_REALTIME  CALENDAR_CLOCK
-    //#define CLOCK_MONOTONIC SYSTEM_CLOCK
+    //#define CLOCK_REALTIME  CALENDAR_CLOCK    // returns UTC time since 1970-01-01
+    //#define CLOCK_MONOTONIC SYSTEM_CLOCK      // returns the time since boot time
     
     clock_serv_t cclock;
     mach_timespec_t now;

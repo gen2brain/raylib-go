@@ -47,7 +47,7 @@ func LoadImageEx(pixels []Color, width, height int32) *Image {
 }
 
 // LoadImagePro - Load image from raw data with parameters
-func LoadImagePro(data []byte, width, height int32, format TextureFormat) *Image {
+func LoadImagePro(data []byte, width, height int32, format PixelFormat) *Image {
 	cdata := unsafe.Pointer(&data[0])
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
@@ -58,7 +58,7 @@ func LoadImagePro(data []byte, width, height int32, format TextureFormat) *Image
 }
 
 // LoadImageRaw - Load image data from RAW file
-func LoadImageRaw(fileName string, width, height int32, format TextureFormat, headerSize int32) *Image {
+func LoadImageRaw(fileName string, width, height int32, format PixelFormat, headerSize int32) *Image {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	cwidth := (C.int)(width)
@@ -121,6 +121,15 @@ func GetImageData(image *Image) []byte {
 	return (*[1 << 30]uint8)(unsafe.Pointer(ret))[:]
 }
 
+// GetPixelDataSize - Get pixel data size in bytes (image or texture)
+func GetPixelDataSize(width, height, format int32) int32 {
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	cformat := (C.int)(format)
+	ret := C.GetPixelDataSize(cwidth, cheight, cformat)
+	return int32(ret)
+}
+
 // GetTextureData - Get pixel data from GPU texture and return an Image
 func GetTextureData(texture Texture2D) *Image {
 	ctexture := texture.cptr()
@@ -166,6 +175,27 @@ func ImageAlphaMask(image, alphaMask *Image) {
 	C.ImageAlphaMask(cimage, *calphaMask)
 }
 
+// ImageAlphaClear - Apply alpha mask to image
+func ImageAlphaClear(image *Image, color Color, threshold float32) {
+	cimage := image.cptr()
+	ccolor := color.cptr()
+	cthreshold := (C.float)(threshold)
+	C.ImageAlphaClear(cimage, *ccolor, cthreshold)
+}
+
+// ImageAlphaCrop - Crop image depending on alpha value
+func ImageAlphaCrop(image *Image, threshold float32) {
+	cimage := image.cptr()
+	cthreshold := (C.float)(threshold)
+	C.ImageAlphaCrop(cimage, cthreshold)
+}
+
+// ImageAlphaPremultiply - Premultiply alpha channel
+func ImageAlphaPremultiply(image *Image) {
+	cimage := image.cptr()
+	C.ImageAlphaPremultiply(cimage)
+}
+
 // ImageDither - Dither image data to 16bpp or lower (Floyd-Steinberg dithering)
 func ImageDither(image *Image, rBpp, gBpp, bBpp, aBpp int32) {
 	cimage := image.cptr()
@@ -205,6 +235,12 @@ func ImageResizeNN(image *Image, newWidth, newHeight int32) {
 	cnewWidth := (C.int)(newWidth)
 	cnewHeight := (C.int)(newHeight)
 	C.ImageResizeNN(cimage, cnewWidth, cnewHeight)
+}
+
+// ImageMipmaps - Generate all mipmap levels for a provided image
+func ImageMipmaps(image *Image) {
+	cimage := image.cptr()
+	C.ImageMipmaps(cimage)
 }
 
 // ImageText - Create an image from text (default font)
@@ -383,12 +419,14 @@ func GenImageWhiteNoise(width, height int, factor float32) *Image {
 }
 
 // GenImagePerlinNoise - Generate image: perlin noise
-func GenImagePerlinNoise(width, height int, scale float32) *Image {
+func GenImagePerlinNoise(width, height, offsetX, offsetY int, scale float32) *Image {
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
+	coffsetX := (C.int)(offsetX)
+	coffsetY := (C.int)(offsetY)
 	cscale := (C.float)(scale)
 
-	ret := C.GenImagePerlinNoise(cwidth, cheight, cscale)
+	ret := C.GenImagePerlinNoise(cwidth, cheight, coffsetX, coffsetY, cscale)
 	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }

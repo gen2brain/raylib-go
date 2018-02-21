@@ -37,7 +37,42 @@ func LoadWave(fileName string) Wave {
 
 // LoadWaveEx - Load wave data from float array data (32bit)
 func LoadWaveEx(data []byte, sampleCount int32, sampleRate int32, sampleSize int32, channels int32) Wave {
-	return newWaveFromPointer(unsafe.Pointer(js.Global.Get("Module").Call("_LoadWaveEx", data, sampleCount, sampleRate, sampleSize, channels).Unsafe()))
+	defer func() {
+		e := recover()
+
+		if e == nil {
+			return
+		}
+
+		if e, ok := e.(*js.Error); ok {
+			println(e)
+		} else {
+			panic(e)
+		}
+	}()
+
+	w := Wave{}
+	wav := *(*[unsafe.Sizeof(w)]byte)(unsafe.Pointer(&w))
+
+	//// Call C from JavaScript
+	//var result = Module.ccall('c_add', // name of C function
+	//'number', // return type
+	//['number', 'number'], // argument types
+	//[10, 20]); // arguments
+
+	println(wav)
+
+	//js.Global.Get("Module").Call("_LoadWaveEx", wav, data, sampleCount, sampleRate, sampleSize, channels)
+
+	ww := js.Global.Get("Module").Call("ccall", "LoadWaveEx", "number",
+		[]string{"array", "number", "number", "number", "number"},
+		[]interface{}{data, sampleCount, sampleRate, sampleSize, channels}).Uint64()
+
+	www := newWaveFromPointer(unsafe.Pointer(&ww))
+	println(www)
+
+	return www
+	//return newWaveFromPointer(unsafe.Pointer(wav.Unsafe()))
 }
 
 // LoadSound - Load sound to memory
@@ -47,7 +82,10 @@ func LoadSound(fileName string) Sound {
 
 // LoadSoundFromWave - Load sound to memory from wave data
 func LoadSoundFromWave(wave Wave) Sound {
-	return newSoundFromPointer(unsafe.Pointer(js.Global.Get("Module").Call("_LoadSoundFromWave", wave).Unsafe()))
+	s := js.MakeWrapper(Sound{})
+	js.Global.Get("Module").Call("_LoadSoundFromWave", wave, s)
+	return s.Interface().(Sound)
+	//return newSoundFromPointer(unsafe.Pointer())
 }
 
 // UpdateSound - Update sound buffer with new data
