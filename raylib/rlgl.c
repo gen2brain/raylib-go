@@ -1324,7 +1324,7 @@ int rlGetVersion(void)
 void rlSetDebugMarker(const char *text)
 {
 #if defined(GRAPHICS_API_OPENGL_33)
-    if (debugMarkerSupported) glInsertEventMarkerEXT(0, text);
+    //if (debugMarkerSupported) glInsertEventMarkerEXT(0, text);
 #endif
 }
 
