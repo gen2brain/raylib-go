@@ -9,7 +9,6 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.SetDebug(true)
 	raylib.SetConfigFlags(raylib.FlagMsaa4xHint)
 	raylib.InitWindow(screenWidth, screenHeight, "Physac [raylib] - physics friction")
 
