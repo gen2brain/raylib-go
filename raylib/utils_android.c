@@ -1,4 +1,4 @@
-// +build android,!js
+// +build android
 
 #include "_cgo_export.h"
 #include <android/log.h>

@@ -1,4 +1,4 @@
-// +build windows,!js
+// +build windows
 
 package raylib
 

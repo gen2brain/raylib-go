@@ -1,4 +1,4 @@
-// +build darwin,!js
+// +build darwin
 
 package raylib
 

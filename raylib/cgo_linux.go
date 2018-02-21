@@ -1,4 +1,4 @@
-// +build linux,!arm,!arm64,!js
+// +build linux,!arm,!arm64
 
 package raylib
 
