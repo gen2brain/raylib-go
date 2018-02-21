@@ -17,7 +17,7 @@ func main() {
 	radialGradient := raylib.GenImageGradientRadial(screenWidth, screenHeight, 0, raylib.White, raylib.Black)
 	checked := raylib.GenImageChecked(screenWidth, screenHeight, 32, 32, raylib.Red, raylib.Blue)
 	whiteNoise := raylib.GenImageWhiteNoise(screenWidth, screenHeight, 0.5)
-	perlinNoise := raylib.GenImagePerlinNoise(screenWidth, screenHeight, 8)
+	perlinNoise := raylib.GenImagePerlinNoise(screenWidth, screenHeight, 50, 50, 4.0)
 	cellular := raylib.GenImageCellular(screenWidth, screenHeight, 32)
 
 	textures := make([]raylib.Texture2D, numTextures)
