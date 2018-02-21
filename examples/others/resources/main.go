@@ -4,6 +4,7 @@ import (
 	//"bytes"
 
 	"github.com/gen2brain/raylib-go/raylib"
+	"github.com/gen2brain/raylib-go/rres"
 )
 
 const numTextures = 4
@@ -28,15 +29,15 @@ func main() {
 	//b := MustAsset("data.rres")
 	//reader := bytes.NewReader(b)
 
-	res := raylib.LoadResource(reader, 0, nil)
+	res := rres.LoadResource(reader, 0, []byte("passwordpassword"))
 	wav := raylib.LoadWaveEx(res.Data, int32(res.Param1), int32(res.Param2), int32(res.Param3), int32(res.Param4))
 	snd := raylib.LoadSoundFromWave(wav)
 	raylib.UnloadWave(wav)
 
 	textures := make([]raylib.Texture2D, numTextures)
 	for i := 0; i < numTextures; i++ {
-		r := raylib.LoadResource(reader, i+1, nil)
-		image := raylib.LoadImagePro(r.Data, int32(r.Param1), int32(r.Param2), raylib.TextureFormat(r.Param3))
+		r := rres.LoadResource(reader, i+1, []byte("passwordpassword"))
+		image := raylib.LoadImagePro(r.Data, int32(r.Param1), int32(r.Param2), raylib.PixelFormat(r.Param3))
 		textures[i] = raylib.LoadTextureFromImage(image)
 		raylib.UnloadImage(image)
 	}
