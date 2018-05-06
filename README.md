@@ -33,11 +33,11 @@ You can also build binary in [MSYS2](https://msys2.github.io/) shell.
 
 ##### Android
 
-[Android example](https://github.com/gen2brain/raylib-go/tree/master/examples/android/example).
+[Android example](https://github.com/gen2brain/raylib-go/tree/master/examples/others/android/example).
 
 ##### Raspberry Pi
 
-[RPi example](https://github.com/gen2brain/raylib-go/tree/master/examples/rpi/basic_window).
+[RPi example](https://github.com/gen2brain/raylib-go/tree/master/examples/others/rpi/basic_window).
 
 ### Installation
 
