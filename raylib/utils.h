@@ -58,14 +58,14 @@ extern "C" {            // Prevents name mangling of functions
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
-#if defined(PLATFORM_DESKTOP) || defined(PLATFORM_RPI)
+//#if defined(PLATFORM_DESKTOP) || defined(PLATFORM_RPI)
 #if defined(SUPPORT_SAVE_BMP)
 void SaveBMP(const char *fileName, unsigned char *imgData, int width, int height, int compSize);
 #endif
 #if defined(SUPPORT_SAVE_PNG)
 void SavePNG(const char *fileName, unsigned char *imgData, int width, int height, int compSize);
 #endif
-#endif
+//#endif
 
 #if defined(PLATFORM_ANDROID)
 void InitAssetManager(AAssetManager *manager);  // Initialize asset manager from android app

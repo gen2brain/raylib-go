@@ -424,15 +424,17 @@ static void *GamepadThread(void *arg);                  // Mouse reading thread
 #if defined(PLATFORM_ANDROID)
 // To allow easier porting to android, we allow the user to define a 
 // main function which we call from android_main, defined by ourselves
-extern int main(int argc, char *argv[]);
+//extern int main(int argc, char *argv[]);
+extern void android_run();
 
 void android_main(struct android_app *app)
 {
     char arg0[] = "raylib";     // NOTE: argv[] are mutable
     androidApp = app;
 
+    (void)android_run();
     // TODO: Should we maybe report != 0 return codes somewhere?
-    (void)main(1, (char*[]) { arg0, NULL });
+    //(void)main(1, (char*[]) { arg0, NULL });
 }
 
 // TODO: Add this to header (if apps really need it)

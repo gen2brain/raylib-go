@@ -7,8 +7,7 @@ package raylib
 #include <android/asset_manager.h>
 #include <android_native_app_glue.h>
 
-extern void android_main(struct android_app *app);
-extern void android_init(void *state);
+extern void android_init();
 
 AAssetManager* asset_manager;
 const char* internal_storage_path;
@@ -21,33 +20,32 @@ import (
 	"unsafe"
 )
 
-var callbackHolder func(unsafe.Pointer)
+var callbackHolder func()
 
 // InitWindow - Initialize Window and OpenGL Graphics
 func InitWindow(width int32, height int32, t interface{}) {
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
 
-	app, ok := t.(unsafe.Pointer)
+	title, ok := t.(string)
 	if ok {
-		C.InitWindow(cwidth, cheight, app)
-		C.android_init(app)
+		ctitle := C.CString(title)
+		defer C.free(unsafe.Pointer(ctitle))
+
+		C.InitWindow(cwidth, cheight, ctitle)
+		C.android_init()
 	}
 }
 
 // SetCallbackFunc - Sets callback function
-func SetCallbackFunc(callback func(unsafe.Pointer)) {
+func SetCallbackFunc(callback func()) {
 	callbackHolder = callback
 }
 
-// SetMainLoop - Sets main loop function
-func SetMainLoop(f func(), fps, simulateInfiniteLoop int) {
-}
-
-//export androidMain
-func androidMain(app *C.struct_android_app) {
+//export android_run
+func android_run() {
 	if callbackHolder != nil {
-		callbackHolder(unsafe.Pointer(app))
+		callbackHolder()
 	}
 }
 

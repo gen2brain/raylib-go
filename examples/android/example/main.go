@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	"runtime"
-	"unsafe"
 
 	"github.com/gen2brain/raylib-go/raylib"
 )
@@ -17,20 +16,16 @@ const (
 )
 
 func init() {
-	raylib.SetCallbackFunc(run)
+	raylib.SetCallbackFunc(main)
 }
 
-func run(app unsafe.Pointer) {
+func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
 	raylib.SetConfigFlags(raylib.FlagVsyncHint)
 
-	if runtime.GOOS != "android" {
-		raylib.InitWindow(screenWidth, screenHeight, "Android example")
-	} else {
-		raylib.InitWindow(screenWidth, screenHeight, app)
-	}
+	raylib.InitWindow(screenWidth, screenHeight, "Android example")
 
 	raylib.InitAudioDevice()
 
@@ -125,8 +120,4 @@ func run(app unsafe.Pointer) {
 	raylib.CloseWindow()              // Close window
 
 	os.Exit(0)
-}
-
-func main() {
-	run(nil)
 }

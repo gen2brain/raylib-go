@@ -1159,6 +1159,10 @@ RLAPI void StopAudioStream(AudioStream stream);                       // Stop au
 RLAPI void SetAudioStreamVolume(AudioStream stream, float volume);    // Set volume for audio stream (1.0 is max level)
 RLAPI void SetAudioStreamPitch(AudioStream stream, float pitch);      // Set pitch for audio stream (1.0 is base level)
 
+#if defined(PLATFORM_ANDROID)
+RLAPI struct android_app *GetAndroidApp(void);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
