@@ -23,18 +23,15 @@ import (
 var callbackHolder func()
 
 // InitWindow - Initialize Window and OpenGL Graphics
-func InitWindow(width int32, height int32, t interface{}) {
+func InitWindow(width int32, height int32, title string) {
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
 
-	title, ok := t.(string)
-	if ok {
-		ctitle := C.CString(title)
-		defer C.free(unsafe.Pointer(ctitle))
+	ctitle := C.CString(title)
+	defer C.free(unsafe.Pointer(ctitle))
 
-		C.InitWindow(cwidth, cheight, ctitle)
-		C.android_init()
-	}
+	C.InitWindow(cwidth, cheight, ctitle)
+	C.android_init()
 }
 
 // SetCallbackFunc - Sets callback function
