@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"unsafe"
 
 	"github.com/gen2brain/raylib-go/raylib"
 )
@@ -96,26 +95,16 @@ func NewGame() (g Game) {
 
 // On Android this sets callback function to be used for android_main
 func init() {
-	raylib.SetCallbackFunc(run)
+	raylib.SetCallbackFunc(main)
 }
 
-// Main function, not used on Android, used on desktop platform
 func main() {
-	run(nil)
-}
-
-// Callback function on Android, not needed on desktop platform
-func run(app unsafe.Pointer) {
 	// Initialize game
 	game := NewGame()
 	game.GameOver = true
 
 	// Initialize window
-	if runtime.GOOS != "android" {
-		raylib.InitWindow(screenWidth, screenHeight, "Floppy Gopher")
-	} else {
-		raylib.InitWindow(screenWidth, screenHeight, app)
-	}
+	raylib.InitWindow(screenWidth, screenHeight, "Floppy Gopher")
 
 	// Initialize audio
 	raylib.InitAudioDevice()
@@ -158,7 +147,7 @@ func (g *Game) Init() {
 	g.FrameRec = raylib.NewRectangle(0, 0, spriteSize, spriteSize)
 
 	// Cloud rectangle
-	g.CloudRec = raylib.NewRectangle(0, 0, screenWidth, g.TxClouds.Height)
+	g.CloudRec = raylib.NewRectangle(0, 0, float32(screenWidth), float32(g.TxClouds.Height))
 
 	// Initialize particles
 	g.Particles = make([]Particle, maxParticles)
@@ -188,14 +177,14 @@ func (g *Game) Init() {
 	// Pipes
 	g.Pipes = make([]Pipe, maxPipes*2)
 	for i := 0; i < maxPipes*2; i += 2 {
-		g.Pipes[i].Rec.X = int32(g.PipesPos[i/2].X)
-		g.Pipes[i].Rec.Y = int32(g.PipesPos[i/2].Y)
+		g.Pipes[i].Rec.X = g.PipesPos[i/2].X
+		g.Pipes[i].Rec.Y = g.PipesPos[i/2].Y
 		g.Pipes[i].Rec.Width = pipesWidth
 		g.Pipes[i].Rec.Height = 550
 		g.Pipes[i].Color = colors[raylib.GetRandomValue(0, int32(len(colors)-1))]
 
-		g.Pipes[i+1].Rec.X = int32(g.PipesPos[i/2].X)
-		g.Pipes[i+1].Rec.Y = int32(1200 + g.PipesPos[i/2].Y - 550)
+		g.Pipes[i+1].Rec.X = g.PipesPos[i/2].X
+		g.Pipes[i+1].Rec.Y = 1200 + g.PipesPos[i/2].Y - 550
 		g.Pipes[i+1].Rec.Width = pipesWidth
 		g.Pipes[i+1].Rec.Height = 550
 
@@ -259,13 +248,13 @@ func (g *Game) Update() {
 				}
 
 				for i := 0; i < maxPipes*2; i += 2 {
-					g.Pipes[i].Rec.X = int32(g.PipesPos[i/2].X)
-					g.Pipes[i+1].Rec.X = int32(g.PipesPos[i/2].X)
+					g.Pipes[i].Rec.X = g.PipesPos[i/2].X
+					g.Pipes[i+1].Rec.X = g.PipesPos[i/2].X
 				}
 
 				// Scroll clouds
 				g.CloudRec.X += cloudsSpeedX
-				if g.CloudRec.X > g.TxClouds.Width {
+				if g.CloudRec.X > float32(g.TxClouds.Width) {
 					g.CloudRec.X = 0
 				}
 
@@ -326,7 +315,7 @@ func (g *Game) Update() {
 
 				// Check Collisions
 				for i := 0; i < maxPipes*2; i++ {
-					if raylib.CheckCollisionRecs(raylib.NewRectangle(int32(g.Floppy.Position.X), int32(g.Floppy.Position.Y), spriteSize, spriteSize), g.Pipes[i].Rec) {
+					if raylib.CheckCollisionRecs(raylib.NewRectangle(g.Floppy.Position.X, g.Floppy.Position.Y, spriteSize, spriteSize), g.Pipes[i].Rec) {
 						// OMG You killed Gopher you bastard!
 						g.Dead = true
 
@@ -399,8 +388,8 @@ func (g *Game) Draw() {
 		raylib.DrawTextureRec(g.TxClouds, g.CloudRec, raylib.NewVector2(0, float32(screenHeight-g.TxClouds.Height)), raylib.RayWhite)
 
 		// Draw rotated clouds
-		raylib.DrawTexturePro(g.TxClouds, raylib.NewRectangle(-g.CloudRec.X, 0, g.TxClouds.Width, g.TxClouds.Height),
-			raylib.NewRectangle(0, 0, g.TxClouds.Width, g.TxClouds.Height), raylib.NewVector2(float32(g.TxClouds.Width), float32(g.TxClouds.Height)), 180, raylib.White)
+		raylib.DrawTexturePro(g.TxClouds, raylib.NewRectangle(-g.CloudRec.X, 0, float32(g.TxClouds.Width), float32(g.TxClouds.Height)),
+			raylib.NewRectangle(0, 0, float32(g.TxClouds.Width), float32(g.TxClouds.Height)), raylib.NewVector2(float32(g.TxClouds.Width), float32(g.TxClouds.Height)), 180, raylib.White)
 
 		// Draw Gopher
 		raylib.DrawTextureRec(g.TxSprites, g.FrameRec, g.Floppy.Position, raylib.RayWhite)
@@ -411,8 +400,8 @@ func (g *Game) Draw() {
 				if g.Particles[i].Active {
 					raylib.DrawTexturePro(
 						g.TxSmoke,
-						raylib.NewRectangle(0, 0, g.TxSmoke.Width, g.TxSmoke.Height),
-						raylib.NewRectangle(int32(g.Particles[i].Position.X), int32(g.Particles[i].Position.Y), g.TxSmoke.Width*int32(g.Particles[i].Size), g.TxSmoke.Height*int32(g.Particles[i].Size)),
+						raylib.NewRectangle(0, 0, float32(g.TxSmoke.Width), float32(g.TxSmoke.Height)),
+						raylib.NewRectangle(g.Particles[i].Position.X, g.Particles[i].Position.Y, float32(g.TxSmoke.Width)*g.Particles[i].Size, float32(g.TxSmoke.Height)*g.Particles[i].Size),
 						raylib.NewVector2(float32(g.TxSmoke.Width)*g.Particles[i].Size/2, float32(g.TxSmoke.Height)*g.Particles[i].Size/2),
 						g.Particles[i].Rotation,
 						raylib.Fade(g.Particles[i].Color, g.Particles[i].Alpha),
@@ -423,12 +412,12 @@ func (g *Game) Draw() {
 
 		// Draw pipes
 		for i := 0; i < maxPipes; i++ {
-			raylib.DrawRectangle(g.Pipes[i*2].Rec.X, g.Pipes[i*2].Rec.Y, g.Pipes[i*2].Rec.Width, g.Pipes[i*2].Rec.Height, g.Pipes[i*2].Color)
-			raylib.DrawRectangle(g.Pipes[i*2+1].Rec.X, g.Pipes[i*2+1].Rec.Y, g.Pipes[i*2+1].Rec.Width, g.Pipes[i*2+1].Rec.Height, g.Pipes[i*2].Color)
+			raylib.DrawRectangle(int32(g.Pipes[i*2].Rec.X), int32(g.Pipes[i*2].Rec.Y), int32(g.Pipes[i*2].Rec.Width), int32(g.Pipes[i*2].Rec.Height), g.Pipes[i*2].Color)
+			raylib.DrawRectangle(int32(g.Pipes[i*2+1].Rec.X), int32(g.Pipes[i*2+1].Rec.Y), int32(g.Pipes[i*2+1].Rec.Width), int32(g.Pipes[i*2+1].Rec.Height), g.Pipes[i*2].Color)
 
 			// Draw borders
-			raylib.DrawRectangleLines(g.Pipes[i*2].Rec.X, g.Pipes[i*2].Rec.Y, g.Pipes[i*2].Rec.Width, g.Pipes[i*2].Rec.Height, raylib.Black)
-			raylib.DrawRectangleLines(g.Pipes[i*2+1].Rec.X, g.Pipes[i*2+1].Rec.Y, g.Pipes[i*2+1].Rec.Width, g.Pipes[i*2+1].Rec.Height, raylib.Black)
+			raylib.DrawRectangleLines(int32(g.Pipes[i*2].Rec.X), int32(g.Pipes[i*2].Rec.Y), int32(g.Pipes[i*2].Rec.Width), int32(g.Pipes[i*2].Rec.Height), raylib.Black)
+			raylib.DrawRectangleLines(int32(g.Pipes[i*2+1].Rec.X), int32(g.Pipes[i*2+1].Rec.Y), int32(g.Pipes[i*2+1].Rec.Width), int32(g.Pipes[i*2+1].Rec.Height), raylib.Black)
 		}
 
 		// Draw Super Flashing FX (one frame only)

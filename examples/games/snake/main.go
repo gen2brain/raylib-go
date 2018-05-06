@@ -177,8 +177,8 @@ func (g *Game) Update() {
 
 			// collision
 			if raylib.CheckCollisionRecs(
-				raylib.NewRectangle(int32(g.Snake[0].Position.X), int32(g.Snake[0].Position.Y), int32(g.Snake[0].Size.X), int32(g.Snake[0].Size.Y)),
-				raylib.NewRectangle(int32(g.Fruit.Position.X), int32(g.Fruit.Position.Y), int32(g.Fruit.Size.X), int32(g.Fruit.Size.Y)),
+				raylib.NewRectangle(g.Snake[0].Position.X, g.Snake[0].Position.Y, g.Snake[0].Size.X, g.Snake[0].Size.Y),
+				raylib.NewRectangle(g.Fruit.Position.X, g.Fruit.Position.Y, g.Fruit.Size.X, g.Fruit.Size.Y),
 			) {
 				g.Snake[g.CounterTail].Position = g.SnakePosition[g.CounterTail-1]
 				g.CounterTail += 1
