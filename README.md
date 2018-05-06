@@ -16,11 +16,11 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
 ##### Ubuntu
 
-    apt-get install libasound2-dev libgl1-mesa-dev libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev libxrandr-dev
+    apt-get install libgl1-mesa-dev libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev libxrandr-dev
 
 ##### Fedora
 
-    dnf install alsa-lib-devel mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel
+    dnf install mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel
 
 ##### macOS
 
