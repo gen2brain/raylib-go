@@ -143,13 +143,13 @@ func UpdateTexture(texture Texture2D, pixels []byte) {
 	C.UpdateTexture(*ctexture, cpixels)
 }
 
-// SaveImageAs - Save image to a PNG file
-func SaveImageAs(name string, image Image) {
+// ExportImage - Export image as a PNG file
+func ExportImage(name string, image Image) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	cimage := image.cptr()
 
-	C.SaveImageAs(cname, *cimage)
+	C.ExportImage(cname, *cimage)
 }
 
 // ImageToPOT - Convert image to POT (power-of-two)
@@ -160,7 +160,7 @@ func ImageToPOT(image *Image, fillColor Color) {
 }
 
 // ImageFormat - Convert image data to desired format
-func ImageFormat(image *Image, newFormat int32) {
+func ImageFormat(image *Image, newFormat PixelFormat) {
 	cimage := image.cptr()
 	cnewFormat := (C.int)(newFormat)
 	C.ImageFormat(cimage, cnewFormat)
@@ -253,12 +253,12 @@ func ImageText(text string, fontSize int32, color Color) *Image {
 }
 
 // ImageTextEx - Create an image from text (custom sprite font)
-func ImageTextEx(font SpriteFont, text string, fontSize float32, spacing int32, tint Color) *Image {
+func ImageTextEx(font Font, text string, fontSize, spacing float32, tint Color) *Image {
 	cfont := font.cptr()
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
 	cfontSize := (C.float)(fontSize)
-	cspacing := (C.int)(spacing)
+	cspacing := (C.float)(spacing)
 	ctint := tint.cptr()
 	ret := C.ImageTextEx(*cfont, ctext, cfontSize, cspacing, *ctint)
 	v := newImageFromPointer(unsafe.Pointer(&ret))
@@ -274,6 +274,15 @@ func ImageDraw(dst, src *Image, srcRec, dstRec Rectangle) {
 	C.ImageDraw(cdst, *csrc, *csrcRec, *cdstRec)
 }
 
+// ImageDrawRectangle - Draw rectangle within an image
+func ImageDrawRectangle(dst *Image, position Vector2, rec Rectangle, color Color) {
+	cdst := dst.cptr()
+	cposition := position.cptr()
+	crec := rec.cptr()
+	ccolor := color.cptr()
+	C.ImageDrawRectangle(cdst, *cposition, *crec, *ccolor)
+}
+
 // ImageDrawText - Draw text (default font) within an image (destination)
 func ImageDrawText(dst *Image, position Vector2, text string, fontSize int32, color Color) {
 	cdst := dst.cptr()
@@ -286,14 +295,14 @@ func ImageDrawText(dst *Image, position Vector2, text string, fontSize int32, co
 }
 
 // ImageDrawTextEx - Draw text (custom sprite font) within an image (destination)
-func ImageDrawTextEx(dst *Image, position Vector2, font SpriteFont, text string, fontSize float32, spacing int32, color Color) {
+func ImageDrawTextEx(dst *Image, position Vector2, font Font, text string, fontSize, spacing float32, color Color) {
 	cdst := dst.cptr()
 	cposition := position.cptr()
 	cfont := font.cptr()
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
 	cfontSize := (C.float)(fontSize)
-	cspacing := (C.int)(spacing)
+	cspacing := (C.float)(spacing)
 	ccolor := color.cptr()
 	C.ImageDrawTextEx(cdst, *cposition, *cfont, ctext, cfontSize, cspacing, *ccolor)
 }

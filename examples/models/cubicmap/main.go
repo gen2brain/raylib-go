@@ -15,6 +15,7 @@ func main() {
 	camera.Target = raylib.NewVector3(0.0, 0.0, 0.0)
 	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
+	camera.Type = raylib.CameraPerspective
 
 	image := raylib.LoadImage("cubicmap.png")      // Load cubicmap image (RAM)
 	cubicmap := raylib.LoadTextureFromImage(image) // Convert image to texture to display (VRAM)
@@ -45,11 +46,11 @@ func main() {
 
 		raylib.ClearBackground(raylib.RayWhite)
 
-		raylib.Begin3dMode(camera)
+		raylib.BeginMode3D(camera)
 
 		raylib.DrawModel(model, mapPosition, 1.0, raylib.White)
 
-		raylib.End3dMode()
+		raylib.EndMode3D()
 
 		raylib.DrawTextureEx(cubicmap, raylib.NewVector2(float32(screenWidth-cubicmap.Width*4-20), 20), 0.0, 4.0, raylib.White)
 		raylib.DrawRectangleLines(screenWidth-cubicmap.Width*4-20, 20, cubicmap.Width*4, cubicmap.Height*4, raylib.Green)

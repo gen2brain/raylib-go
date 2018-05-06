@@ -95,8 +95,8 @@ func main() {
 			if mouseTail[i].Active {
 				raylib.DrawTexturePro(
 					smoke,
-					raylib.NewRectangle(0, 0, smoke.Width, smoke.Height),
-					raylib.NewRectangle(int32(mouseTail[i].Position.X), int32(mouseTail[i].Position.Y), smoke.Width*int32(mouseTail[i].Size), smoke.Height*int32(mouseTail[i].Size)),
+					raylib.NewRectangle(0, 0, float32(smoke.Width), float32(smoke.Height)),
+					raylib.NewRectangle(mouseTail[i].Position.X, mouseTail[i].Position.Y, float32(smoke.Width)*mouseTail[i].Size, float32(smoke.Height)*mouseTail[i].Size),
 					raylib.NewVector2(float32(smoke.Width)*mouseTail[i].Size/2, float32(smoke.Height)*mouseTail[i].Size/2),
 					mouseTail[i].Rotation,
 					raylib.Fade(mouseTail[i].Color, mouseTail[i].Alpha),

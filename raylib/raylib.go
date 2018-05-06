@@ -151,6 +151,15 @@ const (
 	CameraThirdPerson
 )
 
+// CameraType type
+type CameraType int32
+
+// Camera projection modes
+const (
+	CameraPerspective CameraType = iota
+	CameraOrthographic
+)
+
 // Some basic Defines
 const (
 	Pi      = 3.1415927
@@ -213,6 +222,9 @@ const (
 	KeyRightShift   = 344
 	KeyRightControl = 345
 	KeyRightAlt     = 346
+	KeyGrave        = 96
+	KeySlash        = 47
+	KeyBackSlash    = 92
 
 	// Keyboard Alpha Numeric Keys
 	KeyZero  = 48
@@ -421,6 +433,24 @@ func newVector3FromPointer(ptr unsafe.Pointer) Vector3 {
 	return *(*Vector3)(ptr)
 }
 
+// Vector4 type
+type Vector4 struct {
+	X float32
+	Y float32
+	Z float32
+	W float32
+}
+
+// NewVector4 - Returns new Vector4
+func NewVector4(X, Y, Z, W float32) Vector4 {
+	return Vector4{X, Y, Z, W}
+}
+
+// newVector4FromPointer - Returns new Vector4 from pointer
+func newVector4FromPointer(ptr unsafe.Pointer) Vector4 {
+	return *(*Vector4)(ptr)
+}
+
 // Matrix type (OpenGL style 4x4 - right handed, column major)
 type Matrix struct {
 	M0, M4, M8, M12  float32
@@ -485,14 +515,14 @@ func newColorFromPointer(ptr unsafe.Pointer) Color {
 
 // Rectangle type
 type Rectangle struct {
-	X      int32
-	Y      int32
-	Width  int32
-	Height int32
+	X      float32
+	Y      float32
+	Width  float32
+	Height float32
 }
 
 // NewRectangle - Returns new Rectangle
-func NewRectangle(x, y, width, height int32) Rectangle {
+func NewRectangle(x, y, width, height float32) Rectangle {
 	return Rectangle{x, y, width, height}
 }
 
@@ -501,26 +531,61 @@ func newRectangleFromPointer(ptr unsafe.Pointer) Rectangle {
 	return *(*Rectangle)(ptr)
 }
 
-// Camera type, defines a camera position/orientation in 3d space
-type Camera struct {
+// ToInt32 converts rectangle to int32 variant
+func (r *Rectangle) ToInt32() RectangleInt32 {
+	rect := RectangleInt32{}
+	rect.X = int32(r.X)
+	rect.Y = int32(r.Y)
+	rect.Width = int32(r.Width)
+	rect.Height = int32(r.Height)
+
+	return rect
+}
+
+// RectangleInt32 type
+type RectangleInt32 struct {
+	X      int32
+	Y      int32
+	Width  int32
+	Height int32
+}
+
+// ToFloat32 converts rectangle to float32 variant
+func (r *RectangleInt32) ToFloat32() Rectangle {
+	rect := Rectangle{}
+	rect.X = float32(r.X)
+	rect.Y = float32(r.Y)
+	rect.Width = float32(r.Width)
+	rect.Height = float32(r.Height)
+
+	return rect
+}
+
+// Camera3D type, defines a camera position/orientation in 3d space
+type Camera3D struct {
 	// Camera position
 	Position Vector3
 	// Camera target it looks-at
 	Target Vector3
 	// Camera up vector (rotation over its axis)
 	Up Vector3
-	// Camera field-of-view apperture in Y (degrees)
+	// Camera field-of-view apperture in Y (degrees) in perspective, used as near plane width in orthographic
 	Fovy float32
+	// Camera type, controlling projection type, either CameraPerspective or CameraOrthographic.
+	Type CameraType
 }
 
-// NewCamera - Returns new Camera
-func NewCamera(pos, target, up Vector3, fovy float32) Camera {
-	return Camera{pos, target, up, fovy}
+// Camera type fallback, defaults to Camera3D
+type Camera = Camera3D
+
+// NewCamera3D - Returns new Camera3D
+func NewCamera3D(pos, target, up Vector3, fovy float32, ct CameraType) Camera3D {
+	return Camera3D{pos, target, up, fovy, ct}
 }
 
-// newCameraFromPointer - Returns new Camera from pointer
-func newCameraFromPointer(ptr unsafe.Pointer) Camera {
-	return *(*Camera)(ptr)
+// newCamera3DFromPointer - Returns new Camera3D from pointer
+func newCamera3DFromPointer(ptr unsafe.Pointer) Camera3D {
+	return *(*Camera3D)(ptr)
 }
 
 // Camera2D type, defines a 2d camera
@@ -608,7 +673,7 @@ const (
 	LocMapMetalness
 	LocMapNormal
 	LocMapRoughness
-	LocMapOccusion
+	LocMapOcclusion
 	LocMapEmission
 	LocMapHeight
 	LocMapCubemap
@@ -838,7 +903,7 @@ func newShaderFromPointer(ptr unsafe.Pointer) Shader {
 	return *(*Shader)(ptr)
 }
 
-// CharInfo - SpriteFont character info
+// CharInfo - Font character info
 type CharInfo struct {
 	// Character value (Unicode)
 	Value int32
@@ -852,18 +917,18 @@ type CharInfo struct {
 	AdvanceX int32
 }
 
-// NewCharInfo - Returns new SpriteFont
+// NewCharInfo - Returns new CharInfo
 func NewCharInfo(value int32, rec Rectangle, offsetX, offsetY, advanceX int32) CharInfo {
 	return CharInfo{value, rec, offsetX, offsetY, advanceX}
 }
 
-// newCharInfoFromPointer - Returns new SpriteFont from pointer
+// newCharInfoFromPointer - Returns new CharInfo from pointer
 func newCharInfoFromPointer(ptr unsafe.Pointer) CharInfo {
 	return *(*CharInfo)(ptr)
 }
 
-// SpriteFont type, includes texture and charSet array data
-type SpriteFont struct {
+// Font type, includes texture and charSet array data
+type Font struct {
 	// Font texture
 	Texture Texture2D
 	// Base size (default chars height)
@@ -874,14 +939,14 @@ type SpriteFont struct {
 	Chars *CharInfo
 }
 
-// NewSpriteFont - Returns new SpriteFont
-func NewSpriteFont(texture Texture2D, baseSize, charsCount int32, chars *CharInfo) SpriteFont {
-	return SpriteFont{texture, baseSize, charsCount, chars}
+// NewFont - Returns new Font
+func NewFont(texture Texture2D, baseSize, charsCount int32, chars *CharInfo) Font {
+	return Font{texture, baseSize, charsCount, chars}
 }
 
-// newSpriteFontFromPointer - Returns new SpriteFont from pointer
-func newSpriteFontFromPointer(ptr unsafe.Pointer) SpriteFont {
-	return *(*SpriteFont)(ptr)
+// newFontFromPointer - Returns new Font from pointer
+func newFontFromPointer(ptr unsafe.Pointer) Font {
+	return *(*Font)(ptr)
 }
 
 // PixelFormat - Texture format

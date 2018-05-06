@@ -15,9 +15,9 @@ func main() {
 	msg3 := "...and a THIRD one! GREAT! :D"
 
 	// NOTE: Textures/Fonts MUST be loaded after Window initialization (OpenGL context is required)
-	font1 := raylib.LoadSpriteFont("fonts/custom_mecha.png")         // SpriteFont loading
-	font2 := raylib.LoadSpriteFont("fonts/custom_alagard.png")       // SpriteFont loading
-	font3 := raylib.LoadSpriteFont("fonts/custom_jupiter_crash.png") // SpriteFont loading
+	font1 := raylib.LoadFont("fonts/custom_mecha.png")         // Font loading
+	font2 := raylib.LoadFont("fonts/custom_alagard.png")       // Font loading
+	font3 := raylib.LoadFont("fonts/custom_jupiter_crash.png") // Font loading
 
 	var fontPosition1, fontPosition2, fontPosition3 raylib.Vector2
 
@@ -44,9 +44,9 @@ func main() {
 		raylib.EndDrawing()
 	}
 
-	raylib.UnloadSpriteFont(font1) // SpriteFont unloading
-	raylib.UnloadSpriteFont(font2) // SpriteFont unloading
-	raylib.UnloadSpriteFont(font3) // SpriteFont unloading
+	raylib.UnloadFont(font1) // Font unloading
+	raylib.UnloadFont(font2) // Font unloading
+	raylib.UnloadFont(font3) // Font unloading
 
 	raylib.CloseWindow()
 }

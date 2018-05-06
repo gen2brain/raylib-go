@@ -23,7 +23,7 @@ func main() {
 
 		raylib.ClearBackground(raylib.RayWhite)
 
-		raylib.Begin3dMode(camera)
+		raylib.BeginMode3D(camera)
 
 		raylib.DrawCube(raylib.NewVector3(-4.0, 0.0, 2.0), 2.0, 5.0, 2.0, raylib.Red)
 		raylib.DrawCubeWires(raylib.NewVector3(-4.0, 0.0, 2.0), 2.0, 5.0, 2.0, raylib.Gold)
@@ -41,7 +41,7 @@ func main() {
 
 		raylib.DrawGrid(10, 1.0) // Draw a grid
 
-		raylib.End3dMode()
+		raylib.EndMode3D()
 
 		raylib.DrawFPS(10, 10)
 

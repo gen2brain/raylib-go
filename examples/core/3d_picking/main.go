@@ -10,11 +10,12 @@ func main() {
 
 	raylib.InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d picking")
 
-	camera := raylib.Camera{}
+	camera := raylib.Camera3D{}
 	camera.Position = raylib.NewVector3(10.0, 10.0, 10.0)
 	camera.Target = raylib.NewVector3(0.0, 0.0, 0.0)
 	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
+	camera.Type = raylib.CameraPerspective
 
 	cubePosition := raylib.NewVector3(0.0, 1.0, 0.0)
 	cubeSize := raylib.NewVector3(2.0, 2.0, 2.0)
@@ -44,7 +45,7 @@ func main() {
 
 		raylib.ClearBackground(raylib.RayWhite)
 
-		raylib.Begin3dMode(camera)
+		raylib.BeginMode3D(camera)
 
 		if collision {
 			raylib.DrawCube(cubePosition, cubeSize.X, cubeSize.Y, cubeSize.Z, raylib.Red)
@@ -60,7 +61,7 @@ func main() {
 
 		raylib.DrawGrid(10, 1.0)
 
-		raylib.End3dMode()
+		raylib.EndMode3D()
 
 		raylib.DrawText("Try selecting the box with mouse!", 240, 10, 20, raylib.DarkGray)
 

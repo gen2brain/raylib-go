@@ -12,14 +12,14 @@ func main() {
 
 	raylib.InitWindow(screenWidth, screenHeight, "raylib [text] example - ttf loading")
 
-	msg := "TTF SpriteFont"
+	msg := "TTF Font"
 
 	// NOTE: Textures/Fonts MUST be loaded after Window initialization (OpenGL context is required)
 
 	fontChars := int32(0)
 
-	// TTF SpriteFont loading with custom generation parameters
-	font := raylib.LoadSpriteFontEx("fonts/KAISG.ttf", 96, 0, &fontChars)
+	// TTF Font loading with custom generation parameters
+	font := raylib.LoadFontEx("fonts/KAISG.ttf", 96, 0, &fontChars)
 
 	// Generate mipmap levels to use trilinear filtering
 	// NOTE: On 2D drawing it won't be noticeable, it looks like FILTER_BILINEAR
@@ -68,8 +68,8 @@ func main() {
 			droppedFiles = raylib.GetDroppedFiles(&count)
 
 			if count == 1 { // Only support one ttf file dropped
-				raylib.UnloadSpriteFont(font)
-				font = raylib.LoadSpriteFontEx(droppedFiles[0], fontSize, 0, &fontChars)
+				raylib.UnloadFont(font)
+				font = raylib.LoadFontEx(droppedFiles[0], fontSize, 0, &fontChars)
 				raylib.ClearDroppedFiles()
 			}
 		}
@@ -104,7 +104,7 @@ func main() {
 		raylib.EndDrawing()
 	}
 
-	raylib.UnloadSpriteFont(font) // SpriteFont unloading
+	raylib.UnloadFont(font) // Font unloading
 
 	raylib.ClearDroppedFiles() // Clear internal buffers
 

@@ -67,11 +67,6 @@
 #include <xinput.h>
 #include <dbt.h>
 
-#if defined(_MSC_VER)
- #include <malloc.h>
- #define strdup _strdup
-#endif
-
 // HACK: Define macros that some windows.h variants don't
 #ifndef WM_MOUSEHWHEEL
  #define WM_MOUSEHWHEEL 0x020E
@@ -105,12 +100,11 @@
 #endif
 
 #if WINVER < 0x0601
-typedef struct tagCHANGEFILTERSTRUCT
+typedef struct
 {
     DWORD cbSize;
     DWORD ExtStatus;
-
-} CHANGEFILTERSTRUCT, *PCHANGEFILTERSTRUCT;
+} CHANGEFILTERSTRUCT;
 #ifndef MSGFLT_ALLOW
  #define MSGFLT_ALLOW 1
 #endif
@@ -129,13 +123,13 @@ typedef struct
 #endif /*Windows Vista*/
 
 #ifndef DPI_ENUMS_DECLARED
-typedef enum PROCESS_DPI_AWARENESS
+typedef enum
 {
     PROCESS_DPI_UNAWARE = 0,
     PROCESS_SYSTEM_DPI_AWARE = 1,
     PROCESS_PER_MONITOR_DPI_AWARE = 2
 } PROCESS_DPI_AWARENESS;
-typedef enum MONITOR_DPI_TYPE
+typedef enum
 {
     MDT_EFFECTIVE_DPI = 0,
     MDT_ANGULAR_DPI = 1,
@@ -209,7 +203,7 @@ typedef HRESULT (WINAPI * PFN_DirectInput8Create)(HINSTANCE,DWORD,REFIID,LPVOID*
 
 // user32.dll function pointer typedefs
 typedef BOOL (WINAPI * PFN_SetProcessDPIAware)(void);
-typedef BOOL (WINAPI * PFN_ChangeWindowMessageFilterEx)(HWND,UINT,DWORD,PCHANGEFILTERSTRUCT);
+typedef BOOL (WINAPI * PFN_ChangeWindowMessageFilterEx)(HWND,UINT,DWORD,CHANGEFILTERSTRUCT*);
 #define SetProcessDPIAware _glfw.win32.user32.SetProcessDPIAware_
 #define ChangeWindowMessageFilterEx _glfw.win32.user32.ChangeWindowMessageFilterEx_
 
@@ -289,6 +283,7 @@ typedef struct _GLFWwindowWin32
 typedef struct _GLFWlibraryWin32
 {
     HWND                helperWindowHandle;
+    HDEVNOTIFY          deviceNotificationHandle;
     DWORD               foregroundLockTimeout;
     int                 acquiredMonitorCount;
     char*               clipboardString;
@@ -403,7 +398,7 @@ void _glfwUpdateKeyNamesWin32(void);
 void _glfwInitTimerWin32(void);
 
 void _glfwPollMonitorsWin32(void);
-GLFWbool _glfwSetVideoModeWin32(_GLFWmonitor* monitor, const GLFWvidmode* desired);
+void _glfwSetVideoModeWin32(_GLFWmonitor* monitor, const GLFWvidmode* desired);
 void _glfwRestoreVideoModeWin32(_GLFWmonitor* monitor);
 void _glfwGetMonitorContentScaleWin32(HMONITOR handle, float* xscale, float* yscale);
 

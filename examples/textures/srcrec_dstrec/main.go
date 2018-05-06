@@ -13,14 +13,14 @@ func main() {
 	// NOTE: Textures MUST be loaded after Window initialization (OpenGL context is required)
 	scarfy := raylib.LoadTexture("scarfy.png") // Texture loading
 
-	frameWidth := scarfy.Width / 7
-	frameHeight := scarfy.Height
+	frameWidth := float32(scarfy.Width) / 7
+	frameHeight := float32(scarfy.Height)
 
 	// NOTE: Source rectangle (part of the texture to use for drawing)
-	sourceRec := raylib.NewRectangle(0, 0, int32(frameWidth), int32(frameHeight))
+	sourceRec := raylib.NewRectangle(0, 0, frameWidth, frameHeight)
 
 	// NOTE: Destination rectangle (screen rectangle where drawing part of texture)
-	destRec := raylib.NewRectangle(screenWidth/2, screenHeight/2, frameWidth*2, frameHeight*2)
+	destRec := raylib.NewRectangle(float32(screenWidth)/2, float32(screenHeight)/2, frameWidth*2, frameHeight*2)
 
 	// NOTE: Origin of the texture (rotation/scale point), it's relative to destination rectangle size
 	origin := raylib.NewVector2(float32(frameWidth), float32(frameHeight))
@@ -45,8 +45,8 @@ func main() {
 		// rotation defines the texture rotation (using origin as rotation point)
 		raylib.DrawTexturePro(scarfy, sourceRec, destRec, origin, rotation, raylib.White)
 
-		raylib.DrawLine(destRec.X, 0, destRec.X, screenHeight, raylib.Gray)
-		raylib.DrawLine(0, destRec.Y, screenWidth, destRec.Y, raylib.Gray)
+		raylib.DrawLine(int32(destRec.X), 0, int32(destRec.X), screenHeight, raylib.Gray)
+		raylib.DrawLine(0, int32(destRec.Y), screenWidth, int32(destRec.Y), raylib.Gray)
 
 		raylib.DrawText("(c) Scarfy sprite by Eiden Marsal", screenWidth-200, screenHeight-20, 10, raylib.Gray)
 

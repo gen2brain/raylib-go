@@ -33,14 +33,14 @@ func main() {
 
 		raylib.ClearBackground(raylib.RayWhite)
 
-		raylib.Begin3dMode(camera)
+		raylib.BeginMode3D(camera)
 
 		raylib.DrawCube(cubePosition, 2.0, 2.0, 2.0, raylib.Red)
 		raylib.DrawCubeWires(cubePosition, 2.0, 2.0, 2.0, raylib.Maroon)
 
 		raylib.DrawGrid(10, 1.0)
 
-		raylib.End3dMode()
+		raylib.EndMode3D()
 
 		raylib.DrawText("Enemy: 100 / 100", int32(cubeScreenPosition.X)-raylib.MeasureText("Enemy: 100 / 100", 20)/2, int32(cubeScreenPosition.Y), 20, raylib.Black)
 		raylib.DrawText("Text is always on top of the cube", (screenWidth-raylib.MeasureText("Text is always on top of the cube", 20))/2, 25, 20, raylib.Gray)

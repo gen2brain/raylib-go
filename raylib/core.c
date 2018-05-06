@@ -48,7 +48,10 @@
 *       Mouse gestures are directly mapped like touches and processed by gestures system.
 *
 *   #define SUPPORT_BUSY_WAIT_LOOP
-*       Use busy wait loop for timming sync, if not defined, a high-resolution timer is setup and used
+*       Use busy wait loop for timing sync, if not defined, a high-resolution timer is setup and used
+*
+*   #define SUPPORT_SCREEN_CAPTURE
+*       Allow automatic screen capture of current screen pressing F12, defined in KeyCallback()
 *
 *   #define SUPPORT_GIF_RECORDING
 *       Allow automatic gif recording of current screen pressing CTRL+F12, defined in KeyCallback()
@@ -81,29 +84,19 @@
 *
 **********************************************************************************************/
 
-// Default configuration flags (supported features)
-//-------------------------------------------------
-#define SUPPORT_DEFAULT_FONT
-#define SUPPORT_MOUSE_GESTURES
-#define SUPPORT_CAMERA_SYSTEM
-#define SUPPORT_GESTURES_SYSTEM
-//#define SUPPORT_BUSY_WAIT_LOOP
-#define SUPPORT_GIF_RECORDING
-//-------------------------------------------------
-
-#include "raylib.h"
+#include "config.h"             // Defines module configuration flags
+#include "raylib.h"             // Declares module functions
 
 #if (defined(__linux__) || defined(PLATFORM_WEB)) && _POSIX_C_SOURCE < 199309L
     #undef _POSIX_C_SOURCE
     #define _POSIX_C_SOURCE 199309L // Required for CLOCK_MONOTONIC if compiled with c99 without gnu ext.
 #endif
 
-#include "rlgl.h"           // raylib OpenGL abstraction layer to OpenGL 1.1, 3.3+ or ES2
-#include "utils.h"          // Required for: fopen() Android mapping
-
-#define RAYMATH_IMPLEMENTATION  // Use raymath as a header-only library (includes implementation)
-#define RAYMATH_EXTERN_INLINE   // Compile raymath functions as static inline (remember, it's a compiler hint)
+#define RAYMATH_IMPLEMENTATION  // Define external out-of-line implementation of raymath here
 #include "raymath.h"            // Required for: Vector3 and Matrix functions
+
+#include "rlgl.h"               // raylib OpenGL abstraction layer to OpenGL 1.1, 3.3+ or ES2
+#include "utils.h"              // Required for: fopen() Android mapping
 
 #if defined(SUPPORT_GESTURES_SYSTEM)
     #define GESTURES_IMPLEMENTATION
@@ -117,16 +110,17 @@
 
 #if defined(SUPPORT_GIF_RECORDING)
     #define RGIF_IMPLEMENTATION
-    #include "external/rgif.h"   // Support GIF recording
+    #include "external/rgif.h"  // Support GIF recording
 #endif
 
 #include <stdio.h>          // Standard input / output lib
 #include <stdlib.h>         // Required for: malloc(), free(), rand(), atexit()
 #include <stdint.h>         // Required for: typedef unsigned long long int uint64_t, used by hi-res timer
 #include <time.h>           // Required for: time() - Android/RPI hi-res timer (NOTE: Linux only!)
-#include <math.h>           // Required for: tan() [Used in Begin3dMode() to set perspective]
+#include <math.h>           // Required for: tan() [Used in BeginMode3D() to set perspective]
 #include <string.h>         // Required for: strrchr(), strcmp()
 //#include <errno.h>          // Macros for reporting and retrieving error conditions through error codes
+#include <ctype.h>          // Required for: tolower() [Used in IsFileExtension()]
 
 #if defined(_WIN32)
     #include <direct.h>             // Required for: _getch(), _chdir()
@@ -147,13 +141,7 @@
 #if defined(PLATFORM_DESKTOP) || defined(PLATFORM_WEB)
     //#define GLFW_INCLUDE_NONE     // Disable the standard OpenGL header inclusion on GLFW3
     #include <GLFW/glfw3.h>         // GLFW3 library: Windows, OpenGL context and Input management
-
-    #if defined(__linux__)
-        #define GLFW_EXPOSE_NATIVE_X11   // Linux specific definitions for getting
-        #define GLFW_EXPOSE_NATIVE_GLX   // native functions like glfwGetX11Window
-        #include <GLFW/glfw3native.h>    // which are required for hiding mouse
-    #endif
-    //#include <GL/gl.h>        // OpenGL functions (GLFW3 already includes gl.h)
+                                    // NOTE: GLFW3 already includes gl.h (OpenGL) headers
 
     #if !defined(SUPPORT_BUSY_WAIT_LOOP) && defined(_WIN32)
     // NOTE: Those functions require linking with winmm library
@@ -238,9 +226,10 @@ static GLFWwindow *window;                      // Native window (graphic device
 
 static bool windowReady = false;                // Check if window has been initialized successfully
 static bool windowMinimized = false;            // Check if window has been minimized
+static const char *windowTitle = NULL;          // Window text title...
 
 #if defined(PLATFORM_ANDROID)
-static struct android_app *app;                 // Android activity
+static struct android_app *androidApp;          // Android activity
 static struct android_poll_source *source;      // Android events polling source
 static int ident, events;                       // Android ALooper_pollAll() variables
 static const char *internalDataPath;            // Android internal data path to write data (/data/data/<package>/files)
@@ -283,10 +272,10 @@ static bool windowShouldClose = false;  // Flag to set window for closing
 #endif
 
 #if defined(PLATFORM_UWP)
-static EGLNativeWindowType uwpWindow;
+extern EGLNativeWindowType uwpWindow;   // Native EGL window handler for UWP (external, defined in UWP App)
 #endif
 
-// Display size-related data
+// Screen related variables
 static unsigned int displayWidth, displayHeight; // Display width and height (monitor, device-screen, LCD, ...)
 static int screenWidth, screenHeight;       // Screen width and height (used render area)
 static int renderWidth, renderHeight;       // Framebuffer width and height (render area, including black bars if required)
@@ -294,13 +283,11 @@ static int renderOffsetX = 0;               // Offset X from render area (must b
 static int renderOffsetY = 0;               // Offset Y from render area (must be divided by 2)
 static bool fullscreen = false;             // Fullscreen mode (useful only for PLATFORM_DESKTOP)
 static Matrix downscaleView;                // Matrix to downscale view (in case screen size bigger than display size)
+
 static bool cursorHidden = false;           // Track if cursor is hidden
 static bool cursorOnScreen = false;         // Tracks if cursor is inside client area
 
 #if defined(PLATFORM_DESKTOP) || defined(PLATFORM_RPI) || defined(PLATFORM_WEB) || defined(PLATFORM_UWP)
-static const char *windowTitle = NULL;      // Window text title...
-static int screenshotCounter = 0;           // Screenshots counter
-
 // Register mouse states
 static char previousMouseState[3] = { 0 };  // Registers previous mouse button state
 static char currentMouseState[3] = { 0 };   // Registers current mouse button state
@@ -326,6 +313,7 @@ static int lastGamepadButtonPressed = -1;   // Register last gamepad button pres
 static int gamepadAxisCount = 0;            // Register number of available gamepad axis
 
 static Vector2 mousePosition;               // Mouse position on screen
+static float mouseScale = 1.0f;             // Mouse default scale
 
 #if defined(PLATFORM_WEB)
 static bool toggleCursorLock = false;       // Ask for cursor pointer lock on next click
@@ -338,17 +326,23 @@ static char **dropFilesPath;                // Store dropped files paths as stri
 static int dropFilesCount = 0;              // Count stored strings
 #endif
 
-static double currentTime, previousTime;    // Used to track timmings
-static double updateTime, drawTime;         // Time measures for update and draw
+static double currentTime = 0.0;            // Current time measure
+static double previousTime = 0.0;           // Previous time measure
+static double updateTime = 0.0;             // Time measure for frame update
+static double drawTime = 0.0;               // Time measure for frame draw
 static double frameTime = 0.0;              // Time measure for one frame
 static double targetTime = 0.0;             // Desired time for one frame, if 0 not applied
 
 static unsigned char configFlags = 0;       // Configuration flags (bit based)
 static bool showLogo = false;               // Track if showing logo at init is enabled
 
+#if defined(SUPPORT_SCREEN_CAPTURE)
+static int screenshotCounter = 0;           // Screenshots counter
+#endif
+
 #if defined(SUPPORT_GIF_RECORDING)
-static int gifFramesCounter = 0;
-static bool gifRecording = false;
+static int gifFramesCounter = 0;            // GIF frames counter
+static bool gifRecording = false;           // GIF recording state
 #endif
 
 //----------------------------------------------------------------------------------
@@ -415,7 +409,7 @@ static void *GamepadThread(void *arg);                  // Mouse reading thread
 #endif
 
 #if defined(PLATFORM_UWP)
-// Define functions required to manage inputs
+// TODO: Define functions required to manage inputs
 #endif
 
 #if defined(_WIN32)
@@ -426,28 +420,96 @@ static void *GamepadThread(void *arg);                  // Mouse reading thread
 //----------------------------------------------------------------------------------
 // Module Functions Definition - Window and OpenGL Context Functions
 //----------------------------------------------------------------------------------
-#if defined(PLATFORM_DESKTOP) || defined(PLATFORM_RPI) || defined(PLATFORM_WEB) || defined(PLATFORM_UWP)
+
+#if defined(PLATFORM_ANDROID)
+// To allow easier porting to android, we allow the user to define a 
+// main function which we call from android_main, defined by ourselves
+extern int main(int argc, char *argv[]);
+
+void android_main(struct android_app *app)
+{
+    char arg0[] = "raylib";     // NOTE: argv[] are mutable
+    androidApp = app;
+
+    // TODO: Should we maybe report != 0 return codes somewhere?
+    (void)main(1, (char*[]) { arg0, NULL });
+}
+
+// TODO: Add this to header (if apps really need it)
+struct android_app *GetAndroidApp(void)
+{
+    return androidApp;
+}
+#endif
+
 // Initialize window and OpenGL context
 // NOTE: data parameter could be used to pass any kind of required data to the initialization
-void InitWindow(int width, int height, void *data)
+void InitWindow(int width, int height, const char *title)
 {
-    TraceLog(LOG_INFO, "Initializing raylib (v1.9.4-dev)");
+    TraceLog(LOG_INFO, "Initializing raylib %s", RAYLIB_VERSION);
 
-#if defined(PLATFORM_DESKTOP)
-    windowTitle = (char *)data;
-#endif
+    windowTitle = title;
+#if defined(PLATFORM_ANDROID)
+    screenWidth = width;
+    screenHeight = height;
 
-#if defined(PLATFORM_UWP)
-    uwpWindow = (EGLNativeWindowType)data;
-#endif
+    // Input data is android app pointer
+    internalDataPath = androidApp->activity->internalDataPath;
 
-    // Init hi-res timer
-    InitTimer();
+    // Set desired windows flags before initializing anything
+    ANativeActivity_setWindowFlags(androidApp->activity, AWINDOW_FLAG_FULLSCREEN, 0);  //AWINDOW_FLAG_SCALED, AWINDOW_FLAG_DITHER
+    //ANativeActivity_setWindowFlags(androidApp->activity, AWINDOW_FLAG_FORCE_NOT_FULLSCREEN, AWINDOW_FLAG_FULLSCREEN);
 
+    int orientation = AConfiguration_getOrientation(androidApp->config);
+
+    if (orientation == ACONFIGURATION_ORIENTATION_PORT) TraceLog(LOG_INFO, "PORTRAIT window orientation");
+    else if (orientation == ACONFIGURATION_ORIENTATION_LAND) TraceLog(LOG_INFO, "LANDSCAPE window orientation");
+
+    // TODO: Automatic orientation doesn't seem to work
+    if (width <= height)
+    {
+        AConfiguration_setOrientation(androidApp->config, ACONFIGURATION_ORIENTATION_PORT);
+        TraceLog(LOG_WARNING, "Window set to portraid mode");
+    }
+    else
+    {
+        AConfiguration_setOrientation(androidApp->config, ACONFIGURATION_ORIENTATION_LAND);
+        TraceLog(LOG_WARNING, "Window set to landscape mode");
+    }
+
+    //AConfiguration_getDensity(androidApp->config);
+    //AConfiguration_getKeyboard(androidApp->config);
+    //AConfiguration_getScreenSize(androidApp->config);
+    //AConfiguration_getScreenLong(androidApp->config);
+
+    androidApp->onAppCmd = AndroidCommandCallback;
+    androidApp->onInputEvent = AndroidInputCallback;
+
+    InitAssetManager(androidApp->activity->assetManager);
+
+    TraceLog(LOG_INFO, "Android app initialized successfully");
+
+    // Wait for window to be initialized (display and context)
+    while (!windowReady)
+    {
+        // Process events loop
+        while ((ident = ALooper_pollAll(0, NULL, &events, (void**)&source)) >= 0)
+        {
+            // Process this event
+            if (source != NULL) source->process(androidApp, source);
+
+            // NOTE: Never close window, native activity is controlled by the system!
+            //if (androidApp->destroyRequested != 0) windowShouldClose = true;
+        }
+    }
+#else
     // Init graphics device (display device and OpenGL context)
     // NOTE: returns true if window and graphic device has been initialized successfully
     windowReady = InitGraphicsDevice(width, height);
     if (!windowReady) return;
+
+    // Init hi-res timer
+    InitTimer();
 
 #if defined(SUPPORT_DEFAULT_FONT)
     // Load default font
@@ -494,71 +556,8 @@ void InitWindow(int width, int height, void *data)
         SetTargetFPS(60);
         LogoAnimation();
     }
+#endif        // defined(PLATFORM_ANDROID)
 }
-#endif
-
-#if defined(PLATFORM_ANDROID)
-// Initialize window and OpenGL context (and Android activity)
-// NOTE: data parameter could be used to pass any kind of required data to the initialization
-void InitWindow(int width, int height, void *data)
-{
-    TraceLog(LOG_INFO, "Initializing raylib (v1.9.4-dev)");
-
-    screenWidth = width;
-    screenHeight = height;
-
-    // Input data is android app pointer
-    app = (struct android_app *)data;
-    internalDataPath = app->activity->internalDataPath;
-
-    // Set desired windows flags before initializing anything
-    ANativeActivity_setWindowFlags(app->activity, AWINDOW_FLAG_FULLSCREEN, 0);  //AWINDOW_FLAG_SCALED, AWINDOW_FLAG_DITHER
-    //ANativeActivity_setWindowFlags(app->activity, AWINDOW_FLAG_FORCE_NOT_FULLSCREEN, AWINDOW_FLAG_FULLSCREEN);
-
-    int orientation = AConfiguration_getOrientation(app->config);
-
-    if (orientation == ACONFIGURATION_ORIENTATION_PORT) TraceLog(LOG_INFO, "PORTRAIT window orientation");
-    else if (orientation == ACONFIGURATION_ORIENTATION_LAND) TraceLog(LOG_INFO, "LANDSCAPE window orientation");
-
-    // TODO: Automatic orientation doesn't seem to work
-    if (width <= height)
-    {
-        AConfiguration_setOrientation(app->config, ACONFIGURATION_ORIENTATION_PORT);
-        TraceLog(LOG_WARNING, "Window set to portraid mode");
-    }
-    else
-    {
-        AConfiguration_setOrientation(app->config, ACONFIGURATION_ORIENTATION_LAND);
-        TraceLog(LOG_WARNING, "Window set to landscape mode");
-    }
-
-    //AConfiguration_getDensity(app->config);
-    //AConfiguration_getKeyboard(app->config);
-    //AConfiguration_getScreenSize(app->config);
-    //AConfiguration_getScreenLong(app->config);
-
-    app->onAppCmd = AndroidCommandCallback;
-    app->onInputEvent = AndroidInputCallback;
-
-    InitAssetManager(app->activity->assetManager);
-
-    TraceLog(LOG_INFO, "Android app initialized successfully");
-
-    // Wait for window to be initialized (display and context)
-    while (!windowReady)
-    {
-        // Process events loop
-        while ((ident = ALooper_pollAll(0, NULL, &events,(void**)&source)) >= 0)
-        {
-            // Process this event
-            if (source != NULL) source->process(app, source);
-
-            // NOTE: Never close window, native activity is controlled by the system!
-            //if (app->destroyRequested != 0) windowShouldClose = true;
-        }
-    }
-}
-#endif
 
 // Close window and unload OpenGL context
 void CloseWindow(void)
@@ -736,6 +735,14 @@ void SetWindowMinSize(int width, int height)
 #endif
 }
 
+// Set window dimensions
+void SetWindowSize(int width, int height)
+{
+#if defined(PLATFORM_DESKTOP)
+    glfwSetWindowSize(window, width, height);
+#endif
+}
+
 // Get current screen width
 int GetScreenWidth(void)
 {
@@ -752,11 +759,7 @@ int GetScreenHeight(void)
 void ShowCursor()
 {
 #if defined(PLATFORM_DESKTOP)
-    #if defined(__linux__) && defined(_GLFW_X11)
-        XUndefineCursor(glfwGetX11Display(), glfwGetX11Window(window));
-    #else
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    #endif
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 #endif
     cursorHidden = false;
 }
@@ -765,18 +768,7 @@ void ShowCursor()
 void HideCursor()
 {
 #if defined(PLATFORM_DESKTOP)
-    #if defined(__linux__) && defined(_GLFW_X11)
-        XColor col;
-        const char nil[] = {0};
-
-        Pixmap pix = XCreateBitmapFromData(glfwGetX11Display(), glfwGetX11Window(window), nil, 1, 1);
-        Cursor cur = XCreatePixmapCursor(glfwGetX11Display(), pix, pix, &col, &col, 0, 0);
-
-        XDefineCursor(glfwGetX11Display(), glfwGetX11Window(window), cur);
-        XFreeCursor(glfwGetX11Display(), cur);
-    #else
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-    #endif
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 #endif
     cursorHidden = true;
 }
@@ -890,7 +882,7 @@ void EndDrawing(void)
 }
 
 // Initialize 2D mode with custom camera (2D)
-void Begin2dMode(Camera2D camera)
+void BeginMode2D(Camera2D camera)
 {
     rlglDraw();                         // Draw Buffers (Only OpenGL 3+ and ES2)
 
@@ -908,7 +900,7 @@ void Begin2dMode(Camera2D camera)
 }
 
 // Ends 2D mode with custom camera
-void End2dMode(void)
+void EndMode2D(void)
 {
     rlglDraw();                         // Draw Buffers (Only OpenGL 3+ and ES2)
 
@@ -916,7 +908,7 @@ void End2dMode(void)
 }
 
 // Initializes 3D mode with custom camera (3D)
-void Begin3dMode(Camera camera)
+void BeginMode3D(Camera3D camera)
 {
     rlglDraw();                         // Draw Buffers (Only OpenGL 3+ and ES2)
     
@@ -924,13 +916,26 @@ void Begin3dMode(Camera camera)
     rlPushMatrix();                     // Save previous matrix, which contains the settings for the 2d ortho projection
     rlLoadIdentity();                   // Reset current matrix (PROJECTION)
 
-    // Setup perspective projection
     float aspect = (float)screenWidth/(float)screenHeight;
-    double top = 0.01*tan(camera.fovy*0.5*DEG2RAD);
-    double right = top*aspect;
+
+    if (camera.type == CAMERA_PERSPECTIVE) 
+    {
+        // Setup perspective projection
+        double top = 0.01*tan(camera.fovy*0.5*DEG2RAD);
+        double right = top*aspect;
+
+        rlFrustum(-right, right, -top, top, 0.01, 1000.0);
+    }
+    else if (camera.type == CAMERA_ORTHOGRAPHIC)
+    {
+        // Setup orthographic projection
+        double top = camera.fovy/2.0;
+        double right = top*aspect;
+
+        rlOrtho(-right,right,-top,top, 0.01, 1000.0);
+    }
 
     // NOTE: zNear and zFar values are important when computing depth buffer values
-    rlFrustum(-right, right, -top, top, 0.01, 1000.0);
 
     rlMatrixMode(RL_MODELVIEW);         // Switch back to modelview matrix
     rlLoadIdentity();                   // Reset current matrix (MODELVIEW)
@@ -943,7 +948,7 @@ void Begin3dMode(Camera camera)
 }
 
 // Ends 3D mode and returns to default 2D orthographic mode
-void End3dMode(void)
+void EndMode3D(void)
 {
     rlglDraw();                         // Process internal buffers (update + draw)
 
@@ -1018,22 +1023,41 @@ Ray GetMouseRay(Vector2 mousePosition, Camera camera)
 
     TraceLog(LOG_DEBUG, "Device coordinates: (%f, %f, %f)", deviceCoords.x, deviceCoords.y, deviceCoords.z);
 
-    // Calculate projection matrix from perspective
-    Matrix matProj = MatrixPerspective(camera.fovy*DEG2RAD, ((double)GetScreenWidth()/(double)GetScreenHeight()), 0.01, 1000.0);
-
     // Calculate view matrix from camera look at
     Matrix matView = MatrixLookAt(camera.position, camera.target, camera.up);
+
+    Matrix matProj;
+
+    if (camera.type == CAMERA_PERSPECTIVE) 
+    {
+        // Calculate projection matrix from perspective
+        matProj = MatrixPerspective(camera.fovy*DEG2RAD, ((double)GetScreenWidth()/(double)GetScreenHeight()), 0.01, 1000.0);
+    }
+    else if (camera.type == CAMERA_ORTHOGRAPHIC)
+    {
+        float aspect = (float)screenWidth/(float)screenHeight;
+        double top = camera.fovy/2.0;
+        double right = top*aspect;
+        // Calculate projection matrix from orthographic
+        matProj = MatrixOrtho(-right, right, -top, top, 0.01, 1000.0);
+    }
 
     // Unproject far/near points
     Vector3 nearPoint = rlUnproject((Vector3){ deviceCoords.x, deviceCoords.y, 0.0f }, matProj, matView);
     Vector3 farPoint = rlUnproject((Vector3){ deviceCoords.x, deviceCoords.y, 1.0f }, matProj, matView);
 
+    // Unproject the mouse cursor in the near plane.
+    // We need this as the source position because orthographic projects, compared to perspect doesn't have a 
+    // convergence point, meaning that the "eye" of the camera is more like a plane than a point.
+    Vector3 cameraPlanePointerPos = rlUnproject((Vector3){ deviceCoords.x, deviceCoords.y, -1.0f }, matProj, matView);
+
     // Calculate normalized direction vector
-    Vector3 direction = Vector3Subtract(farPoint, nearPoint);
-    Vector3Normalize(&direction);
+    Vector3 direction = Vector3Normalize(Vector3Subtract(farPoint, nearPoint));
+
+    if (camera.type == CAMERA_PERSPECTIVE) ray.position = camera.position;
+    else if (camera.type == CAMERA_ORTHOGRAPHIC) ray.position = cameraPlanePointerPos;
 
     // Apply calculated vectors to ray
-    ray.position = camera.position;
     ray.direction = direction;
 
     return ray;
@@ -1043,7 +1067,21 @@ Ray GetMouseRay(Vector2 mousePosition, Camera camera)
 Vector2 GetWorldToScreen(Vector3 position, Camera camera)
 {
     // Calculate projection matrix (from perspective instead of frustum
-    Matrix matProj = MatrixPerspective(camera.fovy*DEG2RAD, (double)GetScreenWidth()/(double)GetScreenHeight(), 0.01, 1000.0);
+    Matrix matProj;
+
+    if(camera.type == CAMERA_PERSPECTIVE) 
+    {
+        // Calculate projection matrix from perspective
+        matProj = MatrixPerspective(camera.fovy*DEG2RAD, ((double)GetScreenWidth()/(double)GetScreenHeight()), 0.01, 1000.0);
+    }
+    else if(camera.type == CAMERA_ORTHOGRAPHIC)
+    {
+        float aspect = (float)screenWidth/(float)screenHeight;
+        double top = camera.fovy/2.0;
+        double right = top*aspect;
+        // Calculate projection matrix from orthographic
+        matProj = MatrixOrtho(-right, right, -top, top, 0.01, 1000.0);
+    }
 
     // Calculate view matrix from camera look at (and transpose it)
     Matrix matView = MatrixLookAt(camera.position, camera.target, camera.up);
@@ -1052,10 +1090,10 @@ Vector2 GetWorldToScreen(Vector3 position, Camera camera)
     Quaternion worldPos = { position.x, position.y, position.z, 1.0f };
 
     // Transform world position to view
-    QuaternionTransform(&worldPos, matView);
+    worldPos = QuaternionTransform(worldPos, matView);
 
     // Transform result to projection (clip space position)
-    QuaternionTransform(&worldPos, matProj);
+    worldPos = QuaternionTransform(worldPos, matProj);
 
     // Calculate normalized device coordinates (inverted y)
     Vector3 ndcPos = { worldPos.x/worldPos.w, -worldPos.y/worldPos.w, worldPos.z/worldPos.w };
@@ -1112,23 +1150,23 @@ double GetTime(void)
 #endif
 }
 
-// Returns normalized float array for a Color
-float *ColorToFloat(Color color)
-{
-    static float buffer[4];
-
-    buffer[0] = (float)color.r/255;
-    buffer[1] = (float)color.g/255;
-    buffer[2] = (float)color.b/255;
-    buffer[3] = (float)color.a/255;
-
-    return buffer;
-}
-
 // Returns hexadecimal value for a Color
 int ColorToInt(Color color)
 {
     return (((int)color.r << 24) | ((int)color.g << 16) | ((int)color.b << 8) | (int)color.a);
+}
+
+// Returns color normalized as float [0..1]
+Vector4 ColorNormalize(Color color)
+{
+    Vector4 result;
+
+    result.x = (float)color.r/255.0f;
+    result.y = (float)color.g/255.0f;
+    result.z = (float)color.b/255.0f;
+    result.w = (float)color.a/255.0f;
+    
+    return result;
 }
 
 // Returns HSV values for a Color
@@ -1254,10 +1292,27 @@ bool IsFileExtension(const char *fileName, const char *ext)
 {
     bool result = false;
     const char *fileExt;
-    
+
     if ((fileExt = strrchr(fileName, '.')) != NULL)
     {
+    #if defined(_WIN32)
+        result = true;
+        int extLen = strlen(ext);
+        
+        if (strlen(fileExt) == extLen)
+        {
+            for (int i = 0; i < extLen; i++)
+            {
+                if (tolower(fileExt[i]) != tolower(ext[i]))
+                {
+                    result = false;
+                    break;
+                }
+            }
+        }
+    #else
         if (strcmp(fileExt, ext) == 0) result = true;
+    #endif
     }
 
     return result;
@@ -1268,7 +1323,7 @@ const char *GetExtension(const char *fileName)
 {
     const char *dot = strrchr(fileName, '.');
     
-    if (!dot || dot == fileName) return "";
+    if (!dot || dot == fileName) return NULL;
     
     return (dot + 1);
 }
@@ -1315,24 +1370,32 @@ bool ChangeDirectory(const char *dir)
     return (CHDIR(dir) == 0);
 }
 
-#if defined(PLATFORM_DESKTOP)
 // Check if a file has been dropped into window
 bool IsFileDropped(void)
 {
+#if defined(PLATFORM_DESKTOP)
     if (dropFilesCount > 0) return true;
     else return false;
+#else
+    return false;
+#endif
 }
 
 // Get dropped files names
 char **GetDroppedFiles(int *count)
 {
+#if defined(PLATFORM_DESKTOP)
     *count = dropFilesCount;
     return dropFilesPath;
+#else
+    return NULL;
+#endif
 }
 
 // Clear dropped files paths buffer
 void ClearDroppedFiles(void)
 {
+#if defined(PLATFORM_DESKTOP)
     if (dropFilesCount > 0)
     {
         for (int i = 0; i < dropFilesCount; i++) free(dropFilesPath[i]);
@@ -1341,8 +1404,8 @@ void ClearDroppedFiles(void)
 
         dropFilesCount = 0;
     }
-}
 #endif
+}
 
 // Save integer value to storage file (to defined position)
 // NOTE: Storage positions is directly related to file memory layout (4 bytes each integer)
@@ -1663,7 +1726,7 @@ int GetMouseX(void)
 #if defined(PLATFORM_ANDROID)
     return (int)touchPosition[0].x;
 #else
-    return (int)mousePosition.x;
+    return (int)(mousePosition.x*mouseScale);
 #endif
 }
 
@@ -1673,7 +1736,7 @@ int GetMouseY(void)
 #if defined(PLATFORM_ANDROID)
     return (int)touchPosition[0].x;
 #else
-    return (int)mousePosition.y;
+    return (int)(mousePosition.y*mouseScale);
 #endif
 }
 
@@ -1683,7 +1746,7 @@ Vector2 GetMousePosition(void)
 #if defined(PLATFORM_ANDROID)
     return GetTouchPosition(0);
 #else
-    return mousePosition;
+    return (Vector2){ mousePosition.x*mouseScale, mousePosition.y*mouseScale };
 #endif
 }
 
@@ -1694,6 +1757,15 @@ void SetMousePosition(Vector2 position)
 #if defined(PLATFORM_DESKTOP) || defined(PLATFORM_WEB)
     // NOTE: emscripten not implemented
     glfwSetCursorPos(window, position.x, position.y);
+#endif
+}
+
+// Set mouse scaling
+// NOTE: Useful when rendering to different size targets
+void SetMouseScale(float scale)
+{
+#if !defined(PLATFORM_ANDROID)
+    mouseScale = scale;
 #endif
 }
 
@@ -2122,7 +2194,7 @@ static bool InitGraphicsDevice(int width, int height)
         }
     }
 
-	//SetupFramebufferSize(displayWidth, displayHeight);
+    //SetupFramebufferSize(displayWidth, displayHeight);
 
     EGLint numConfigs = 0;
     if ((eglChooseConfig(display, framebufferAttribs, &config, 1, &numConfigs) == EGL_FALSE) || (numConfigs == 0))
@@ -2176,9 +2248,9 @@ static bool InitGraphicsDevice(int width, int height)
         return false;
     }
 
-	// Get EGL display window size 
-	eglQuerySurface(display, surface, EGL_WIDTH, &screenWidth);
-	eglQuerySurface(display, surface, EGL_HEIGHT, &screenHeight);
+    // Get EGL display window size 
+    eglQuerySurface(display, surface, EGL_WIDTH, &screenWidth);
+    eglQuerySurface(display, surface, EGL_HEIGHT, &screenHeight);
     
 #else   // PLATFORM_ANDROID, PLATFORM_RPI
     EGLint numConfigs;
@@ -2219,8 +2291,8 @@ static bool InitGraphicsDevice(int width, int height)
 #if defined(PLATFORM_ANDROID)
     EGLint displayFormat;
 
-    displayWidth = ANativeWindow_getWidth(app->window);
-    displayHeight = ANativeWindow_getHeight(app->window);
+    displayWidth = ANativeWindow_getWidth(androidApp->window);
+    displayHeight = ANativeWindow_getHeight(androidApp->window);
 
     // EGL_NATIVE_VISUAL_ID is an attribute of the EGLConfig that is guaranteed to be accepted by ANativeWindow_setBuffersGeometry()
     // As soon as we picked a EGLConfig, we can safely reconfigure the ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID
@@ -2230,10 +2302,10 @@ static bool InitGraphicsDevice(int width, int height)
     // NOTE: This function use and modify global module variables: screenWidth/screenHeight and renderWidth/renderHeight and downscaleView
     SetupFramebufferSize(displayWidth, displayHeight);
 
-    ANativeWindow_setBuffersGeometry(app->window, renderWidth, renderHeight, displayFormat);
-    //ANativeWindow_setBuffersGeometry(app->window, 0, 0, displayFormat);       // Force use of native display size
+    ANativeWindow_setBuffersGeometry(androidApp->window, renderWidth, renderHeight, displayFormat);
+    //ANativeWindow_setBuffersGeometry(androidApp->window, 0, 0, displayFormat);       // Force use of native display size
 
-    surface = eglCreateWindowSurface(display, config, app->window, NULL);
+    surface = eglCreateWindowSurface(display, config, androidApp->window, NULL);
 #endif  // defined(PLATFORM_ANDROID)
 
 #if defined(PLATFORM_RPI)
@@ -2297,8 +2369,8 @@ static bool InitGraphicsDevice(int width, int height)
     }
 #endif // defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI)
 
-	renderWidth = screenWidth;
-	renderHeight = screenHeight;
+    renderWidth = screenWidth;
+    renderHeight = screenHeight;
 
     // Initialize OpenGL context (states and resources)
     // NOTE: screenWidth and screenHeight not used, just stored as globals
@@ -2639,14 +2711,14 @@ static void PollInputEvents(void)
     while ((ident = ALooper_pollAll(appEnabled ? 0 : -1, NULL, &events,(void**)&source)) >= 0)
     {
         // Process this event
-        if (source != NULL) source->process(app, source);
+        if (source != NULL) source->process(androidApp, source);
 
         // NOTE: Never close window, native activity is controlled by the system!
-        if (app->destroyRequested != 0)
+        if (androidApp->destroyRequested != 0)
         {
             //TraceLog(LOG_INFO, "Closing Window...");
             //windowShouldClose = true;
-            //ANativeActivity_finish(app->activity);
+            //ANativeActivity_finish(androidApp->activity);
         }
     }
 #endif
@@ -2724,10 +2796,12 @@ static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, i
         }
         else
     #endif  // SUPPORT_GIF_RECORDING
+    #if defined(SUPPORT_SCREEN_CAPTURE)
         {
             TakeScreenshot(FormatText("screenshot%03i.png", screenshotCounter));
             screenshotCounter++;
         }
+    #endif  // SUPPORT_SCREEN_CAPTURE
     }
 #endif  // PLATFORM_DESKTOP
     else
@@ -2832,7 +2906,7 @@ static void WindowSizeCallback(GLFWwindow *window, int width, int height)
     rlLoadIdentity();                           // Reset current matrix (MODELVIEW)
     rlClearScreenBuffers();                     // Clear screen buffers (color and depth)
 
-    // Window size must be updated to be used on 3D mode to get new aspect ratio (Begin3dMode())
+    // Window size must be updated to be used on 3D mode to get new aspect ratio (BeginMode3D())
     // NOTE: Be careful! GLFW3 will choose the closest fullscreen resolution supported by current monitor,
     // for example, if reescaling back to 800x450 (desired), it could set 720x480 (closest fullscreen supported)
     screenWidth = width;
@@ -2983,14 +3057,14 @@ static void AndroidCommandCallback(struct android_app *app, int32_t cmd)
         case APP_CMD_DESTROY:
         {
             // TODO: Finish activity?
-            //ANativeActivity_finish(app->activity);
+            //ANativeActivity_finish(androidApp->activity);
 
             TraceLog(LOG_INFO, "APP_CMD_DESTROY");
         } break;
         case APP_CMD_CONFIG_CHANGED:
         {
-            //AConfiguration_fromAssetManager(app->config, app->activity->assetManager);
-            //print_cur_config(app);
+            //AConfiguration_fromAssetManager(androidApp->config, androidApp->activity->assetManager);
+            //print_cur_config(androidApp);
 
             // Check screen orientation here!
 
@@ -3389,12 +3463,14 @@ static void ProcessKeyboard(void)
     // Check exit key (same functionality as GLFW3 KeyCallback())
     if (currentKeyState[exitKey] == 1) windowShouldClose = true;
 
+#if defined(SUPPORT_SCREEN_CAPTURE)
     // Check screen capture key (raylib key: KEY_F12)
     if (currentKeyState[301] == 1)
     {
         TakeScreenshot(FormatText("screenshot%03i.png", screenshotCounter));
         screenshotCounter++;
     }
+#endif
 }
 
 // Restore default keyboard input

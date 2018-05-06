@@ -12,15 +12,15 @@ func main() {
 
 	raylib.InitWindow(screenWidth, screenHeight, "raylib [text] example - raylib fonts")
 
-	fonts := make([]raylib.SpriteFont, maxFonts)
-	fonts[0] = raylib.LoadSpriteFont("fonts/alagard.png")
-	fonts[1] = raylib.LoadSpriteFont("fonts/pixelplay.png")
-	fonts[2] = raylib.LoadSpriteFont("fonts/mecha.png")
-	fonts[3] = raylib.LoadSpriteFont("fonts/setback.png")
-	fonts[4] = raylib.LoadSpriteFont("fonts/romulus.png")
-	fonts[5] = raylib.LoadSpriteFont("fonts/pixantiqua.png")
-	fonts[6] = raylib.LoadSpriteFont("fonts/alpha_beta.png")
-	fonts[7] = raylib.LoadSpriteFont("fonts/jupiter_crash.png")
+	fonts := make([]raylib.Font, maxFonts)
+	fonts[0] = raylib.LoadFont("fonts/alagard.png")
+	fonts[1] = raylib.LoadFont("fonts/pixelplay.png")
+	fonts[2] = raylib.LoadFont("fonts/mecha.png")
+	fonts[3] = raylib.LoadFont("fonts/setback.png")
+	fonts[4] = raylib.LoadFont("fonts/romulus.png")
+	fonts[5] = raylib.LoadFont("fonts/pixantiqua.png")
+	fonts[6] = raylib.LoadFont("fonts/alpha_beta.png")
+	fonts[7] = raylib.LoadFont("fonts/jupiter_crash.png")
 
 	messages := []string{
 		"ALAGARD FONT designed by Hewett Tsoi",
@@ -33,7 +33,7 @@ func main() {
 		"JUPITER_CRASH FONT designed by Brian Kent (AEnigma)",
 	}
 
-	spacings := []int32{2, 4, 8, 4, 3, 4, 4, 1}
+	spacings := []float32{2, 4, 8, 4, 3, 4, 4, 1}
 	positions := make([]raylib.Vector2, maxFonts)
 
 	var i int32
@@ -67,7 +67,7 @@ func main() {
 	}
 
 	for i = 0; i < maxFonts; i++ {
-		raylib.UnloadSpriteFont(fonts[i])
+		raylib.UnloadFont(fonts[i])
 	}
 
 	raylib.CloseWindow()

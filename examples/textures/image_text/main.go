@@ -10,9 +10,9 @@ func main() {
 
 	raylib.InitWindow(screenWidth, screenHeight, "raylib [textures] example - image text drawing")
 
-	// TTF SpriteFont loading with custom generation parameters
+	// TTF Font loading with custom generation parameters
 	var fontChars int32
-	font := raylib.LoadSpriteFontEx("fonts/KAISG.ttf", 64, 0, &fontChars)
+	font := raylib.LoadFontEx("fonts/KAISG.ttf", 64, 0, &fontChars)
 
 	parrots := raylib.LoadImage("parrots.png") // Load image in CPU memory (RAM)
 
@@ -56,7 +56,7 @@ func main() {
 	}
 
 	raylib.UnloadTexture(texture)
-	raylib.UnloadSpriteFont(font)
+	raylib.UnloadFont(font)
 
 	raylib.CloseWindow()
 }

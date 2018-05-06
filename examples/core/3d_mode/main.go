@@ -7,11 +7,12 @@ import (
 func main() {
 	raylib.InitWindow(800, 450, "raylib [core] example - 3d mode")
 
-	camera := raylib.Camera{}
+	camera := raylib.Camera3D{}
 	camera.Position = raylib.NewVector3(0.0, 10.0, 10.0)
 	camera.Target = raylib.NewVector3(0.0, 0.0, 0.0)
 	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
+	camera.Type = raylib.CameraPerspective
 
 	cubePosition := raylib.NewVector3(0.0, 0.0, 0.0)
 
@@ -22,14 +23,14 @@ func main() {
 
 		raylib.ClearBackground(raylib.RayWhite)
 
-		raylib.Begin3dMode(camera)
+		raylib.BeginMode3D(camera)
 
 		raylib.DrawCube(cubePosition, 2.0, 2.0, 2.0, raylib.Red)
 		raylib.DrawCubeWires(cubePosition, 2.0, 2.0, 2.0, raylib.Maroon)
 
 		raylib.DrawGrid(10, 1.0)
 
-		raylib.End3dMode()
+		raylib.EndMode3D()
 
 		raylib.DrawText("Welcome to the third dimension!", 10, 40, 20, raylib.DarkGray)
 

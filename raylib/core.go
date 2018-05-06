@@ -55,6 +55,13 @@ func CloseWindow() {
 	C.CloseWindow()
 }
 
+// IsWindowReady - Check if window has been initialized successfully
+func IsWindowReady() bool {
+	ret := C.IsWindowReady()
+	v := bool(int(ret) == 1)
+	return v
+}
+
 // WindowShouldClose - Detect if KEY_ESCAPE pressed or Close icon pressed
 func WindowShouldClose() bool {
 	ret := C.WindowShouldClose()
@@ -100,6 +107,20 @@ func SetWindowMonitor(monitor int32) {
 	C.SetWindowMonitor(cmonitor)
 }
 
+// SetWindowMinSize - Set window minimum dimensions (for FLAG_WINDOW_RESIZABLE)
+func SetWindowMinSize(w, h int32) {
+	cw := (C.int)(w)
+	ch := (C.int)(h)
+	C.SetWindowMinSize(cw, ch)
+}
+
+// SetWindowSize - Set window dimensions
+func SetWindowSize(w, h int32) {
+	cw := (C.int)(w)
+	ch := (C.int)(h)
+	C.SetWindowSize(cw, ch)
+}
+
 // GetScreenWidth - Get current screen width
 func GetScreenWidth() int32 {
 	ret := C.GetScreenWidth()
@@ -130,26 +151,26 @@ func EndDrawing() {
 	C.EndDrawing()
 }
 
-// Begin2dMode - Initialize 2D mode with custom camera
-func Begin2dMode(camera Camera2D) {
+// BeginMode2D - Initialize 2D mode with custom camera
+func BeginMode2D(camera Camera2D) {
 	ccamera := camera.cptr()
-	C.Begin2dMode(*ccamera)
+	C.BeginMode2D(*ccamera)
 }
 
-// End2dMode - Ends 2D mode custom camera usage
-func End2dMode() {
-	C.End2dMode()
+// EndMode2D - Ends 2D mode custom camera usage
+func EndMode2D() {
+	C.EndMode2D()
 }
 
-// Begin3dMode - Initializes 3D mode for drawing (Camera setup)
-func Begin3dMode(camera Camera) {
+// BeginMode3D - Initializes 3D mode for drawing (Camera setup)
+func BeginMode3D(camera Camera) {
 	ccamera := camera.cptr()
-	C.Begin3dMode(*ccamera)
+	C.BeginMode3D(*ccamera)
 }
 
-// End3dMode - Ends 3D mode and returns to default 2D orthographic mode
-func End3dMode() {
-	C.End3dMode()
+// EndMode3D - Ends 3D mode and returns to default 2D orthographic mode
+func EndMode3D() {
+	C.EndMode3D()
 }
 
 // BeginTextureMode - Initializes render texture for drawing
@@ -241,15 +262,15 @@ func ColorToHSV(color Color) Vector3 {
 	return v
 }
 
-// ColorToFloat - Converts Color to float32 slice and normalizes
-func ColorToFloat(color Color) []float32 {
-	data := make([]float32, 0)
-	data[0] = float32(color.R) / 255
-	data[0] = float32(color.G) / 255
-	data[0] = float32(color.B) / 255
-	data[0] = float32(color.A) / 255
+// ColorNormalize - Returns color normalized as float [0..1]
+func ColorNormalize(color Color) Vector4 {
+	result := Vector4{}
+	result.X = float32(color.R) / 255
+	result.Y = float32(color.G) / 255
+	result.Z = float32(color.B) / 255
+	result.W = float32(color.A) / 255
 
-	return data
+	return result
 }
 
 // Vector3ToFloat - Converts Vector3 to float32 slice
@@ -525,6 +546,12 @@ func GetMousePosition() Vector2 {
 func SetMousePosition(position Vector2) {
 	cposition := position.cptr()
 	C.SetMousePosition(*cposition)
+}
+
+// SetMouseScale - Set mouse scaling
+func SetMouseScale(scale float32) {
+	cscale := (C.float)(scale)
+	C.SetMouseScale(cscale)
 }
 
 // GetMouseWheelMove - Returns mouse wheel movement Y

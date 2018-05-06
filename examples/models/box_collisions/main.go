@@ -15,6 +15,7 @@ func main() {
 	camera.Target = raylib.NewVector3(0.0, 0.0, 0.0)
 	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
+	camera.Type = raylib.CameraPerspective
 
 	playerPosition := raylib.NewVector3(0.0, 1.0, 2.0)
 	playerSize := raylib.NewVector3(1.0, 2.0, 1.0)
@@ -81,7 +82,7 @@ func main() {
 
 		raylib.ClearBackground(raylib.RayWhite)
 
-		raylib.Begin3dMode(camera)
+		raylib.BeginMode3D(camera)
 
 		// Draw enemy-box
 		raylib.DrawCube(enemyBoxPos, enemyBoxSize.X, enemyBoxSize.Y, enemyBoxSize.Z, raylib.Gray)
@@ -96,7 +97,7 @@ func main() {
 
 		raylib.DrawGrid(10, 1.0) // Draw a grid
 
-		raylib.End3dMode()
+		raylib.EndMode3D()
 
 		raylib.DrawText("Move player with cursors to collide", 220, 40, 20, raylib.Gray)
 

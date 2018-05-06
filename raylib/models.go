@@ -200,6 +200,14 @@ func UnloadMesh(mesh *Mesh) {
 	C.UnloadMesh(cmesh)
 }
 
+// ExportMesh - Export mesh as an OBJ file
+func ExportMesh(fileName string, mesh Mesh) {
+	cfileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(cfileName))
+	cmesh := mesh.cptr()
+	C.ExportMesh(cfileName, *cmesh)
+}
+
 // GenMeshPlane - Generate plane mesh (with subdivisions)
 func GenMeshPlane(width, length float32, resX, resZ int) Mesh {
 	cwidth := (C.float)(width)
@@ -390,10 +398,10 @@ func DrawBillboardRec(camera Camera, texture Texture2D, sourceRec Rectangle, cen
 	C.DrawBillboardRec(*ccamera, *ctexture, *csourceRec, *ccenter, csize, *ctint)
 }
 
-// CalculateBoundingBox - Calculate mesh bounding box limits
-func CalculateBoundingBox(mesh Mesh) BoundingBox {
+// MeshBoundingBox - Compute mesh bounding box limits
+func MeshBoundingBox(mesh Mesh) BoundingBox {
 	cmesh := mesh.cptr()
-	ret := C.CalculateBoundingBox(*cmesh)
+	ret := C.MeshBoundingBox(*cmesh)
 	v := newBoundingBoxFromPointer(unsafe.Pointer(&ret))
 	return v
 }

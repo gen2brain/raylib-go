@@ -54,11 +54,7 @@
 *
 **********************************************************************************************/
 
-// Default configuration flags (supported features)
-//-------------------------------------------------
-#define SUPPORT_VR_SIMULATOR
-#define SUPPORT_DISTORTION_SHADER
-//-------------------------------------------------
+#include "config.h"
 
 #include "rlgl.h"
 
@@ -470,8 +466,7 @@ void rlRotatef(float angleDeg, float x, float y, float z)
     Matrix matRotation = MatrixIdentity();
 
     Vector3 axis = (Vector3){ x, y, z };
-    Vector3Normalize(&axis);
-    matRotation = MatrixRotate(axis, angleDeg*DEG2RAD);
+    matRotation = MatrixRotate(Vector3Normalize(axis), angleDeg*DEG2RAD);
 
     // NOTE: We transpose matrix with multiplication order
     *currentMatrix = MatrixMultiply(matRotation, *currentMatrix);
@@ -570,7 +565,7 @@ void rlEnd(void)
         // This way, rlTranslatef(), rlRotatef()... behaviour is the same than OpenGL 1.1
 
         // Apply transformation matrix to all temp vertices
-        for (int i = 0; i < tempBufferCount; i++) Vector3Transform(&tempBuffer[i], *currentMatrix);
+        for (int i = 0; i < tempBufferCount; i++) tempBuffer[i] = Vector3Transform(tempBuffer[i], *currentMatrix);
 
         // Deactivate tempBuffer usage to allow rlVertex3f do its job
         useTempBuffer = false;
@@ -1356,13 +1351,13 @@ Vector3 rlUnproject(Vector3 source, Matrix proj, Matrix view)
 
     // Calculate unproject matrix (multiply view patrix by projection matrix) and invert it
     Matrix matViewProj = MatrixMultiply(view, proj);
-    MatrixInvert(&matViewProj);
+    matViewProj = MatrixInvert(matViewProj);
 
     // Create quaternion from source point
     Quaternion quat = { source.x, source.y, source.z, 1.0f };
 
     // Multiply quat point by unproject matrix
-    QuaternionTransform(&quat, matViewProj);
+    quat = QuaternionTransform(quat, matViewProj);
 
     // Normalized world points in vectors
     result.x = quat.x/quat.w;
@@ -1782,14 +1777,14 @@ void rlLoadMesh(Mesh *mesh, bool dynamic)
     {
         glGenBuffers(1, &mesh->vboId[4]);
         glBindBuffer(GL_ARRAY_BUFFER, mesh->vboId[4]);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float)*3*mesh->vertexCount, mesh->tangents, drawHint);
-        glVertexAttribPointer(4, 3, GL_FLOAT, 0, 0, 0);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float)*4*mesh->vertexCount, mesh->tangents, drawHint);
+        glVertexAttribPointer(4, 4, GL_FLOAT, 0, 0, 0);
         glEnableVertexAttribArray(4);
     }
     else
     {
         // Default tangents vertex attribute
-        glVertexAttrib3f(4, 0.0f, 0.0f, 0.0f);
+        glVertexAttrib4f(4, 0.0f, 0.0f, 0.0f, 0.0f);
         glDisableVertexAttribArray(4);
     }
 
@@ -1804,7 +1799,7 @@ void rlLoadMesh(Mesh *mesh, bool dynamic)
     }
     else
     {
-        // Default tangents vertex attribute
+        // Default texcoord2 vertex attribute
         glVertexAttrib2f(5, 0.0f, 0.0f);
         glDisableVertexAttribArray(5);
     }
@@ -1868,8 +1863,8 @@ void rlUpdateMesh(Mesh mesh, int buffer, int numVertex)
         case 4:     // Update tangents (vertex tangents)
         {
             glBindBuffer(GL_ARRAY_BUFFER, mesh.vboId[4]);
-            if (numVertex >= mesh.vertexCount) glBufferData(GL_ARRAY_BUFFER, sizeof(float)*3*numVertex, mesh.tangents, GL_DYNAMIC_DRAW);
-            else glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float)*3*numVertex, mesh.tangents);
+            if (numVertex >= mesh.vertexCount) glBufferData(GL_ARRAY_BUFFER, sizeof(float)*4*numVertex, mesh.tangents, GL_DYNAMIC_DRAW);
+            else glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float)*4*numVertex, mesh.tangents);
         } break;
         case 5:     // Update texcoords2 (vertex second texture coordinates)
         {
@@ -1952,7 +1947,7 @@ void rlDrawMesh(Mesh mesh, Material material, Matrix transform)
     if (material.shader.locs[LOC_MATRIX_PROJECTION] != -1) SetShaderValueMatrix(material.shader, material.shader.locs[LOC_MATRIX_PROJECTION], projection);
 
     // At this point the modelview matrix just contains the view matrix (camera)
-    // That's because Begin3dMode() sets it an no model-drawing function modifies it, all use rlPushMatrix() and rlPopMatrix()
+    // That's because BeginMode3D() sets it an no model-drawing function modifies it, all use rlPushMatrix() and rlPopMatrix()
     Matrix matView = modelview;         // View matrix (camera)
     Matrix matProjection = projection;  // Projection matrix (perspective)
 
@@ -2019,7 +2014,7 @@ void rlDrawMesh(Mesh mesh, Material material, Matrix transform)
         if (material.shader.locs[LOC_VERTEX_TANGENT] != -1)
         {
             glBindBuffer(GL_ARRAY_BUFFER, mesh.vboId[4]);
-            glVertexAttribPointer(material.shader.locs[LOC_VERTEX_TANGENT], 3, GL_FLOAT, 0, 0, 0);
+            glVertexAttribPointer(material.shader.locs[LOC_VERTEX_TANGENT], 4, GL_FLOAT, 0, 0, 0);
             glEnableVertexAttribArray(material.shader.locs[LOC_VERTEX_TANGENT]);
         }
 
@@ -3374,9 +3369,9 @@ static void LoadBuffersDefault(void)
     quads.texcoords = (float *)malloc(sizeof(float)*2*4*MAX_QUADS_BATCH);       // 2 float by texcoord, 4 texcoord by quad
     quads.colors = (unsigned char *)malloc(sizeof(unsigned char)*4*4*MAX_QUADS_BATCH);  // 4 float by color, 4 colors by quad
 #if defined(GRAPHICS_API_OPENGL_33)
-    quads.indices = (unsigned int *)malloc(sizeof(int)*6*MAX_QUADS_BATCH);      // 6 int by quad (indices)
+    quads.indices = (unsigned int *)malloc(sizeof(unsigned int)*6*MAX_QUADS_BATCH);      // 6 int by quad (indices)
 #elif defined(GRAPHICS_API_OPENGL_ES2)
-    quads.indices = (unsigned short *)malloc(sizeof(short)*6*MAX_QUADS_BATCH);  // 6 int by quad (indices)
+    quads.indices = (unsigned short *)malloc(sizeof(unsigned short)*6*MAX_QUADS_BATCH);  // 6 int by quad (indices)
 #endif
 
     for (int i = 0; i < (3*4*MAX_QUADS_BATCH); i++) quads.vertices[i] = 0.0f;

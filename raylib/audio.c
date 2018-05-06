@@ -13,7 +13,7 @@
 *       - Manage raw audio context
 *
 *   CONFIGURATION:
-*   
+*
 *   #define AUDIO_STANDALONE
 *       Define to use the module as standalone library (independently of raylib).
 *       Required types and functions are defined in the same module.
@@ -26,7 +26,8 @@
 *   #define SUPPORT_FILEFORMAT_XM
 *   #define SUPPORT_FILEFORMAT_MOD
 *   #define SUPPORT_FILEFORMAT_FLAC
-*       Selected desired fileformats to be supported for loading. Some of those formats are 
+*   #define SUPPORT_FILEFORMAT_MP3
+*       Selected desired fileformats to be supported for loading. Some of those formats are
 *       supported by default, to remove support, just comment unrequired #define in this module
 *
 *   LIMITATIONS (only OpenAL Soft):
@@ -74,13 +75,7 @@
 *
 **********************************************************************************************/
 
-// Default configuration flags (supported features)
-//-------------------------------------------------
-#define SUPPORT_FILEFORMAT_WAV
-#define SUPPORT_FILEFORMAT_OGG
-#define SUPPORT_FILEFORMAT_XM
-#define SUPPORT_FILEFORMAT_MOD
-//-------------------------------------------------
+#include "config.h"
 
 #if !defined(USE_OPENAL_BACKEND)
     #define USE_MINI_AL 1       // Set to 1 to use mini_al; 0 to use OpenAL.
@@ -133,6 +128,11 @@
     #define DR_FLAC_IMPLEMENTATION
     #define DR_FLAC_NO_WIN32_IO
     #include "external/dr_flac.h"       // FLAC loading functions
+#endif
+
+#if defined(SUPPORT_FILEFORMAT_MP3)
+    #define DR_MP3_IMPLEMENTATION
+    #include "external/dr_mp3.h"       // MP3 loading functions
 #endif
 
 #ifdef _MSC_VER
@@ -1555,7 +1555,7 @@ void UpdateMusicStream(Music music)
             case MUSIC_AUDIO_OGG:
             {
                 // NOTE: Returns the number of samples to process (be careful! we ask for number of shorts!)
-                int numSamplesOgg = stb_vorbis_get_samples_short_interleaved(music->ctxOgg, music->stream.channels, (short *)pcm, samplesCount*music->stream.channels);
+                stb_vorbis_get_samples_short_interleaved(music->ctxOgg, music->stream.channels, (short *)pcm, samplesCount*music->stream.channels);
 
             } break;
         #if defined(SUPPORT_FILEFORMAT_FLAC)

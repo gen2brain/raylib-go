@@ -42,13 +42,13 @@ func main() {
 
 		raylib.ClearBackground(raylib.RayWhite)
 
-		raylib.Begin3dMode(camera)
+		raylib.BeginMode3D(camera)
 
 		raylib.DrawModel(model, mapPosition, 1.0, raylib.Red)
 
 		raylib.DrawGrid(20, 1.0)
 
-		raylib.End3dMode()
+		raylib.EndMode3D()
 
 		raylib.DrawTexture(texture, screenWidth-texture.Width-20, 20, raylib.White)
 		raylib.DrawRectangleLines(screenWidth-texture.Width-20, 20, texture.Width, texture.Height, raylib.Green)

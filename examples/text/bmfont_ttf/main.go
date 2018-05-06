@@ -14,8 +14,8 @@ func main() {
 	msgTtf := "THIS SPRITE FONT has been GENERATED from a TTF"
 
 	// NOTE: Textures/Fonts MUST be loaded after Window initialization (OpenGL context is required)
-	fontBm := raylib.LoadSpriteFont("fonts/bmfont.fnt")      // BMFont (AngelCode)
-	fontTtf := raylib.LoadSpriteFont("fonts/pixantiqua.ttf") // TTF font
+	fontBm := raylib.LoadFont("fonts/bmfont.fnt")      // BMFont (AngelCode)
+	fontTtf := raylib.LoadFont("fonts/pixantiqua.ttf") // TTF font
 
 	fontPosition := raylib.Vector2{}
 
@@ -35,8 +35,8 @@ func main() {
 		raylib.EndDrawing()
 	}
 
-	raylib.UnloadSpriteFont(fontBm)  // AngelCode SpriteFont unloading
-	raylib.UnloadSpriteFont(fontTtf) // TTF SpriteFont unloading
+	raylib.UnloadFont(fontBm)  // AngelCode Font unloading
+	raylib.UnloadFont(fontTtf) // TTF Font unloading
 
 	raylib.CloseWindow()
 }

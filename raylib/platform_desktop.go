@@ -21,9 +21,8 @@ func InitWindow(width int32, height int32, t interface{}) {
 	title, ok := t.(string)
 	if ok {
 		ctitle := C.CString(title)
-		cptitle := unsafe.Pointer(ctitle)
-		defer C.free(cptitle)
-		C.InitWindow(cwidth, cheight, cptitle)
+		defer C.free(unsafe.Pointer(ctitle))
+		C.InitWindow(cwidth, cheight, ctitle)
 	}
 }
 

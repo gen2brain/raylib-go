@@ -11,11 +11,12 @@ const (
 func main() {
 	raylib.InitWindow(800, 450, "raylib [core] example - 3d camera first person")
 
-	camera := raylib.Camera{}
+	camera := raylib.Camera3D{}
 	camera.Position = raylib.NewVector3(4.0, 2.0, 4.0)
 	camera.Target = raylib.NewVector3(0.0, 1.8, 0.0)
 	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 60.0
+	camera.Type = raylib.CameraPerspective
 
 	// Generates some random columns
 	heights := make([]float32, maxColumns)
@@ -39,7 +40,7 @@ func main() {
 
 		raylib.ClearBackground(raylib.RayWhite)
 
-		raylib.Begin3dMode(camera)
+		raylib.BeginMode3D(camera)
 
 		raylib.DrawPlane(raylib.NewVector3(0.0, 0.0, 0.0), raylib.NewVector2(32.0, 32.0), raylib.LightGray) // Draw ground
 		raylib.DrawCube(raylib.NewVector3(-16.0, 2.5, 0.0), 1.0, 5.0, 32.0, raylib.Blue)                    // Draw a blue wall
@@ -52,7 +53,7 @@ func main() {
 			raylib.DrawCubeWires(positions[i], 2.0, heights[i], 2.0, raylib.Maroon)
 		}
 
-		raylib.End3dMode()
+		raylib.EndMode3D()
 
 		raylib.DrawRectangle(10, 10, 220, 70, raylib.Fade(raylib.SkyBlue, 0.5))
 		raylib.DrawRectangleLines(10, 10, 220, 70, raylib.Blue)

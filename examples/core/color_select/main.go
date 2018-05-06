@@ -18,8 +18,8 @@ func main() {
 	// Fills colorsRecs data (for every rectangle)
 	for i := 0; i < 21; i++ {
 		r := raylib.Rectangle{}
-		r.X = int32(20 + 100*(i%7) + 10*(i%7))
-		r.Y = int32(60 + 100*(i/7) + 10*(i/7))
+		r.X = float32(20 + 100*(i%7) + 10*(i%7))
+		r.Y = float32(60 + 100*(i/7) + 10*(i/7))
 		r.Width = 100
 		r.Height = 100
 
@@ -56,10 +56,10 @@ func main() {
 
 			// Draw four rectangles around selected rectangle
 			if selected[i] {
-				raylib.DrawRectangle(colorsRecs[i].X, colorsRecs[i].Y, 100, 10, raylib.RayWhite)    // Square top rectangle
-				raylib.DrawRectangle(colorsRecs[i].X, colorsRecs[i].Y, 10, 100, raylib.RayWhite)    // Square left rectangle
-				raylib.DrawRectangle(colorsRecs[i].X+90, colorsRecs[i].Y, 10, 100, raylib.RayWhite) // Square right rectangle
-				raylib.DrawRectangle(colorsRecs[i].X, colorsRecs[i].Y+90, 100, 10, raylib.RayWhite) // Square bottom rectangle
+				raylib.DrawRectangle(int32(colorsRecs[i].X), int32(colorsRecs[i].Y), 100, 10, raylib.RayWhite)    // Square top rectangle
+				raylib.DrawRectangle(int32(colorsRecs[i].X), int32(colorsRecs[i].Y), 10, 100, raylib.RayWhite)    // Square left rectangle
+				raylib.DrawRectangle(int32(colorsRecs[i].X+90), int32(colorsRecs[i].Y), 10, 100, raylib.RayWhite) // Square right rectangle
+				raylib.DrawRectangle(int32(colorsRecs[i].X), int32(colorsRecs[i].Y)+90, 100, 10, raylib.RayWhite) // Square bottom rectangle
 			}
 		}
 

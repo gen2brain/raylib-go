@@ -19,8 +19,8 @@ func main() {
 	parrots := raylib.LoadImage("parrots.png") // Load image in CPU memory (RAM)
 
 	// Draw one image over the other with a scaling of 1.5f
-	raylib.ImageDraw(parrots, cat, raylib.NewRectangle(0, 0, cat.Width, cat.Height), raylib.NewRectangle(30, 40, int32(float32(cat.Width)*1.5), int32(float32(cat.Height)*1.5)))
-	raylib.ImageCrop(parrots, raylib.NewRectangle(0, 50, parrots.Width, parrots.Height-100)) // Crop resulting image
+	raylib.ImageDraw(parrots, cat, raylib.NewRectangle(0, 0, float32(cat.Width), float32(cat.Height)), raylib.NewRectangle(30, 40, float32(cat.Width)*1.5, float32(cat.Height)*1.5))
+	raylib.ImageCrop(parrots, raylib.NewRectangle(0, 50, float32(parrots.Width), float32(parrots.Height-100))) // Crop resulting image
 
 	raylib.UnloadImage(cat) // Unload image from RAM
 

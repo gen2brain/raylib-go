@@ -35,17 +35,17 @@ func main() {
 
 	raylib.InitWindow(screenWidth, screenHeight, "raylib [textures] example - image processing")
 
-	image := raylib.LoadImage("parrots.png")                      // Loaded in CPU memory (RAM)
-	raylib.ImageFormat(image, int32(raylib.UncompressedR8g8b8a8)) // Format image to RGBA 32bit (required for texture update)
-	texture := raylib.LoadTextureFromImage(image)                 // Image converted to texture, GPU memory (VRAM)
+	image := raylib.LoadImage("parrots.png")               // Loaded in CPU memory (RAM)
+	raylib.ImageFormat(image, raylib.UncompressedR8g8b8a8) // Format image to RGBA 32bit (required for texture update)
+	texture := raylib.LoadTextureFromImage(image)          // Image converted to texture, GPU memory (VRAM)
 
 	currentProcess := None
 	textureReload := false
 
 	selectRecs := make([]raylib.Rectangle, numProcesses)
 
-	for i := int32(0); i < numProcesses; i++ {
-		selectRecs[i] = raylib.NewRectangle(40, 50+32*i, 150, 30)
+	for i := 0; i < numProcesses; i++ {
+		selectRecs[i] = raylib.NewRectangle(40, 50+32*float32(i), 150, 30)
 	}
 
 	raylib.SetTargetFPS(60)
@@ -114,12 +114,12 @@ func main() {
 		for i := 0; i < numProcesses; i++ {
 			if i == currentProcess {
 				raylib.DrawRectangleRec(selectRecs[i], raylib.SkyBlue)
-				raylib.DrawRectangleLines(selectRecs[i].X, selectRecs[i].Y, selectRecs[i].Width, selectRecs[i].Height, raylib.Blue)
-				raylib.DrawText(processText[i], selectRecs[i].X+selectRecs[i].Width/2-raylib.MeasureText(processText[i], 10)/2, selectRecs[i].Y+11, 10, raylib.DarkBlue)
+				raylib.DrawRectangleLines(int32(selectRecs[i].X), int32(selectRecs[i].Y), int32(selectRecs[i].Width), int32(selectRecs[i].Height), raylib.Blue)
+				raylib.DrawText(processText[i], int32(selectRecs[i].X+selectRecs[i].Width/2)-raylib.MeasureText(processText[i], 10)/2, int32(selectRecs[i].Y)+11, 10, raylib.DarkBlue)
 			} else {
 				raylib.DrawRectangleRec(selectRecs[i], raylib.LightGray)
-				raylib.DrawRectangleLines(selectRecs[i].X, selectRecs[i].Y, selectRecs[i].Width, selectRecs[i].Height, raylib.Gray)
-				raylib.DrawText(processText[i], selectRecs[i].X+selectRecs[i].Width/2-raylib.MeasureText(processText[i], 10)/2, selectRecs[i].Y+11, 10, raylib.DarkGray)
+				raylib.DrawRectangleLines(int32(selectRecs[i].X), int32(selectRecs[i].Y), int32(selectRecs[i].Width), int32(selectRecs[i].Height), raylib.Gray)
+				raylib.DrawText(processText[i], int32(selectRecs[i].X+selectRecs[i].Width/2)-raylib.MeasureText(processText[i], 10)/2, int32(selectRecs[i].Y)+11, 10, raylib.DarkGray)
 			}
 		}
 

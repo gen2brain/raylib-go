@@ -19,13 +19,13 @@ func main() {
 	buildings := make([]raylib.Rectangle, maxBuildings)
 	buildColors := make([]raylib.Color, maxBuildings)
 
-	spacing := int32(0)
+	spacing := float32(0)
 
 	for i := 0; i < maxBuildings; i++ {
 		r := raylib.Rectangle{}
-		r.Width = raylib.GetRandomValue(50, 200)
-		r.Height = raylib.GetRandomValue(100, 800)
-		r.Y = screenHeight - 130 - r.Height
+		r.Width = float32(raylib.GetRandomValue(50, 200))
+		r.Height = float32(raylib.GetRandomValue(100, 800))
+		r.Y = float32(screenHeight) - 130 - r.Height
 		r.X = -6000 + spacing
 
 		spacing += r.Width
@@ -89,7 +89,7 @@ func main() {
 
 		raylib.ClearBackground(raylib.RayWhite)
 
-		raylib.Begin2dMode(camera)
+		raylib.BeginMode2D(camera)
 
 		raylib.DrawRectangle(-6000, 320, 13000, 8000, raylib.DarkGray)
 
@@ -102,7 +102,7 @@ func main() {
 		raylib.DrawRectangle(int32(camera.Target.X), -500, 1, screenHeight*4, raylib.Green)
 		raylib.DrawRectangle(-500, int32(camera.Target.Y), screenWidth*4, 1, raylib.Green)
 
-		raylib.End2dMode()
+		raylib.EndMode2D()
 
 		raylib.DrawText("SCREEN AREA", 640, 10, 20, raylib.Red)
 

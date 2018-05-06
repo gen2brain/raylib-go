@@ -212,6 +212,10 @@ static int translateState(int state)
         mods |= GLFW_MOD_ALT;
     if (state & Mod4Mask)
         mods |= GLFW_MOD_SUPER;
+    if (state & LockMask)
+        mods |= GLFW_MOD_CAPS_LOCK;
+    if (state & Mod2Mask)
+        mods |= GLFW_MOD_NUM_LOCK;
 
     return mods;
 }
@@ -707,21 +711,26 @@ static GLFWbool createNativeWindow(_GLFWwindow* window,
     {
         XClassHint* hint = XAllocClassHint();
 
-        if (strlen(_glfw.hints.init.x11.className) &&
-            strlen(_glfw.hints.init.x11.classClass))
+        if (strlen(wndconfig->x11.instanceName) &&
+            strlen(wndconfig->x11.className))
         {
-            hint->res_name = (char*) _glfw.hints.init.x11.className;
-            hint->res_class = (char*) _glfw.hints.init.x11.classClass;
-        }
-        else if (strlen(wndconfig->title))
-        {
-            hint->res_name = (char*) wndconfig->title;
-            hint->res_class = (char*) wndconfig->title;
+            hint->res_name = (char*) wndconfig->x11.instanceName;
+            hint->res_class = (char*) wndconfig->x11.className;
         }
         else
         {
-            hint->res_name = (char*) "glfw-application";
-            hint->res_class = (char*) "GLFW-Application";
+            const char* resourceName = getenv("RESOURCE_NAME");
+            if (resourceName && strlen(resourceName))
+                hint->res_name = (char*) resourceName;
+            else if (strlen(wndconfig->title))
+                hint->res_name = (char*) wndconfig->title;
+            else
+                hint->res_name = (char*) "glfw-application";
+
+            if (strlen(wndconfig->title))
+                hint->res_class = (char*) wndconfig->title;
+            else
+                hint->res_class = (char*) "GLFW-Application";
         }
 
         XSetClassHint(_glfw.x11.display, window->x11.handle, hint);
@@ -1047,7 +1056,7 @@ static const char* getSelectionString(Atom selection)
             if (targets[i] == XA_STRING)
                 *selectionString = convertLatin1toUTF8(data);
             else
-                *selectionString = strdup(data);
+                *selectionString = _glfw_strdup(data);
         }
 
         XFree(data);
@@ -1067,10 +1076,8 @@ static const char* getSelectionString(Atom selection)
 
 // Make the specified window and its video mode active on its monitor
 //
-static GLFWbool acquireMonitor(_GLFWwindow* window)
+static void acquireMonitor(_GLFWwindow* window)
 {
-    GLFWbool status;
-
     if (_glfw.x11.saver.count == 0)
     {
         // Remember old screen saver settings
@@ -1088,7 +1095,7 @@ static GLFWbool acquireMonitor(_GLFWwindow* window)
     if (!window->monitor->window)
         _glfw.x11.saver.count++;
 
-    status = _glfwSetVideoModeX11(window->monitor, &window->videoMode);
+    _glfwSetVideoModeX11(window->monitor, &window->videoMode);
 
     if (window->x11.overrideRedirect)
     {
@@ -1104,7 +1111,6 @@ static GLFWbool acquireMonitor(_GLFWwindow* window)
     }
 
     _glfwInputMonitorWindow(window->monitor, window);
-    return status;
 }
 
 // Remove the window and restore the original video mode
@@ -1968,11 +1974,7 @@ int _glfwPlatformCreateWindow(_GLFWwindow* window,
     {
         _glfwPlatformShowWindow(window);
         updateWindowMode(window);
-        if (!acquireMonitor(window))
-            return GLFW_FALSE;
-
-        if (wndconfig->centerCursor)
-            centerCursor(window);
+        acquireMonitor(window);
     }
 
     XFlush(_glfw.x11.display);
@@ -2444,6 +2446,28 @@ int _glfwPlatformWindowMaximized(_GLFWwindow* window)
     return maximized;
 }
 
+int _glfwPlatformWindowHovered(_GLFWwindow* window)
+{
+    Window w = _glfw.x11.root;
+    while (w)
+    {
+        Window root;
+        int rootX, rootY, childX, childY;
+        unsigned int mask;
+
+        if (!XQueryPointer(_glfw.x11.display, w,
+                           &root, &w, &rootX, &rootY, &childX, &childY, &mask))
+        {
+            return GLFW_FALSE;
+        }
+
+        if (w == window->x11.handle)
+            return GLFW_TRUE;
+    }
+
+    return GLFW_FALSE;
+}
+
 int _glfwPlatformFramebufferTransparent(_GLFWwindow* window)
 {
     if (!window->x11.transparent)
@@ -2803,7 +2827,7 @@ void _glfwPlatformSetCursor(_GLFWwindow* window, _GLFWcursor* cursor)
 void _glfwPlatformSetClipboardString(const char* string)
 {
     free(_glfw.x11.clipboardString);
-    _glfw.x11.clipboardString = strdup(string);
+    _glfw.x11.clipboardString = _glfw_strdup(string);
 
     XSetSelectionOwner(_glfw.x11.display,
                        _glfw.x11.CLIPBOARD,
@@ -2995,7 +3019,7 @@ GLFWAPI void glfwSetX11SelectionString(const char* string)
     _GLFW_REQUIRE_INIT();
 
     free(_glfw.x11.primarySelectionString);
-    _glfw.x11.primarySelectionString = strdup(string);
+    _glfw.x11.primarySelectionString = _glfw_strdup(string);
 
     XSetSelectionOwner(_glfw.x11.display,
                        _glfw.x11.PRIMARY,

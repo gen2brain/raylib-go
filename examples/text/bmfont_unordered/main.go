@@ -17,7 +17,7 @@ func main() {
 	msg := "ASCII extended characters:\n¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆ\nÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæ\nçèéêëìíîïðñòóôõö÷øùúûüýþÿ"
 
 	// NOTE: Loaded font has an unordered list of characters (chars in the range 32..255)
-	font := raylib.LoadSpriteFont("fonts/pixantiqua.fnt") // BMFont (AngelCode)
+	font := raylib.LoadFont("fonts/pixantiqua.fnt") // BMFont (AngelCode)
 
 	raylib.SetTargetFPS(60)
 
@@ -35,7 +35,7 @@ func main() {
 		raylib.EndDrawing()
 	}
 
-	raylib.UnloadSpriteFont(font) // AngelCode SpriteFont unloading
+	raylib.UnloadFont(font) // AngelCode Font unloading
 
 	raylib.CloseWindow()
 }

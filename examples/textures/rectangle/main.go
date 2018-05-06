@@ -21,8 +21,8 @@ func main() {
 	scarfy := raylib.LoadTexture("scarfy.png") // Texture loading
 
 	position := raylib.NewVector2(350.0, 280.0)
-	frameRec := raylib.NewRectangle(0, 0, scarfy.Width/6, scarfy.Height)
-	currentFrame := int32(0)
+	frameRec := raylib.NewRectangle(0, 0, float32(scarfy.Width/6), float32(scarfy.Height))
+	currentFrame := float32(0)
 
 	framesCounter := 0
 	framesSpeed := 8 // Number of spritesheet frames shown by second
@@ -40,7 +40,7 @@ func main() {
 				currentFrame = 0
 			}
 
-			frameRec.X = currentFrame * scarfy.Width / 6
+			frameRec.X = currentFrame * float32(scarfy.Width) / 6
 		}
 
 		if raylib.IsKeyPressed(raylib.KeyRight) {
@@ -61,7 +61,7 @@ func main() {
 
 		raylib.DrawTexture(scarfy, 15, 40, raylib.White)
 		raylib.DrawRectangleLines(15, 40, scarfy.Width, scarfy.Height, raylib.Lime)
-		raylib.DrawRectangleLines(15+frameRec.X, 40+frameRec.Y, frameRec.Width, frameRec.Height, raylib.Red)
+		raylib.DrawRectangleLines(15+int32(frameRec.X), 40+int32(frameRec.Y), int32(frameRec.Width), int32(frameRec.Height), raylib.Red)
 
 		raylib.DrawText("FRAME SPEED: ", 165, 210, 10, raylib.DarkGray)
 		raylib.DrawText(fmt.Sprintf("%02d FPS", framesSpeed), 575, 210, 10, raylib.DarkGray)

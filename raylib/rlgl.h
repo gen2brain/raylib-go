@@ -24,7 +24,7 @@
 *   #define RLGL_STANDALONE
 *       Use rlgl as standalone library (no raylib dependency)
 *
-*   #define SUPPORT_VR_SIMULATION / SUPPORT_STEREO_RENDERING
+*   #define SUPPORT_VR_SIMULATOR
 *       Support VR simulation functionality (stereo rendering)
 *
 *   #define SUPPORT_DISTORTION_SHADER
@@ -187,7 +187,7 @@ typedef unsigned char byte;
         float *texcoords;       // vertex texture coordinates (UV - 2 components per vertex) (shader-location = 1)
         float *texcoords2;      // vertex second texture coordinates (useful for lightmaps) (shader-location = 5)
         float *normals;         // vertex normals (XYZ - 3 components per vertex) (shader-location = 2)
-        float *tangents;        // vertex tangents (XYZ - 3 components per vertex) (shader-location = 4)
+        float *tangents;        // vertex tangents (XYZW - 4 components per vertex) (shader-location = 4)
         unsigned char *colors;  // vertex colors (RGBA - 4 components per vertex) (shader-location = 3)
         unsigned short *indices;// vertex indices (in case vertex data comes indexed)
 
@@ -321,7 +321,7 @@ typedef unsigned char byte;
         LOC_MAP_METALNESS,       // LOC_MAP_SPECULAR
         LOC_MAP_NORMAL,
         LOC_MAP_ROUGHNESS,
-        LOC_MAP_OCCUSION,
+        LOC_MAP_OCCLUSION,
         LOC_MAP_EMISSION,
         LOC_MAP_HEIGHT,
         LOC_MAP_CUBEMAP,

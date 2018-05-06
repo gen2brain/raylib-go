@@ -102,13 +102,13 @@ func main() {
 
 		raylib.BeginTextureMode(target) // Enable drawing to texture
 
-		raylib.Begin3dMode(camera)
+		raylib.BeginMode3D(camera)
 
 		raylib.DrawModel(dwarf, position, 2.0, raylib.White) // Draw 3d model with texture
 
 		raylib.DrawGrid(10, 1.0) // Draw a grid
 
-		raylib.End3dMode()
+		raylib.EndMode3D()
 
 		raylib.EndTextureMode() // End drawing to texture (now we have a texture available for next passes)
 
@@ -116,7 +116,7 @@ func main() {
 		raylib.BeginShaderMode(shaders[currentShader])
 
 		// NOTE: Render texture must be y-flipped due to default OpenGL coordinates (left-bottom)
-		raylib.DrawTextureRec(target.Texture, raylib.NewRectangle(0, 0, target.Texture.Width, -target.Texture.Height), raylib.NewVector2(0, 0), raylib.White)
+		raylib.DrawTextureRec(target.Texture, raylib.NewRectangle(0, 0, float32(target.Texture.Width), float32(-target.Texture.Height)), raylib.NewVector2(0, 0), raylib.White)
 
 		raylib.EndShaderMode()
 

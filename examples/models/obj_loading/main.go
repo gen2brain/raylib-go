@@ -30,7 +30,7 @@ func main() {
 
 		raylib.ClearBackground(raylib.RayWhite)
 
-		raylib.Begin3dMode(camera)
+		raylib.BeginMode3D(camera)
 
 		raylib.DrawModel(dwarf, position, 2.0, raylib.White) // Draw 3d model with texture
 
@@ -38,7 +38,7 @@ func main() {
 
 		raylib.DrawGizmo(position) // Draw gizmo
 
-		raylib.End3dMode()
+		raylib.EndMode3D()
 
 		raylib.DrawText("(c) Dwarf 3D model by David Moreno", screenWidth-200, screenHeight-20, 10, raylib.Gray)
 

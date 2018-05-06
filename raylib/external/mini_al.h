@@ -2037,7 +2037,7 @@ static inline float mal_mix_f32(float x, float y, float a)
 // Atomics
 //
 ///////////////////////////////////////////////////////////////////////////////
-#if defined(_WIN32) && defined(_MSC_VER)
+#if defined(_WIN32) && !defined(__GNUC__)
 #define mal_memory_barrier()            MemoryBarrier()
 #define mal_atomic_exchange_32(a, b)    InterlockedExchange((LONG*)a, (LONG)b)
 #define mal_atomic_exchange_64(a, b)    InterlockedExchange64((LONGLONG*)a, (LONGLONG)b)
@@ -6412,6 +6412,7 @@ static mal_result mal_device_init__alsa(mal_context* pContext, mal_device_type t
                         free(NAME);
                         free(DESC);
                         free(IOID);
+                        ppNextDeviceHint += 1;
 
                         if (foundDevice) {
                             break;
@@ -6974,7 +6975,7 @@ static mal_result mal_device_init__oss(mal_context* pContext, mal_device_type ty
 
     // When not using MMAP mode, we need to use an intermediary buffer for the client <-> device transfer. We do
     // everything by the size of a fragment.
-    pDevice->oss.pIntermediaryBuffer = mal_malloc(fragmentSizeInBytes);
+    pDevice->oss.pIntermediaryBuffer = mal_malloc(actualFragmentSizeInBytes);
     if (pDevice->oss.pIntermediaryBuffer == NULL) {
         close(pDevice->oss.fd);
         return mal_post_error(pDevice, "[OSS] Failed to allocate memory for intermediary buffer.", MAL_OUT_OF_MEMORY);

@@ -36,14 +36,14 @@ func main() {
 
 		raylib.BeginVrDrawing()
 
-		raylib.Begin3dMode(camera)
+		raylib.BeginMode3D(camera)
 
 		raylib.DrawCube(cubePosition, 2.0, 2.0, 2.0, raylib.Red)
 		raylib.DrawCubeWires(cubePosition, 2.0, 2.0, 2.0, raylib.Maroon)
 
 		raylib.DrawGrid(40, 1.0)
 
-		raylib.End3dMode()
+		raylib.EndMode3D()
 
 		raylib.EndVrDrawing()
 

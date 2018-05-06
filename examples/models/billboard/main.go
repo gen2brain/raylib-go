@@ -15,6 +15,7 @@ func main() {
 	camera.Target = raylib.NewVector3(0.0, 2.0, 0.0)
 	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
+	camera.Type = raylib.CameraPerspective
 
 	bill := raylib.LoadTexture("billboard.png")      // Our texture billboard
 	billPosition := raylib.NewVector3(0.0, 2.0, 0.0) // Position where draw billboard
@@ -30,13 +31,13 @@ func main() {
 
 		raylib.ClearBackground(raylib.RayWhite)
 
-		raylib.Begin3dMode(camera)
+		raylib.BeginMode3D(camera)
 
 		raylib.DrawBillboard(camera, bill, billPosition, 2.0, raylib.White)
 
 		raylib.DrawGrid(10, 1.0) // Draw a grid
 
-		raylib.End3dMode()
+		raylib.EndMode3D()
 
 		raylib.EndDrawing()
 	}
