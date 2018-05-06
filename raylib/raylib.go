@@ -1045,18 +1045,6 @@ type Image struct {
 	Format PixelFormat
 }
 
-// ToImage converts a Image to Go image.Image
-func (i *Image) ToImage() image.Image {
-	img := image.NewRGBA(image.Rect(0, 0, int(i.Width), int(i.Height)))
-
-	// Get pixel data from image (RGBA 32bit)
-	pixels := GetImageData(i)
-
-	img.Pix = pixels
-
-	return img
-}
-
 // NewImage - Returns new Image
 func NewImage(data []byte, width, height, mipmaps int32, format PixelFormat) *Image {
 	d := unsafe.Pointer(&data[0])

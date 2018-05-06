@@ -7,12 +7,27 @@ package raylib
 import "C"
 
 import (
+	"image"
 	"unsafe"
 )
 
 // cptr returns C pointer
 func (i *Image) cptr() *C.Image {
 	return (*C.Image)(unsafe.Pointer(i))
+}
+
+// ToImage converts a Image to Go image.Image
+func (i *Image) ToImage() image.Image {
+	img := image.NewRGBA(image.Rect(0, 0, int(i.Width), int(i.Height)))
+
+	// Get pixel data from image (RGBA 32bit)
+	cimg := i.cptr()
+	ret := C.GetImageData(*cimg)
+	pixels := (*[1 << 30]uint8)(unsafe.Pointer(ret))[0 : i.Width*i.Height*4]
+
+	img.Pix = pixels
+
+	return img
 }
 
 // cptr returns C pointer
@@ -113,10 +128,10 @@ func UnloadRenderTexture(target RenderTexture2D) {
 }
 
 // GetImageData - Get pixel data from image
-func GetImageData(image *Image) []byte {
-	cimage := image.cptr()
-	ret := C.GetImageData(*cimage)
-	return (*[1 << 30]uint8)(unsafe.Pointer(ret))[:]
+func GetImageData(img *Image) []Color {
+	cimg := img.cptr()
+	ret := C.GetImageData(*cimg)
+	return (*[1 << 30]Color)(unsafe.Pointer(ret))[0 : img.Width*img.Height]
 }
 
 // GetPixelDataSize - Get pixel data size in bytes (image or texture)
