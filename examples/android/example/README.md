@@ -2,28 +2,26 @@
 
 To compile example to shared library you will need [Android NDK](https://developer.android.com/ndk/downloads/index.html).
 To build Android apk you will need [Android SDK](http://developer.android.com/sdk/index.html#Other).
-Download and unpack archives somewhere.
-
-Go must be cross compiled for android. There is a bootstrap.sh script that you can use to compile Go for android/arm and android/arm64.
 
 Export path to Android NDK, point to location where you have unpacked archive:
 
     export ANDROID_NDK_HOME=/opt/android-ndk
 
-Compile Go and android_native_app_glue, /usr/local is prefix where Go and Android toolchains will be installed:
+Add toolchain bin directory to PATH:
 
-    ./bootstrap.sh /usr/local
+    export PATH=${ANDROID_NDK_HOME}/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin:${PATH}
 
-After build is complete point GOROOT to new Go installation in /usr/local, and add toolchain bin directory to PATH:
-
-    export GOROOT=/usr/local/go
-    export PATH=/usr/local/android-arm7/bin:${PATH}
+Export sysroot path:
+    
+    export ANDROID_SYSROOT=${ANDROID_NDK_HOME}/platforms/android-16/arch-arm
 
 And compile shared library:
 
-    CGO_CFLAGS="-I/usr/local/android-arm7/include" CGO_LDFLAGS="-L/usr/local/android-arm7/lib" \
-    CC=arm-linux-androideabi-gcc CGO_ENABLED=1 GOOS=android GOARCH=arm \
-    ${GOROOT}/bin/go build -v -x -buildmode=c-shared -ldflags="-s -w -extldflags=-Wl,-soname,libexample.so" \
+    CC=arm-linux-androideabi-gcc \
+    CGO_CFLAGS="-I${ANDROID_SYSROOT}/usr/include --sysroot=${ANDROID_SYSROOT}" \
+    CGO_LDFLAGS="-L${ANDROID_SYSROOT}/usr/lib --sysroot=${ANDROID_SYSROOT}" \
+    CGO_ENABLED=1 GOOS=android GOARCH=arm \
+    go build -buildmode=c-shared -ldflags="-s -w -extldflags=-Wl,-soname,libexample.so" \
     -o=android/libs/armeabi-v7a/libexample.so
 
 To build apk export path to Android SDK, point to location where you unpacked archive:
