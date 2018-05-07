@@ -14,11 +14,23 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
 ##### Ubuntu
 
+###### X11
+
     apt-get install libgl1-mesa-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev 
+
+###### Wayland 
+
+    apt-get install libgl1-mesa-dev libwayland-dev libxkbcommon-dev 
 
 ##### Fedora
 
+###### X11
+
     dnf install mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel
+
+###### Wayland 
+
+    dnf install mesa-libGL-devel wayland-devel libxkbcommon-devel
 
 ##### macOS
 
