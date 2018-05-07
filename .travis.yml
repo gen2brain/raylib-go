@@ -10,7 +10,7 @@ go:
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then
         sudo apt-get update -y;
-        sudo apt-get install libasound2-dev libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev libxrandr-dev -y;
+        sudo apt-get install libxi-dev libxinerama-dev libxcursor-dev libxrandr-dev -y;
     fi
 
 install:
