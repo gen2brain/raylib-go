@@ -12,11 +12,9 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
 ### Requirements
 
-* [GLFW](http://www.glfw.org/) is included as part of the Go package, but you need to make sure you have dependencies installed, see below.
-
 ##### Ubuntu
 
-    apt-get install libgl1-mesa-dev libxi-dev libxinerama-dev libxcursor-dev libxxf86vm-dev libxrandr-dev
+    apt-get install libgl1-mesa-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev 
 
 ##### Fedora
 
