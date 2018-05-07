@@ -33,4 +33,8 @@ And build apk with ant:
     cd android
     ant clean debug
 
-If everything is successfully built apk can be found in bin/ directory.
+Or with gradle:
+
+    ./gradlew assembleDebug
+
+If everything is successfully built apk can be found in bin/ directory or in the android/build/outputs in case `gradle` is used.
