@@ -17,6 +17,8 @@ package raylib
 #include "external/glfw/src/wayland-pointer-constraints-unstable-v1-client-protocol.c"
 #include "external/glfw/src/wayland-relative-pointer-unstable-v1-client-protocol.c"
 #include "external/glfw/src/wayland-idle-inhibit-unstable-v1-client-protocol.c"
+#include "external/glfw/src/wayland-xdg-shell-client-protocol.c"
+#include "external/glfw/src/wayland-viewporter-client-protocol.c"
 #endif
 #ifdef _GLFW_X11
 #include "external/glfw/src/x11_init.c"
