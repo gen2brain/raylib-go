@@ -979,8 +979,6 @@ func TextBox(bounds raylib.Rectangle, text string) string {
 	b := bounds.ToInt32()
 	state := Normal
 
-	keyBackspaceText := int32(259) // GLFW BACKSPACE: 3 + 256
-
 	mousePoint := raylib.GetMousePosition()
 	letter := int32(-1)
 
@@ -991,16 +989,15 @@ func TextBox(bounds raylib.Rectangle, text string) string {
 		framesCounter2++
 
 		letter = raylib.GetKeyPressed()
-
 		if letter != -1 {
-			if letter == keyBackspaceText {
-				if len(text) > 0 {
-					text = text[:len(text)-1]
-				}
-			} else {
-				if letter >= 32 && letter < 127 {
-					text = fmt.Sprintf("%s%c", text, letter)
-				}
+			if letter >= 32 && letter < 127 {
+				text = fmt.Sprintf("%s%c", text, letter)
+			}
+		}
+
+		if raylib.IsKeyPressed(raylib.KeyBackspace) {
+			if len(text) > 0 {
+				text = text[:len(text)-1]
 			}
 		}
 	}
