@@ -841,25 +841,25 @@ const (
 // VrDeviceInfo - Head-Mounted-Display device parameters
 type VrDeviceInfo struct {
 	// HMD horizontal resolution in pixels
-	hResolution int
+	HResolution int
 	// HMD vertical resolution in pixels
-	vResolution int
+	VResolution int
 	// HMD horizontal size in meters
-	hScreenSize float32
+	HScreenSize float32
 	// HMD vertical size in meters
-	vScreenSize float32
+	VScreenSize float32
 	// HMD screen center in meters
-	vScreenCenter float32
+	VScreenCenter float32
 	// HMD distance between eye and display in meters
-	eyeToScreenDistance float32
+	EyeToScreenDistance float32
 	// HMD lens separation distance in meters
-	lensSeparationDistance float32
+	LensSeparationDistance float32
 	// HMD IPD (distance between pupils) in meters
-	interpupillaryDistance float32
+	InterpupillaryDistance float32
 	// HMD lens distortion constant parameters
-	lensDistortionValues [4]float32
+	LensDistortionValues [4]float32
 	// HMD chromatic aberration correction parameters
-	chromaAbCorrection [4]float32
+	ChromaAbCorrection [4]float32
 }
 
 // NewVrDeviceInfo - Returns new VrDeviceInfo
