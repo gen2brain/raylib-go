@@ -103,7 +103,7 @@ func (g *Game) Init() {
 // Update - Update game
 func (g *Game) Update() {
 	if !g.GameOver {
-		if raylib.IsKeyPressed('P') {
+		if raylib.IsKeyPressed(raylib.KeyP) {
 			g.Pause = !g.Pause
 		}
 
