@@ -32,7 +32,6 @@ func main() {
 		raylib.UpdateCamera(&camera) // Update camera
 
 		if raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
-			// NOTE: This function is NOT WORKING properly!
 			ray = raylib.GetMouseRay(raylib.GetMousePosition(), camera)
 
 			// Check collision between ray and box
