@@ -14,7 +14,7 @@ const (
 func main() {
 	raylib.SetConfigFlags(raylib.FlagMsaa4xHint) // Set MSAA 4X hint before windows creation
 
-	raylib.InitWindow(800, 450, "raylib [core] example - gamepad input")
+	raylib.InitWindow(800, 650, "raylib [core] example - gamepad input")
 
 	texPs3Pad := raylib.LoadTexture("ps3.png")
 	texXboxPad := raylib.LoadTexture("xbox.png")
@@ -181,9 +181,9 @@ func main() {
 			}
 
 			if raylib.GetGamepadButtonPressed() != -1 {
-				raylib.DrawText(fmt.Sprintf("DETECTED BUTTON: %d", raylib.GetGamepadButtonPressed()), 10, 430, 10, raylib.Red)
+				raylib.DrawText(fmt.Sprintf("DETECTED BUTTON: %d", raylib.GetGamepadButtonPressed()), 10, 610, 10, raylib.Red)
 			} else {
-				raylib.DrawText("DETECTED BUTTON: NONE", 10, 430, 10, raylib.Gray)
+				raylib.DrawText("DETECTED BUTTON: NONE", 10, 610, 10, raylib.Gray)
 			}
 		} else {
 			raylib.DrawText("GP1: NOT DETECTED", 10, 10, 10, raylib.Gray)
