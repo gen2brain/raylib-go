@@ -35,10 +35,10 @@ func main() {
 					raylib.DrawRectangle(0, int32(85+40*i), screenWidth, 40, raylib.Fade(raylib.LightGray, 0.3))
 				}
 
-				raylib.DrawText(droppedFiles[i], 120, int32(100), 10, raylib.Gray)
+				raylib.DrawText(droppedFiles[i], 120, int32(100+i*40), 10, raylib.Gray)
 			}
 
-			raylib.DrawText("Drop new files...", 100, int32(150), 20, raylib.DarkGray)
+			raylib.DrawText("Drop new files...", 100, int32(150+count*40), 20, raylib.DarkGray)
 		}
 
 		raylib.EndDrawing()
