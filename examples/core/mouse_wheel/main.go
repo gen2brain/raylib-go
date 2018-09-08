@@ -26,7 +26,7 @@ func main() {
 
 		raylib.DrawRectangle(screenWidth/2-40, boxPositionY, 80, 80, raylib.Maroon)
 
-		raylib.DrawText("Use mouse wheel to move the cube up and down!", 10, 10, 20, raylib.Gray)
+		raylib.DrawText("Use mouse wheel to move the square up and down!", 10, 10, 20, raylib.Gray)
 		raylib.DrawText(fmt.Sprintf("Box position Y: %d", boxPositionY), 10, 40, 20, raylib.LightGray)
 
 		raylib.EndDrawing()
