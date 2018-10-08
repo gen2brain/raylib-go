@@ -8,7 +8,7 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [shapes] example - raylib logo animation")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [shapes] example - raylib logo animation")
 
 	logoPositionX := screenWidth/2 - 128
 	logoPositionY := screenHeight/2 - 128
@@ -25,9 +25,9 @@ func main() {
 	state := 0            // Tracking animation states (State Machine)
 	alpha := float32(1.0) // Useful for fading
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
+	for !rl.WindowShouldClose() {
 		if state == 0 { // State 0: Small box blinking
 			framesCounter++
 
@@ -66,7 +66,7 @@ func main() {
 				}
 			}
 		} else if state == 4 { // State 4: Reset and Replay
-			if raylib.IsKeyPressed(raylib.KeyR) {
+			if rl.IsKeyPressed(rl.KeyR) {
 				framesCounter = 0
 				lettersCount = 0
 
@@ -81,30 +81,30 @@ func main() {
 			}
 		}
 
-		raylib.BeginDrawing()
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.BeginDrawing()
+		rl.ClearBackground(rl.RayWhite)
 
 		if state == 0 {
 			if (framesCounter/15)%2 == 0 {
-				raylib.DrawRectangle(logoPositionX, logoPositionY, 16, 16, raylib.Black)
+				rl.DrawRectangle(logoPositionX, logoPositionY, 16, 16, rl.Black)
 			}
 		} else if state == 1 {
-			raylib.DrawRectangle(logoPositionX, logoPositionY, topSideRecWidth, 16, raylib.Black)
-			raylib.DrawRectangle(logoPositionX, logoPositionY, 16, leftSideRecHeight, raylib.Black)
+			rl.DrawRectangle(logoPositionX, logoPositionY, topSideRecWidth, 16, rl.Black)
+			rl.DrawRectangle(logoPositionX, logoPositionY, 16, leftSideRecHeight, rl.Black)
 		} else if state == 2 {
-			raylib.DrawRectangle(logoPositionX, logoPositionY, topSideRecWidth, 16, raylib.Black)
-			raylib.DrawRectangle(logoPositionX, logoPositionY, 16, leftSideRecHeight, raylib.Black)
+			rl.DrawRectangle(logoPositionX, logoPositionY, topSideRecWidth, 16, rl.Black)
+			rl.DrawRectangle(logoPositionX, logoPositionY, 16, leftSideRecHeight, rl.Black)
 
-			raylib.DrawRectangle(logoPositionX+240, logoPositionY, 16, rightSideRecHeight, raylib.Black)
-			raylib.DrawRectangle(logoPositionX, logoPositionY+240, bottomSideRecWidth, 16, raylib.Black)
+			rl.DrawRectangle(logoPositionX+240, logoPositionY, 16, rightSideRecHeight, rl.Black)
+			rl.DrawRectangle(logoPositionX, logoPositionY+240, bottomSideRecWidth, 16, rl.Black)
 		} else if state == 3 {
-			raylib.DrawRectangle(logoPositionX, logoPositionY, topSideRecWidth, 16, raylib.Fade(raylib.Black, alpha))
-			raylib.DrawRectangle(logoPositionX, logoPositionY+16, 16, leftSideRecHeight-32, raylib.Fade(raylib.Black, alpha))
+			rl.DrawRectangle(logoPositionX, logoPositionY, topSideRecWidth, 16, rl.Fade(rl.Black, alpha))
+			rl.DrawRectangle(logoPositionX, logoPositionY+16, 16, leftSideRecHeight-32, rl.Fade(rl.Black, alpha))
 
-			raylib.DrawRectangle(logoPositionX+240, logoPositionY+16, 16, rightSideRecHeight-32, raylib.Fade(raylib.Black, alpha))
-			raylib.DrawRectangle(logoPositionX, logoPositionY+240, bottomSideRecWidth, 16, raylib.Fade(raylib.Black, alpha))
+			rl.DrawRectangle(logoPositionX+240, logoPositionY+16, 16, rightSideRecHeight-32, rl.Fade(rl.Black, alpha))
+			rl.DrawRectangle(logoPositionX, logoPositionY+240, bottomSideRecWidth, 16, rl.Fade(rl.Black, alpha))
 
-			raylib.DrawRectangle(screenWidth/2-112, screenHeight/2-112, 224, 224, raylib.Fade(raylib.RayWhite, alpha))
+			rl.DrawRectangle(screenWidth/2-112, screenHeight/2-112, 224, 224, rl.Fade(rl.RayWhite, alpha))
 
 			text := "raylib"
 			length := int32(len(text))
@@ -112,13 +112,13 @@ func main() {
 				lettersCount = length
 			}
 
-			raylib.DrawText(text[0:lettersCount], screenWidth/2-44, screenHeight/2+48, 50, raylib.Fade(raylib.Black, alpha))
+			rl.DrawText(text[0:lettersCount], screenWidth/2-44, screenHeight/2+48, 50, rl.Fade(rl.Black, alpha))
 		} else if state == 4 {
-			raylib.DrawText("[R] REPLAY", 340, 200, 20, raylib.Gray)
+			rl.DrawText("[R] REPLAY", 340, 200, 20, rl.Gray)
 		}
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

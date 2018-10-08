@@ -12,47 +12,47 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [core] example - gestures detection")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [core] example - gestures detection")
 
-	touchPosition := raylib.NewVector2(0, 0)
-	touchArea := raylib.NewRectangle(220, 10, float32(screenWidth)-230, float32(screenHeight)-20)
+	touchPosition := rl.NewVector2(0, 0)
+	touchArea := rl.NewRectangle(220, 10, float32(screenWidth)-230, float32(screenHeight)-20)
 
 	gestureStrings := make([]string, 0)
 
-	currentGesture := raylib.GestureNone
-	lastGesture := raylib.GestureNone
+	currentGesture := rl.GestureNone
+	lastGesture := rl.GestureNone
 
-	//raylib.SetGesturesEnabled(uint32(raylib.GestureHold | raylib.GestureDrag)) // Enable only some gestures to be detected
+	//rl.SetGesturesEnabled(uint32(rl.GestureHold | rl.GestureDrag)) // Enable only some gestures to be detected
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
+	for !rl.WindowShouldClose() {
 		lastGesture = currentGesture
-		currentGesture = raylib.GetGestureDetected()
-		touchPosition = raylib.GetTouchPosition(0)
+		currentGesture = rl.GetGestureDetected()
+		touchPosition = rl.GetTouchPosition(0)
 
-		if raylib.CheckCollisionPointRec(touchPosition, touchArea) && currentGesture != raylib.GestureNone {
+		if rl.CheckCollisionPointRec(touchPosition, touchArea) && currentGesture != rl.GestureNone {
 			if currentGesture != lastGesture {
 				switch currentGesture {
-				case raylib.GestureTap:
+				case rl.GestureTap:
 					gestureStrings = append(gestureStrings, "GESTURE TAP")
-				case raylib.GestureDoubletap:
+				case rl.GestureDoubletap:
 					gestureStrings = append(gestureStrings, "GESTURE DOUBLETAP")
-				case raylib.GestureHold:
+				case rl.GestureHold:
 					gestureStrings = append(gestureStrings, "GESTURE HOLD")
-				case raylib.GestureDrag:
+				case rl.GestureDrag:
 					gestureStrings = append(gestureStrings, "GESTURE DRAG")
-				case raylib.GestureSwipeRight:
+				case rl.GestureSwipeRight:
 					gestureStrings = append(gestureStrings, "GESTURE SWIPE RIGHT")
-				case raylib.GestureSwipeLeft:
+				case rl.GestureSwipeLeft:
 					gestureStrings = append(gestureStrings, "GESTURE SWIPE LEFT")
-				case raylib.GestureSwipeUp:
+				case rl.GestureSwipeUp:
 					gestureStrings = append(gestureStrings, "GESTURE SWIPE UP")
-				case raylib.GestureSwipeDown:
+				case rl.GestureSwipeDown:
 					gestureStrings = append(gestureStrings, "GESTURE SWIPE DOWN")
-				case raylib.GesturePinchIn:
+				case rl.GesturePinchIn:
 					gestureStrings = append(gestureStrings, "GESTURE PINCH IN")
-				case raylib.GesturePinchOut:
+				case rl.GesturePinchOut:
 					gestureStrings = append(gestureStrings, "GESTURE PINCH OUT")
 				}
 
@@ -62,38 +62,38 @@ func main() {
 			}
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.DrawRectangleRec(touchArea, raylib.Gray)
-		raylib.DrawRectangle(225, 15, screenWidth-240, screenHeight-30, raylib.RayWhite)
+		rl.DrawRectangleRec(touchArea, rl.Gray)
+		rl.DrawRectangle(225, 15, screenWidth-240, screenHeight-30, rl.RayWhite)
 
-		raylib.DrawText("GESTURES TEST AREA", screenWidth-270, screenHeight-40, 20, raylib.Fade(raylib.Gray, 0.5))
+		rl.DrawText("GESTURES TEST AREA", screenWidth-270, screenHeight-40, 20, rl.Fade(rl.Gray, 0.5))
 
 		for i := 0; i < len(gestureStrings); i++ {
 			if i%2 == 0 {
-				raylib.DrawRectangle(10, int32(30+20*i), 200, 20, raylib.Fade(raylib.LightGray, 0.5))
+				rl.DrawRectangle(10, int32(30+20*i), 200, 20, rl.Fade(rl.LightGray, 0.5))
 			} else {
-				raylib.DrawRectangle(10, int32(30+20*i), 200, 20, raylib.Fade(raylib.LightGray, 0.3))
+				rl.DrawRectangle(10, int32(30+20*i), 200, 20, rl.Fade(rl.LightGray, 0.3))
 			}
 
 			if i < len(gestureStrings)-1 {
-				raylib.DrawText(gestureStrings[i], 35, int32(36+20*i), 10, raylib.DarkGray)
+				rl.DrawText(gestureStrings[i], 35, int32(36+20*i), 10, rl.DarkGray)
 			} else {
-				raylib.DrawText(gestureStrings[i], 35, int32(36+20*i), 10, raylib.Maroon)
+				rl.DrawText(gestureStrings[i], 35, int32(36+20*i), 10, rl.Maroon)
 			}
 		}
 
-		raylib.DrawRectangleLines(10, 29, 200, screenHeight-50, raylib.Gray)
-		raylib.DrawText("DETECTED GESTURES", 50, 15, 10, raylib.Gray)
+		rl.DrawRectangleLines(10, 29, 200, screenHeight-50, rl.Gray)
+		rl.DrawText("DETECTED GESTURES", 50, 15, 10, rl.Gray)
 
-		if currentGesture != raylib.GestureNone {
-			raylib.DrawCircleV(touchPosition, 30, raylib.Maroon)
+		if currentGesture != rl.GestureNone {
+			rl.DrawCircleV(touchPosition, 30, rl.Maroon)
 		}
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

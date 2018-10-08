@@ -5,39 +5,39 @@ import (
 )
 
 func main() {
-	raylib.InitWindow(800, 450, "raylib [core] example - 3d mode")
+	rl.InitWindow(800, 450, "raylib [core] example - 3d mode")
 
-	camera := raylib.Camera3D{}
-	camera.Position = raylib.NewVector3(0.0, 10.0, 10.0)
-	camera.Target = raylib.NewVector3(0.0, 0.0, 0.0)
-	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)
+	camera := rl.Camera3D{}
+	camera.Position = rl.NewVector3(0.0, 10.0, 10.0)
+	camera.Target = rl.NewVector3(0.0, 0.0, 0.0)
+	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
-	camera.Type = raylib.CameraPerspective
+	camera.Type = rl.CameraPerspective
 
-	cubePosition := raylib.NewVector3(0.0, 0.0, 0.0)
+	cubePosition := rl.NewVector3(0.0, 0.0, 0.0)
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		raylib.BeginDrawing()
+	for !rl.WindowShouldClose() {
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.BeginMode3D(camera)
+		rl.BeginMode3D(camera)
 
-		raylib.DrawCube(cubePosition, 2.0, 2.0, 2.0, raylib.Red)
-		raylib.DrawCubeWires(cubePosition, 2.0, 2.0, 2.0, raylib.Maroon)
+		rl.DrawCube(cubePosition, 2.0, 2.0, 2.0, rl.Red)
+		rl.DrawCubeWires(cubePosition, 2.0, 2.0, 2.0, rl.Maroon)
 
-		raylib.DrawGrid(10, 1.0)
+		rl.DrawGrid(10, 1.0)
 
-		raylib.EndMode3D()
+		rl.EndMode3D()
 
-		raylib.DrawText("Welcome to the third dimension!", 10, 40, 20, raylib.DarkGray)
+		rl.DrawText("Welcome to the third dimension!", 10, 40, 20, rl.DarkGray)
 
-		raylib.DrawFPS(10, 10)
+		rl.DrawFPS(10, 10)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

@@ -1,6 +1,6 @@
 // +build !android,arm
 
-package raylib
+package rl
 
 /*
 #include "raylib.h"

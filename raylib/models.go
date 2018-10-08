@@ -1,4 +1,4 @@
-package raylib
+package rl
 
 /*
 #include "raylib.h"
@@ -201,11 +201,11 @@ func UnloadMesh(mesh *Mesh) {
 }
 
 // ExportMesh - Export mesh as an OBJ file
-func ExportMesh(fileName string, mesh Mesh) {
+func ExportMesh(mesh Mesh, fileName string) {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	cmesh := mesh.cptr()
-	C.ExportMesh(cfileName, *cmesh)
+	C.ExportMesh(*cmesh, cfileName)
 }
 
 // GenMeshPlane - Generate plane mesh (with subdivisions)

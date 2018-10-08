@@ -11,57 +11,57 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [textures] example - texture from image.Image")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [textures] example - texture from image.Image")
 
 	r, err := os.Open("raylib_logo.png")
 	if err != nil {
-		raylib.TraceLog(raylib.LogError, err.Error())
+		rl.TraceLog(rl.LogError, err.Error())
 	}
 	defer r.Close()
 
 	img, err := png.Decode(r)
 	if err != nil {
-		raylib.TraceLog(raylib.LogError, err.Error())
+		rl.TraceLog(rl.LogError, err.Error())
 	}
 
-	// Create raylib.Image from Go image.Image and create texture
-	im := raylib.NewImageFromImage(img)
-	texture := raylib.LoadTextureFromImage(im)
+	// Create rl.Image from Go image.Image and create texture
+	im := rl.NewImageFromImage(img)
+	texture := rl.LoadTextureFromImage(im)
 
 	// Unload CPU (RAM) image data
-	raylib.UnloadImage(im)
+	rl.UnloadImage(im)
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		if raylib.IsKeyPressed(raylib.KeyS) {
-			rimg := raylib.GetTextureData(texture)
+	for !rl.WindowShouldClose() {
+		if rl.IsKeyPressed(rl.KeyS) {
+			rimg := rl.GetTextureData(texture)
 
 			f, err := os.Create("image_saved.png")
 			if err != nil {
-				raylib.TraceLog(raylib.LogError, err.Error())
+				rl.TraceLog(rl.LogError, err.Error())
 			}
 
 			err = png.Encode(f, rimg.ToImage())
 			if err != nil {
-				raylib.TraceLog(raylib.LogError, err.Error())
+				rl.TraceLog(rl.LogError, err.Error())
 			}
 
 			f.Close()
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.DrawText("PRESS S TO SAVE IMAGE FROM TEXTURE", 20, 20, 12, raylib.LightGray)
-		raylib.DrawTexture(texture, screenWidth/2-texture.Width/2, screenHeight/2-texture.Height/2, raylib.White)
-		raylib.DrawText("this IS a texture loaded from an image.Image!", 285, 370, 10, raylib.Gray)
+		rl.DrawText("PRESS S TO SAVE IMAGE FROM TEXTURE", 20, 20, 12, rl.LightGray)
+		rl.DrawTexture(texture, screenWidth/2-texture.Width/2, screenHeight/2-texture.Height/2, rl.White)
+		rl.DrawText("this IS a texture loaded from an image.Image!", 285, 370, 10, rl.Gray)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.UnloadTexture(texture)
+	rl.UnloadTexture(texture)
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

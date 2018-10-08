@@ -30,28 +30,28 @@ func (g *Game) Init() {
 // Update - Update game
 func (g *Game) Update() {
 	// Keys 1-9 switch demos
-	switch raylib.GetKeyPressed() {
-	case raylib.KeyOne:
+	switch rl.GetKeyPressed() {
+	case rl.KeyOne:
 		g.Demo1()
-	case raylib.KeyTwo:
+	case rl.KeyTwo:
 		g.Demo2()
-	case raylib.KeyThree:
+	case rl.KeyThree:
 		g.Demo3()
-	case raylib.KeyFour:
+	case rl.KeyFour:
 		g.Demo4()
-	case raylib.KeyFive:
+	case rl.KeyFive:
 		g.Demo5()
-	case raylib.KeySix:
+	case rl.KeySix:
 		g.Demo6()
-	case raylib.KeySeven:
+	case rl.KeySeven:
 		g.Demo7()
-	case raylib.KeyEight:
+	case rl.KeyEight:
 		g.Demo8()
-	case raylib.KeyNine:
+	case rl.KeyNine:
 		g.Demo9()
 	}
 
-	g.TimeStep = float64(raylib.GetFrameTime())
+	g.TimeStep = float64(rl.GetFrameTime())
 
 	// Physics steps calculations
 	g.World.Step(g.TimeStep)
@@ -66,7 +66,7 @@ func (g *Game) Draw() {
 		g.DrawJoint(j)
 	}
 
-	raylib.DrawText("Use keys 1-9 to switch current demo", 20, 20, 10, raylib.RayWhite)
+	rl.DrawText("Use keys 1-9 to switch current demo", 20, 20, 10, rl.RayWhite)
 }
 
 // DrawBody - Draw body
@@ -83,10 +83,10 @@ func (g *Game) DrawBody(b *box2d.Body) {
 	v3 := o.Add(S.MulV(x.Add(R.MulV(box2d.Vec2{h.X, h.Y}))))
 	v4 := o.Add(S.MulV(x.Add(R.MulV(box2d.Vec2{-h.X, h.Y}))))
 
-	raylib.DrawLine(int32(v1.X), int32(v1.Y), int32(v2.X), int32(v2.Y), raylib.RayWhite)
-	raylib.DrawLine(int32(v2.X), int32(v2.Y), int32(v3.X), int32(v3.Y), raylib.RayWhite)
-	raylib.DrawLine(int32(v3.X), int32(v3.Y), int32(v4.X), int32(v4.Y), raylib.RayWhite)
-	raylib.DrawLine(int32(v4.X), int32(v4.Y), int32(v1.X), int32(v1.Y), raylib.RayWhite)
+	rl.DrawLine(int32(v1.X), int32(v1.Y), int32(v2.X), int32(v2.Y), rl.RayWhite)
+	rl.DrawLine(int32(v2.X), int32(v2.Y), int32(v3.X), int32(v3.Y), rl.RayWhite)
+	rl.DrawLine(int32(v3.X), int32(v3.Y), int32(v4.X), int32(v4.Y), rl.RayWhite)
+	rl.DrawLine(int32(v4.X), int32(v4.Y), int32(v1.X), int32(v1.Y), rl.RayWhite)
 }
 
 // DrawJoint - Draw joint
@@ -111,8 +111,8 @@ func (g *Game) DrawJoint(j *box2d.Joint) {
 	x2 = o.Add(S.MulV(x2))
 	p2 = o.Add(S.MulV(p2))
 
-	raylib.DrawLine(int32(x1.X), int32(x1.Y), int32(p1.X), int32(p1.Y), raylib.RayWhite)
-	raylib.DrawLine(int32(x2.X), int32(x2.Y), int32(p2.X), int32(p2.Y), raylib.RayWhite)
+	rl.DrawLine(int32(x1.X), int32(x1.Y), int32(p1.X), int32(p1.Y), rl.RayWhite)
+	rl.DrawLine(int32(x2.X), int32(x2.Y), int32(p2.X), int32(p2.Y), rl.RayWhite)
 }
 
 // Demo1 - Single box
@@ -489,25 +489,25 @@ func (g *Game) Demo9() {
 }
 
 func main() {
-	raylib.InitWindow(800, 450, "raylib [physics] example - box2d")
+	rl.InitWindow(800, 450, "raylib [physics] example - box2d")
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
 	game := NewGame()
 
 	game.Demo1()
 
-	for !raylib.WindowShouldClose() {
-		raylib.BeginDrawing()
+	for !rl.WindowShouldClose() {
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.Black)
+		rl.ClearBackground(rl.Black)
 
 		game.Update()
 
 		game.Draw()
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

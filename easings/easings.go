@@ -10,21 +10,25 @@ import (
 // Linear Easing functions
 
 // LinearNone easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func LinearNone(t, b, c, d float32) float32 {
 	return c*t/d + b
 }
 
 // LinearIn easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func LinearIn(t, b, c, d float32) float32 {
 	return c*t/d + b
 }
 
 // LinearOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func LinearOut(t, b, c, d float32) float32 {
 	return c*t/d + b
 }
 
 // LinearInOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func LinearInOut(t, b, c, d float32) float32 {
 	return c*t/d + b
 }
@@ -32,16 +36,19 @@ func LinearInOut(t, b, c, d float32) float32 {
 // Sine Easing functions
 
 // SineIn easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func SineIn(t, b, c, d float32) float32 {
 	return -c*float32(math.Cos(float64(t/d)*(math.Pi/2))) + c + b
 }
 
 // SineOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func SineOut(t, b, c, d float32) float32 {
 	return c*float32(math.Sin(float64(t/d)*(math.Pi/2))) + b
 }
 
 // SineInOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func SineInOut(t, b, c, d float32) float32 {
 	return -c/2*(float32(math.Cos(math.Pi*float64(t/d)))-1) + b
 }
@@ -49,17 +56,20 @@ func SineInOut(t, b, c, d float32) float32 {
 // Circular Easing functions
 
 // CircIn easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func CircIn(t, b, c, d float32) float32 {
 	t = t / d
 	return -c*(float32(math.Sqrt(float64(1-t*t)))-1) + b
 }
 
 // CircOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func CircOut(t, b, c, d float32) float32 {
 	return c*float32(math.Sqrt(1-float64((t/d-1)*t))) + b
 }
 
 // CircInOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func CircInOut(t, b, c, d float32) float32 {
 	t = t / d * 2
 
@@ -74,18 +84,21 @@ func CircInOut(t, b, c, d float32) float32 {
 // Cubic Easing functions
 
 // CubicIn easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func CubicIn(t, b, c, d float32) float32 {
 	t = t / d
 	return c*t*t*t + b
 }
 
 // CubicOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func CubicOut(t, b, c, d float32) float32 {
 	t = t/d - 1
 	return c*(t*t*t+1) + b
 }
 
 // CubicInOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func CubicInOut(t, b, c, d float32) float32 {
 	t = t / d * 2
 	if t < 1 {
@@ -99,18 +112,21 @@ func CubicInOut(t, b, c, d float32) float32 {
 // Quadratic Easing functions
 
 // QuadIn easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func QuadIn(t, b, c, d float32) float32 {
 	t = t / d
 	return c*t*t + b
 }
 
 // QuadOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func QuadOut(t, b, c, d float32) float32 {
 	t = t / d
 	return (-c*t*(t-2) + b)
 }
 
 // QuadInOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func QuadInOut(t, b, c, d float32) float32 {
 	t = t / d * 2
 	if t < 1 {
@@ -123,6 +139,7 @@ func QuadInOut(t, b, c, d float32) float32 {
 // Exponential Easing functions
 
 // ExpoIn easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func ExpoIn(t, b, c, d float32) float32 {
 	if t == 0 {
 		return b
@@ -132,6 +149,7 @@ func ExpoIn(t, b, c, d float32) float32 {
 }
 
 // ExpoOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func ExpoOut(t, b, c, d float32) float32 {
 	if t == d {
 		return (b + c)
@@ -141,6 +159,7 @@ func ExpoOut(t, b, c, d float32) float32 {
 }
 
 // ExpoInOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func ExpoInOut(t, b, c, d float32) float32 {
 	if t == 0 {
 		return b
@@ -162,6 +181,7 @@ func ExpoInOut(t, b, c, d float32) float32 {
 // Back Easing functions
 
 // BackIn easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func BackIn(t, b, c, d float32) float32 {
 	s := float32(1.70158)
 	t = t / d
@@ -169,6 +189,7 @@ func BackIn(t, b, c, d float32) float32 {
 }
 
 // BackOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func BackOut(t, b, c, d float32) float32 {
 	s := float32(1.70158)
 	t = t/d - 1
@@ -176,6 +197,7 @@ func BackOut(t, b, c, d float32) float32 {
 }
 
 // BackInOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func BackInOut(t, b, c, d float32) float32 {
 	s := float32(1.70158)
 	s = s * 1.525
@@ -192,11 +214,13 @@ func BackInOut(t, b, c, d float32) float32 {
 // Bounce Easing functions
 
 // BounceIn easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func BounceIn(t, b, c, d float32) float32 {
 	return (c - BounceOut(d-t, 0, c, d) + b)
 }
 
 // BounceOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func BounceOut(t, b, c, d float32) float32 {
 	t = t / d
 	if t < (1 / 2.75) {
@@ -214,6 +238,7 @@ func BounceOut(t, b, c, d float32) float32 {
 }
 
 // BounceInOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func BounceInOut(t, b, c, d float32) float32 {
 	if t < d/2 {
 		return BounceIn(t*2, 0, c, d)*0.5 + b
@@ -225,6 +250,7 @@ func BounceInOut(t, b, c, d float32) float32 {
 // Elastic Easing functions
 
 // ElasticIn easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func ElasticIn(t, b, c, d float32) float32 {
 	if t == 0 {
 		return b
@@ -245,6 +271,7 @@ func ElasticIn(t, b, c, d float32) float32 {
 }
 
 // ElasticOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func ElasticOut(t, b, c, d float32) float32 {
 	if t == 0 {
 		return b
@@ -264,6 +291,7 @@ func ElasticOut(t, b, c, d float32) float32 {
 }
 
 // ElasticInOut easing
+// t: current time, b: begInnIng value, c: change In value, d: duration
 func ElasticInOut(t, b, c, d float32) float32 {
 	if t == 0 {
 		return b

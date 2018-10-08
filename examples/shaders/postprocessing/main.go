@@ -40,53 +40,53 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.SetConfigFlags(raylib.FlagMsaa4xHint | raylib.FlagVsyncHint) // Enable Multi Sampling Anti Aliasing 4x (if available)
+	rl.SetConfigFlags(rl.FlagMsaa4xHint | rl.FlagVsyncHint) // Enable Multi Sampling Anti Aliasing 4x (if available)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [shaders] example - postprocessing shader")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [shaders] example - postprocessing shader")
 
-	camera := raylib.Camera{}
-	camera.Position = raylib.NewVector3(3.0, 3.0, 3.0)
-	camera.Target = raylib.NewVector3(0.0, 1.5, 0.0)
-	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)
+	camera := rl.Camera{}
+	camera.Position = rl.NewVector3(3.0, 3.0, 3.0)
+	camera.Target = rl.NewVector3(0.0, 1.5, 0.0)
+	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
 
-	dwarf := raylib.LoadModel("dwarf.obj")                   // Load OBJ model
-	texture := raylib.LoadTexture("dwarf_diffuse.png")       // Load model texture
-	dwarf.Material.Maps[raylib.MapDiffuse].Texture = texture // Set dwarf model diffuse texture
+	dwarf := rl.LoadModel("dwarf.obj")                   // Load OBJ model
+	texture := rl.LoadTexture("dwarf_diffuse.png")       // Load model texture
+	dwarf.Material.Maps[rl.MapDiffuse].Texture = texture // Set dwarf model diffuse texture
 
-	position := raylib.NewVector3(0.0, 0.0, 0.0) // Set model position
+	position := rl.NewVector3(0.0, 0.0, 0.0) // Set model position
 
 	// Load all postpro shaders
 	// NOTE 1: All postpro shader use the base vertex shader (DEFAULT_VERTEX_SHADER)
-	shaders := make([]raylib.Shader, MaxPostproShaders)
-	shaders[FxGrayscale] = raylib.LoadShader("", "glsl330/grayscale.fs")
-	shaders[FxPosterization] = raylib.LoadShader("", "glsl330/posterization.fs")
-	shaders[FxDreamVision] = raylib.LoadShader("", "glsl330/dream_vision.fs")
-	shaders[FxPixelizer] = raylib.LoadShader("", "glsl330/pixelizer.fs")
-	shaders[FxCrossHatching] = raylib.LoadShader("", "glsl330/cross_hatching.fs")
-	shaders[FxCrossStitching] = raylib.LoadShader("", "glsl330/cross_stitching.fs")
-	shaders[FxPredatorView] = raylib.LoadShader("", "glsl330/predator.fs")
-	shaders[FxScanlines] = raylib.LoadShader("", "glsl330/scanlines.fs")
-	shaders[FxFisheye] = raylib.LoadShader("", "glsl330/fisheye.fs")
-	shaders[FxSobel] = raylib.LoadShader("", "glsl330/sobel.fs")
-	shaders[FxBlur] = raylib.LoadShader("", "glsl330/blur.fs")
-	shaders[FxBloom] = raylib.LoadShader("", "glsl330/bloom.fs")
+	shaders := make([]rl.Shader, MaxPostproShaders)
+	shaders[FxGrayscale] = rl.LoadShader("", "glsl330/grayscale.fs")
+	shaders[FxPosterization] = rl.LoadShader("", "glsl330/posterization.fs")
+	shaders[FxDreamVision] = rl.LoadShader("", "glsl330/dream_vision.fs")
+	shaders[FxPixelizer] = rl.LoadShader("", "glsl330/pixelizer.fs")
+	shaders[FxCrossHatching] = rl.LoadShader("", "glsl330/cross_hatching.fs")
+	shaders[FxCrossStitching] = rl.LoadShader("", "glsl330/cross_stitching.fs")
+	shaders[FxPredatorView] = rl.LoadShader("", "glsl330/predator.fs")
+	shaders[FxScanlines] = rl.LoadShader("", "glsl330/scanlines.fs")
+	shaders[FxFisheye] = rl.LoadShader("", "glsl330/fisheye.fs")
+	shaders[FxSobel] = rl.LoadShader("", "glsl330/sobel.fs")
+	shaders[FxBlur] = rl.LoadShader("", "glsl330/blur.fs")
+	shaders[FxBloom] = rl.LoadShader("", "glsl330/bloom.fs")
 
 	currentShader := FxGrayscale
 
 	// Create a RenderTexture2D to be used for render to texture
-	target := raylib.LoadRenderTexture(screenWidth, screenHeight)
+	target := rl.LoadRenderTexture(screenWidth, screenHeight)
 
-	raylib.SetCameraMode(camera, raylib.CameraOrbital) // Set free camera mode
+	rl.SetCameraMode(camera, rl.CameraOrbital) // Set free camera mode
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		raylib.UpdateCamera(&camera) // Update camera
+	for !rl.WindowShouldClose() {
+		rl.UpdateCamera(&camera) // Update camera
 
-		if raylib.IsKeyPressed(raylib.KeyRight) {
+		if rl.IsKeyPressed(rl.KeyRight) {
 			currentShader++
-		} else if raylib.IsKeyPressed(raylib.KeyLeft) {
+		} else if rl.IsKeyPressed(rl.KeyLeft) {
 			currentShader--
 		}
 
@@ -96,51 +96,51 @@ func main() {
 			currentShader = MaxPostproShaders - 1
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.BeginTextureMode(target) // Enable drawing to texture
+		rl.BeginTextureMode(target) // Enable drawing to texture
 
-		raylib.BeginMode3D(camera)
+		rl.BeginMode3D(camera)
 
-		raylib.DrawModel(dwarf, position, 2.0, raylib.White) // Draw 3d model with texture
+		rl.DrawModel(dwarf, position, 2.0, rl.White) // Draw 3d model with texture
 
-		raylib.DrawGrid(10, 1.0) // Draw a grid
+		rl.DrawGrid(10, 1.0) // Draw a grid
 
-		raylib.EndMode3D()
+		rl.EndMode3D()
 
-		raylib.EndTextureMode() // End drawing to texture (now we have a texture available for next passes)
+		rl.EndTextureMode() // End drawing to texture (now we have a texture available for next passes)
 
 		// Render previously generated texture using selected postpro shader
-		raylib.BeginShaderMode(shaders[currentShader])
+		rl.BeginShaderMode(shaders[currentShader])
 
 		// NOTE: Render texture must be y-flipped due to default OpenGL coordinates (left-bottom)
-		raylib.DrawTextureRec(target.Texture, raylib.NewRectangle(0, 0, float32(target.Texture.Width), float32(-target.Texture.Height)), raylib.NewVector2(0, 0), raylib.White)
+		rl.DrawTextureRec(target.Texture, rl.NewRectangle(0, 0, float32(target.Texture.Width), float32(-target.Texture.Height)), rl.NewVector2(0, 0), rl.White)
 
-		raylib.EndShaderMode()
+		rl.EndShaderMode()
 
-		raylib.DrawRectangle(0, 9, 580, 30, raylib.Fade(raylib.LightGray, 0.7))
+		rl.DrawRectangle(0, 9, 580, 30, rl.Fade(rl.LightGray, 0.7))
 
-		raylib.DrawText("(c) Dwarf 3D model by David Moreno", screenWidth-200, screenHeight-20, 10, raylib.DarkGray)
+		rl.DrawText("(c) Dwarf 3D model by David Moreno", screenWidth-200, screenHeight-20, 10, rl.DarkGray)
 
-		raylib.DrawText("CURRENT POSTPRO SHADER:", 10, 15, 20, raylib.Black)
-		raylib.DrawText(postproShaderText[currentShader], 330, 15, 20, raylib.Red)
-		raylib.DrawText("< >", 540, 10, 30, raylib.DarkBlue)
+		rl.DrawText("CURRENT POSTPRO SHADER:", 10, 15, 20, rl.Black)
+		rl.DrawText(postproShaderText[currentShader], 330, 15, 20, rl.Red)
+		rl.DrawText("< >", 540, 10, 30, rl.DarkBlue)
 
-		raylib.DrawFPS(700, 15)
+		rl.DrawFPS(700, 15)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
 	// Unload all postpro shaders
 	for i := 0; i < MaxPostproShaders; i++ {
-		raylib.UnloadShader(shaders[i])
+		rl.UnloadShader(shaders[i])
 	}
 
-	raylib.UnloadTexture(texture)      // Unload texture
-	raylib.UnloadModel(dwarf)          // Unload model
-	raylib.UnloadRenderTexture(target) // Unload render texture
+	rl.UnloadTexture(texture)      // Unload texture
+	rl.UnloadModel(dwarf)          // Unload model
+	rl.UnloadRenderTexture(target) // Unload render texture
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

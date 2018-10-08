@@ -8,70 +8,71 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d picking")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d picking")
 
-	camera := raylib.Camera3D{}
-	camera.Position = raylib.NewVector3(10.0, 10.0, 10.0)
-	camera.Target = raylib.NewVector3(0.0, 0.0, 0.0)
-	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)
+	camera := rl.Camera3D{}
+	camera.Position = rl.NewVector3(10.0, 10.0, 10.0)
+	camera.Target = rl.NewVector3(0.0, 0.0, 0.0)
+	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
-	camera.Type = raylib.CameraPerspective
+	camera.Type = rl.CameraPerspective
 
-	cubePosition := raylib.NewVector3(0.0, 1.0, 0.0)
-	cubeSize := raylib.NewVector3(2.0, 2.0, 2.0)
+	cubePosition := rl.NewVector3(0.0, 1.0, 0.0)
+	cubeSize := rl.NewVector3(2.0, 2.0, 2.0)
 
-	var ray raylib.Ray
+	var ray rl.Ray
 
 	collision := false
 
-	raylib.SetCameraMode(camera, raylib.CameraFree) // Set a free camera mode
+	rl.SetCameraMode(camera, rl.CameraFree) // Set a free camera mode
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		raylib.UpdateCamera(&camera) // Update camera
+	for !rl.WindowShouldClose() {
+		rl.UpdateCamera(&camera) // Update camera
 
-		if raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
-			ray = raylib.GetMouseRay(raylib.GetMousePosition(), camera)
+		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
+			// NOTE: This function is NOT WORKING properly!
+			ray = rl.GetMouseRay(rl.GetMousePosition(), camera)
 
 			// Check collision between ray and box
-			min := raylib.NewVector3(cubePosition.X-cubeSize.X/2, cubePosition.Y-cubeSize.Y/2, cubePosition.Z-cubeSize.Z/2)
-			max := raylib.NewVector3(cubePosition.X+cubeSize.X/2, cubePosition.Y+cubeSize.Y/2, cubePosition.Z+cubeSize.Z/2)
-			collision = raylib.CheckCollisionRayBox(ray, raylib.NewBoundingBox(min, max))
+			min := rl.NewVector3(cubePosition.X-cubeSize.X/2, cubePosition.Y-cubeSize.Y/2, cubePosition.Z-cubeSize.Z/2)
+			max := rl.NewVector3(cubePosition.X+cubeSize.X/2, cubePosition.Y+cubeSize.Y/2, cubePosition.Z+cubeSize.Z/2)
+			collision = rl.CheckCollisionRayBox(ray, rl.NewBoundingBox(min, max))
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.BeginMode3D(camera)
+		rl.BeginMode3D(camera)
 
 		if collision {
-			raylib.DrawCube(cubePosition, cubeSize.X, cubeSize.Y, cubeSize.Z, raylib.Red)
-			raylib.DrawCubeWires(cubePosition, cubeSize.X, cubeSize.Y, cubeSize.Z, raylib.Maroon)
+			rl.DrawCube(cubePosition, cubeSize.X, cubeSize.Y, cubeSize.Z, rl.Red)
+			rl.DrawCubeWires(cubePosition, cubeSize.X, cubeSize.Y, cubeSize.Z, rl.Maroon)
 
-			raylib.DrawCubeWires(cubePosition, cubeSize.X+0.2, cubeSize.Y+0.2, cubeSize.Z+0.2, raylib.Green)
+			rl.DrawCubeWires(cubePosition, cubeSize.X+0.2, cubeSize.Y+0.2, cubeSize.Z+0.2, rl.Green)
 		} else {
-			raylib.DrawCube(cubePosition, cubeSize.X, cubeSize.Y, cubeSize.Z, raylib.Gray)
-			raylib.DrawCubeWires(cubePosition, cubeSize.X, cubeSize.Y, cubeSize.Z, raylib.DarkGray)
+			rl.DrawCube(cubePosition, cubeSize.X, cubeSize.Y, cubeSize.Z, rl.Gray)
+			rl.DrawCubeWires(cubePosition, cubeSize.X, cubeSize.Y, cubeSize.Z, rl.DarkGray)
 		}
 
-		raylib.DrawRay(ray, raylib.Maroon)
+		rl.DrawRay(ray, rl.Maroon)
 
-		raylib.DrawGrid(10, 1.0)
+		rl.DrawGrid(10, 1.0)
 
-		raylib.EndMode3D()
+		rl.EndMode3D()
 
-		raylib.DrawText("Try selecting the box with mouse!", 240, 10, 20, raylib.DarkGray)
+		rl.DrawText("Try selecting the box with mouse!", 240, 10, 20, rl.DarkGray)
 
 		if collision {
-			raylib.DrawText("BOX SELECTED", (screenWidth-raylib.MeasureText("BOX SELECTED", 30))/2, int32(float32(screenHeight)*0.1), 30, raylib.Green)
+			rl.DrawText("BOX SELECTED", (screenWidth-rl.MeasureText("BOX SELECTED", 30))/2, int32(float32(screenHeight)*0.1), 30, rl.Green)
 		}
 
-		raylib.DrawFPS(10, 10)
+		rl.DrawFPS(10, 10)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

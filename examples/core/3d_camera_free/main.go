@@ -5,53 +5,53 @@ import (
 )
 
 func main() {
-	raylib.InitWindow(800, 450, "raylib [core] example - 3d camera free")
+	rl.InitWindow(800, 450, "raylib [core] example - 3d camera free")
 
-	camera := raylib.Camera3D{}
-	camera.Position = raylib.NewVector3(10.0, 10.0, 10.0)
-	camera.Target = raylib.NewVector3(0.0, 0.0, 0.0)
-	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)
+	camera := rl.Camera3D{}
+	camera.Position = rl.NewVector3(10.0, 10.0, 10.0)
+	camera.Target = rl.NewVector3(0.0, 0.0, 0.0)
+	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
-	camera.Type = raylib.CameraPerspective
+	camera.Type = rl.CameraPerspective
 
-	cubePosition := raylib.NewVector3(0.0, 0.0, 0.0)
+	cubePosition := rl.NewVector3(0.0, 0.0, 0.0)
 
-	raylib.SetCameraMode(camera, raylib.CameraFree) // Set a free camera mode
+	rl.SetCameraMode(camera, rl.CameraFree) // Set a free camera mode
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		raylib.UpdateCamera(&camera) // Update camera
+	for !rl.WindowShouldClose() {
+		rl.UpdateCamera(&camera) // Update camera
 
-		if raylib.IsKeyDown(raylib.KeyZ) {
-			camera.Target = raylib.NewVector3(0.0, 0.0, 0.0)
+		if rl.IsKeyDown(rl.KeyZ) {
+			camera.Target = rl.NewVector3(0.0, 0.0, 0.0)
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.BeginMode3D(camera)
+		rl.BeginMode3D(camera)
 
-		raylib.DrawCube(cubePosition, 2.0, 2.0, 2.0, raylib.Red)
-		raylib.DrawCubeWires(cubePosition, 2.0, 2.0, 2.0, raylib.Maroon)
+		rl.DrawCube(cubePosition, 2.0, 2.0, 2.0, rl.Red)
+		rl.DrawCubeWires(cubePosition, 2.0, 2.0, 2.0, rl.Maroon)
 
-		raylib.DrawGrid(10, 1.0)
+		rl.DrawGrid(10, 1.0)
 
-		raylib.EndMode3D()
+		rl.EndMode3D()
 
-		raylib.DrawRectangle(10, 10, 320, 133, raylib.Fade(raylib.SkyBlue, 0.5))
-		raylib.DrawRectangleLines(10, 10, 320, 133, raylib.Blue)
+		rl.DrawRectangle(10, 10, 320, 133, rl.Fade(rl.SkyBlue, 0.5))
+		rl.DrawRectangleLines(10, 10, 320, 133, rl.Blue)
 
-		raylib.DrawText("Free camera default controls:", 20, 20, 10, raylib.Black)
-		raylib.DrawText("- Mouse Wheel to Zoom in-out", 40, 40, 10, raylib.DarkGray)
-		raylib.DrawText("- Mouse Wheel Pressed to Pan", 40, 60, 10, raylib.DarkGray)
-		raylib.DrawText("- Alt + Mouse Wheel Pressed to Rotate", 40, 80, 10, raylib.DarkGray)
-		raylib.DrawText("- Alt + Ctrl + Mouse Wheel Pressed for Smooth Zoom", 40, 100, 10, raylib.DarkGray)
-		raylib.DrawText("- Z to zoom to (0, 0, 0)", 40, 120, 10, raylib.DarkGray)
+		rl.DrawText("Free camera default controls:", 20, 20, 10, rl.Black)
+		rl.DrawText("- Mouse Wheel to Zoom in-out", 40, 40, 10, rl.DarkGray)
+		rl.DrawText("- Mouse Wheel Pressed to Pan", 40, 60, 10, rl.DarkGray)
+		rl.DrawText("- Alt + Mouse Wheel Pressed to Rotate", 40, 80, 10, rl.DarkGray)
+		rl.DrawText("- Alt + Ctrl + Mouse Wheel Pressed for Smooth Zoom", 40, 100, 10, rl.DarkGray)
+		rl.DrawText("- Z to zoom to (0, 0, 0)", 40, 120, 10, rl.DarkGray)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

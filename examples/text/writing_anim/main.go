@@ -8,24 +8,24 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [text] example - text writing anim")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [text] example - text writing anim")
 
 	message := "This sample illustrates a text writing\nanimation effect! Check it out! ;)"
 	length := len(message)
 
 	framesCounter := 0
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
+	for !rl.WindowShouldClose() {
 		// Update
-		if raylib.IsKeyDown(raylib.KeySpace) {
+		if rl.IsKeyDown(rl.KeySpace) {
 			framesCounter += 8
 		} else {
 			framesCounter++
 		}
 
-		if raylib.IsKeyPressed(raylib.KeyEnter) {
+		if rl.IsKeyPressed(rl.KeyEnter) {
 			framesCounter = 0
 		}
 
@@ -34,17 +34,17 @@ func main() {
 		}
 
 		// Draw
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.DrawText(message[0:framesCounter/10], 210, 160, 20, raylib.Maroon)
+		rl.DrawText(message[0:framesCounter/10], 210, 160, 20, rl.Maroon)
 
-		raylib.DrawText("PRESS [ENTER] to RESTART!", 240, 260, 20, raylib.LightGray)
-		raylib.DrawText("PRESS [SPACE] to SPEED UP!", 239, 300, 20, raylib.LightGray)
+		rl.DrawText("PRESS [ENTER] to RESTART!", 240, 260, 20, rl.LightGray)
+		rl.DrawText("PRESS [SPACE] to SPEED UP!", 239, 300, 20, rl.LightGray)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

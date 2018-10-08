@@ -10,57 +10,57 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.SetConfigFlags(raylib.FlagMsaa4xHint) // Enable Multi Sampling Anti Aliasing 4x (if available)
+	rl.SetConfigFlags(rl.FlagMsaa4xHint) // Enable Multi Sampling Anti Aliasing 4x (if available)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [shaders] example - model shader")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [shaders] example - model shader")
 
-	camera := raylib.Camera{}
-	camera.Position = raylib.NewVector3(3.0, 3.0, 3.0)
-	camera.Target = raylib.NewVector3(0.0, 1.5, 0.0)
-	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)
+	camera := rl.Camera{}
+	camera.Position = rl.NewVector3(3.0, 3.0, 3.0)
+	camera.Target = rl.NewVector3(0.0, 1.5, 0.0)
+	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
 
-	dwarf := raylib.LoadModel("dwarf.obj")                                 // Load OBJ model
-	texture := raylib.LoadTexture("dwarf_diffuse.png")                     // Load model texture
-	shader := raylib.LoadShader("glsl330/base.vs", "glsl330/grayscale.fs") // Load model shader
+	dwarf := rl.LoadModel("dwarf.obj")                                 // Load OBJ model
+	texture := rl.LoadTexture("dwarf_diffuse.png")                     // Load model texture
+	shader := rl.LoadShader("glsl330/base.vs", "glsl330/grayscale.fs") // Load model shader
 
 	dwarf.Material.Shader = shader                           // Set shader effect to 3d model
-	dwarf.Material.Maps[raylib.MapDiffuse].Texture = texture // Set dwarf model diffuse texture
+	dwarf.Material.Maps[rl.MapDiffuse].Texture = texture // Set dwarf model diffuse texture
 
-	position := raylib.NewVector3(0.0, 0.0, 0.0) // Set model position
+	position := rl.NewVector3(0.0, 0.0, 0.0) // Set model position
 
-	raylib.SetCameraMode(camera, raylib.CameraFree) // Set free camera mode
+	rl.SetCameraMode(camera, rl.CameraFree) // Set free camera mode
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		raylib.UpdateCamera(&camera) // Update camera
+	for !rl.WindowShouldClose() {
+		rl.UpdateCamera(&camera) // Update camera
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.BeginMode3D(camera)
+		rl.BeginMode3D(camera)
 
-		raylib.DrawModel(dwarf, position, 2.0, raylib.White) // Draw 3d model with texture
+		rl.DrawModel(dwarf, position, 2.0, rl.White) // Draw 3d model with texture
 
-		raylib.DrawGrid(10, 1.0) // Draw a grid
+		rl.DrawGrid(10, 1.0) // Draw a grid
 
-		raylib.EndMode3D()
+		rl.EndMode3D()
 
-		raylib.DrawText("(c) Dwarf 3D model by David Moreno", screenWidth-200, screenHeight-20, 10, raylib.Gray)
+		rl.DrawText("(c) Dwarf 3D model by David Moreno", screenWidth-200, screenHeight-20, 10, rl.Gray)
 
-		raylib.DrawText(fmt.Sprintf("Camera position: (%.2f, %.2f, %.2f)", camera.Position.X, camera.Position.Y, camera.Position.Z), 600, 20, 10, raylib.Black)
-		raylib.DrawText(fmt.Sprintf("Camera target: (%.2f, %.2f, %.2f)", camera.Target.X, camera.Target.Y, camera.Target.Z), 600, 40, 10, raylib.Gray)
+		rl.DrawText(fmt.Sprintf("Camera position: (%.2f, %.2f, %.2f)", camera.Position.X, camera.Position.Y, camera.Position.Z), 600, 20, 10, rl.Black)
+		rl.DrawText(fmt.Sprintf("Camera target: (%.2f, %.2f, %.2f)", camera.Target.X, camera.Target.Y, camera.Target.Z), 600, 40, 10, rl.Gray)
 
-		raylib.DrawFPS(10, 10)
+		rl.DrawFPS(10, 10)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.UnloadShader(shader)   // Unload shader
-	raylib.UnloadTexture(texture) // Unload texture
-	raylib.UnloadModel(dwarf)     // Unload model
+	rl.UnloadShader(shader)   // Unload shader
+	rl.UnloadTexture(texture) // Unload texture
+	rl.UnloadModel(dwarf)     // Unload model
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

@@ -8,62 +8,62 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [models] example - box collisions")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [models] example - box collisions")
 
-	camera := raylib.Camera{}
-	camera.Position = raylib.NewVector3(0.0, 10.0, 10.0)
-	camera.Target = raylib.NewVector3(0.0, 0.0, 0.0)
-	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)
+	camera := rl.Camera{}
+	camera.Position = rl.NewVector3(0.0, 10.0, 10.0)
+	camera.Target = rl.NewVector3(0.0, 0.0, 0.0)
+	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
-	camera.Type = raylib.CameraPerspective
+	camera.Type = rl.CameraPerspective
 
-	playerPosition := raylib.NewVector3(0.0, 1.0, 2.0)
-	playerSize := raylib.NewVector3(1.0, 2.0, 1.0)
-	playerColor := raylib.Green
+	playerPosition := rl.NewVector3(0.0, 1.0, 2.0)
+	playerSize := rl.NewVector3(1.0, 2.0, 1.0)
+	playerColor := rl.Green
 
-	enemyBoxPos := raylib.NewVector3(-4.0, 1.0, 0.0)
-	enemyBoxSize := raylib.NewVector3(2.0, 2.0, 2.0)
+	enemyBoxPos := rl.NewVector3(-4.0, 1.0, 0.0)
+	enemyBoxSize := rl.NewVector3(2.0, 2.0, 2.0)
 
-	enemySpherePos := raylib.NewVector3(4.0, 0.0, 0.0)
+	enemySpherePos := rl.NewVector3(4.0, 0.0, 0.0)
 	enemySphereSize := float32(1.5)
 
 	collision := false
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
+	for !rl.WindowShouldClose() {
 		// Update
 
 		// Move player
-		if raylib.IsKeyDown(raylib.KeyRight) {
+		if rl.IsKeyDown(rl.KeyRight) {
 			playerPosition.X += 0.2
-		} else if raylib.IsKeyDown(raylib.KeyLeft) {
+		} else if rl.IsKeyDown(rl.KeyLeft) {
 			playerPosition.X -= 0.2
-		} else if raylib.IsKeyDown(raylib.KeyDown) {
+		} else if rl.IsKeyDown(rl.KeyDown) {
 			playerPosition.Z += 0.2
-		} else if raylib.IsKeyDown(raylib.KeyUp) {
+		} else if rl.IsKeyDown(rl.KeyUp) {
 			playerPosition.Z -= 0.2
 		}
 
 		collision = false
 
 		// Check collisions player vs enemy-box
-		if raylib.CheckCollisionBoxes(
-			raylib.NewBoundingBox(
-				raylib.NewVector3(playerPosition.X-playerSize.X/2, playerPosition.Y-playerSize.Y/2, playerPosition.Z-playerSize.Z/2),
-				raylib.NewVector3(playerPosition.X+playerSize.X/2, playerPosition.Y+playerSize.Y/2, playerPosition.Z+playerSize.Z/2)),
-			raylib.NewBoundingBox(
-				raylib.NewVector3(enemyBoxPos.X-enemyBoxSize.X/2, enemyBoxPos.Y-enemyBoxSize.Y/2, enemyBoxPos.Z-enemyBoxSize.Z/2),
-				raylib.NewVector3(enemyBoxPos.X+enemyBoxSize.X/2, enemyBoxPos.Y+enemyBoxSize.Y/2, enemyBoxPos.Z+enemyBoxSize.Z/2)),
+		if rl.CheckCollisionBoxes(
+			rl.NewBoundingBox(
+				rl.NewVector3(playerPosition.X-playerSize.X/2, playerPosition.Y-playerSize.Y/2, playerPosition.Z-playerSize.Z/2),
+				rl.NewVector3(playerPosition.X+playerSize.X/2, playerPosition.Y+playerSize.Y/2, playerPosition.Z+playerSize.Z/2)),
+			rl.NewBoundingBox(
+				rl.NewVector3(enemyBoxPos.X-enemyBoxSize.X/2, enemyBoxPos.Y-enemyBoxSize.Y/2, enemyBoxPos.Z-enemyBoxSize.Z/2),
+				rl.NewVector3(enemyBoxPos.X+enemyBoxSize.X/2, enemyBoxPos.Y+enemyBoxSize.Y/2, enemyBoxPos.Z+enemyBoxSize.Z/2)),
 		) {
 			collision = true
 		}
 
 		// Check collisions player vs enemy-sphere
-		if raylib.CheckCollisionBoxSphere(
-			raylib.NewBoundingBox(
-				raylib.NewVector3(playerPosition.X-playerSize.X/2, playerPosition.Y-playerSize.Y/2, playerPosition.Z-playerSize.Z/2),
-				raylib.NewVector3(playerPosition.X+playerSize.X/2, playerPosition.Y+playerSize.Y/2, playerPosition.Z+playerSize.Z/2)),
+		if rl.CheckCollisionBoxSphere(
+			rl.NewBoundingBox(
+				rl.NewVector3(playerPosition.X-playerSize.X/2, playerPosition.Y-playerSize.Y/2, playerPosition.Z-playerSize.Z/2),
+				rl.NewVector3(playerPosition.X+playerSize.X/2, playerPosition.Y+playerSize.Y/2, playerPosition.Z+playerSize.Z/2)),
 			enemySpherePos,
 			enemySphereSize,
 		) {
@@ -71,40 +71,40 @@ func main() {
 		}
 
 		if collision {
-			playerColor = raylib.Red
+			playerColor = rl.Red
 		} else {
-			playerColor = raylib.Green
+			playerColor = rl.Green
 		}
 
 		// Draw
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.BeginMode3D(camera)
+		rl.BeginMode3D(camera)
 
 		// Draw enemy-box
-		raylib.DrawCube(enemyBoxPos, enemyBoxSize.X, enemyBoxSize.Y, enemyBoxSize.Z, raylib.Gray)
-		raylib.DrawCubeWires(enemyBoxPos, enemyBoxSize.X, enemyBoxSize.Y, enemyBoxSize.Z, raylib.DarkGray)
+		rl.DrawCube(enemyBoxPos, enemyBoxSize.X, enemyBoxSize.Y, enemyBoxSize.Z, rl.Gray)
+		rl.DrawCubeWires(enemyBoxPos, enemyBoxSize.X, enemyBoxSize.Y, enemyBoxSize.Z, rl.DarkGray)
 
 		// Draw enemy-sphere
-		raylib.DrawSphere(enemySpherePos, enemySphereSize, raylib.Gray)
-		raylib.DrawSphereWires(enemySpherePos, enemySphereSize, 16, 16, raylib.DarkGray)
+		rl.DrawSphere(enemySpherePos, enemySphereSize, rl.Gray)
+		rl.DrawSphereWires(enemySpherePos, enemySphereSize, 16, 16, rl.DarkGray)
 
 		// Draw player
-		raylib.DrawCubeV(playerPosition, playerSize, playerColor)
+		rl.DrawCubeV(playerPosition, playerSize, playerColor)
 
-		raylib.DrawGrid(10, 1.0) // Draw a grid
+		rl.DrawGrid(10, 1.0) // Draw a grid
 
-		raylib.EndMode3D()
+		rl.EndMode3D()
 
-		raylib.DrawText("Move player with cursors to collide", 220, 40, 20, raylib.Gray)
+		rl.DrawText("Move player with cursors to collide", 220, 40, 20, rl.Gray)
 
-		raylib.DrawFPS(10, 10)
+		rl.DrawFPS(10, 10)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

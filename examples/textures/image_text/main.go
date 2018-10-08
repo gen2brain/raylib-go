@@ -8,55 +8,55 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [textures] example - image text drawing")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [textures] example - image text drawing")
 
 	// TTF Font loading with custom generation parameters
 	var fontChars int32
-	font := raylib.LoadFontEx("fonts/KAISG.ttf", 64, 0, &fontChars)
+	font := rl.LoadFontEx("fonts/KAISG.ttf", 64, 0, &fontChars)
 
-	parrots := raylib.LoadImage("parrots.png") // Load image in CPU memory (RAM)
+	parrots := rl.LoadImage("parrots.png") // Load image in CPU memory (RAM)
 
 	// Draw over image using custom font
-	raylib.ImageDrawTextEx(parrots, raylib.NewVector2(20, 20), font, "[Parrots font drawing]", float32(font.BaseSize), 0, raylib.White)
+	rl.ImageDrawTextEx(parrots, rl.NewVector2(20, 20), font, "[Parrots font drawing]", float32(font.BaseSize), 0, rl.White)
 
-	texture := raylib.LoadTextureFromImage(parrots) // Image converted to texture, uploaded to GPU memory (VRAM)
+	texture := rl.LoadTextureFromImage(parrots) // Image converted to texture, uploaded to GPU memory (VRAM)
 
-	raylib.UnloadImage(parrots) // Once image has been converted to texture and uploaded to VRAM, it can be unloaded from RAM
+	rl.UnloadImage(parrots) // Once image has been converted to texture and uploaded to VRAM, it can be unloaded from RAM
 
-	position := raylib.NewVector2(float32(screenWidth)/2-float32(texture.Width)/2, float32(screenHeight)/2-float32(texture.Height)/2-20)
+	position := rl.NewVector2(float32(screenWidth)/2-float32(texture.Width)/2, float32(screenHeight)/2-float32(texture.Height)/2-20)
 
 	showFont := false
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		if raylib.IsKeyDown(raylib.KeySpace) {
+	for !rl.WindowShouldClose() {
+		if rl.IsKeyDown(rl.KeySpace) {
 			showFont = true
 		} else {
 			showFont = false
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
 		if !showFont {
 			// Draw texture with text already drawn inside
-			raylib.DrawTextureV(texture, position, raylib.White)
+			rl.DrawTextureV(texture, position, rl.White)
 
 			// Draw text directly using sprite font
-			raylib.DrawTextEx(font, "[Parrots font drawing]", raylib.NewVector2(position.X+20, position.Y+20+280), float32(font.BaseSize), 0, raylib.White)
+			rl.DrawTextEx(font, "[Parrots font drawing]", rl.NewVector2(position.X+20, position.Y+20+280), float32(font.BaseSize), 0, rl.White)
 		} else {
-			raylib.DrawTexture(font.Texture, screenWidth/2-font.Texture.Width/2, 50, raylib.Black)
+			rl.DrawTexture(font.Texture, screenWidth/2-font.Texture.Width/2, 50, rl.Black)
 		}
 
-		raylib.DrawText("PRESS SPACE to SEE USED SPRITEFONT ", 290, 420, 10, raylib.DarkGray)
+		rl.DrawText("PRESS SPACE to SEE USED SPRITEFONT ", 290, 420, 10, rl.DarkGray)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.UnloadTexture(texture)
-	raylib.UnloadFont(font)
+	rl.UnloadTexture(texture)
+	rl.UnloadFont(font)
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

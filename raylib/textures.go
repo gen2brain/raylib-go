@@ -1,4 +1,4 @@
-package raylib
+package rl
 
 /*
 #include "raylib.h"
@@ -127,11 +127,18 @@ func UnloadRenderTexture(target RenderTexture2D) {
 	C.UnloadRenderTexture(*ctarget)
 }
 
-// GetImageData - Get pixel data from image
+// GetImageData - Get pixel data from image as a Color slice
 func GetImageData(img *Image) []Color {
 	cimg := img.cptr()
 	ret := C.GetImageData(*cimg)
 	return (*[1 << 24]Color)(unsafe.Pointer(ret))[0 : img.Width*img.Height]
+}
+
+// GetImageDataNormalized - Get pixel data from image as Vector4 slice (float normalized)
+func GetImageDataNormalized(img *Image) []Vector4 {
+	cimg := img.cptr()
+	ret := C.GetImageDataNormalized(*cimg)
+	return (*[1 << 24]Vector4)(unsafe.Pointer(ret))[0 : img.Width*img.Height]
 }
 
 // GetPixelDataSize - Get pixel data size in bytes (image or texture)
@@ -159,12 +166,12 @@ func UpdateTexture(texture Texture2D, pixels []Color) {
 }
 
 // ExportImage - Export image as a PNG file
-func ExportImage(name string, image Image) {
+func ExportImage(image Image, name string) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	cimage := image.cptr()
 
-	C.ExportImage(cname, *cimage)
+	C.ExportImage(*cimage, cname)
 }
 
 // ImageToPOT - Convert image to POT (power-of-two)
@@ -248,6 +255,17 @@ func ImageResizeNN(image *Image, newWidth, newHeight int32) {
 	cnewWidth := (C.int)(newWidth)
 	cnewHeight := (C.int)(newHeight)
 	C.ImageResizeNN(cimage, cnewWidth, cnewHeight)
+}
+
+// ImageResizeCanvas - Resize canvas and fill with color
+func ImageResizeCanvas(image *Image, newWidth, newHeight, offsetX, offsetY int32, color Color) {
+	cimage := image.cptr()
+	cnewWidth := (C.int)(newWidth)
+	cnewHeight := (C.int)(newHeight)
+	coffsetX := (C.int)(offsetX)
+	coffsetY := (C.int)(offsetY)
+	ccolor := color.cptr()
+	C.ImageResizeCanvas(cimage, cnewWidth, cnewHeight, coffsetX, coffsetY, *ccolor)
 }
 
 // ImageMipmaps - Generate all mipmap levels for a provided image
@@ -334,6 +352,18 @@ func ImageFlipHorizontal(image *Image) {
 	C.ImageFlipHorizontal(cimage)
 }
 
+// ImageRotateCW - Rotate image clockwise 90deg
+func ImageRotateCW(image *Image) {
+	cimage := image.cptr()
+	C.ImageRotateCW(cimage)
+}
+
+// ImageRotateCCW - Rotate image counter-clockwise 90deg
+func ImageRotateCCW(image *Image) {
+	cimage := image.cptr()
+	C.ImageRotateCCW(cimage)
+}
+
 // ImageColorTint - Modify image color: tint
 func ImageColorTint(image *Image, color Color) {
 	cimage := image.cptr()
@@ -365,6 +395,14 @@ func ImageColorBrightness(image *Image, brightness int32) {
 	cimage := image.cptr()
 	cbrightness := (C.int)(brightness)
 	C.ImageColorBrightness(cimage, cbrightness)
+}
+
+// ImageColorReplace - Modify image color: replace color
+func ImageColorReplace(image *Image, color, replace Color) {
+	cimage := image.cptr()
+	ccolor := color.cptr()
+	creplace := replace.cptr()
+	C.ImageColorReplace(cimage, *ccolor, *creplace)
 }
 
 // GenImageColor - Generate image: plain color

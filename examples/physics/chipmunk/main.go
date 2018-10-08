@@ -1,163 +1,139 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 
 	"github.com/gen2brain/raylib-go/raylib"
-	"github.com/jakecoffman/cp"
+
+	"github.com/vova616/chipmunk"
+	"github.com/vova616/chipmunk/vect"
 )
 
-var grabbableMaskBit uint = 1 << 31
-var grabFilter = cp.ShapeFilter{
-	cp.NO_GROUP, grabbableMaskBit, grabbableMaskBit,
+const (
+	ballRadius = 25
+	ballMass   = 1
+)
+
+// Game type
+type Game struct {
+	Space       *chipmunk.Space
+	Balls       []*chipmunk.Shape
+	StaticLines []*chipmunk.Shape
+
+	ticksToNextBall int
 }
 
-func randUnitCircle() cp.Vector {
-	v := cp.Vector{X: rand.Float64()*2.0 - 1.0, Y: rand.Float64()*2.0 - 1.0}
-	if v.LengthSq() < 1.0 {
-		return v
-	}
-	return randUnitCircle()
+// NewGame - Start new game
+func NewGame() (g Game) {
+	g.Init()
+	return
 }
 
-var simpleTerrainVerts = []cp.Vector{
-	{350.00, 425.07}, {336.00, 436.55}, {272.00, 435.39}, {258.00, 427.63}, {225.28, 420.00}, {202.82, 396.00},
-	{191.81, 388.00}, {189.00, 381.89}, {173.00, 380.39}, {162.59, 368.00}, {150.47, 319.00}, {128.00, 311.55},
-	{119.14, 286.00}, {126.84, 263.00}, {120.56, 227.00}, {141.14, 178.00}, {137.52, 162.00}, {146.51, 142.00},
-	{156.23, 136.00}, {158.00, 118.27}, {170.00, 100.77}, {208.43, 84.00}, {224.00, 69.65}, {249.30, 68.00},
-	{257.00, 54.77}, {363.00, 45.94}, {374.15, 54.00}, {386.00, 69.60}, {413.00, 70.73}, {456.00, 84.89},
-	{468.09, 99.00}, {467.09, 123.00}, {464.92, 135.00}, {469.00, 141.03}, {497.00, 148.67}, {513.85, 180.00},
-	{509.56, 223.00}, {523.51, 247.00}, {523.00, 277.00}, {497.79, 311.00}, {478.67, 348.00}, {467.90, 360.00},
-	{456.76, 382.00}, {432.95, 389.00}, {417.00, 411.32}, {373.00, 433.19}, {361.00, 430.02}, {350.00, 425.07},
+// Init - Initialize game
+func (g *Game) Init() {
+	g.createBodies()
+
+	g.ticksToNextBall = 10
 }
 
-// creates a circle with random placement
-func addCircle(space *cp.Space, radius float64) {
-	mass := radius * radius / 25.0
-	body := space.AddBody(cp.NewBody(mass, cp.MomentForCircle(mass, 0, radius, cp.Vector{})))
-	body.SetPosition(randUnitCircle().Mult(180))
-
-	shape := space.AddShape(cp.NewCircle(body, radius, cp.Vector{}))
-	shape.SetElasticity(0)
-	shape.SetFriction(0.9)
-}
-
-// creates a simple terrain to contain bodies
-func simpleTerrain() *cp.Space {
-	space := cp.NewSpace()
-	space.Iterations = 10
-	space.SetGravity(cp.Vector{0, -100})
-	space.SetCollisionSlop(0.5)
-
-	offset := cp.Vector{X: -320, Y: -240}
-	for i := 0; i < len(simpleTerrainVerts)-1; i++ {
-		a := simpleTerrainVerts[i]
-		b := simpleTerrainVerts[i+1]
-		space.AddShape(cp.NewSegment(space.StaticBody, a.Add(offset), b.Add(offset), 0))
+// Update - Update game
+func (g *Game) Update() {
+	g.ticksToNextBall--
+	if g.ticksToNextBall == 0 {
+		g.ticksToNextBall = rand.Intn(100) + 1
+		g.addBall()
 	}
 
-	return space
+	// Physics steps calculations
+	g.step(rl.GetFrameTime())
+}
+
+// Draw - Draw game
+func (g *Game) Draw() {
+	for i := range g.StaticLines {
+		x := g.StaticLines[i].GetAsSegment().A.X
+		y := g.StaticLines[i].GetAsSegment().A.Y
+
+		x2 := g.StaticLines[i].GetAsSegment().B.X
+		y2 := g.StaticLines[i].GetAsSegment().B.Y
+
+		rl.DrawLine(int32(x), int32(y), int32(x2), int32(y2), rl.DarkBlue)
+	}
+
+	for _, b := range g.Balls {
+		pos := b.Body.Position()
+		rl.DrawCircleLines(int32(pos.X), int32(pos.Y), float32(ballRadius), rl.DarkBlue)
+	}
+}
+
+// createBodies sets up the chipmunk space and static bodies
+func (g *Game) createBodies() {
+	g.Space = chipmunk.NewSpace()
+	g.Space.Gravity = vect.Vect{0, 900}
+
+	staticBody := chipmunk.NewBodyStatic()
+	g.StaticLines = []*chipmunk.Shape{
+		chipmunk.NewSegment(vect.Vect{250.0, 240.0}, vect.Vect{550.0, 280.0}, 0),
+		chipmunk.NewSegment(vect.Vect{550.0, 280.0}, vect.Vect{550.0, 180.0}, 0),
+	}
+
+	for _, segment := range g.StaticLines {
+		segment.SetElasticity(0.6)
+		staticBody.AddShape(segment)
+	}
+
+	g.Space.AddBody(staticBody)
+}
+
+// addBall adds ball to chipmunk space and body
+func (g *Game) addBall() {
+	x := rand.Intn(600-200) + 200
+	ball := chipmunk.NewCircle(vect.Vector_Zero, float32(ballRadius))
+	ball.SetElasticity(0.95)
+
+	body := chipmunk.NewBody(vect.Float(ballMass), ball.Moment(float32(ballMass)))
+	body.SetPosition(vect.Vect{vect.Float(x), 0.0})
+	body.SetAngle(vect.Float(rand.Float32() * 2 * math.Pi))
+	body.AddShape(ball)
+
+	g.Space.AddBody(body)
+	g.Balls = append(g.Balls, ball)
+}
+
+// step advances the physics engine and cleans up any balls that are off-screen
+func (g *Game) step(dt float32) {
+	g.Space.Step(vect.Float(dt))
+
+	for i := 0; i < len(g.Balls); i++ {
+		p := g.Balls[i].Body.Position()
+		if p.Y < -100 {
+			g.Space.RemoveBody(g.Balls[i].Body)
+			g.Balls[i] = nil
+			g.Balls = append(g.Balls[:i], g.Balls[i+1:]...)
+			i-- // consider same index again
+		}
+	}
 }
 
 func main() {
-	const width, height = 800, 450
-	const physicsTickrate = 1.0 / 60.0
+	rl.InitWindow(800, 450, "raylib [physics] example - chipmunk")
 
-	raylib.SetConfigFlags(raylib.FlagVsyncHint)
-	raylib.InitWindow(width, height, "raylib [physics] example - chipmunk")
+	rl.SetTargetFPS(60)
 
-	offset := raylib.Vector2{X: width / 2, Y: height / 2}
-	// since the example ported from elsewhere, flip the camera 180 and offset to center it
-	camera := raylib.NewCamera2D(offset, raylib.Vector2{}, 180, 1)
+	game := NewGame()
 
-	space := simpleTerrain()
-	for i := 0; i < 1000; i++ {
-		addCircle(space, 5)
-	}
-	mouseBody := cp.NewKinematicBody()
-	var mouse cp.Vector
-	var mouseJoint *cp.Constraint
+	for !rl.WindowShouldClose() {
+		rl.BeginDrawing()
 
-	var accumulator, dt float32
-	lastTime := raylib.GetTime()
-	for !raylib.WindowShouldClose() {
-		// calculate dt
-		now := raylib.GetTime()
-		dt = now - lastTime
-		lastTime = now
+		rl.ClearBackground(rl.RayWhite)
 
-		// update the mouse position
-		mousePos := raylib.GetMousePosition()
-		// alter the mouse coordinates based on the camera position, rotation
-		mouse.X = float64(mousePos.X-camera.Offset.X) * -1
-		mouse.Y = float64(mousePos.Y-camera.Offset.Y) * -1
-		// smooth mouse movements to new position
-		newPoint := mouseBody.Position().Lerp(mouse, 0.25)
-		mouseBody.SetVelocityVector(newPoint.Sub(mouseBody.Position()).Mult(60.0))
-		mouseBody.SetPosition(newPoint)
+		game.Update()
 
-		// handle grabbing
-		if raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
-			result := space.PointQueryNearest(mouse, 5, grabFilter)
-			if result.Shape != nil && result.Shape.Body().Mass() < cp.INFINITY {
-				var nearest cp.Vector
-				if result.Distance > 0 {
-					nearest = result.Point
-				} else {
-					nearest = mouse
-				}
+		game.Draw()
 
-				// create a new constraint where the mouse is to draw the body towards the mouse
-				body := result.Shape.Body()
-				mouseJoint = cp.NewPivotJoint2(mouseBody, body, cp.Vector{}, body.WorldToLocal(nearest))
-				mouseJoint.SetMaxForce(50000)
-				mouseJoint.SetErrorBias(math.Pow(1.0-0.15, 60.0))
-				space.AddConstraint(mouseJoint)
-			}
-		} else if raylib.IsMouseButtonReleased(raylib.MouseLeftButton) && mouseJoint != nil {
-			space.RemoveConstraint(mouseJoint)
-			mouseJoint = nil
-		}
-
-		// perform a fixed rate physics tick
-		accumulator += dt
-		for accumulator >= physicsTickrate {
-			space.Step(physicsTickrate)
-			accumulator -= physicsTickrate
-		}
-
-		raylib.BeginDrawing()
-		raylib.ClearBackground(raylib.RayWhite)
-		raylib.BeginMode2D(camera)
-
-		// this is a generic way to iterate over the shapes in a space,
-		// to avoid the type switch just keep a pointer to the shapes when they've been created
-		space.EachShape(func(s *cp.Shape) {
-			switch s.Class.(type) {
-			case *cp.Segment:
-				segment := s.Class.(*cp.Segment)
-				a := segment.A()
-				b := segment.B()
-				raylib.DrawLineV(v(a), v(b), raylib.Black)
-			case *cp.Circle:
-				circle := s.Class.(*cp.Circle)
-				pos := circle.Body().Position()
-				raylib.DrawCircleV(v(pos), float32(circle.Radius()), raylib.Red)
-			default:
-				fmt.Println("unexpected shape", s.Class)
-			}
-		})
-
-		raylib.EndMode2D()
-		raylib.DrawFPS(0, 0)
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
-}
-
-func v(v cp.Vector) raylib.Vector2 {
-	return raylib.Vector2{X: float32(v.X), Y: float32(v.Y)}
+	rl.CloseWindow()
 }

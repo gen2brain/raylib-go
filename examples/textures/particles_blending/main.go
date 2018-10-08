@@ -9,8 +9,8 @@ const (
 )
 
 type particle struct {
-	Position raylib.Vector2
-	Color    raylib.Color
+	Position rl.Vector2
+	Color    rl.Color
 	Alpha    float32
 	Size     float32
 	Rotation float32
@@ -21,31 +21,31 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	//raylib.SetConfigFlags(raylib.FlagVsyncHint)
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [textures] example - particles blending")
+	//rl.SetConfigFlags(rl.FlagVsyncHint)
+	rl.InitWindow(screenWidth, screenHeight, "raylib [textures] example - particles blending")
 
 	// Particles pool, reuse them!
 	mouseTail := make([]particle, maxParticles)
 
 	// Initialize particles
 	for i := 0; i < maxParticles; i++ {
-		mouseTail[i].Position = raylib.NewVector2(0, 0)
-		mouseTail[i].Color = raylib.NewColor(byte(raylib.GetRandomValue(0, 255)), byte(raylib.GetRandomValue(0, 255)), byte(raylib.GetRandomValue(0, 255)), 255)
+		mouseTail[i].Position = rl.NewVector2(0, 0)
+		mouseTail[i].Color = rl.NewColor(byte(rl.GetRandomValue(0, 255)), byte(rl.GetRandomValue(0, 255)), byte(rl.GetRandomValue(0, 255)), 255)
 		mouseTail[i].Alpha = 1.0
-		mouseTail[i].Size = float32(raylib.GetRandomValue(1, 30)) / 20.0
-		mouseTail[i].Rotation = float32(raylib.GetRandomValue(0, 360))
+		mouseTail[i].Size = float32(rl.GetRandomValue(1, 30)) / 20.0
+		mouseTail[i].Rotation = float32(rl.GetRandomValue(0, 360))
 		mouseTail[i].Active = false
 	}
 
 	gravity := float32(3.0)
 
-	smoke := raylib.LoadTexture("smoke.png")
+	smoke := rl.LoadTexture("smoke.png")
 
-	blending := raylib.BlendAlpha
+	blending := rl.BlendAlpha
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
+	for !rl.WindowShouldClose() {
 		// Update
 
 		// Activate one particle every frame and Update active particles
@@ -56,7 +56,7 @@ func main() {
 			if !mouseTail[i].Active {
 				mouseTail[i].Active = true
 				mouseTail[i].Alpha = 1.0
-				mouseTail[i].Position = raylib.GetMousePosition()
+				mouseTail[i].Position = rl.GetMousePosition()
 				i = maxParticles
 			}
 		}
@@ -74,50 +74,50 @@ func main() {
 			}
 		}
 
-		if raylib.IsKeyPressed(raylib.KeySpace) {
-			if blending == raylib.BlendAlpha {
-				blending = raylib.BlendAdditive
+		if rl.IsKeyPressed(rl.KeySpace) {
+			if blending == rl.BlendAlpha {
+				blending = rl.BlendAdditive
 			} else {
-				blending = raylib.BlendAlpha
+				blending = rl.BlendAlpha
 			}
 		}
 
 		// Draw
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.DarkGray)
+		rl.ClearBackground(rl.DarkGray)
 
-		raylib.BeginBlendMode(blending)
+		rl.BeginBlendMode(blending)
 
 		// Draw active particles
 		for i := 0; i < maxParticles; i++ {
 			if mouseTail[i].Active {
-				raylib.DrawTexturePro(
+				rl.DrawTexturePro(
 					smoke,
-					raylib.NewRectangle(0, 0, float32(smoke.Width), float32(smoke.Height)),
-					raylib.NewRectangle(mouseTail[i].Position.X, mouseTail[i].Position.Y, float32(smoke.Width)*mouseTail[i].Size, float32(smoke.Height)*mouseTail[i].Size),
-					raylib.NewVector2(float32(smoke.Width)*mouseTail[i].Size/2, float32(smoke.Height)*mouseTail[i].Size/2),
+					rl.NewRectangle(0, 0, float32(smoke.Width), float32(smoke.Height)),
+					rl.NewRectangle(mouseTail[i].Position.X, mouseTail[i].Position.Y, float32(smoke.Width)*mouseTail[i].Size, float32(smoke.Height)*mouseTail[i].Size),
+					rl.NewVector2(float32(smoke.Width)*mouseTail[i].Size/2, float32(smoke.Height)*mouseTail[i].Size/2),
 					mouseTail[i].Rotation,
-					raylib.Fade(mouseTail[i].Color, mouseTail[i].Alpha),
+					rl.Fade(mouseTail[i].Color, mouseTail[i].Alpha),
 				)
 			}
 		}
 
-		raylib.EndBlendMode()
+		rl.EndBlendMode()
 
-		raylib.DrawText("PRESS SPACE to CHANGE BLENDING MODE", 180, 20, 20, raylib.Black)
+		rl.DrawText("PRESS SPACE to CHANGE BLENDING MODE", 180, 20, 20, rl.Black)
 
-		if blending == raylib.BlendAlpha {
-			raylib.DrawText("ALPHA BLENDING", 290, screenHeight-40, 20, raylib.Black)
+		if blending == rl.BlendAlpha {
+			rl.DrawText("ALPHA BLENDING", 290, screenHeight-40, 20, rl.Black)
 		} else {
-			raylib.DrawText("ADDITIVE BLENDING", 280, screenHeight-40, 20, raylib.RayWhite)
+			rl.DrawText("ADDITIVE BLENDING", 280, screenHeight-40, 20, rl.RayWhite)
 		}
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.UnloadTexture(smoke)
+	rl.UnloadTexture(smoke)
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

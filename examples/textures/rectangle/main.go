@@ -15,21 +15,21 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [textures] example - texture loading and drawing")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [textures] example - texture loading and drawing")
 
 	// NOTE: Textures MUST be loaded after Window initialization (OpenGL context is required)
-	scarfy := raylib.LoadTexture("scarfy.png") // Texture loading
+	scarfy := rl.LoadTexture("scarfy.png") // Texture loading
 
-	position := raylib.NewVector2(350.0, 280.0)
-	frameRec := raylib.NewRectangle(0, 0, float32(scarfy.Width/6), float32(scarfy.Height))
+	position := rl.NewVector2(350.0, 280.0)
+	frameRec := rl.NewRectangle(0, 0, float32(scarfy.Width/6), float32(scarfy.Height))
 	currentFrame := float32(0)
 
 	framesCounter := 0
 	framesSpeed := 8 // Number of spritesheet frames shown by second
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
+	for !rl.WindowShouldClose() {
 		framesCounter++
 
 		if framesCounter >= (60 / framesSpeed) {
@@ -43,9 +43,9 @@ func main() {
 			frameRec.X = currentFrame * float32(scarfy.Width) / 6
 		}
 
-		if raylib.IsKeyPressed(raylib.KeyRight) {
+		if rl.IsKeyPressed(rl.KeyRight) {
 			framesSpeed++
-		} else if raylib.IsKeyPressed(raylib.KeyLeft) {
+		} else if rl.IsKeyPressed(rl.KeyLeft) {
 			framesSpeed--
 		}
 
@@ -55,33 +55,33 @@ func main() {
 			framesSpeed = minFrameSpeed
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.DrawTexture(scarfy, 15, 40, raylib.White)
-		raylib.DrawRectangleLines(15, 40, scarfy.Width, scarfy.Height, raylib.Lime)
-		raylib.DrawRectangleLines(15+int32(frameRec.X), 40+int32(frameRec.Y), int32(frameRec.Width), int32(frameRec.Height), raylib.Red)
+		rl.DrawTexture(scarfy, 15, 40, rl.White)
+		rl.DrawRectangleLines(15, 40, scarfy.Width, scarfy.Height, rl.Lime)
+		rl.DrawRectangleLines(15+int32(frameRec.X), 40+int32(frameRec.Y), int32(frameRec.Width), int32(frameRec.Height), rl.Red)
 
-		raylib.DrawText("FRAME SPEED: ", 165, 210, 10, raylib.DarkGray)
-		raylib.DrawText(fmt.Sprintf("%02d FPS", framesSpeed), 575, 210, 10, raylib.DarkGray)
-		raylib.DrawText("PRESS RIGHT/LEFT KEYS to CHANGE SPEED!", 290, 240, 10, raylib.DarkGray)
+		rl.DrawText("FRAME SPEED: ", 165, 210, 10, rl.DarkGray)
+		rl.DrawText(fmt.Sprintf("%02d FPS", framesSpeed), 575, 210, 10, rl.DarkGray)
+		rl.DrawText("PRESS RIGHT/LEFT KEYS to CHANGE SPEED!", 290, 240, 10, rl.DarkGray)
 
 		for i := 0; i < maxFrameSpeed; i++ {
 			if i < framesSpeed {
-				raylib.DrawRectangle(int32(250+21*i), 205, 20, 20, raylib.Red)
+				rl.DrawRectangle(int32(250+21*i), 205, 20, 20, rl.Red)
 			}
-			raylib.DrawRectangleLines(int32(250+21*i), 205, 20, 20, raylib.Maroon)
+			rl.DrawRectangleLines(int32(250+21*i), 205, 20, 20, rl.Maroon)
 		}
 
-		raylib.DrawTextureRec(scarfy, frameRec, position, raylib.White) // Draw part of the texture
+		rl.DrawTextureRec(scarfy, frameRec, position, rl.White) // Draw part of the texture
 
-		raylib.DrawText("(c) Scarfy sprite by Eiden Marsal", screenWidth-200, screenHeight-20, 10, raylib.Gray)
+		rl.DrawText("(c) Scarfy sprite by Eiden Marsal", screenWidth-200, screenHeight-20, 10, rl.Gray)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.UnloadTexture(scarfy)
+	rl.UnloadTexture(scarfy)
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

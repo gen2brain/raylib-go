@@ -12,47 +12,47 @@ const (
 )
 
 func main() {
-	raylib.InitWindow(800, 450, "raylib [core] example - storage save/load values")
+	rl.InitWindow(800, 450, "raylib [core] example - storage save/load values")
 
 	score := int32(0)
 	hiscore := int32(0)
 
 	framesCounter := 0
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		if raylib.IsKeyPressed(raylib.KeyR) {
-			score = raylib.GetRandomValue(1000, 2000)
-			hiscore = raylib.GetRandomValue(2000, 4000)
+	for !rl.WindowShouldClose() {
+		if rl.IsKeyPressed(rl.KeyR) {
+			score = rl.GetRandomValue(1000, 2000)
+			hiscore = rl.GetRandomValue(2000, 4000)
 		}
 
-		if raylib.IsKeyPressed(raylib.KeyEnter) {
-			raylib.StorageSaveValue(storageScore, score)
-			raylib.StorageSaveValue(storageHiscore, hiscore)
-		} else if raylib.IsKeyPressed(raylib.KeySpace) {
+		if rl.IsKeyPressed(rl.KeyEnter) {
+			rl.StorageSaveValue(storageScore, score)
+			rl.StorageSaveValue(storageHiscore, hiscore)
+		} else if rl.IsKeyPressed(rl.KeySpace) {
 			// NOTE: If requested position could not be found, value 0 is returned
-			score = raylib.StorageLoadValue(storageScore)
-			hiscore = raylib.StorageLoadValue(storageHiscore)
+			score = rl.StorageLoadValue(storageScore)
+			hiscore = rl.StorageLoadValue(storageHiscore)
 		}
 
 		framesCounter++
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.DrawText(fmt.Sprintf("SCORE: %d", score), 280, 130, 40, raylib.Maroon)
-		raylib.DrawText(fmt.Sprintf("HI-SCORE: %d", hiscore), 210, 200, 50, raylib.Black)
+		rl.DrawText(fmt.Sprintf("SCORE: %d", score), 280, 130, 40, rl.Maroon)
+		rl.DrawText(fmt.Sprintf("HI-SCORE: %d", hiscore), 210, 200, 50, rl.Black)
 
-		raylib.DrawText(fmt.Sprintf("frames: %d", framesCounter), 10, 10, 20, raylib.Lime)
+		rl.DrawText(fmt.Sprintf("frames: %d", framesCounter), 10, 10, 20, rl.Lime)
 
-		raylib.DrawText("Press R to generate random numbers", 220, 40, 20, raylib.LightGray)
-		raylib.DrawText("Press ENTER to SAVE values", 250, 310, 20, raylib.LightGray)
-		raylib.DrawText("Press SPACE to LOAD values", 252, 350, 20, raylib.LightGray)
+		rl.DrawText("Press R to generate random numbers", 220, 40, 20, rl.LightGray)
+		rl.DrawText("Press ENTER to SAVE values", 250, 310, 20, rl.LightGray)
+		rl.DrawText("Press SPACE to LOAD values", 252, 350, 20, rl.LightGray)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

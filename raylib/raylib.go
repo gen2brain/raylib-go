@@ -33,7 +33,7 @@ Example:
 
 
 */
-package raylib
+package rl
 
 import (
 	"image"
@@ -174,8 +174,8 @@ const (
 	FlagFullscreenMode = 2
 	// Set to allow resizable window
 	FlagWindowResizable = 4
-	// Set to show window decoration (frame and buttons)
-	FlagWindowDecorated = 8
+	// Set to disable window decoration (frame and buttons)
+	FlagWindowUndecorated = 8
 	// Set to allow transparent window
 	FlagWindowTransparent = 16
 	// Set to try enabling MSAA 4X
@@ -219,35 +219,35 @@ const (
 	KeyLeftShift    = 340
 	KeyLeftControl  = 341
 	KeyLeftAlt      = 342
-	KeyLeftSuper    = 343
+	KeyLeftSuper    = 347
 	KeyRightShift   = 344
 	KeyRightControl = 345
 	KeyRightAlt     = 346
 	KeyRightSuper   = 347
-	KeyKBMenu       = 348
+	KeyKbMenu       = 348
 	KeyLeftBracket  = 91
 	KeyBackSlash    = 92
 	KeyRightBracket = 93
 	KeyGrave        = 96
 
 	// Keyboard Number Pad Keys
-	KeyKPZero     = 320
-	KeyKPOne      = 321
-	KeyKPTwo      = 322
-	KeyKPThree    = 323
-	KeyKPFour     = 324
-	KeyKPFive     = 325
-	KeyKPSix      = 326
-	KeyKPSeven    = 327
-	KeyKPEight    = 328
-	KeyKPNine     = 329
-	KeyKPDecimal  = 330
-	KeyKPDivide   = 331
-	KeyKPMultiply = 332
-	KeyKPSubtract = 333
-	KeyKPAdd      = 334
-	KeyKPEnter    = 335
-	KeyKPEqual    = 336
+	KeyKp0        = 320
+	KeyKp1        = 321
+	KeyKp2        = 322
+	KeyKp3        = 323
+	KeyKp4        = 324
+	KeyKp5        = 325
+	KeyKp6        = 326
+	KeyKp7        = 327
+	KeyKp8        = 328
+	KeyKp9        = 329
+	KeyKpDecimal  = 330
+	KeyKpDivide   = 331
+	KeyKpMultiply = 332
+	KeyKpSubtract = 333
+	KeyKpAdd      = 334
+	KeyKpEnter    = 335
+	KeyKpEqual    = 336
 
 	// Keyboard Alpha Numeric Keys
 	KeyApostrophe = 39
@@ -357,6 +357,24 @@ const (
 	GamepadXboxButtonDown   = 12
 	GamepadXboxButtonLeft   = 13
 	GamepadXboxButtonHome   = 8
+
+	// Android Gamepad Controller (SNES CLASSIC)
+	GamepadAndroidDpadUp     = 19
+	GamepadAndroidDpadDown   = 20
+	GamepadAndroidDpadLeft   = 21
+	GamepadAndroidDpadRight  = 22
+	GamepadAndroidDpadCenter = 23
+
+	GamepadAndroidButtonA  = 96
+	GamepadAndroidButtonB  = 97
+	GamepadAndroidButtonC  = 98
+	GamepadAndroidButtonX  = 99
+	GamepadAndroidButtonY  = 100
+	GamepadAndroidButtonZ  = 101
+	GamepadAndroidButtonL1 = 102
+	GamepadAndroidButtonR1 = 103
+	GamepadAndroidButtonL2 = 104
+	GamepadAndroidButtonR2 = 105
 
 	// Xbox360 USB Controller Axis
 	// [-1..1] (left->right)
@@ -871,25 +889,25 @@ const (
 // VrDeviceInfo - Head-Mounted-Display device parameters
 type VrDeviceInfo struct {
 	// HMD horizontal resolution in pixels
-	HResolution int
+	hResolution int
 	// HMD vertical resolution in pixels
-	VResolution int
+	vResolution int
 	// HMD horizontal size in meters
-	HScreenSize float32
+	hScreenSize float32
 	// HMD vertical size in meters
-	VScreenSize float32
+	vScreenSize float32
 	// HMD screen center in meters
-	VScreenCenter float32
+	vScreenCenter float32
 	// HMD distance between eye and display in meters
-	EyeToScreenDistance float32
+	eyeToScreenDistance float32
 	// HMD lens separation distance in meters
-	LensSeparationDistance float32
+	lensSeparationDistance float32
 	// HMD IPD (distance between pupils) in meters
-	InterpupillaryDistance float32
+	interpupillaryDistance float32
 	// HMD lens distortion constant parameters
-	LensDistortionValues [4]float32
+	lensDistortionValues [4]float32
 	// HMD chromatic aberration correction parameters
-	ChromaAbCorrection [4]float32
+	chromaAbCorrection [4]float32
 }
 
 // NewVrDeviceInfo - Returns new VrDeviceInfo

@@ -16,36 +16,36 @@ const (
 )
 
 func init() {
-	raylib.SetCallbackFunc(main)
+	rl.SetCallbackFunc(main)
 }
 
 func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.SetConfigFlags(raylib.FlagVsyncHint)
+	rl.SetConfigFlags(rl.FlagVsyncHint)
 
-	raylib.InitWindow(screenWidth, screenHeight, "Android example")
+	rl.InitWindow(screenWidth, screenHeight, "Android example")
 
-	raylib.InitAudioDevice()
+	rl.InitAudioDevice()
 
 	currentScreen := Logo
 	windowShouldClose := false
 
-	texture := raylib.LoadTexture("raylib_logo.png") // Load texture (placed on assets folder)
-	fx := raylib.LoadSound("coin.wav")               // Load WAV audio file (placed on assets folder)
-	ambient := raylib.LoadMusicStream("ambient.ogg") // Load music
+	texture := rl.LoadTexture("raylib_logo.png") // Load texture (placed on assets folder)
+	fx := rl.LoadSound("coin.wav")               // Load WAV audio file (placed on assets folder)
+	ambient := rl.LoadMusicStream("ambient.ogg") // Load music
 
-	raylib.PlayMusicStream(ambient)
+	rl.PlayMusicStream(ambient)
 
 	framesCounter := 0 // Used to count frames
 
-	//raylib.SetTargetFPS(60)
+	//rl.SetTargetFPS(60)
 
 	for !windowShouldClose {
-		raylib.UpdateMusicStream(ambient)
+		rl.UpdateMusicStream(ambient)
 
-		if runtime.GOOS == "android" && raylib.IsKeyDown(raylib.KeyBack) || raylib.WindowShouldClose() {
+		if runtime.GOOS == "android" && rl.IsKeyDown(rl.KeyBack) || rl.WindowShouldClose() {
 			windowShouldClose = true
 		}
 
@@ -60,64 +60,64 @@ func main() {
 			break
 		case Title:
 			// Press enter to change to GamePlay screen
-			if raylib.IsGestureDetected(raylib.GestureTap) {
-				raylib.PlaySound(fx)
+			if rl.IsGestureDetected(rl.GestureTap) {
+				rl.PlaySound(fx)
 				currentScreen = GamePlay
 			}
 			break
 		case GamePlay:
 			// Press enter to change to Ending screen
-			if raylib.IsGestureDetected(raylib.GestureTap) {
-				raylib.PlaySound(fx)
+			if rl.IsGestureDetected(rl.GestureTap) {
+				rl.PlaySound(fx)
 				currentScreen = Ending
 			}
 			break
 		case Ending:
 			// Press enter to return to Title screen
-			if raylib.IsGestureDetected(raylib.GestureTap) {
-				raylib.PlaySound(fx)
+			if rl.IsGestureDetected(rl.GestureTap) {
+				rl.PlaySound(fx)
 				currentScreen = Title
 			}
 			break
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
 		switch currentScreen {
 		case Logo:
-			raylib.DrawText("LOGO SCREEN", 20, 20, 40, raylib.LightGray)
-			raylib.DrawTexture(texture, screenWidth/2-texture.Width/2, screenHeight/2-texture.Height/2, raylib.White)
-			raylib.DrawText("WAIT for 4 SECONDS...", 290, 400, 20, raylib.Gray)
+			rl.DrawText("LOGO SCREEN", 20, 20, 40, rl.LightGray)
+			rl.DrawTexture(texture, screenWidth/2-texture.Width/2, screenHeight/2-texture.Height/2, rl.White)
+			rl.DrawText("WAIT for 4 SECONDS...", 290, 400, 20, rl.Gray)
 			break
 		case Title:
-			raylib.DrawRectangle(0, 0, screenWidth, screenHeight, raylib.Green)
-			raylib.DrawText("TITLE SCREEN", 20, 20, 40, raylib.DarkGreen)
-			raylib.DrawText("TAP SCREEN to JUMP to GAMEPLAY SCREEN", 160, 220, 20, raylib.DarkGreen)
+			rl.DrawRectangle(0, 0, screenWidth, screenHeight, rl.Green)
+			rl.DrawText("TITLE SCREEN", 20, 20, 40, rl.DarkGreen)
+			rl.DrawText("TAP SCREEN to JUMP to GAMEPLAY SCREEN", 160, 220, 20, rl.DarkGreen)
 			break
 		case GamePlay:
-			raylib.DrawRectangle(0, 0, screenWidth, screenHeight, raylib.Purple)
-			raylib.DrawText("GAMEPLAY SCREEN", 20, 20, 40, raylib.Maroon)
-			raylib.DrawText("TAP SCREEN to JUMP to ENDING SCREEN", 170, 220, 20, raylib.Maroon)
+			rl.DrawRectangle(0, 0, screenWidth, screenHeight, rl.Purple)
+			rl.DrawText("GAMEPLAY SCREEN", 20, 20, 40, rl.Maroon)
+			rl.DrawText("TAP SCREEN to JUMP to ENDING SCREEN", 170, 220, 20, rl.Maroon)
 			break
 		case Ending:
-			raylib.DrawRectangle(0, 0, screenWidth, screenHeight, raylib.Blue)
-			raylib.DrawText("ENDING SCREEN", 20, 20, 40, raylib.DarkBlue)
-			raylib.DrawText("TAP SCREEN to RETURN to TITLE SCREEN", 160, 220, 20, raylib.DarkBlue)
+			rl.DrawRectangle(0, 0, screenWidth, screenHeight, rl.Blue)
+			rl.DrawText("ENDING SCREEN", 20, 20, 40, rl.DarkBlue)
+			rl.DrawText("TAP SCREEN to RETURN to TITLE SCREEN", 160, 220, 20, rl.DarkBlue)
 			break
 		default:
 			break
 		}
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.UnloadSound(fx)            // Unload sound data
-	raylib.UnloadMusicStream(ambient) // Unload music stream data
-	raylib.CloseAudioDevice()         // Close audio device (music streaming is automatically stopped)
-	raylib.UnloadTexture(texture)     // Unload texture data
-	raylib.CloseWindow()              // Close window
+	rl.UnloadSound(fx)            // Unload sound data
+	rl.UnloadMusicStream(ambient) // Unload music stream data
+	rl.CloseAudioDevice()         // Close audio device (music streaming is automatically stopped)
+	rl.UnloadTexture(texture)     // Unload texture data
+	rl.CloseWindow()              // Close window
 
 	os.Exit(0)
 }

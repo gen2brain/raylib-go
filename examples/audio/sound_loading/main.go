@@ -5,37 +5,37 @@ import (
 )
 
 func main() {
-	raylib.InitWindow(800, 450, "raylib [audio] example - sound loading and playing")
+	rl.InitWindow(800, 450, "raylib [audio] example - sound loading and playing")
 
-	raylib.InitAudioDevice()
+	rl.InitAudioDevice()
 
-	fxWav := raylib.LoadSound("weird.wav")
-	fxOgg := raylib.LoadSound("tanatana.ogg")
+	fxWav := rl.LoadSound("weird.wav")
+	fxOgg := rl.LoadSound("tanatana.ogg")
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		if raylib.IsKeyPressed(raylib.KeySpace) {
-			raylib.PlaySound(fxWav)
+	for !rl.WindowShouldClose() {
+		if rl.IsKeyPressed(rl.KeySpace) {
+			rl.PlaySound(fxWav)
 		}
-		if raylib.IsKeyPressed(raylib.KeyEnter) {
-			raylib.PlaySound(fxOgg)
+		if rl.IsKeyPressed(rl.KeyEnter) {
+			rl.PlaySound(fxOgg)
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.DrawText("Press SPACE to PLAY the WAV sound!", 200, 180, 20, raylib.LightGray)
-		raylib.DrawText("Press ENTER to PLAY the OGG sound!", 200, 220, 20, raylib.LightGray)
+		rl.DrawText("Press SPACE to PLAY the WAV sound!", 200, 180, 20, rl.LightGray)
+		rl.DrawText("Press ENTER to PLAY the OGG sound!", 200, 220, 20, rl.LightGray)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.UnloadSound(fxWav)
-	raylib.UnloadSound(fxOgg)
+	rl.UnloadSound(fxWav)
+	rl.UnloadSound(fxOgg)
 
-	raylib.CloseAudioDevice()
+	rl.CloseAudioDevice()
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

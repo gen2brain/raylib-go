@@ -5,56 +5,56 @@ import (
 )
 
 func main() {
-	raylib.InitWindow(800, 450, "raylib [audio] example - music playing (streaming)")
-	raylib.InitAudioDevice()
+	rl.InitWindow(800, 450, "raylib [audio] example - music playing (streaming)")
+	rl.InitAudioDevice()
 
-	music := raylib.LoadMusicStream("guitar_noodling.ogg")
+	music := rl.LoadMusicStream("guitar_noodling.ogg")
 	pause := false
 
-	raylib.PlayMusicStream(music)
+	rl.PlayMusicStream(music)
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		raylib.UpdateMusicStream(music) // Update music buffer with new stream data
+	for !rl.WindowShouldClose() {
+		rl.UpdateMusicStream(music) // Update music buffer with new stream data
 
 		// Restart music playing (stop and play)
-		if raylib.IsKeyPressed(raylib.KeySpace) {
-			raylib.StopMusicStream(music)
-			raylib.PlayMusicStream(music)
+		if rl.IsKeyPressed(rl.KeySpace) {
+			rl.StopMusicStream(music)
+			rl.PlayMusicStream(music)
 		}
 
 		// Pause/Resume music playing
-		if raylib.IsKeyPressed(raylib.KeyP) {
+		if rl.IsKeyPressed(rl.KeyP) {
 			pause = !pause
 
 			if pause {
-				raylib.PauseMusicStream(music)
+				rl.PauseMusicStream(music)
 			} else {
-				raylib.ResumeMusicStream(music)
+				rl.ResumeMusicStream(music)
 			}
 		}
 
 		// Get timePlayed scaled to bar dimensions (400 pixels)
-		timePlayed := raylib.GetMusicTimePlayed(music) / raylib.GetMusicTimeLength(music) * 100 * 4
+		timePlayed := rl.GetMusicTimePlayed(music) / rl.GetMusicTimeLength(music) * 100 * 4
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
-		raylib.DrawText("MUSIC SHOULD BE PLAYING!", 255, 150, 20, raylib.LightGray)
+		rl.ClearBackground(rl.RayWhite)
+		rl.DrawText("MUSIC SHOULD BE PLAYING!", 255, 150, 20, rl.LightGray)
 
-		raylib.DrawRectangle(200, 200, 400, 12, raylib.LightGray)
-		raylib.DrawRectangle(200, 200, int32(timePlayed), 12, raylib.Maroon)
-		raylib.DrawRectangleLines(200, 200, 400, 12, raylib.Gray)
+		rl.DrawRectangle(200, 200, 400, 12, rl.LightGray)
+		rl.DrawRectangle(200, 200, int32(timePlayed), 12, rl.Maroon)
+		rl.DrawRectangleLines(200, 200, 400, 12, rl.Gray)
 
-		raylib.DrawText("PRESS SPACE TO RESTART MUSIC", 215, 250, 20, raylib.LightGray)
-		raylib.DrawText("PRESS P TO PAUSE/RESUME MUSIC", 208, 280, 20, raylib.LightGray)
+		rl.DrawText("PRESS SPACE TO RESTART MUSIC", 215, 250, 20, rl.LightGray)
+		rl.DrawText("PRESS P TO PAUSE/RESUME MUSIC", 208, 280, 20, rl.LightGray)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.UnloadMusicStream(music) // Unload music stream buffers from RAM
-	raylib.CloseAudioDevice()       // Close audio device (music streaming is automatically stopped)
+	rl.UnloadMusicStream(music) // Unload music stream buffers from RAM
+	rl.CloseAudioDevice()       // Close audio device (music streaming is automatically stopped)
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

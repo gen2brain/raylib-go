@@ -3,20 +3,20 @@ package main
 import "github.com/gen2brain/raylib-go/raylib"
 
 func main() {
-	raylib.SetConfigFlags(raylib.FlagVsyncHint)
-	raylib.InitWindow(800, 450, "raylib [core] example - basic window")
+	rl.SetConfigFlags(rl.FlagVsyncHint)
+	rl.InitWindow(800, 450, "raylib [core] example - basic window")
 
-	//raylib.SetTargetFPS(60)
+	//rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		raylib.BeginDrawing()
+	for !rl.WindowShouldClose() {
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.DrawText("Congrats! You created your first window!", 190, 200, 20, raylib.LightGray)
+		rl.DrawText("Congrats! You created your first window!", 190, 200, 20, rl.LightGray)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

@@ -12,190 +12,190 @@ const (
 )
 
 func main() {
-	raylib.SetConfigFlags(raylib.FlagMsaa4xHint) // Set MSAA 4X hint before windows creation
+	rl.SetConfigFlags(rl.FlagMsaa4xHint) // Set MSAA 4X hint before windows creation
 
-	raylib.InitWindow(800, 450, "raylib [core] example - gamepad input")
+	rl.InitWindow(800, 450, "raylib [core] example - gamepad input")
 
-	texPs3Pad := raylib.LoadTexture("ps3.png")
-	texXboxPad := raylib.LoadTexture("xbox.png")
+	texPs3Pad := rl.LoadTexture("ps3.png")
+	texXboxPad := rl.LoadTexture("xbox.png")
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		raylib.BeginDrawing()
+	for !rl.WindowShouldClose() {
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		if raylib.IsGamepadAvailable(raylib.GamepadPlayer1) {
-			raylib.DrawText(fmt.Sprintf("GP1: %s", raylib.GetGamepadName(raylib.GamepadPlayer1)), 10, 10, 10, raylib.Black)
+		if rl.IsGamepadAvailable(rl.GamepadPlayer1) {
+			rl.DrawText(fmt.Sprintf("GP1: %s", rl.GetGamepadName(rl.GamepadPlayer1)), 10, 10, 10, rl.Black)
 
-			if raylib.IsGamepadName(raylib.GamepadPlayer1, xbox360NameID) {
-				raylib.DrawTexture(texXboxPad, 0, 0, raylib.DarkGray)
+			if rl.IsGamepadName(rl.GamepadPlayer1, xbox360NameID) {
+				rl.DrawTexture(texXboxPad, 0, 0, rl.DarkGray)
 
 				// Draw buttons: xbox home
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadXboxButtonHome) {
-					raylib.DrawCircle(394, 89, 19, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadXboxButtonHome) {
+					rl.DrawCircle(394, 89, 19, rl.Red)
 				}
 
 				// Draw buttons: basic
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadXboxButtonStart) {
-					raylib.DrawCircle(436, 150, 9, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadXboxButtonStart) {
+					rl.DrawCircle(436, 150, 9, rl.Red)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadXboxButtonSelect) {
-					raylib.DrawCircle(352, 150, 9, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadXboxButtonSelect) {
+					rl.DrawCircle(352, 150, 9, rl.Red)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadXboxButtonX) {
-					raylib.DrawCircle(501, 151, 15, raylib.Blue)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadXboxButtonX) {
+					rl.DrawCircle(501, 151, 15, rl.Blue)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadXboxButtonA) {
-					raylib.DrawCircle(536, 187, 15, raylib.Lime)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadXboxButtonA) {
+					rl.DrawCircle(536, 187, 15, rl.Lime)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadXboxButtonB) {
-					raylib.DrawCircle(572, 151, 15, raylib.Maroon)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadXboxButtonB) {
+					rl.DrawCircle(572, 151, 15, rl.Maroon)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadXboxButtonY) {
-					raylib.DrawCircle(536, 115, 15, raylib.Gold)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadXboxButtonY) {
+					rl.DrawCircle(536, 115, 15, rl.Gold)
 				}
 
 				// Draw buttons: d-pad
-				raylib.DrawRectangle(317, 202, 19, 71, raylib.Black)
-				raylib.DrawRectangle(293, 228, 69, 19, raylib.Black)
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadXboxButtonUp) {
-					raylib.DrawRectangle(317, 202, 19, 26, raylib.Red)
+				rl.DrawRectangle(317, 202, 19, 71, rl.Black)
+				rl.DrawRectangle(293, 228, 69, 19, rl.Black)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadXboxButtonUp) {
+					rl.DrawRectangle(317, 202, 19, 26, rl.Red)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadXboxButtonDown) {
-					raylib.DrawRectangle(317, 202+45, 19, 26, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadXboxButtonDown) {
+					rl.DrawRectangle(317, 202+45, 19, 26, rl.Red)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadXboxButtonLeft) {
-					raylib.DrawRectangle(292, 228, 25, 19, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadXboxButtonLeft) {
+					rl.DrawRectangle(292, 228, 25, 19, rl.Red)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadXboxButtonRight) {
-					raylib.DrawRectangle(292+44, 228, 26, 19, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadXboxButtonRight) {
+					rl.DrawRectangle(292+44, 228, 26, 19, rl.Red)
 				}
 
 				// Draw buttons: left-right back
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadXboxButtonLb) {
-					raylib.DrawCircle(259, 61, 20, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadXboxButtonLb) {
+					rl.DrawCircle(259, 61, 20, rl.Red)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadXboxButtonRb) {
-					raylib.DrawCircle(536, 61, 20, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadXboxButtonRb) {
+					rl.DrawCircle(536, 61, 20, rl.Red)
 				}
 
 				// Draw axis: left joystick
-				raylib.DrawCircle(259, 152, 39, raylib.Black)
-				raylib.DrawCircle(259, 152, 34, raylib.LightGray)
-				raylib.DrawCircle(int32(259+(raylib.GetGamepadAxisMovement(raylib.GamepadPlayer1, raylib.GamepadXboxAxisLeftX)*20)),
-					int32(152-(raylib.GetGamepadAxisMovement(raylib.GamepadPlayer1, raylib.GamepadXboxAxisLeftY)*20)), 25, raylib.Black)
+				rl.DrawCircle(259, 152, 39, rl.Black)
+				rl.DrawCircle(259, 152, 34, rl.LightGray)
+				rl.DrawCircle(int32(259+(rl.GetGamepadAxisMovement(rl.GamepadPlayer1, rl.GamepadXboxAxisLeftX)*20)),
+					int32(152-(rl.GetGamepadAxisMovement(rl.GamepadPlayer1, rl.GamepadXboxAxisLeftY)*20)), 25, rl.Black)
 
 				// Draw axis: right joystick
-				raylib.DrawCircle(461, 237, 38, raylib.Black)
-				raylib.DrawCircle(461, 237, 33, raylib.LightGray)
-				raylib.DrawCircle(int32(461+(raylib.GetGamepadAxisMovement(raylib.GamepadPlayer1, raylib.GamepadXboxAxisRightX)*20)),
-					int32(237-(raylib.GetGamepadAxisMovement(raylib.GamepadPlayer1, raylib.GamepadXboxAxisRightY)*20)), 25, raylib.Black)
+				rl.DrawCircle(461, 237, 38, rl.Black)
+				rl.DrawCircle(461, 237, 33, rl.LightGray)
+				rl.DrawCircle(int32(461+(rl.GetGamepadAxisMovement(rl.GamepadPlayer1, rl.GamepadXboxAxisRightX)*20)),
+					int32(237-(rl.GetGamepadAxisMovement(rl.GamepadPlayer1, rl.GamepadXboxAxisRightY)*20)), 25, rl.Black)
 
 				// Draw axis: left-right triggers
-				raylib.DrawRectangle(170, 30, 15, 70, raylib.Gray)
-				raylib.DrawRectangle(604, 30, 15, 70, raylib.Gray)
-				raylib.DrawRectangle(170, 30, 15, int32(((1.0+raylib.GetGamepadAxisMovement(raylib.GamepadPlayer1, raylib.GamepadXboxAxisLt))/2.0)*70), raylib.Red)
-				raylib.DrawRectangle(604, 30, 15, int32(((1.0+raylib.GetGamepadAxisMovement(raylib.GamepadPlayer1, raylib.GamepadXboxAxisRt))/2.0)*70), raylib.Red)
+				rl.DrawRectangle(170, 30, 15, 70, rl.Gray)
+				rl.DrawRectangle(604, 30, 15, 70, rl.Gray)
+				rl.DrawRectangle(170, 30, 15, int32(((1.0+rl.GetGamepadAxisMovement(rl.GamepadPlayer1, rl.GamepadXboxAxisLt))/2.0)*70), rl.Red)
+				rl.DrawRectangle(604, 30, 15, int32(((1.0+rl.GetGamepadAxisMovement(rl.GamepadPlayer1, rl.GamepadXboxAxisRt))/2.0)*70), rl.Red)
 
-			} else if raylib.IsGamepadName(raylib.GamepadPlayer1, ps3NameID) {
-				raylib.DrawTexture(texPs3Pad, 0, 0, raylib.DarkGray)
+			} else if rl.IsGamepadName(rl.GamepadPlayer1, ps3NameID) {
+				rl.DrawTexture(texPs3Pad, 0, 0, rl.DarkGray)
 
 				// Draw buttons: ps
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadPs3ButtonPs) {
-					raylib.DrawCircle(396, 222, 13, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadPs3ButtonPs) {
+					rl.DrawCircle(396, 222, 13, rl.Red)
 				}
 
 				// Draw buttons: basic
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadPs3ButtonSelect) {
-					raylib.DrawRectangle(328, 170, 32, 13, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadPs3ButtonSelect) {
+					rl.DrawRectangle(328, 170, 32, 13, rl.Red)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadPs3ButtonStart) {
-					raylib.DrawTriangle(raylib.NewVector2(436, 168), raylib.NewVector2(436, 185), raylib.NewVector2(464, 177), raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadPs3ButtonStart) {
+					rl.DrawTriangle(rl.NewVector2(436, 168), rl.NewVector2(436, 185), rl.NewVector2(464, 177), rl.Red)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadPs3ButtonTriangle) {
-					raylib.DrawCircle(557, 144, 13, raylib.Lime)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadPs3ButtonTriangle) {
+					rl.DrawCircle(557, 144, 13, rl.Lime)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadPs3ButtonCircle) {
-					raylib.DrawCircle(586, 173, 13, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadPs3ButtonCircle) {
+					rl.DrawCircle(586, 173, 13, rl.Red)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadPs3ButtonCross) {
-					raylib.DrawCircle(557, 203, 13, raylib.Violet)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadPs3ButtonCross) {
+					rl.DrawCircle(557, 203, 13, rl.Violet)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadPs3ButtonSquare) {
-					raylib.DrawCircle(527, 173, 13, raylib.Pink)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadPs3ButtonSquare) {
+					rl.DrawCircle(527, 173, 13, rl.Pink)
 				}
 
 				// Draw buttons: d-pad
-				raylib.DrawRectangle(225, 132, 24, 84, raylib.Black)
-				raylib.DrawRectangle(195, 161, 84, 25, raylib.Black)
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadPs3ButtonUp) {
-					raylib.DrawRectangle(225, 132, 24, 29, raylib.Red)
+				rl.DrawRectangle(225, 132, 24, 84, rl.Black)
+				rl.DrawRectangle(195, 161, 84, 25, rl.Black)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadPs3ButtonUp) {
+					rl.DrawRectangle(225, 132, 24, 29, rl.Red)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadPs3ButtonDown) {
-					raylib.DrawRectangle(225, 132+54, 24, 30, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadPs3ButtonDown) {
+					rl.DrawRectangle(225, 132+54, 24, 30, rl.Red)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadPs3ButtonLeft) {
-					raylib.DrawRectangle(195, 161, 30, 25, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadPs3ButtonLeft) {
+					rl.DrawRectangle(195, 161, 30, 25, rl.Red)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadPs3ButtonRight) {
-					raylib.DrawRectangle(195+54, 161, 30, 25, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadPs3ButtonRight) {
+					rl.DrawRectangle(195+54, 161, 30, 25, rl.Red)
 				}
 
 				// Draw buttons: left-right back buttons
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadPs3ButtonL1) {
-					raylib.DrawCircle(239, 82, 20, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadPs3ButtonL1) {
+					rl.DrawCircle(239, 82, 20, rl.Red)
 				}
-				if raylib.IsGamepadButtonDown(raylib.GamepadPlayer1, raylib.GamepadPs3ButtonR1) {
-					raylib.DrawCircle(557, 82, 20, raylib.Red)
+				if rl.IsGamepadButtonDown(rl.GamepadPlayer1, rl.GamepadPs3ButtonR1) {
+					rl.DrawCircle(557, 82, 20, rl.Red)
 				}
 
 				// Draw axis: left joystick
-				raylib.DrawCircle(319, 255, 35, raylib.Black)
-				raylib.DrawCircle(319, 255, 31, raylib.LightGray)
-				raylib.DrawCircle(int32(319+(raylib.GetGamepadAxisMovement(raylib.GamepadPlayer1, raylib.GamepadPs3AxisLeftX)*20)),
-					int32(255+(raylib.GetGamepadAxisMovement(raylib.GamepadPlayer1, raylib.GamepadPs3AxisLeftY)*20)), 25, raylib.Black)
+				rl.DrawCircle(319, 255, 35, rl.Black)
+				rl.DrawCircle(319, 255, 31, rl.LightGray)
+				rl.DrawCircle(int32(319+(rl.GetGamepadAxisMovement(rl.GamepadPlayer1, rl.GamepadPs3AxisLeftX)*20)),
+					int32(255+(rl.GetGamepadAxisMovement(rl.GamepadPlayer1, rl.GamepadPs3AxisLeftY)*20)), 25, rl.Black)
 
 				// Draw axis: right joystick
-				raylib.DrawCircle(475, 255, 35, raylib.Black)
-				raylib.DrawCircle(475, 255, 31, raylib.LightGray)
-				raylib.DrawCircle(int32(475+(raylib.GetGamepadAxisMovement(raylib.GamepadPlayer1, raylib.GamepadPs3AxisRightX)*20)),
-					int32(255+(raylib.GetGamepadAxisMovement(raylib.GamepadPlayer1, raylib.GamepadPs3AxisRightY)*20)), 25, raylib.Black)
+				rl.DrawCircle(475, 255, 35, rl.Black)
+				rl.DrawCircle(475, 255, 31, rl.LightGray)
+				rl.DrawCircle(int32(475+(rl.GetGamepadAxisMovement(rl.GamepadPlayer1, rl.GamepadPs3AxisRightX)*20)),
+					int32(255+(rl.GetGamepadAxisMovement(rl.GamepadPlayer1, rl.GamepadPs3AxisRightY)*20)), 25, rl.Black)
 
 				// Draw axis: left-right triggers
-				raylib.DrawRectangle(169, 48, 15, 70, raylib.Gray)
-				raylib.DrawRectangle(611, 48, 15, 70, raylib.Gray)
-				raylib.DrawRectangle(169, 48, 15, int32(((1.0-raylib.GetGamepadAxisMovement(raylib.GamepadPlayer1, raylib.GamepadPs3AxisL2))/2.0)*70), raylib.Red)
-				raylib.DrawRectangle(611, 48, 15, int32(((1.0-raylib.GetGamepadAxisMovement(raylib.GamepadPlayer1, raylib.GamepadPs3AxisR2))/2.0)*70), raylib.Red)
+				rl.DrawRectangle(169, 48, 15, 70, rl.Gray)
+				rl.DrawRectangle(611, 48, 15, 70, rl.Gray)
+				rl.DrawRectangle(169, 48, 15, int32(((1.0-rl.GetGamepadAxisMovement(rl.GamepadPlayer1, rl.GamepadPs3AxisL2))/2.0)*70), rl.Red)
+				rl.DrawRectangle(611, 48, 15, int32(((1.0-rl.GetGamepadAxisMovement(rl.GamepadPlayer1, rl.GamepadPs3AxisR2))/2.0)*70), rl.Red)
 			} else {
-				raylib.DrawText("- GENERIC GAMEPAD -", 280, 180, 20, raylib.Gray)
+				rl.DrawText("- GENERIC GAMEPAD -", 280, 180, 20, rl.Gray)
 
 				// TODO: Draw generic gamepad
 			}
 
-			raylib.DrawText(fmt.Sprintf("DETECTED AXIS [%d]:", raylib.GetGamepadAxisCount(raylib.GamepadPlayer1)), 10, 50, 10, raylib.Maroon)
+			rl.DrawText(fmt.Sprintf("DETECTED AXIS [%d]:", rl.GetGamepadAxisCount(rl.GamepadPlayer1)), 10, 50, 10, rl.Maroon)
 
-			for i := int32(0); i < raylib.GetGamepadAxisCount(raylib.GamepadPlayer1); i++ {
-				raylib.DrawText(fmt.Sprintf("AXIS %d: %.02f", i, raylib.GetGamepadAxisMovement(raylib.GamepadPlayer1, i)), 20, 70+20*i, 10, raylib.DarkGray)
+			for i := int32(0); i < rl.GetGamepadAxisCount(rl.GamepadPlayer1); i++ {
+				rl.DrawText(fmt.Sprintf("AXIS %d: %.02f", i, rl.GetGamepadAxisMovement(rl.GamepadPlayer1, i)), 20, 70+20*i, 10, rl.DarkGray)
 			}
 
-			if raylib.GetGamepadButtonPressed() != -1 {
-				raylib.DrawText(fmt.Sprintf("DETECTED BUTTON: %d", raylib.GetGamepadButtonPressed()), 10, 430, 10, raylib.Red)
+			if rl.GetGamepadButtonPressed() != -1 {
+				rl.DrawText(fmt.Sprintf("DETECTED BUTTON: %d", rl.GetGamepadButtonPressed()), 10, 430, 10, rl.Red)
 			} else {
-				raylib.DrawText("DETECTED BUTTON: NONE", 10, 430, 10, raylib.Gray)
+				rl.DrawText("DETECTED BUTTON: NONE", 10, 430, 10, rl.Gray)
 			}
 		} else {
-			raylib.DrawText("GP1: NOT DETECTED", 10, 10, 10, raylib.Gray)
+			rl.DrawText("GP1: NOT DETECTED", 10, 10, 10, rl.Gray)
 
-			raylib.DrawTexture(texXboxPad, 0, 0, raylib.LightGray)
+			rl.DrawTexture(texXboxPad, 0, 0, rl.LightGray)
 		}
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.UnloadTexture(texPs3Pad)
-	raylib.UnloadTexture(texXboxPad)
+	rl.UnloadTexture(texPs3Pad)
+	rl.UnloadTexture(texXboxPad)
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

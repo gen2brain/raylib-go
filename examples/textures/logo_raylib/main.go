@@ -8,24 +8,24 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [textures] example - texture loading and drawing")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [textures] example - texture loading and drawing")
 
 	// NOTE: Textures MUST be loaded after Window initialization (OpenGL context is required)
-	texture := raylib.LoadTexture("raylib_logo.png")
+	texture := rl.LoadTexture("raylib_logo.png")
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		raylib.BeginDrawing()
+	for !rl.WindowShouldClose() {
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
-		raylib.DrawTexture(texture, screenWidth/2-texture.Width/2, screenHeight/2-texture.Height/2, raylib.White)
-		raylib.DrawText("this IS a texture!", 360, 370, 10, raylib.Gray)
+		rl.ClearBackground(rl.RayWhite)
+		rl.DrawTexture(texture, screenWidth/2-texture.Width/2, screenHeight/2-texture.Height/2, rl.White)
+		rl.DrawText("this IS a texture!", 360, 370, 10, rl.Gray)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.UnloadTexture(texture)
+	rl.UnloadTexture(texture)
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

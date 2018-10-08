@@ -13,14 +13,14 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [core] example - resources loading")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [core] example - resources loading")
 
-	raylib.InitAudioDevice()
+	rl.InitAudioDevice()
 
 	// OpenAsset() will also work on Android (reads files from assets/)
-	reader, err := raylib.OpenAsset("data.rres")
+	reader, err := rl.OpenAsset("data.rres")
 	if err != nil {
-		raylib.TraceLog(raylib.LogWarning, "[%s] rRES raylib resource file could not be opened: %v", "data.rres", err)
+		rl.TraceLog(rl.LogWarning, "[%s] rRES raylib resource file could not be opened: %v", "data.rres", err)
 	}
 
 	defer reader.Close()
@@ -30,67 +30,67 @@ func main() {
 	//reader := bytes.NewReader(b)
 
 	res := rres.LoadResource(reader, 0, []byte("passwordpassword"))
-	wav := raylib.LoadWaveEx(res.Data, int32(res.Param1), int32(res.Param2), int32(res.Param3), int32(res.Param4))
-	snd := raylib.LoadSoundFromWave(wav)
-	raylib.UnloadWave(wav)
+	wav := rl.LoadWaveEx(res.Data, int32(res.Param1), int32(res.Param2), int32(res.Param3), int32(res.Param4))
+	snd := rl.LoadSoundFromWave(wav)
+	rl.UnloadWave(wav)
 
-	textures := make([]raylib.Texture2D, numTextures)
+	textures := make([]rl.Texture2D, numTextures)
 	for i := 0; i < numTextures; i++ {
 		r := rres.LoadResource(reader, i+1, []byte("passwordpassword"))
-		image := raylib.LoadImagePro(r.Data, int32(r.Param1), int32(r.Param2), raylib.PixelFormat(r.Param3))
-		textures[i] = raylib.LoadTextureFromImage(image)
-		raylib.UnloadImage(image)
+		image := rl.LoadImagePro(r.Data, int32(r.Param1), int32(r.Param2), rl.PixelFormat(r.Param3))
+		textures[i] = rl.LoadTextureFromImage(image)
+		rl.UnloadImage(image)
 	}
 
 	currentTexture := 0
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		if raylib.IsKeyPressed(raylib.KeySpace) {
-			raylib.PlaySound(snd)
+	for !rl.WindowShouldClose() {
+		if rl.IsKeyPressed(rl.KeySpace) {
+			rl.PlaySound(snd)
 		}
 
-		if raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
+		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
 			currentTexture = (currentTexture + 1) % numTextures // Cycle between the textures
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.DrawTexture(textures[currentTexture], screenWidth/2-textures[currentTexture].Width/2, screenHeight/2-textures[currentTexture].Height/2, raylib.RayWhite)
+		rl.DrawTexture(textures[currentTexture], screenWidth/2-textures[currentTexture].Width/2, screenHeight/2-textures[currentTexture].Height/2, rl.RayWhite)
 
-		raylib.DrawText("MOUSE LEFT BUTTON to CYCLE TEXTURES", 40, 410, 10, raylib.Gray)
-		raylib.DrawText("SPACE to PLAY SOUND", 40, 430, 10, raylib.Gray)
+		rl.DrawText("MOUSE LEFT BUTTON to CYCLE TEXTURES", 40, 410, 10, rl.Gray)
+		rl.DrawText("SPACE to PLAY SOUND", 40, 430, 10, rl.Gray)
 
 		switch currentTexture {
 		case 0:
-			raylib.DrawText("GIF", 272, 70, 20, raylib.Gray)
+			rl.DrawText("GIF", 272, 70, 20, rl.Gray)
 			break
 		case 1:
-			raylib.DrawText("JPEG", 272, 70, 20, raylib.Gray)
+			rl.DrawText("JPEG", 272, 70, 20, rl.Gray)
 			break
 		case 2:
-			raylib.DrawText("PNG", 272, 70, 20, raylib.Gray)
+			rl.DrawText("PNG", 272, 70, 20, rl.Gray)
 			break
 		case 3:
-			raylib.DrawText("TGA", 272, 70, 20, raylib.Gray)
+			rl.DrawText("TGA", 272, 70, 20, rl.Gray)
 			break
 		default:
 			break
 		}
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.UnloadSound(snd)
+	rl.UnloadSound(snd)
 
 	for _, t := range textures {
-		raylib.UnloadTexture(t)
+		rl.UnloadTexture(t)
 	}
 
-	raylib.CloseAudioDevice()
+	rl.CloseAudioDevice()
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

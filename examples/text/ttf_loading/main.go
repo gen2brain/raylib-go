@@ -10,7 +10,7 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [text] example - ttf loading")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [text] example - ttf loading")
 
 	msg := "TTF Font"
 
@@ -19,94 +19,94 @@ func main() {
 	fontChars := int32(0)
 
 	// TTF Font loading with custom generation parameters
-	font := raylib.LoadFontEx("fonts/KAISG.ttf", 96, 0, &fontChars)
+	font := rl.LoadFontEx("fonts/KAISG.ttf", 96, 0, &fontChars)
 
 	// Generate mipmap levels to use trilinear filtering
 	// NOTE: On 2D drawing it won't be noticeable, it looks like FILTER_BILINEAR
-	raylib.GenTextureMipmaps(&font.Texture)
+	rl.GenTextureMipmaps(&font.Texture)
 
 	fontSize := font.BaseSize
-	fontPosition := raylib.NewVector2(40, float32(screenHeight)/2+50)
-	textSize := raylib.Vector2{}
+	fontPosition := rl.NewVector2(40, float32(screenHeight)/2+50)
+	textSize := rl.Vector2{}
 
-	raylib.SetTextureFilter(font.Texture, raylib.FilterPoint)
+	rl.SetTextureFilter(font.Texture, rl.FilterPoint)
 	currentFontFilter := 0 // FilterPoint
 
 	count := int32(0)
 	droppedFiles := make([]string, 0)
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
+	for !rl.WindowShouldClose() {
 		// Update
 		//----------------------------------------------------------------------------------
-		fontSize += raylib.GetMouseWheelMove() * 4.0
+		fontSize += rl.GetMouseWheelMove() * 4.0
 
 		// Choose font texture filter method
-		if raylib.IsKeyPressed(raylib.KeyOne) {
-			raylib.SetTextureFilter(font.Texture, raylib.FilterPoint)
+		if rl.IsKeyPressed(rl.KeyOne) {
+			rl.SetTextureFilter(font.Texture, rl.FilterPoint)
 			currentFontFilter = 0
-		} else if raylib.IsKeyPressed(raylib.KeyTwo) {
-			raylib.SetTextureFilter(font.Texture, raylib.FilterBilinear)
+		} else if rl.IsKeyPressed(rl.KeyTwo) {
+			rl.SetTextureFilter(font.Texture, rl.FilterBilinear)
 			currentFontFilter = 1
-		} else if raylib.IsKeyPressed(raylib.KeyThree) {
+		} else if rl.IsKeyPressed(rl.KeyThree) {
 			// NOTE: Trilinear filter won't be noticed on 2D drawing
-			raylib.SetTextureFilter(font.Texture, raylib.FilterTrilinear)
+			rl.SetTextureFilter(font.Texture, rl.FilterTrilinear)
 			currentFontFilter = 2
 		}
 
-		textSize = raylib.MeasureTextEx(font, msg, float32(fontSize), 0)
+		textSize = rl.MeasureTextEx(font, msg, float32(fontSize), 0)
 
-		if raylib.IsKeyDown(raylib.KeyLeft) {
+		if rl.IsKeyDown(rl.KeyLeft) {
 			fontPosition.X -= 10
-		} else if raylib.IsKeyDown(raylib.KeyRight) {
+		} else if rl.IsKeyDown(rl.KeyRight) {
 			fontPosition.X += 10
 		}
 
 		// Load a dropped TTF file dynamically (at current fontSize)
-		if raylib.IsFileDropped() {
-			droppedFiles = raylib.GetDroppedFiles(&count)
+		if rl.IsFileDropped() {
+			droppedFiles = rl.GetDroppedFiles(&count)
 
 			if count == 1 { // Only support one ttf file dropped
-				raylib.UnloadFont(font)
-				font = raylib.LoadFontEx(droppedFiles[0], fontSize, 0, &fontChars)
-				raylib.ClearDroppedFiles()
+				rl.UnloadFont(font)
+				font = rl.LoadFontEx(droppedFiles[0], fontSize, 0, &fontChars)
+				rl.ClearDroppedFiles()
 			}
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.DrawText("Use mouse wheel to change font size", 20, 20, 10, raylib.Gray)
-		raylib.DrawText("Use KEY_RIGHT and KEY_LEFT to move text", 20, 40, 10, raylib.Gray)
-		raylib.DrawText("Use 1, 2, 3 to change texture filter", 20, 60, 10, raylib.Gray)
-		raylib.DrawText("Drop a new TTF font for dynamic loading", 20, 80, 10, raylib.DarkGray)
+		rl.DrawText("Use mouse wheel to change font size", 20, 20, 10, rl.Gray)
+		rl.DrawText("Use KEY_RIGHT and KEY_LEFT to move text", 20, 40, 10, rl.Gray)
+		rl.DrawText("Use 1, 2, 3 to change texture filter", 20, 60, 10, rl.Gray)
+		rl.DrawText("Drop a new TTF font for dynamic loading", 20, 80, 10, rl.DarkGray)
 
-		raylib.DrawTextEx(font, msg, fontPosition, float32(fontSize), 0, raylib.Black)
+		rl.DrawTextEx(font, msg, fontPosition, float32(fontSize), 0, rl.Black)
 
 		// TODO: It seems texSize measurement is not accurate due to chars offsets...
-		//raylib.DrawRectangleLines(int32(fontPosition.X), int32(fontPosition.Y), int32(textSize.X), int32(textSize.Y), raylib.Red)
+		//rl.DrawRectangleLines(int32(fontPosition.X), int32(fontPosition.Y), int32(textSize.X), int32(textSize.Y), rl.Red)
 
-		raylib.DrawRectangle(0, screenHeight-80, screenWidth, 80, raylib.LightGray)
-		raylib.DrawText(fmt.Sprintf("Font size: %02.02f", float32(fontSize)), 20, screenHeight-50, 10, raylib.DarkGray)
-		raylib.DrawText(fmt.Sprintf("Text size: [%02.02f, %02.02f]", textSize.X, textSize.Y), 20, screenHeight-30, 10, raylib.DarkGray)
-		raylib.DrawText("CURRENT TEXTURE FILTER:", 250, 400, 20, raylib.Gray)
+		rl.DrawRectangle(0, screenHeight-80, screenWidth, 80, rl.LightGray)
+		rl.DrawText(fmt.Sprintf("Font size: %02.02f", float32(fontSize)), 20, screenHeight-50, 10, rl.DarkGray)
+		rl.DrawText(fmt.Sprintf("Text size: [%02.02f, %02.02f]", textSize.X, textSize.Y), 20, screenHeight-30, 10, rl.DarkGray)
+		rl.DrawText("CURRENT TEXTURE FILTER:", 250, 400, 20, rl.Gray)
 
 		if currentFontFilter == 0 {
-			raylib.DrawText("POINT", 570, 400, 20, raylib.Black)
+			rl.DrawText("POINT", 570, 400, 20, rl.Black)
 		} else if currentFontFilter == 1 {
-			raylib.DrawText("BILINEAR", 570, 400, 20, raylib.Black)
+			rl.DrawText("BILINEAR", 570, 400, 20, rl.Black)
 		} else if currentFontFilter == 2 {
-			raylib.DrawText("TRILINEAR", 570, 400, 20, raylib.Black)
+			rl.DrawText("TRILINEAR", 570, 400, 20, rl.Black)
 		}
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.UnloadFont(font) // Font unloading
+	rl.UnloadFont(font) // Font unloading
 
-	raylib.ClearDroppedFiles() // Clear internal buffers
+	rl.ClearDroppedFiles() // Clear internal buffers
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

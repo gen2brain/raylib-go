@@ -200,13 +200,13 @@ func LoadResource(reader io.ReadSeeker, rresID int, key []byte) (data Data) {
 	// Read rres file header
 	err := binary.Read(reader, binary.LittleEndian, &fileHeader)
 	if err != nil {
-		raylib.TraceLog(raylib.LogWarning, err.Error())
+		rl.TraceLog(rl.LogWarning, err.Error())
 		return
 	}
 
 	// Verify "rRES" identifier
 	if string(fileHeader.ID[:]) != "rRES" {
-		raylib.TraceLog(raylib.LogWarning, "not a valid raylib resource file")
+		rl.TraceLog(rl.LogWarning, "not a valid raylib resource file")
 		return
 	}
 
@@ -216,7 +216,7 @@ func LoadResource(reader io.ReadSeeker, rresID int, key []byte) (data Data) {
 		// Read resource info and parameters
 		err = binary.Read(reader, binary.LittleEndian, &infoHeader)
 		if err != nil {
-			raylib.TraceLog(raylib.LogWarning, err.Error())
+			rl.TraceLog(rl.LogWarning, err.Error())
 			return
 		}
 
@@ -236,17 +236,17 @@ func LoadResource(reader io.ReadSeeker, rresID int, key []byte) (data Data) {
 			// Decompress data
 			data.Data, err = Decompress(b, int(infoHeader.CompType))
 			if err != nil {
-				raylib.TraceLog(raylib.LogWarning, "[ID %d] %v", infoHeader.ID, err)
+				rl.TraceLog(rl.LogWarning, "[ID %d] %v", infoHeader.ID, err)
 			}
 
 			// Decrypt data
 			data.Data, err = Decrypt(key, data.Data, int(infoHeader.CryptoType))
 			if err != nil {
-				raylib.TraceLog(raylib.LogWarning, "[ID %d] %v", infoHeader.ID, err)
+				rl.TraceLog(rl.LogWarning, "[ID %d] %v", infoHeader.ID, err)
 			}
 
 			if data.Data != nil && len(data.Data) == int(infoHeader.UncompSize) {
-				raylib.TraceLog(raylib.LogInfo, "[ID %d] Resource data loaded successfully", infoHeader.ID)
+				rl.TraceLog(rl.LogInfo, "[ID %d] Resource data loaded successfully", infoHeader.ID)
 			}
 		} else {
 			// Skip required data to read next resource infoHeader
@@ -255,7 +255,7 @@ func LoadResource(reader io.ReadSeeker, rresID int, key []byte) (data Data) {
 	}
 
 	if data.Data == nil {
-		raylib.TraceLog(raylib.LogWarning, "[ID %d] Requested resource could not be found", rresID)
+		rl.TraceLog(rl.LogWarning, "[ID %d] Requested resource could not be found", rresID)
 	}
 
 	return

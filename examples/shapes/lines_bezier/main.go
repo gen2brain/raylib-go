@@ -8,29 +8,29 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [shapes] example - cubic-bezier lines")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [shapes] example - cubic-bezier lines")
 
-	start := raylib.NewVector2(0, 0)
-	end := raylib.NewVector2(float32(screenWidth), float32(screenHeight))
+	start := rl.NewVector2(0, 0)
+	end := rl.NewVector2(float32(screenWidth), float32(screenHeight))
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		if raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
-			start = raylib.GetMousePosition()
-		} else if raylib.IsMouseButtonDown(raylib.MouseRightButton) {
-			end = raylib.GetMousePosition()
+	for !rl.WindowShouldClose() {
+		if rl.IsMouseButtonDown(rl.MouseLeftButton) {
+			start = rl.GetMousePosition()
+		} else if rl.IsMouseButtonDown(rl.MouseRightButton) {
+			end = rl.GetMousePosition()
 		}
 
-		raylib.BeginDrawing()
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.BeginDrawing()
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.DrawText("USE MOUSE LEFT-RIGHT CLICK to DEFINE LINE START and END POINTS", 15, 20, 20, raylib.Gray)
+		rl.DrawText("USE MOUSE LEFT-RIGHT CLICK to DEFINE LINE START and END POINTS", 15, 20, 20, rl.Gray)
 
-		raylib.DrawLineBezier(start, end, 2.0, raylib.Red)
+		rl.DrawLineBezier(start, end, 2.0, rl.Red)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

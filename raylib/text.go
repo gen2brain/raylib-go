@@ -1,4 +1,4 @@
-package raylib
+package rl
 
 /*
 #include "raylib.h"
@@ -17,9 +17,9 @@ func (s *Font) cptr() *C.Font {
 	return (*C.Font)(unsafe.Pointer(s))
 }
 
-// GetDefaultFont - Get the default Font
-func GetDefaultFont() Font {
-	ret := C.GetDefaultFont()
+// GetFontDefault - Get the default Font
+func GetFontDefault() Font {
+	ret := C.GetFontDefault()
 	v := newFontFromPointer(unsafe.Pointer(&ret))
 	return v
 }

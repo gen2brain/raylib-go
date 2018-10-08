@@ -8,32 +8,32 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [textures] example - texture to image")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [textures] example - texture to image")
 
-	image := raylib.LoadImage("raylib_logo.png")  // Load image data into CPU memory (RAM)
-	texture := raylib.LoadTextureFromImage(image) // Image converted to texture, GPU memory (RAM -> VRAM)
-	raylib.UnloadImage(image)                     // Unload image data from CPU memory (RAM)
+	image := rl.LoadImage("raylib_logo.png")  // Load image data into CPU memory (RAM)
+	texture := rl.LoadTextureFromImage(image) // Image converted to texture, GPU memory (RAM -> VRAM)
+	rl.UnloadImage(image)                     // Unload image data from CPU memory (RAM)
 
-	image = raylib.GetTextureData(texture) // Retrieve image data from GPU memory (VRAM -> RAM)
-	raylib.UnloadTexture(texture)          // Unload texture from GPU memory (VRAM)
+	image = rl.GetTextureData(texture) // Retrieve image data from GPU memory (VRAM -> RAM)
+	rl.UnloadTexture(texture)          // Unload texture from GPU memory (VRAM)
 
-	texture = raylib.LoadTextureFromImage(image) // Recreate texture from retrieved image data (RAM -> VRAM)
-	raylib.UnloadImage(image)                    // Unload retrieved image data from CPU memory (RAM)
+	texture = rl.LoadTextureFromImage(image) // Recreate texture from retrieved image data (RAM -> VRAM)
+	rl.UnloadImage(image)                    // Unload retrieved image data from CPU memory (RAM)
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		raylib.BeginDrawing()
+	for !rl.WindowShouldClose() {
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.DrawTexture(texture, screenWidth/2-texture.Width/2, screenHeight/2-texture.Height/2, raylib.White)
-		raylib.DrawText("this IS a texture loaded from an image!", 300, 370, 10, raylib.Gray)
+		rl.DrawTexture(texture, screenWidth/2-texture.Width/2, screenHeight/2-texture.Height/2, rl.White)
+		rl.DrawText("this IS a texture loaded from an image!", 300, 370, 10, rl.Gray)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.UnloadTexture(texture)
+	rl.UnloadTexture(texture)
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

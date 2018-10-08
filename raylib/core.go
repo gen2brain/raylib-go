@@ -1,4 +1,4 @@
-package raylib
+package rl
 
 /*
 #include "raylib.h"
@@ -95,43 +95,90 @@ func SetWindowTitle(title string) {
 }
 
 // SetWindowPosition - Set window position on screen (only PLATFORM_DESKTOP)
-func SetWindowPosition(x, y int32) {
+func SetWindowPosition(x, y int) {
 	cx := (C.int)(x)
 	cy := (C.int)(y)
 	C.SetWindowPosition(cx, cy)
 }
 
 // SetWindowMonitor - Set monitor for the current window (fullscreen mode)
-func SetWindowMonitor(monitor int32) {
+func SetWindowMonitor(monitor int) {
 	cmonitor := (C.int)(monitor)
 	C.SetWindowMonitor(cmonitor)
 }
 
 // SetWindowMinSize - Set window minimum dimensions (for FLAG_WINDOW_RESIZABLE)
-func SetWindowMinSize(w, h int32) {
+func SetWindowMinSize(w, h int) {
 	cw := (C.int)(w)
 	ch := (C.int)(h)
 	C.SetWindowMinSize(cw, ch)
 }
 
 // SetWindowSize - Set window dimensions
-func SetWindowSize(w, h int32) {
+func SetWindowSize(w, h int) {
 	cw := (C.int)(w)
 	ch := (C.int)(h)
 	C.SetWindowSize(cw, ch)
 }
 
 // GetScreenWidth - Get current screen width
-func GetScreenWidth() int32 {
+func GetScreenWidth() int {
 	ret := C.GetScreenWidth()
-	v := (int32)(ret)
+	v := (int)(ret)
 	return v
 }
 
 // GetScreenHeight - Get current screen height
-func GetScreenHeight() int32 {
+func GetScreenHeight() int {
 	ret := C.GetScreenHeight()
-	v := (int32)(ret)
+	v := (int)(ret)
+	return v
+}
+
+// GetMonitorCount - Get number of connected monitors
+func GetMonitorCount() int {
+	ret := C.GetMonitorCount()
+	v := (int)(ret)
+	return v
+}
+
+// GetMonitorWidth - Get primary monitor width
+func GetMonitorWidth(monitor int) int {
+	cmonitor := (C.int)(monitor)
+	ret := C.GetMonitorWidth(cmonitor)
+	v := (int)(ret)
+	return v
+}
+
+// GetMonitorHeight - Get primary monitor height
+func GetMonitorHeight(monitor int) int {
+	cmonitor := (C.int)(monitor)
+	ret := C.GetMonitorHeight(cmonitor)
+	v := (int)(ret)
+	return v
+}
+
+// GetMonitorPhysicalWidth - Get primary monitor physical width in millimetres
+func GetMonitorPhysicalWidth(monitor int) int {
+	cmonitor := (C.int)(monitor)
+	ret := C.GetMonitorPhysicalWidth(cmonitor)
+	v := (int)(ret)
+	return v
+}
+
+// GetMonitorPhysicalHeight - Get primary monitor physical height in millimetres
+func GetMonitorPhysicalHeight(monitor int) int {
+	cmonitor := (C.int)(monitor)
+	ret := C.GetMonitorPhysicalHeight(cmonitor)
+	v := (int)(ret)
+	return v
+}
+
+// GetMonitorName - Get the human-readable, UTF-8 encoded name of the primary monitor
+func GetMonitorName(monitor int) string {
+	cmonitor := (C.int)(monitor)
+	ret := C.GetMonitorName(cmonitor)
+	v := C.GoString(ret)
 	return v
 }
 
@@ -275,7 +322,7 @@ func ColorNormalize(color Color) Vector4 {
 
 // Vector3ToFloat - Converts Vector3 to float32 slice
 func Vector3ToFloat(vec Vector3) []float32 {
-	data := make([]float32, 3)
+	data := make([]float32, 0)
 	data[0] = vec.X
 	data[1] = vec.Y
 	data[2] = vec.Z
@@ -285,7 +332,7 @@ func Vector3ToFloat(vec Vector3) []float32 {
 
 // MatrixToFloat - Converts Matrix to float32 slice
 func MatrixToFloat(mat Matrix) []float32 {
-	data := make([]float32, 16)
+	data := make([]float32, 0)
 
 	data[0] = mat.M0
 	data[1] = mat.M4

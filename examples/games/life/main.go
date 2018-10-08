@@ -13,8 +13,8 @@ const (
 
 // Cell type
 type Cell struct {
-	Position raylib.Vector2
-	Size     raylib.Vector2
+	Position rl.Vector2
+	Size     rl.Vector2
 	Alive    bool
 	Next     bool
 	Visited  bool
@@ -37,10 +37,10 @@ func main() {
 	game := Game{}
 	game.Init(false)
 
-	raylib.InitWindow(game.ScreenWidth, game.ScreenHeight, "Conway's Game of Life")
-	raylib.SetTargetFPS(20)
+	rl.InitWindow(game.ScreenWidth, game.ScreenHeight, "Conway's Game of Life")
+	rl.SetTargetFPS(20)
 
-	for !raylib.WindowShouldClose() {
+	for !rl.WindowShouldClose() {
 		if game.Playing {
 			game.Update()
 		}
@@ -50,7 +50,7 @@ func main() {
 		game.Draw()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }
 
 // Init - Initialize game
@@ -70,8 +70,8 @@ func (g *Game) Init(clear bool) {
 	for x := int32(0); x <= g.Cols; x++ {
 		for y := int32(0); y <= g.Rows; y++ {
 			g.Cells[x][y] = &Cell{}
-			g.Cells[x][y].Position = raylib.NewVector2((float32(x) * squareSize), (float32(y)*squareSize)+1)
-			g.Cells[x][y].Size = raylib.NewVector2(squareSize-1, squareSize-1)
+			g.Cells[x][y].Position = rl.NewVector2((float32(x) * squareSize), (float32(y)*squareSize)+1)
+			g.Cells[x][y].Size = rl.NewVector2(squareSize-1, squareSize-1)
 			if rand.Float64() < 0.1 && clear == false {
 				g.Cells[x][y].Alive = true
 			}
@@ -82,19 +82,19 @@ func (g *Game) Init(clear bool) {
 // Input - Game input
 func (g *Game) Input() {
 	// control
-	if raylib.IsKeyPressed(raylib.KeyR) {
+	if rl.IsKeyPressed(rl.KeyR) {
 		g.Init(false)
 	}
-	if raylib.IsKeyPressed(raylib.KeyC) {
+	if rl.IsKeyPressed(rl.KeyC) {
 		g.Init(true)
 	}
-	if raylib.IsKeyDown(raylib.KeyRight) && !g.Playing {
+	if rl.IsKeyDown(rl.KeyRight) && !g.Playing {
 		g.Update()
 	}
-	if raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
-		g.Click(raylib.GetMouseX(), raylib.GetMouseY())
+	if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
+		g.Click(rl.GetMouseX(), rl.GetMouseY())
 	}
-	if raylib.IsKeyPressed(raylib.KeySpace) {
+	if rl.IsKeyPressed(rl.KeySpace) {
 		g.Playing = !g.Playing
 	}
 
@@ -165,36 +165,36 @@ func (g *Game) CountNeighbors(x, y int32) int {
 
 // Draw - Draw game
 func (g *Game) Draw() {
-	raylib.BeginDrawing()
-	raylib.ClearBackground(raylib.RayWhite)
+	rl.BeginDrawing()
+	rl.ClearBackground(rl.RayWhite)
 
 	// Draw cells
 	for x := int32(0); x <= g.Cols; x++ {
 		for y := int32(0); y <= g.Rows; y++ {
 			if g.Cells[x][y].Alive {
-				raylib.DrawRectangleV(g.Cells[x][y].Position, g.Cells[x][y].Size, raylib.Blue)
+				rl.DrawRectangleV(g.Cells[x][y].Position, g.Cells[x][y].Size, rl.Blue)
 			} else if g.Cells[x][y].Visited {
-				raylib.DrawRectangleV(g.Cells[x][y].Position, g.Cells[x][y].Size, raylib.Color{R: 128, G: 177, B: 136, A: 255})
+				rl.DrawRectangleV(g.Cells[x][y].Position, g.Cells[x][y].Size, rl.Color{R: 128, G: 177, B: 136, A: 255})
 			}
 		}
 	}
 
 	// Draw grid lines
 	for i := int32(0); i < g.Cols+1; i++ {
-		raylib.DrawLineV(
-			raylib.NewVector2(float32(squareSize*i), 0),
-			raylib.NewVector2(float32(squareSize*i), float32(g.ScreenHeight)),
-			raylib.LightGray,
+		rl.DrawLineV(
+			rl.NewVector2(float32(squareSize*i), 0),
+			rl.NewVector2(float32(squareSize*i), float32(g.ScreenHeight)),
+			rl.LightGray,
 		)
 	}
 
 	for i := int32(0); i < g.Rows+1; i++ {
-		raylib.DrawLineV(
-			raylib.NewVector2(0, float32(squareSize*i)),
-			raylib.NewVector2(float32(g.ScreenWidth), float32(squareSize*i)),
-			raylib.LightGray,
+		rl.DrawLineV(
+			rl.NewVector2(0, float32(squareSize*i)),
+			rl.NewVector2(float32(g.ScreenWidth), float32(squareSize*i)),
+			rl.LightGray,
 		)
 	}
 
-	raylib.EndDrawing()
+	rl.EndDrawing()
 }

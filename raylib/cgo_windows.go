@@ -1,6 +1,6 @@
 // +build windows
 
-package raylib
+package rl
 
 /*
 #include "external/glfw/src/context.c"

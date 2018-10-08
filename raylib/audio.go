@@ -1,6 +1,6 @@
 // +build !noaudio
 
-package raylib
+package rl
 
 /*
 #include "external/stb_vorbis.c"

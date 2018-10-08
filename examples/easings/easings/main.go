@@ -10,8 +10,8 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.SetConfigFlags(raylib.FlagVsyncHint)
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [easings] example - easings")
+	rl.SetConfigFlags(rl.FlagVsyncHint)
+	rl.InitWindow(screenWidth, screenHeight, "raylib [easings] example - easings")
 
 	currentTime := 0
 	duration := float32(60)
@@ -19,7 +19,7 @@ func main() {
 	finalPositionX := startPositionX * 3
 	currentPositionX := startPositionX
 
-	ballPosition := raylib.NewVector2(startPositionX, float32(screenHeight)/2)
+	ballPosition := rl.NewVector2(startPositionX, float32(screenHeight)/2)
 
 	comboActive := 0
 	comboLastActive := 0
@@ -27,10 +27,10 @@ func main() {
 	easingTypes := []string{"SineIn", "SineOut", "SineInOut", "BounceIn", "BounceOut", "BounceInOut", "BackIn", "BackOut", "BackInOut"}
 	ease := easingTypes[comboActive]
 
-	//raylib.SetTargetFPS(60)
+	//rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		if raylib.IsKeyDown(raylib.KeyR) {
+	for !rl.WindowShouldClose() {
+		if rl.IsKeyDown(rl.KeyR) {
 			currentTime = 0
 			currentPositionX = startPositionX
 			ballPosition.X = currentPositionX
@@ -71,18 +71,18 @@ func main() {
 			currentTime++
 		}
 
-		raylib.BeginDrawing()
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.BeginDrawing()
+		rl.ClearBackground(rl.RayWhite)
 
-		raygui.Label(raylib.NewRectangle(20, 20, 200, 20), "Easing Type:")
-		comboActive = raygui.ComboBox(raylib.NewRectangle(20, 40, 200, 20), easingTypes, comboActive)
+		raygui.Label(rl.NewRectangle(20, 20, 200, 20), "Easing Type:")
+		comboActive = raygui.ComboBox(rl.NewRectangle(20, 40, 200, 20), easingTypes, comboActive)
 
-		raygui.Label(raylib.NewRectangle(20, 80, 200, 20), "Press R to reset")
+		raygui.Label(rl.NewRectangle(20, 80, 200, 20), "Press R to reset")
 
-		raylib.DrawCircleV(ballPosition, 50, raylib.Maroon)
+		rl.DrawCircleV(ballPosition, 50, rl.Maroon)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

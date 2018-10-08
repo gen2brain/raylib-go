@@ -8,90 +8,90 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.SetConfigFlags(raylib.FlagMsaa4xHint) // Enable Multi Sampling Anti Aliasing 4x (if available)
+	rl.SetConfigFlags(rl.FlagMsaa4xHint) // Enable Multi Sampling Anti Aliasing 4x (if available)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [shaders] example - custom uniform variable")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [shaders] example - custom uniform variable")
 
-	camera := raylib.Camera{}
-	camera.Position = raylib.NewVector3(3.0, 3.0, 3.0)
-	camera.Target = raylib.NewVector3(0.0, 1.5, 0.0)
-	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)
+	camera := rl.Camera{}
+	camera.Position = rl.NewVector3(3.0, 3.0, 3.0)
+	camera.Target = rl.NewVector3(0.0, 1.5, 0.0)
+	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
 
-	dwarf := raylib.LoadModel("dwarf.obj")             // Load OBJ model
-	texture := raylib.LoadTexture("dwarf_diffuse.png") // Load model texture
+	dwarf := rl.LoadModel("dwarf.obj")             // Load OBJ model
+	texture := rl.LoadTexture("dwarf_diffuse.png") // Load model texture
 
-	dwarf.Material.Maps[raylib.MapDiffuse].Texture = texture // Set dwarf model diffuse texture
+	dwarf.Material.Maps[rl.MapDiffuse].Texture = texture // Set dwarf model diffuse texture
 
-	position := raylib.NewVector3(0.0, 0.0, 0.0) // Set model position
+	position := rl.NewVector3(0.0, 0.0, 0.0) // Set model position
 
-	shader := raylib.LoadShader("glsl330/base.vs", "glsl330/swirl.fs") // Load postpro shader
+	shader := rl.LoadShader("glsl330/base.vs", "glsl330/swirl.fs") // Load postpro shader
 
 	// Get variable (uniform) location on the shader to connect with the program
 	// NOTE: If uniform variable could not be found in the shader, function returns -1
-	swirlCenterLoc := raylib.GetShaderLocation(shader, "center")
+	swirlCenterLoc := rl.GetShaderLocation(shader, "center")
 
 	swirlCenter := make([]float32, 2)
 	swirlCenter[0] = float32(screenWidth) / 2
 	swirlCenter[1] = float32(screenHeight) / 2
 
 	// Create a RenderTexture2D to be used for render to texture
-	target := raylib.LoadRenderTexture(screenWidth, screenHeight)
+	target := rl.LoadRenderTexture(screenWidth, screenHeight)
 
 	// Setup orbital camera
-	raylib.SetCameraMode(camera, raylib.CameraOrbital) // Set an orbital camera mode
+	rl.SetCameraMode(camera, rl.CameraOrbital) // Set an orbital camera mode
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
+	for !rl.WindowShouldClose() {
 		// Update
 		//----------------------------------------------------------------------------------
-		mousePosition := raylib.GetMousePosition()
+		mousePosition := rl.GetMousePosition()
 
 		swirlCenter[0] = mousePosition.X
 		swirlCenter[1] = float32(screenHeight) - mousePosition.Y
 
 		// Send new value to the shader to be used on drawing
-		raylib.SetShaderValue(shader, swirlCenterLoc, swirlCenter, 2)
+		rl.SetShaderValue(shader, swirlCenterLoc, swirlCenter, 2)
 
-		raylib.UpdateCamera(&camera) // Update camera
+		rl.UpdateCamera(&camera) // Update camera
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.BeginTextureMode(target) // Enable drawing to texture
+		rl.BeginTextureMode(target) // Enable drawing to texture
 
-		raylib.BeginMode3D(camera)
+		rl.BeginMode3D(camera)
 
-		raylib.DrawModel(dwarf, position, 2.0, raylib.White) // Draw 3d model with texture
+		rl.DrawModel(dwarf, position, 2.0, rl.White) // Draw 3d model with texture
 
-		raylib.DrawGrid(10, 1.0) // Draw a grid
+		rl.DrawGrid(10, 1.0) // Draw a grid
 
-		raylib.EndMode3D()
+		rl.EndMode3D()
 
-		raylib.DrawText("TEXT DRAWN IN RENDER TEXTURE", 200, 10, 30, raylib.Red)
+		rl.DrawText("TEXT DRAWN IN RENDER TEXTURE", 200, 10, 30, rl.Red)
 
-		raylib.EndTextureMode() // End drawing to texture (now we have a texture available for next passes)
+		rl.EndTextureMode() // End drawing to texture (now we have a texture available for next passes)
 
-		raylib.BeginShaderMode(shader)
+		rl.BeginShaderMode(shader)
 
 		// NOTE: Render texture must be y-flipped due to default OpenGL coordinates (left-bottom)
-		raylib.DrawTextureRec(target.Texture, raylib.NewRectangle(0, 0, float32(target.Texture.Width), float32(-target.Texture.Height)), raylib.NewVector2(0, 0), raylib.White)
+		rl.DrawTextureRec(target.Texture, rl.NewRectangle(0, 0, float32(target.Texture.Width), float32(-target.Texture.Height)), rl.NewVector2(0, 0), rl.White)
 
-		raylib.EndShaderMode()
+		rl.EndShaderMode()
 
-		raylib.DrawText("(c) Dwarf 3D model by David Moreno", screenWidth-200, screenHeight-20, 10, raylib.Gray)
+		rl.DrawText("(c) Dwarf 3D model by David Moreno", screenWidth-200, screenHeight-20, 10, rl.Gray)
 
-		raylib.DrawFPS(10, 10)
+		rl.DrawFPS(10, 10)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.UnloadShader(shader)        // Unload shader
-	raylib.UnloadTexture(texture)      // Unload texture
-	raylib.UnloadModel(dwarf)          // Unload model
-	raylib.UnloadRenderTexture(target) // Unload render texture
+	rl.UnloadShader(shader)        // Unload shader
+	rl.UnloadTexture(texture)      // Unload texture
+	rl.UnloadModel(dwarf)          // Unload model
+	rl.UnloadRenderTexture(target) // Unload render texture
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

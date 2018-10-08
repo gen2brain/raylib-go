@@ -5,50 +5,54 @@ import (
 )
 
 func main() {
-	hmd := raylib.GetVrDeviceInfo(raylib.HmdOculusRiftCv1) // Oculus Rift CV1
-	raylib.InitWindow(int32(hmd.HScreenSize), int32(hmd.VScreenSize), "raylib [core] example - vr simulator")
+	screenWidth := int32(1080)
+	screenHeight := int32(600)
+
+	// NOTE: screenWidth/screenHeight should match VR device aspect ratio
+
+	rl.InitWindow(screenWidth, screenHeight, "raylib [core] example - vr simulator")
 
 	// NOTE: default device (simulator)
-	raylib.InitVrSimulator(hmd) // Init VR device
+	rl.InitVrSimulator(rl.GetVrDeviceInfo(rl.HmdOculusRiftCv1)) // Init VR device (Oculus Rift CV1)
 
-	camera := raylib.Camera{}
-	camera.Position = raylib.NewVector3(5.0, 2.0, 5.0) // Camera position
-	camera.Target = raylib.NewVector3(0.0, 2.0, 0.0)   // Camera looking at point
-	camera.Up = raylib.NewVector3(0.0, 1.0, 0.0)       // Camera up vector (rotation towards target)
+	camera := rl.Camera{}
+	camera.Position = rl.NewVector3(5.0, 2.0, 5.0) // Camera position
+	camera.Target = rl.NewVector3(0.0, 2.0, 0.0)   // Camera looking at point
+	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)       // Camera up vector (rotation towards target)
 	camera.Fovy = 60.0                                 // Camera field-of-view Y
 
-	cubePosition := raylib.NewVector3(0.0, 0.0, 0.0)
+	cubePosition := rl.NewVector3(0.0, 0.0, 0.0)
 
-	raylib.SetCameraMode(camera, raylib.CameraFirstPerson) // Set first person camera mode
+	rl.SetCameraMode(camera, rl.CameraFirstPerson) // Set first person camera mode
 
-	raylib.SetTargetFPS(90)
+	rl.SetTargetFPS(90)
 
-	for !raylib.WindowShouldClose() {
-		raylib.UpdateCamera(&camera) // Update camera (simulator mode)
+	for !rl.WindowShouldClose() {
+		rl.UpdateCamera(&camera) // Update camera (simulator mode)
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.BeginVrDrawing()
+		rl.BeginVrDrawing()
 
-		raylib.BeginMode3D(camera)
+		rl.BeginMode3D(camera)
 
-		raylib.DrawCube(cubePosition, 2.0, 2.0, 2.0, raylib.Red)
-		raylib.DrawCubeWires(cubePosition, 2.0, 2.0, 2.0, raylib.Maroon)
+		rl.DrawCube(cubePosition, 2.0, 2.0, 2.0, rl.Red)
+		rl.DrawCubeWires(cubePosition, 2.0, 2.0, 2.0, rl.Maroon)
 
-		raylib.DrawGrid(40, 1.0)
+		rl.DrawGrid(40, 1.0)
 
-		raylib.EndMode3D()
+		rl.EndMode3D()
 
-		raylib.EndVrDrawing()
+		rl.EndVrDrawing()
 
-		raylib.DrawFPS(10, 10)
+		rl.DrawFPS(10, 10)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseVrSimulator() // Close VR simulator
+	rl.CloseVrSimulator() // Close VR simulator
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

@@ -5,19 +5,19 @@ import (
 )
 
 func main() {
-	raylib.InitWindow(800, 450, "raylib [core] example - color selection (collision detection)")
+	rl.InitWindow(800, 450, "raylib [core] example - color selection (collision detection)")
 
-	colors := [21]raylib.Color{
-		raylib.DarkGray, raylib.Maroon, raylib.Orange, raylib.DarkGreen, raylib.DarkBlue, raylib.DarkPurple,
-		raylib.DarkBrown, raylib.Gray, raylib.Red, raylib.Gold, raylib.Lime, raylib.Blue, raylib.Violet, raylib.Brown,
-		raylib.LightGray, raylib.Pink, raylib.Yellow, raylib.Green, raylib.SkyBlue, raylib.Purple, raylib.Beige,
+	colors := [21]rl.Color{
+		rl.DarkGray, rl.Maroon, rl.Orange, rl.DarkGreen, rl.DarkBlue, rl.DarkPurple,
+		rl.DarkBrown, rl.Gray, rl.Red, rl.Gold, rl.Lime, rl.Blue, rl.Violet, rl.Brown,
+		rl.LightGray, rl.Pink, rl.Yellow, rl.Green, rl.SkyBlue, rl.Purple, rl.Beige,
 	}
 
-	colorsRecs := make([]raylib.Rectangle, 21) // Rectangles array
+	colorsRecs := make([]rl.Rectangle, 21) // Rectangles array
 
 	// Fills colorsRecs data (for every rectangle)
 	for i := 0; i < 21; i++ {
-		r := raylib.Rectangle{}
+		r := rl.Rectangle{}
 		r.X = float32(20 + 100*(i%7) + 10*(i%7))
 		r.Y = float32(60 + 100*(i/7) + 10*(i/7))
 		r.Width = 100
@@ -28,18 +28,18 @@ func main() {
 
 	selected := make([]bool, 21) // Selected rectangles indicator
 
-	mousePoint := raylib.Vector2{}
+	mousePoint := rl.Vector2{}
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		mousePoint = raylib.GetMousePosition()
+	for !rl.WindowShouldClose() {
+		mousePoint = rl.GetMousePosition()
 
 		for i := 0; i < 21; i++ { // Iterate along all the rectangles
-			if raylib.CheckCollisionPointRec(mousePoint, colorsRecs[i]) {
+			if rl.CheckCollisionPointRec(mousePoint, colorsRecs[i]) {
 				colors[i].A = 120
 
-				if raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
+				if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
 					selected[i] = !selected[i]
 				}
 			} else {
@@ -47,24 +47,24 @@ func main() {
 			}
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
 		for i := 0; i < 21; i++ { // Draw all rectangles
-			raylib.DrawRectangleRec(colorsRecs[i], colors[i])
+			rl.DrawRectangleRec(colorsRecs[i], colors[i])
 
 			// Draw four rectangles around selected rectangle
 			if selected[i] {
-				raylib.DrawRectangle(int32(colorsRecs[i].X), int32(colorsRecs[i].Y), 100, 10, raylib.RayWhite)    // Square top rectangle
-				raylib.DrawRectangle(int32(colorsRecs[i].X), int32(colorsRecs[i].Y), 10, 100, raylib.RayWhite)    // Square left rectangle
-				raylib.DrawRectangle(int32(colorsRecs[i].X+90), int32(colorsRecs[i].Y), 10, 100, raylib.RayWhite) // Square right rectangle
-				raylib.DrawRectangle(int32(colorsRecs[i].X), int32(colorsRecs[i].Y)+90, 100, 10, raylib.RayWhite) // Square bottom rectangle
+				rl.DrawRectangle(int32(colorsRecs[i].X), int32(colorsRecs[i].Y), 100, 10, rl.RayWhite)    // Square top rectangle
+				rl.DrawRectangle(int32(colorsRecs[i].X), int32(colorsRecs[i].Y), 10, 100, rl.RayWhite)    // Square left rectangle
+				rl.DrawRectangle(int32(colorsRecs[i].X+90), int32(colorsRecs[i].Y), 10, 100, rl.RayWhite) // Square right rectangle
+				rl.DrawRectangle(int32(colorsRecs[i].X), int32(colorsRecs[i].Y)+90, 100, 10, rl.RayWhite) // Square bottom rectangle
 			}
 		}
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

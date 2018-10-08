@@ -1,6 +1,6 @@
 // +build linux,!arm,!arm64
 
-package raylib
+package rl
 
 /*
 #include "external/glfw/src/context.c"

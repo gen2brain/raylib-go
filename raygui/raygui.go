@@ -339,30 +339,30 @@ var (
 )
 
 // BackgroundColor - Get background color
-func BackgroundColor() raylib.Color {
-	return raylib.GetColor(int32(style[GlobalBackgroundColor]))
+func BackgroundColor() rl.Color {
+	return rl.GetColor(int32(style[GlobalBackgroundColor]))
 }
 
 // LinesColor - Get lines color
-func LinesColor() raylib.Color {
-	return raylib.GetColor(int32(style[GlobalLinesColor]))
+func LinesColor() rl.Color {
+	return rl.GetColor(int32(style[GlobalLinesColor]))
 }
 
 // TextColor - Get text color for normal state
-func TextColor() raylib.Color {
-	return raylib.GetColor(int32(style[GlobalTextColor]))
+func TextColor() rl.Color {
+	return rl.GetColor(int32(style[GlobalTextColor]))
 }
 
 // Label - Label element, show text
-func Label(bounds raylib.Rectangle, text string) {
-	LabelEx(bounds, text, raylib.GetColor(int32(style[LabelTextColor])), raylib.NewColor(0, 0, 0, 0), raylib.NewColor(0, 0, 0, 0))
+func Label(bounds rl.Rectangle, text string) {
+	LabelEx(bounds, text, rl.GetColor(int32(style[LabelTextColor])), rl.NewColor(0, 0, 0, 0), rl.NewColor(0, 0, 0, 0))
 }
 
 // LabelEx - Label element extended, configurable colors
-func LabelEx(bounds raylib.Rectangle, text string, textColor, border, inner raylib.Color) {
+func LabelEx(bounds rl.Rectangle, text string, textColor, border, inner rl.Color) {
 	b := bounds.ToInt32()
 	// Update control
-	textWidth := raylib.MeasureText(text, int32(style[GlobalTextFontsize]))
+	textWidth := rl.MeasureText(text, int32(style[GlobalTextFontsize]))
 	textHeight := int32(style[GlobalTextFontsize])
 
 	if b.Width < textWidth {
@@ -373,19 +373,19 @@ func LabelEx(bounds raylib.Rectangle, text string, textColor, border, inner rayl
 	}
 
 	// Draw control
-	raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, border)
-	raylib.DrawRectangle(b.X+int32(style[LabelBorderWidth]), b.Y+int32(style[LabelBorderWidth]), b.Width-(2*int32(style[LabelBorderWidth])), b.Height-(2*int32(style[LabelBorderWidth])), inner)
-	raylib.DrawText(text, b.X+((b.Width/2)-(textWidth/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), textColor)
+	rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, border)
+	rl.DrawRectangle(b.X+int32(style[LabelBorderWidth]), b.Y+int32(style[LabelBorderWidth]), b.Width-(2*int32(style[LabelBorderWidth])), b.Height-(2*int32(style[LabelBorderWidth])), inner)
+	rl.DrawText(text, b.X+((b.Width/2)-(textWidth/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), textColor)
 }
 
 // Button - Button element, returns true when clicked
-func Button(bounds raylib.Rectangle, text string) bool {
+func Button(bounds rl.Rectangle, text string) bool {
 	b := bounds.ToInt32()
 	state := Normal
-	mousePoint := raylib.GetMousePosition()
+	mousePoint := rl.GetMousePosition()
 	clicked := false
 
-	textWidth := raylib.MeasureText(text, int32(style[GlobalTextFontsize]))
+	textWidth := rl.MeasureText(text, int32(style[GlobalTextFontsize]))
 	textHeight := int32(style[GlobalTextFontsize])
 
 	// Update control
@@ -397,10 +397,10 @@ func Button(bounds raylib.Rectangle, text string) bool {
 		b.Height = textHeight + int32(style[ButtonTextPadding])/2
 	}
 
-	if raylib.CheckCollisionPointRec(mousePoint, bounds) {
-		if raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
+	if rl.CheckCollisionPointRec(mousePoint, bounds) {
+		if rl.IsMouseButtonDown(rl.MouseLeftButton) {
 			state = Pressed
-		} else if raylib.IsMouseButtonReleased(raylib.MouseLeftButton) || raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
+		} else if rl.IsMouseButtonReleased(rl.MouseLeftButton) || rl.IsMouseButtonPressed(rl.MouseLeftButton) {
 			clicked = true
 		} else {
 			state = Focused
@@ -410,21 +410,21 @@ func Button(bounds raylib.Rectangle, text string) bool {
 	// Draw control
 	switch state {
 	case Normal:
-		raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[ButtonDefaultBorderColor])))
-		raylib.DrawRectangle(b.X+int32(style[ButtonBorderWidth]), b.Y+int32(style[ButtonBorderWidth]), b.Width-(2*int32(style[ButtonBorderWidth])), b.Height-(2*int32(style[ButtonBorderWidth])), raylib.GetColor(int32(style[ButtonDefaultInsideColor])))
-		raylib.DrawText(text, b.X+((b.Width/2)-(raylib.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[ButtonDefaultTextColor])))
+		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ButtonDefaultBorderColor])))
+		rl.DrawRectangle(b.X+int32(style[ButtonBorderWidth]), b.Y+int32(style[ButtonBorderWidth]), b.Width-(2*int32(style[ButtonBorderWidth])), b.Height-(2*int32(style[ButtonBorderWidth])), rl.GetColor(int32(style[ButtonDefaultInsideColor])))
+		rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ButtonDefaultTextColor])))
 		break
 
 	case Focused:
-		raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[ButtonHoverBorderColor])))
-		raylib.DrawRectangle(b.X+int32(style[ButtonBorderWidth]), b.Y+int32(style[ButtonBorderWidth]), b.Width-(2*int32(style[ButtonBorderWidth])), b.Height-(2*int32(style[ButtonBorderWidth])), raylib.GetColor(int32(style[ButtonHoverInsideColor])))
-		raylib.DrawText(text, b.X+((b.Width/2)-(raylib.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[ButtonHoverTextColor])))
+		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ButtonHoverBorderColor])))
+		rl.DrawRectangle(b.X+int32(style[ButtonBorderWidth]), b.Y+int32(style[ButtonBorderWidth]), b.Width-(2*int32(style[ButtonBorderWidth])), b.Height-(2*int32(style[ButtonBorderWidth])), rl.GetColor(int32(style[ButtonHoverInsideColor])))
+		rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ButtonHoverTextColor])))
 		break
 
 	case Pressed:
-		raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[ButtonPressedBorderColor])))
-		raylib.DrawRectangle(b.X+int32(style[ButtonBorderWidth]), b.Y+int32(style[ButtonBorderWidth]), b.Width-(2*int32(style[ButtonBorderWidth])), b.Height-(2*int32(style[ButtonBorderWidth])), raylib.GetColor(int32(style[ButtonPressedInsideColor])))
-		raylib.DrawText(text, b.X+((b.Width/2)-(raylib.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[ButtonPressedTextColor])))
+		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ButtonPressedBorderColor])))
+		rl.DrawRectangle(b.X+int32(style[ButtonBorderWidth]), b.Y+int32(style[ButtonBorderWidth]), b.Width-(2*int32(style[ButtonBorderWidth])), b.Height-(2*int32(style[ButtonBorderWidth])), rl.GetColor(int32(style[ButtonPressedInsideColor])))
+		rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ButtonPressedTextColor])))
 		break
 
 	default:
@@ -439,12 +439,12 @@ func Button(bounds raylib.Rectangle, text string) bool {
 }
 
 // ToggleButton - Toggle Button element, returns true when active
-func ToggleButton(bounds raylib.Rectangle, text string, active bool) bool {
+func ToggleButton(bounds rl.Rectangle, text string, active bool) bool {
 	b := bounds.ToInt32()
 	state := Normal
-	mousePoint := raylib.GetMousePosition()
+	mousePoint := rl.GetMousePosition()
 
-	textWidth := raylib.MeasureText(text, int32(style[GlobalTextFontsize]))
+	textWidth := rl.MeasureText(text, int32(style[GlobalTextFontsize]))
 	textHeight := int32(style[GlobalTextFontsize])
 
 	// Update control
@@ -455,10 +455,10 @@ func ToggleButton(bounds raylib.Rectangle, text string, active bool) bool {
 		b.Height = textHeight + int32(style[ToggleTextPadding])/2
 	}
 
-	if raylib.CheckCollisionPointRec(mousePoint, bounds) {
-		if raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
+	if rl.CheckCollisionPointRec(mousePoint, bounds) {
+		if rl.IsMouseButtonDown(rl.MouseLeftButton) {
 			state = Pressed
-		} else if raylib.IsMouseButtonReleased(raylib.MouseLeftButton) || raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
+		} else if rl.IsMouseButtonReleased(rl.MouseLeftButton) || rl.IsMouseButtonPressed(rl.MouseLeftButton) {
 			state = Normal
 			active = !active
 		} else {
@@ -470,24 +470,24 @@ func ToggleButton(bounds raylib.Rectangle, text string, active bool) bool {
 	switch state {
 	case Normal:
 		if active {
-			raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[ToggleActiveBorderColor])))
-			raylib.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), raylib.GetColor(int32(style[ToggleActiveInsideColor])))
-			raylib.DrawText(text, b.X+((b.Width/2)-(raylib.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[ToggleDefaultTextColor])))
+			rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ToggleActiveBorderColor])))
+			rl.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), rl.GetColor(int32(style[ToggleActiveInsideColor])))
+			rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ToggleDefaultTextColor])))
 		} else {
-			raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[ToggleDefaultBorderColor])))
-			raylib.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), raylib.GetColor(int32(style[ToggleDefaultInsideColor])))
-			raylib.DrawText(text, b.X+((b.Width/2)-(raylib.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[ToggleDefaultTextColor])))
+			rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ToggleDefaultBorderColor])))
+			rl.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), rl.GetColor(int32(style[ToggleDefaultInsideColor])))
+			rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ToggleDefaultTextColor])))
 		}
 		break
 	case Focused:
-		raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[ToggleHoverBorderColor])))
-		raylib.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), raylib.GetColor(int32(style[ToggleHoverInsideColor])))
-		raylib.DrawText(text, b.X+((b.Width/2)-(raylib.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[ToggleHoverTextColor])))
+		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ToggleHoverBorderColor])))
+		rl.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), rl.GetColor(int32(style[ToggleHoverInsideColor])))
+		rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ToggleHoverTextColor])))
 		break
 	case Pressed:
-		raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[TogglePressedBorderColor])))
-		raylib.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), raylib.GetColor(int32(style[TogglePressedInsideColor])))
-		raylib.DrawText(text, b.X+((b.Width/2)-(raylib.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[TogglePressedTextColor])))
+		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[TogglePressedBorderColor])))
+		rl.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), rl.GetColor(int32(style[TogglePressedInsideColor])))
+		rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[TogglePressedTextColor])))
 		break
 	default:
 		break
@@ -497,11 +497,11 @@ func ToggleButton(bounds raylib.Rectangle, text string, active bool) bool {
 }
 
 // ToggleGroup - Toggle Group element, returns toggled button index
-func ToggleGroup(bounds raylib.Rectangle, toggleText []string, active int) int {
+func ToggleGroup(bounds rl.Rectangle, toggleText []string, active int) int {
 	for i := 0; i < len(toggleText); i++ {
 		if i == active {
-			ToggleButton(raylib.NewRectangle(bounds.X+float32(i)*(bounds.Width+float32(style[TogglegroupPadding])), bounds.Y, bounds.Width, bounds.Height), toggleText[i], true)
-		} else if ToggleButton(raylib.NewRectangle(bounds.X+float32(i)*(bounds.Width+float32(style[TogglegroupPadding])), bounds.Y, bounds.Width, bounds.Height), toggleText[i], false) {
+			ToggleButton(rl.NewRectangle(bounds.X+float32(i)*(bounds.Width+float32(style[TogglegroupPadding])), bounds.Y, bounds.Width, bounds.Height), toggleText[i], true)
+		} else if ToggleButton(rl.NewRectangle(bounds.X+float32(i)*(bounds.Width+float32(style[TogglegroupPadding])), bounds.Y, bounds.Width, bounds.Height), toggleText[i], false) {
 			active = i
 		}
 	}
@@ -510,15 +510,15 @@ func ToggleGroup(bounds raylib.Rectangle, toggleText []string, active int) int {
 }
 
 // ComboBox - Combo Box element, returns selected item index
-func ComboBox(bounds raylib.Rectangle, comboText []string, active int) int {
+func ComboBox(bounds rl.Rectangle, comboText []string, active int) int {
 	b := bounds.ToInt32()
 	state := Normal
 
 	clicked := false
-	click := raylib.NewRectangle(bounds.X+bounds.Width+float32(style[ComboboxPadding]), bounds.Y, float32(style[boundsWidth]), float32(style[boundsHeight]))
+	click := rl.NewRectangle(bounds.X+bounds.Width+float32(style[ComboboxPadding]), bounds.Y, float32(style[boundsWidth]), float32(style[boundsHeight]))
 	c := click.ToInt32()
 
-	mousePoint := raylib.GetMousePosition()
+	mousePoint := rl.GetMousePosition()
 
 	textWidth := int32(0)
 	textHeight := int32(style[GlobalTextFontsize])
@@ -528,7 +528,7 @@ func ComboBox(bounds raylib.Rectangle, comboText []string, active int) int {
 	for i := 0; i < comboCount; i++ {
 		if i == active {
 			// Update control
-			textWidth = raylib.MeasureText(comboText[i], int32(style[GlobalTextFontsize]))
+			textWidth = rl.MeasureText(comboText[i], int32(style[GlobalTextFontsize]))
 
 			if b.Width < textWidth {
 				b.Width = textWidth + int32(style[ToggleTextPadding])
@@ -537,10 +537,10 @@ func ComboBox(bounds raylib.Rectangle, comboText []string, active int) int {
 				b.Height = textHeight + int32(style[ToggleTextPadding])/2
 			}
 
-			if raylib.CheckCollisionPointRec(mousePoint, bounds) || raylib.CheckCollisionPointRec(mousePoint, click) {
-				if raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
+			if rl.CheckCollisionPointRec(mousePoint, bounds) || rl.CheckCollisionPointRec(mousePoint, click) {
+				if rl.IsMouseButtonDown(rl.MouseLeftButton) {
 					state = Pressed
-				} else if raylib.IsMouseButtonReleased(raylib.MouseLeftButton) || raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
+				} else if rl.IsMouseButtonReleased(rl.MouseLeftButton) || rl.IsMouseButtonPressed(rl.MouseLeftButton) {
 					clicked = true
 				} else {
 					state = Focused
@@ -550,51 +550,51 @@ func ComboBox(bounds raylib.Rectangle, comboText []string, active int) int {
 			// Draw control
 			switch state {
 			case Normal:
-				raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[ComboboxDefaultBorderColor])))
-				raylib.DrawRectangle(b.X+int32(style[ComboboxBorderWidth]), b.Y+int32(style[ComboboxBorderWidth]), b.Width-(2*int32(style[ComboboxBorderWidth])), b.Height-(2*int32(style[ComboboxBorderWidth])), raylib.GetColor(int32(style[ComboboxDefaultInsideColor])))
+				rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ComboboxDefaultBorderColor])))
+				rl.DrawRectangle(b.X+int32(style[ComboboxBorderWidth]), b.Y+int32(style[ComboboxBorderWidth]), b.Width-(2*int32(style[ComboboxBorderWidth])), b.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxDefaultInsideColor])))
 
-				raylib.DrawRectangle(c.X, c.Y, c.Width, c.Height, raylib.GetColor(int32(style[ComboboxDefaultBorderColor])))
-				raylib.DrawRectangle(c.X+int32(style[ComboboxBorderWidth]), c.Y+int32(style[ComboboxBorderWidth]), c.Width-(2*int32(style[ComboboxBorderWidth])), c.Height-(2*int32(style[ComboboxBorderWidth])), raylib.GetColor(int32(style[ComboboxDefaultInsideColor])))
-				raylib.DrawText(fmt.Sprintf("%d/%d", active+1, comboCount), c.X+((c.Width/2)-(raylib.MeasureText(fmt.Sprintf("%d/%d", active+1, comboCount), int32(style[GlobalTextFontsize]))/2)), c.Y+((c.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[ComboboxDefaultListTextColor])))
-				raylib.DrawText(comboText[i], b.X+((b.Width/2)-(raylib.MeasureText(comboText[i], int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[ComboboxDefaultTextColor])))
+				rl.DrawRectangle(c.X, c.Y, c.Width, c.Height, rl.GetColor(int32(style[ComboboxDefaultBorderColor])))
+				rl.DrawRectangle(c.X+int32(style[ComboboxBorderWidth]), c.Y+int32(style[ComboboxBorderWidth]), c.Width-(2*int32(style[ComboboxBorderWidth])), c.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxDefaultInsideColor])))
+				rl.DrawText(fmt.Sprintf("%d/%d", active+1, comboCount), c.X+((c.Width/2)-(rl.MeasureText(fmt.Sprintf("%d/%d", active+1, comboCount), int32(style[GlobalTextFontsize]))/2)), c.Y+((c.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxDefaultListTextColor])))
+				rl.DrawText(comboText[i], b.X+((b.Width/2)-(rl.MeasureText(comboText[i], int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxDefaultTextColor])))
 				break
 			case Focused:
-				raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[ComboboxHoverBorderColor])))
-				raylib.DrawRectangle(b.X+int32(style[ComboboxBorderWidth]), b.Y+int32(style[ComboboxBorderWidth]), b.Width-(2*int32(style[ComboboxBorderWidth])), b.Height-(2*int32(style[ComboboxBorderWidth])), raylib.GetColor(int32(style[ComboboxHoverInsideColor])))
+				rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ComboboxHoverBorderColor])))
+				rl.DrawRectangle(b.X+int32(style[ComboboxBorderWidth]), b.Y+int32(style[ComboboxBorderWidth]), b.Width-(2*int32(style[ComboboxBorderWidth])), b.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxHoverInsideColor])))
 
-				raylib.DrawRectangle(c.X, c.Y, c.Width, c.Height, raylib.GetColor(int32(style[ComboboxHoverBorderColor])))
-				raylib.DrawRectangle(c.X+int32(style[ComboboxBorderWidth]), c.Y+int32(style[ComboboxBorderWidth]), c.Width-(2*int32(style[ComboboxBorderWidth])), c.Height-(2*int32(style[ComboboxBorderWidth])), raylib.GetColor(int32(style[ComboboxHoverInsideColor])))
-				raylib.DrawText(fmt.Sprintf("%d/%d", active+1, comboCount), c.X+((c.Width/2)-(raylib.MeasureText(fmt.Sprintf("%d/%d", active+1, comboCount), int32(style[GlobalTextFontsize]))/2)), c.Y+((c.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[ComboboxHoverListTextColor])))
-				raylib.DrawText(comboText[i], b.X+((b.Width/2)-(raylib.MeasureText(comboText[i], int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[ComboboxHoverTextColor])))
+				rl.DrawRectangle(c.X, c.Y, c.Width, c.Height, rl.GetColor(int32(style[ComboboxHoverBorderColor])))
+				rl.DrawRectangle(c.X+int32(style[ComboboxBorderWidth]), c.Y+int32(style[ComboboxBorderWidth]), c.Width-(2*int32(style[ComboboxBorderWidth])), c.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxHoverInsideColor])))
+				rl.DrawText(fmt.Sprintf("%d/%d", active+1, comboCount), c.X+((c.Width/2)-(rl.MeasureText(fmt.Sprintf("%d/%d", active+1, comboCount), int32(style[GlobalTextFontsize]))/2)), c.Y+((c.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxHoverListTextColor])))
+				rl.DrawText(comboText[i], b.X+((b.Width/2)-(rl.MeasureText(comboText[i], int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxHoverTextColor])))
 				break
 			case Pressed:
-				raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[ComboboxPressedBorderColor])))
-				raylib.DrawRectangle(b.X+int32(style[ComboboxBorderWidth]), b.Y+int32(style[ComboboxBorderWidth]), b.Width-(2*int32(style[ComboboxBorderWidth])), b.Height-(2*int32(style[ComboboxBorderWidth])), raylib.GetColor(int32(style[ComboboxPressedInsideColor])))
+				rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ComboboxPressedBorderColor])))
+				rl.DrawRectangle(b.X+int32(style[ComboboxBorderWidth]), b.Y+int32(style[ComboboxBorderWidth]), b.Width-(2*int32(style[ComboboxBorderWidth])), b.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxPressedInsideColor])))
 
-				raylib.DrawRectangle(c.X, c.Y, c.Width, c.Height, raylib.GetColor(int32(style[ComboboxPressedListBorderColor])))
-				raylib.DrawRectangle(c.X+int32(style[ComboboxBorderWidth]), c.Y+int32(style[ComboboxBorderWidth]), c.Width-(2*int32(style[ComboboxBorderWidth])), c.Height-(2*int32(style[ComboboxBorderWidth])), raylib.GetColor(int32(style[ComboboxPressedListInsideColor])))
-				raylib.DrawText(fmt.Sprintf("%d/%d", active+1, comboCount), c.X+((c.Width/2)-(raylib.MeasureText(fmt.Sprintf("%d/%d", active+1, comboCount), int32(style[GlobalTextFontsize]))/2)), c.Y+((c.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[ComboboxPressedListTextColor])))
-				raylib.DrawText(comboText[i], b.X+((b.Width/2)-(raylib.MeasureText(comboText[i], int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[ComboboxPressedTextColor])))
+				rl.DrawRectangle(c.X, c.Y, c.Width, c.Height, rl.GetColor(int32(style[ComboboxPressedListBorderColor])))
+				rl.DrawRectangle(c.X+int32(style[ComboboxBorderWidth]), c.Y+int32(style[ComboboxBorderWidth]), c.Width-(2*int32(style[ComboboxBorderWidth])), c.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxPressedListInsideColor])))
+				rl.DrawText(fmt.Sprintf("%d/%d", active+1, comboCount), c.X+((c.Width/2)-(rl.MeasureText(fmt.Sprintf("%d/%d", active+1, comboCount), int32(style[GlobalTextFontsize]))/2)), c.Y+((c.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxPressedListTextColor])))
+				rl.DrawText(comboText[i], b.X+((b.Width/2)-(rl.MeasureText(comboText[i], int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxPressedTextColor])))
 				break
 			default:
 				break
 			}
 
 			if clicked {
-				raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[ComboboxPressedBorderColor])))
-				raylib.DrawRectangle(b.X+int32(style[ComboboxBorderWidth]), b.Y+int32(style[ComboboxBorderWidth]), b.Width-(2*int32(style[ComboboxBorderWidth])), b.Height-(2*int32(style[ComboboxBorderWidth])), raylib.GetColor(int32(style[ComboboxPressedInsideColor])))
+				rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ComboboxPressedBorderColor])))
+				rl.DrawRectangle(b.X+int32(style[ComboboxBorderWidth]), b.Y+int32(style[ComboboxBorderWidth]), b.Width-(2*int32(style[ComboboxBorderWidth])), b.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxPressedInsideColor])))
 
-				raylib.DrawRectangle(c.X, c.Y, c.Width, c.Height, raylib.GetColor(int32(style[ComboboxPressedListBorderColor])))
-				raylib.DrawRectangle(c.X+int32(style[ComboboxBorderWidth]), c.Y+int32(style[ComboboxBorderWidth]), c.Width-(2*int32(style[ComboboxBorderWidth])), c.Height-(2*int32(style[ComboboxBorderWidth])), raylib.GetColor(int32(style[ComboboxPressedListInsideColor])))
-				raylib.DrawText(fmt.Sprintf("%d/%d", active+1, comboCount), c.X+((c.Width/2)-(raylib.MeasureText(fmt.Sprintf("%d/%d", active+1, comboCount), int32(style[GlobalTextFontsize]))/2)), c.Y+((c.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[ComboboxPressedListTextColor])))
-				raylib.DrawText(comboText[i], b.X+((b.Width/2)-(raylib.MeasureText(comboText[i], int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[ComboboxPressedTextColor])))
+				rl.DrawRectangle(c.X, c.Y, c.Width, c.Height, rl.GetColor(int32(style[ComboboxPressedListBorderColor])))
+				rl.DrawRectangle(c.X+int32(style[ComboboxBorderWidth]), c.Y+int32(style[ComboboxBorderWidth]), c.Width-(2*int32(style[ComboboxBorderWidth])), c.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxPressedListInsideColor])))
+				rl.DrawText(fmt.Sprintf("%d/%d", active+1, comboCount), c.X+((c.Width/2)-(rl.MeasureText(fmt.Sprintf("%d/%d", active+1, comboCount), int32(style[GlobalTextFontsize]))/2)), c.Y+((c.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxPressedListTextColor])))
+				rl.DrawText(comboText[i], b.X+((b.Width/2)-(rl.MeasureText(comboText[i], int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxPressedTextColor])))
 			}
 
 		}
 	}
 
-	if raylib.CheckCollisionPointRec(mousePoint, bounds) || raylib.CheckCollisionPointRec(mousePoint, click) {
-		if raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
+	if rl.CheckCollisionPointRec(mousePoint, bounds) || rl.CheckCollisionPointRec(mousePoint, click) {
+		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
 			active++
 			if active >= comboCount {
 				active = 0
@@ -606,16 +606,16 @@ func ComboBox(bounds raylib.Rectangle, comboText []string, active int) int {
 }
 
 // CheckBox - Check Box element, returns true when active
-func CheckBox(bounds raylib.Rectangle, checked bool) bool {
+func CheckBox(bounds rl.Rectangle, checked bool) bool {
 	b := bounds.ToInt32()
 	state := Normal
-	mousePoint := raylib.GetMousePosition()
+	mousePoint := rl.GetMousePosition()
 
 	// Update control
-	if raylib.CheckCollisionPointRec(mousePoint, bounds) {
-		if raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
+	if rl.CheckCollisionPointRec(mousePoint, bounds) {
+		if rl.IsMouseButtonDown(rl.MouseLeftButton) {
 			state = Pressed
-		} else if raylib.IsMouseButtonReleased(raylib.MouseLeftButton) || raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
+		} else if rl.IsMouseButtonReleased(rl.MouseLeftButton) || rl.IsMouseButtonPressed(rl.MouseLeftButton) {
 			state = Normal
 			checked = !checked
 		} else {
@@ -626,36 +626,36 @@ func CheckBox(bounds raylib.Rectangle, checked bool) bool {
 	// Draw control
 	switch state {
 	case Normal:
-		raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[CheckboxDefaultBorderColor])))
-		raylib.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), raylib.GetColor(int32(style[CheckboxDefaultInsideColor])))
+		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[CheckboxDefaultBorderColor])))
+		rl.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), rl.GetColor(int32(style[CheckboxDefaultInsideColor])))
 		break
 	case Focused:
-		raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[CheckboxHoverBorderColor])))
-		raylib.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), raylib.GetColor(int32(style[CheckboxHoverInsideColor])))
+		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[CheckboxHoverBorderColor])))
+		rl.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), rl.GetColor(int32(style[CheckboxHoverInsideColor])))
 		break
 	case Pressed:
-		raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[CheckboxClickBorderColor])))
-		raylib.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), raylib.GetColor(int32(style[CheckboxClickInsideColor])))
+		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[CheckboxClickBorderColor])))
+		rl.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), rl.GetColor(int32(style[CheckboxClickInsideColor])))
 		break
 	default:
 		break
 	}
 
 	if checked {
-		raylib.DrawRectangle(b.X+int32(style[CheckboxInsideWidth]), b.Y+int32(style[CheckboxInsideWidth]), b.Width-(2*int32(style[CheckboxInsideWidth])), b.Height-(2*int32(style[CheckboxInsideWidth])), raylib.GetColor(int32(style[CheckboxDefaultActiveColor])))
+		rl.DrawRectangle(b.X+int32(style[CheckboxInsideWidth]), b.Y+int32(style[CheckboxInsideWidth]), b.Width-(2*int32(style[CheckboxInsideWidth])), b.Height-(2*int32(style[CheckboxInsideWidth])), rl.GetColor(int32(style[CheckboxDefaultActiveColor])))
 	}
 
 	return checked
 }
 
 // Slider - Slider element, returns selected value
-func Slider(bounds raylib.Rectangle, value, minValue, maxValue float32) float32 {
+func Slider(bounds rl.Rectangle, value, minValue, maxValue float32) float32 {
 	b := bounds.ToInt32()
 	sliderPos := float32(0)
 	state := Normal
 
 	buttonTravelDistance := float32(0)
-	mousePoint := raylib.GetMousePosition()
+	mousePoint := rl.GetMousePosition()
 
 	// Update control
 	if value < minValue {
@@ -666,7 +666,7 @@ func Slider(bounds raylib.Rectangle, value, minValue, maxValue float32) float32 
 
 	sliderPos = (value - minValue) / (maxValue - minValue)
 
-	sliderButton := raylib.RectangleInt32{}
+	sliderButton := rl.RectangleInt32{}
 	sliderButton.Width = (b.Width-(2*int32(style[SliderButtonBorderWidth])))/10 - 8
 	sliderButton.Height = b.Height - (2 * int32(style[SliderBorderWidth]+2*style[SliderButtonBorderWidth]))
 
@@ -678,14 +678,14 @@ func Slider(bounds raylib.Rectangle, value, minValue, maxValue float32) float32 
 	sliderButton.X = b.X + int32(style[SliderBorderWidth]) + int32(style[SliderButtonBorderWidth]) + int32(sliderPos*buttonTravelDistance)
 	sliderButton.Y = b.Y + int32(style[SliderBorderWidth]) + int32(style[SliderButtonBorderWidth])
 
-	if raylib.CheckCollisionPointRec(mousePoint, bounds) {
+	if rl.CheckCollisionPointRec(mousePoint, bounds) {
 		state = Focused
 
-		if raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
+		if rl.IsMouseButtonDown(rl.MouseLeftButton) {
 			state = Pressed
 		}
 
-		if state == Pressed && raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
+		if state == Pressed && rl.IsMouseButtonDown(rl.MouseLeftButton) {
 			sliderButton.X = int32(mousePoint.X) - sliderButton.Width/2
 
 			if sliderButton.X <= sliderButtonMinPos {
@@ -701,18 +701,18 @@ func Slider(bounds raylib.Rectangle, value, minValue, maxValue float32) float32 
 	}
 
 	// Draw control
-	raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[SliderBorderColor])))
-	raylib.DrawRectangle(b.X+int32(style[SliderBorderWidth]), b.Y+int32(style[SliderBorderWidth]), b.Width-(2*int32(style[SliderBorderWidth])), b.Height-(2*int32(style[SliderBorderWidth])), raylib.GetColor(int32(style[SliderInsideColor])))
+	rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[SliderBorderColor])))
+	rl.DrawRectangle(b.X+int32(style[SliderBorderWidth]), b.Y+int32(style[SliderBorderWidth]), b.Width-(2*int32(style[SliderBorderWidth])), b.Height-(2*int32(style[SliderBorderWidth])), rl.GetColor(int32(style[SliderInsideColor])))
 
 	switch state {
 	case Normal:
-		raylib.DrawRectangle(sliderButton.X, sliderButton.Y, sliderButton.Width, sliderButton.Height, raylib.GetColor(int32(style[SliderDefaultColor])))
+		rl.DrawRectangle(sliderButton.X, sliderButton.Y, sliderButton.Width, sliderButton.Height, rl.GetColor(int32(style[SliderDefaultColor])))
 		break
 	case Focused:
-		raylib.DrawRectangle(sliderButton.X, sliderButton.Y, sliderButton.Width, sliderButton.Height, raylib.GetColor(int32(style[SliderHoverColor])))
+		rl.DrawRectangle(sliderButton.X, sliderButton.Y, sliderButton.Width, sliderButton.Height, rl.GetColor(int32(style[SliderHoverColor])))
 		break
 	case Pressed:
-		raylib.DrawRectangle(sliderButton.X, sliderButton.Y, sliderButton.Width, sliderButton.Height, raylib.GetColor(int32(style[SliderActiveColor])))
+		rl.DrawRectangle(sliderButton.X, sliderButton.Y, sliderButton.Width, sliderButton.Height, rl.GetColor(int32(style[SliderActiveColor])))
 		break
 	default:
 		break
@@ -722,11 +722,11 @@ func Slider(bounds raylib.Rectangle, value, minValue, maxValue float32) float32 
 }
 
 // SliderBar - Slider Bar element, returns selected value
-func SliderBar(bounds raylib.Rectangle, value, minValue, maxValue float32) float32 {
+func SliderBar(bounds rl.Rectangle, value, minValue, maxValue float32) float32 {
 	b := bounds.ToInt32()
 	state := Normal
 
-	mousePoint := raylib.GetMousePosition()
+	mousePoint := rl.GetMousePosition()
 
 	fixedValue := float32(0)
 	fixedMinValue := float32(0)
@@ -742,17 +742,17 @@ func SliderBar(bounds raylib.Rectangle, value, minValue, maxValue float32) float
 		fixedValue = maxValue
 	}
 
-	sliderBar := raylib.RectangleInt32{}
+	sliderBar := rl.RectangleInt32{}
 
 	sliderBar.X = b.X + int32(style[SliderBorderWidth])
 	sliderBar.Y = b.Y + int32(style[SliderBorderWidth])
 	sliderBar.Width = int32((fixedValue * (float32(b.Width) - 2*float32(style[SliderBorderWidth]))) / (maxValue - fixedMinValue))
 	sliderBar.Height = b.Height - 2*int32(style[SliderBorderWidth])
 
-	if raylib.CheckCollisionPointRec(mousePoint, bounds) {
+	if rl.CheckCollisionPointRec(mousePoint, bounds) {
 		state = Focused
 
-		if raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
+		if rl.IsMouseButtonDown(rl.MouseLeftButton) {
 			state = Pressed
 
 			sliderBar.Width = (int32(mousePoint.X) - b.X - int32(style[SliderBorderWidth]))
@@ -770,32 +770,32 @@ func SliderBar(bounds raylib.Rectangle, value, minValue, maxValue float32) float
 	fixedValue = (float32(sliderBar.Width) * (maxValue - fixedMinValue)) / (float32(b.Width) - 2*float32(style[SliderBorderWidth]))
 
 	// Draw control
-	raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[SliderbarBorderColor])))
-	raylib.DrawRectangle(b.X+int32(style[SliderBorderWidth]), b.Y+int32(style[SliderBorderWidth]), b.Width-(2*int32(style[SliderBorderWidth])), b.Height-(2*int32(style[SliderBorderWidth])), raylib.GetColor(int32(style[SliderbarInsideColor])))
+	rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[SliderbarBorderColor])))
+	rl.DrawRectangle(b.X+int32(style[SliderBorderWidth]), b.Y+int32(style[SliderBorderWidth]), b.Width-(2*int32(style[SliderBorderWidth])), b.Height-(2*int32(style[SliderBorderWidth])), rl.GetColor(int32(style[SliderbarInsideColor])))
 
 	switch state {
 	case Normal:
-		raylib.DrawRectangle(sliderBar.X, sliderBar.Y, sliderBar.Width, sliderBar.Height, raylib.GetColor(int32(style[SliderbarDefaultColor])))
+		rl.DrawRectangle(sliderBar.X, sliderBar.Y, sliderBar.Width, sliderBar.Height, rl.GetColor(int32(style[SliderbarDefaultColor])))
 		break
 	case Focused:
-		raylib.DrawRectangle(sliderBar.X, sliderBar.Y, sliderBar.Width, sliderBar.Height, raylib.GetColor(int32(style[SliderbarHoverColor])))
+		rl.DrawRectangle(sliderBar.X, sliderBar.Y, sliderBar.Width, sliderBar.Height, rl.GetColor(int32(style[SliderbarHoverColor])))
 		break
 	case Pressed:
-		raylib.DrawRectangle(sliderBar.X, sliderBar.Y, sliderBar.Width, sliderBar.Height, raylib.GetColor(int32(style[SliderbarActiveColor])))
+		rl.DrawRectangle(sliderBar.X, sliderBar.Y, sliderBar.Width, sliderBar.Height, rl.GetColor(int32(style[SliderbarActiveColor])))
 		break
 	default:
 		break
 	}
 
 	if minValue < 0 && maxValue > 0 {
-		raylib.DrawRectangle((b.X+int32(style[SliderBorderWidth]))-int32(minValue*(float32(b.Width-(int32(style[SliderBorderWidth])*2))/maxValue)), sliderBar.Y, 1, sliderBar.Height, raylib.GetColor(int32(style[SliderbarZeroLineColor])))
+		rl.DrawRectangle((b.X+int32(style[SliderBorderWidth]))-int32(minValue*(float32(b.Width-(int32(style[SliderBorderWidth])*2))/maxValue)), sliderBar.Y, 1, sliderBar.Height, rl.GetColor(int32(style[SliderbarZeroLineColor])))
 	}
 
 	return fixedValue + minValue
 }
 
 // ProgressBar - Progress Bar element, shows current progress value
-func ProgressBar(bounds raylib.Rectangle, value float32) {
+func ProgressBar(bounds rl.Rectangle, value float32) {
 	b := bounds.ToInt32()
 	if value > 1.0 {
 		value = 1.0
@@ -803,39 +803,39 @@ func ProgressBar(bounds raylib.Rectangle, value float32) {
 		value = 0.0
 	}
 
-	progressBar := raylib.RectangleInt32{b.X + int32(style[ProgressbarBorderWidth]), b.Y + int32(style[ProgressbarBorderWidth]), b.Width - (int32(style[ProgressbarBorderWidth]) * 2), b.Height - (int32(style[ProgressbarBorderWidth]) * 2)}
-	progressValue := raylib.RectangleInt32{b.X + int32(style[ProgressbarBorderWidth]), b.Y + int32(style[ProgressbarBorderWidth]), int32(value * float32(b.Width-int32(style[ProgressbarBorderWidth])*2)), b.Height - (int32(style[ProgressbarBorderWidth]) * 2)}
+	progressBar := rl.RectangleInt32{b.X + int32(style[ProgressbarBorderWidth]), b.Y + int32(style[ProgressbarBorderWidth]), b.Width - (int32(style[ProgressbarBorderWidth]) * 2), b.Height - (int32(style[ProgressbarBorderWidth]) * 2)}
+	progressValue := rl.RectangleInt32{b.X + int32(style[ProgressbarBorderWidth]), b.Y + int32(style[ProgressbarBorderWidth]), int32(value * float32(b.Width-int32(style[ProgressbarBorderWidth])*2)), b.Height - (int32(style[ProgressbarBorderWidth]) * 2)}
 
 	// Draw control
-	raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[ProgressbarBorderColor])))
-	raylib.DrawRectangle(progressBar.X, progressBar.Y, progressBar.Width, progressBar.Height, raylib.GetColor(int32(style[ProgressbarInsideColor])))
-	raylib.DrawRectangle(progressValue.X, progressValue.Y, progressValue.Width, progressValue.Height, raylib.GetColor(int32(style[ProgressbarProgressColor])))
+	rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ProgressbarBorderColor])))
+	rl.DrawRectangle(progressBar.X, progressBar.Y, progressBar.Width, progressBar.Height, rl.GetColor(int32(style[ProgressbarInsideColor])))
+	rl.DrawRectangle(progressValue.X, progressValue.Y, progressValue.Width, progressValue.Height, rl.GetColor(int32(style[ProgressbarProgressColor])))
 }
 
 // Spinner - Spinner element, returns selected value
-func Spinner(bounds raylib.Rectangle, value, minValue, maxValue int) int {
+func Spinner(bounds rl.Rectangle, value, minValue, maxValue int) int {
 	b := bounds.ToInt32()
 	state := Normal
 
-	mousePoint := raylib.GetMousePosition()
-	labelBoxBound := raylib.RectangleInt32{b.X + b.Width/4 + 1, b.Y, b.Width / 2, b.Height}
-	leftButtonBound := raylib.RectangleInt32{b.X, b.Y, b.Width / 4, b.Height}
-	rightButtonBound := raylib.RectangleInt32{b.X + b.Width - b.Width/4 + 1, b.Y, b.Width / 4, b.Height}
+	mousePoint := rl.GetMousePosition()
+	labelBoxBound := rl.RectangleInt32{b.X + b.Width/4 + 1, b.Y, b.Width / 2, b.Height}
+	leftButtonBound := rl.RectangleInt32{b.X, b.Y, b.Width / 4, b.Height}
+	rightButtonBound := rl.RectangleInt32{b.X + b.Width - b.Width/4 + 1, b.Y, b.Width / 4, b.Height}
 
-	textWidth := raylib.MeasureText(fmt.Sprintf("%d", value), int32(style[GlobalTextFontsize]))
+	textWidth := rl.MeasureText(fmt.Sprintf("%d", value), int32(style[GlobalTextFontsize]))
 
 	buttonSide := 0
 
 	// Update control
-	if raylib.CheckCollisionPointRec(mousePoint, leftButtonBound.ToFloat32()) || raylib.CheckCollisionPointRec(mousePoint, rightButtonBound.ToFloat32()) || raylib.CheckCollisionPointRec(mousePoint, labelBoxBound.ToFloat32()) {
-		if raylib.IsKeyDown(raylib.KeyLeft) {
+	if rl.CheckCollisionPointRec(mousePoint, leftButtonBound.ToFloat32()) || rl.CheckCollisionPointRec(mousePoint, rightButtonBound.ToFloat32()) || rl.CheckCollisionPointRec(mousePoint, labelBoxBound.ToFloat32()) {
+		if rl.IsKeyDown(rl.KeyLeft) {
 			state = Pressed
 			buttonSide = 1
 
 			if value > minValue {
 				value--
 			}
-		} else if raylib.IsKeyDown(raylib.KeyRight) {
+		} else if rl.IsKeyDown(rl.KeyRight) {
 			state = Pressed
 			buttonSide = 2
 
@@ -845,11 +845,11 @@ func Spinner(bounds raylib.Rectangle, value, minValue, maxValue int) int {
 		}
 	}
 
-	if raylib.CheckCollisionPointRec(mousePoint, leftButtonBound.ToFloat32()) {
+	if rl.CheckCollisionPointRec(mousePoint, leftButtonBound.ToFloat32()) {
 		buttonSide = 1
 		state = Focused
 
-		if raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
+		if rl.IsMouseButtonDown(rl.MouseLeftButton) {
 			if !valueSpeed {
 				if value > minValue {
 					value--
@@ -867,11 +867,11 @@ func Spinner(bounds raylib.Rectangle, value, minValue, maxValue int) int {
 				}
 			}
 		}
-	} else if raylib.CheckCollisionPointRec(mousePoint, rightButtonBound.ToFloat32()) {
+	} else if rl.CheckCollisionPointRec(mousePoint, rightButtonBound.ToFloat32()) {
 		buttonSide = 2
 		state = Focused
 
-		if raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
+		if rl.IsMouseButtonDown(rl.MouseLeftButton) {
 			if !valueSpeed {
 				if value < maxValue {
 					value++
@@ -889,11 +889,11 @@ func Spinner(bounds raylib.Rectangle, value, minValue, maxValue int) int {
 				}
 			}
 		}
-	} else if !raylib.CheckCollisionPointRec(mousePoint, labelBoxBound.ToFloat32()) {
+	} else if !rl.CheckCollisionPointRec(mousePoint, labelBoxBound.ToFloat32()) {
 		buttonSide = 0
 	}
 
-	if raylib.IsMouseButtonUp(raylib.MouseLeftButton) {
+	if rl.IsMouseButtonUp(rl.MouseLeftButton) {
 		valueSpeed = false
 		framesCounter = 0
 	}
@@ -901,71 +901,71 @@ func Spinner(bounds raylib.Rectangle, value, minValue, maxValue int) int {
 	// Draw control
 	switch state {
 	case Normal:
-		raylib.DrawRectangle(leftButtonBound.X, leftButtonBound.Y, leftButtonBound.Width, leftButtonBound.Height, raylib.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
-		raylib.DrawRectangle(leftButtonBound.X+2, leftButtonBound.Y+2, leftButtonBound.Width-4, leftButtonBound.Height-4, raylib.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
+		rl.DrawRectangle(leftButtonBound.X, leftButtonBound.Y, leftButtonBound.Width, leftButtonBound.Height, rl.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
+		rl.DrawRectangle(leftButtonBound.X+2, leftButtonBound.Y+2, leftButtonBound.Width-4, leftButtonBound.Height-4, rl.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
 
-		raylib.DrawRectangle(rightButtonBound.X, rightButtonBound.Y, rightButtonBound.Width, rightButtonBound.Height, raylib.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
-		raylib.DrawRectangle(rightButtonBound.X+2, rightButtonBound.Y+2, rightButtonBound.Width-4, rightButtonBound.Height-4, raylib.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
+		rl.DrawRectangle(rightButtonBound.X, rightButtonBound.Y, rightButtonBound.Width, rightButtonBound.Height, rl.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
+		rl.DrawRectangle(rightButtonBound.X+2, rightButtonBound.Y+2, rightButtonBound.Width-4, rightButtonBound.Height-4, rl.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
 
-		raylib.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(raylib.MeasureText("+", int32(style[GlobalTextFontsize])))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[SpinnerDefaultSymbolColor])))
-		raylib.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(raylib.MeasureText("-", int32(style[GlobalTextFontsize])))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[SpinnerDefaultSymbolColor])))
+		rl.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(rl.MeasureText("+", int32(style[GlobalTextFontsize])))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
+		rl.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(rl.MeasureText("-", int32(style[GlobalTextFontsize])))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
 
-		raylib.DrawRectangle(labelBoxBound.X, labelBoxBound.Y, labelBoxBound.Width, labelBoxBound.Height, raylib.GetColor(int32(style[SpinnerLabelBorderColor])))
-		raylib.DrawRectangle(labelBoxBound.X+1, labelBoxBound.Y+1, labelBoxBound.Width-2, labelBoxBound.Height-2, raylib.GetColor(int32(style[SpinnerLabelInsideColor])))
+		rl.DrawRectangle(labelBoxBound.X, labelBoxBound.Y, labelBoxBound.Width, labelBoxBound.Height, rl.GetColor(int32(style[SpinnerLabelBorderColor])))
+		rl.DrawRectangle(labelBoxBound.X+1, labelBoxBound.Y+1, labelBoxBound.Width-2, labelBoxBound.Height-2, rl.GetColor(int32(style[SpinnerLabelInsideColor])))
 
-		raylib.DrawText(fmt.Sprintf("%d", value), labelBoxBound.X+(labelBoxBound.Width/2-textWidth/2), labelBoxBound.Y+(labelBoxBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[SpinnerDefaultTextColor])))
+		rl.DrawText(fmt.Sprintf("%d", value), labelBoxBound.X+(labelBoxBound.Width/2-textWidth/2), labelBoxBound.Y+(labelBoxBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerDefaultTextColor])))
 		break
 	case Focused:
 		if buttonSide == 1 {
-			raylib.DrawRectangle(leftButtonBound.X, leftButtonBound.Y, leftButtonBound.Width, leftButtonBound.Height, raylib.GetColor(int32(style[SpinnerHoverButtonBorderColor])))
-			raylib.DrawRectangle(leftButtonBound.X+2, leftButtonBound.Y+2, leftButtonBound.Width-4, leftButtonBound.Height-4, raylib.GetColor(int32(style[SpinnerHoverButtonInsideColor])))
+			rl.DrawRectangle(leftButtonBound.X, leftButtonBound.Y, leftButtonBound.Width, leftButtonBound.Height, rl.GetColor(int32(style[SpinnerHoverButtonBorderColor])))
+			rl.DrawRectangle(leftButtonBound.X+2, leftButtonBound.Y+2, leftButtonBound.Width-4, leftButtonBound.Height-4, rl.GetColor(int32(style[SpinnerHoverButtonInsideColor])))
 
-			raylib.DrawRectangle(rightButtonBound.X, rightButtonBound.Y, rightButtonBound.Width, rightButtonBound.Height, raylib.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
-			raylib.DrawRectangle(rightButtonBound.X+2, rightButtonBound.Y+2, rightButtonBound.Width-4, rightButtonBound.Height-4, raylib.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
+			rl.DrawRectangle(rightButtonBound.X, rightButtonBound.Y, rightButtonBound.Width, rightButtonBound.Height, rl.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
+			rl.DrawRectangle(rightButtonBound.X+2, rightButtonBound.Y+2, rightButtonBound.Width-4, rightButtonBound.Height-4, rl.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
 
-			raylib.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(raylib.MeasureText("+", int32(style[GlobalTextFontsize])))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[SpinnerHoverSymbolColor])))
-			raylib.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(raylib.MeasureText("-", int32(style[GlobalTextFontsize])))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[SpinnerDefaultSymbolColor])))
+			rl.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(rl.MeasureText("+", int32(style[GlobalTextFontsize])))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerHoverSymbolColor])))
+			rl.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(rl.MeasureText("-", int32(style[GlobalTextFontsize])))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
 		} else if buttonSide == 2 {
-			raylib.DrawRectangle(leftButtonBound.X, leftButtonBound.Y, leftButtonBound.Width, leftButtonBound.Height, raylib.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
-			raylib.DrawRectangle(leftButtonBound.X+2, leftButtonBound.Y+2, leftButtonBound.Width-4, leftButtonBound.Height-4, raylib.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
+			rl.DrawRectangle(leftButtonBound.X, leftButtonBound.Y, leftButtonBound.Width, leftButtonBound.Height, rl.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
+			rl.DrawRectangle(leftButtonBound.X+2, leftButtonBound.Y+2, leftButtonBound.Width-4, leftButtonBound.Height-4, rl.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
 
-			raylib.DrawRectangle(rightButtonBound.X, rightButtonBound.Y, rightButtonBound.Width, rightButtonBound.Height, raylib.GetColor(int32(style[SpinnerHoverButtonBorderColor])))
-			raylib.DrawRectangle(rightButtonBound.X+2, rightButtonBound.Y+2, rightButtonBound.Width-4, rightButtonBound.Height-4, raylib.GetColor(int32(style[SpinnerHoverButtonInsideColor])))
+			rl.DrawRectangle(rightButtonBound.X, rightButtonBound.Y, rightButtonBound.Width, rightButtonBound.Height, rl.GetColor(int32(style[SpinnerHoverButtonBorderColor])))
+			rl.DrawRectangle(rightButtonBound.X+2, rightButtonBound.Y+2, rightButtonBound.Width-4, rightButtonBound.Height-4, rl.GetColor(int32(style[SpinnerHoverButtonInsideColor])))
 
-			raylib.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(raylib.MeasureText("+", int32(style[GlobalTextFontsize])))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[SpinnerDefaultSymbolColor])))
-			raylib.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(raylib.MeasureText("-", int32(style[GlobalTextFontsize])))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[SpinnerHoverSymbolColor])))
+			rl.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(rl.MeasureText("+", int32(style[GlobalTextFontsize])))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
+			rl.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(rl.MeasureText("-", int32(style[GlobalTextFontsize])))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerHoverSymbolColor])))
 		}
 
-		raylib.DrawRectangle(labelBoxBound.X, labelBoxBound.Y, labelBoxBound.Width, labelBoxBound.Height, raylib.GetColor(int32(style[SpinnerLabelBorderColor])))
-		raylib.DrawRectangle(labelBoxBound.X+1, labelBoxBound.Y+1, labelBoxBound.Width-2, labelBoxBound.Height-2, raylib.GetColor(int32(style[SpinnerLabelInsideColor])))
+		rl.DrawRectangle(labelBoxBound.X, labelBoxBound.Y, labelBoxBound.Width, labelBoxBound.Height, rl.GetColor(int32(style[SpinnerLabelBorderColor])))
+		rl.DrawRectangle(labelBoxBound.X+1, labelBoxBound.Y+1, labelBoxBound.Width-2, labelBoxBound.Height-2, rl.GetColor(int32(style[SpinnerLabelInsideColor])))
 
-		raylib.DrawText(fmt.Sprintf("%d", value), labelBoxBound.X+(labelBoxBound.Width/2-textWidth/2), labelBoxBound.Y+(labelBoxBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[SpinnerHoverTextColor])))
+		rl.DrawText(fmt.Sprintf("%d", value), labelBoxBound.X+(labelBoxBound.Width/2-textWidth/2), labelBoxBound.Y+(labelBoxBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerHoverTextColor])))
 		break
 	case Pressed:
 		if buttonSide == 1 {
-			raylib.DrawRectangle(leftButtonBound.X, leftButtonBound.Y, leftButtonBound.Width, leftButtonBound.Height, raylib.GetColor(int32(style[SpinnerPressedButtonBorderColor])))
-			raylib.DrawRectangle(leftButtonBound.X+2, leftButtonBound.Y+2, leftButtonBound.Width-4, leftButtonBound.Height-4, raylib.GetColor(int32(style[SpinnerPressedButtonInsideColor])))
+			rl.DrawRectangle(leftButtonBound.X, leftButtonBound.Y, leftButtonBound.Width, leftButtonBound.Height, rl.GetColor(int32(style[SpinnerPressedButtonBorderColor])))
+			rl.DrawRectangle(leftButtonBound.X+2, leftButtonBound.Y+2, leftButtonBound.Width-4, leftButtonBound.Height-4, rl.GetColor(int32(style[SpinnerPressedButtonInsideColor])))
 
-			raylib.DrawRectangle(rightButtonBound.X, rightButtonBound.Y, rightButtonBound.Width, rightButtonBound.Height, raylib.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
-			raylib.DrawRectangle(rightButtonBound.X+2, rightButtonBound.Y+2, rightButtonBound.Width-4, rightButtonBound.Height-4, raylib.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
+			rl.DrawRectangle(rightButtonBound.X, rightButtonBound.Y, rightButtonBound.Width, rightButtonBound.Height, rl.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
+			rl.DrawRectangle(rightButtonBound.X+2, rightButtonBound.Y+2, rightButtonBound.Width-4, rightButtonBound.Height-4, rl.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
 
-			raylib.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(raylib.MeasureText("+", int32(style[GlobalTextFontsize])))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[SpinnerPressedSymbolColor])))
-			raylib.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(raylib.MeasureText("-", int32(style[GlobalTextFontsize])))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[SpinnerDefaultSymbolColor])))
+			rl.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(rl.MeasureText("+", int32(style[GlobalTextFontsize])))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerPressedSymbolColor])))
+			rl.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(rl.MeasureText("-", int32(style[GlobalTextFontsize])))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
 		} else if buttonSide == 2 {
-			raylib.DrawRectangle(leftButtonBound.X, leftButtonBound.Y, leftButtonBound.Width, leftButtonBound.Height, raylib.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
-			raylib.DrawRectangle(leftButtonBound.X+2, leftButtonBound.Y+2, leftButtonBound.Width-4, leftButtonBound.Height-4, raylib.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
+			rl.DrawRectangle(leftButtonBound.X, leftButtonBound.Y, leftButtonBound.Width, leftButtonBound.Height, rl.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
+			rl.DrawRectangle(leftButtonBound.X+2, leftButtonBound.Y+2, leftButtonBound.Width-4, leftButtonBound.Height-4, rl.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
 
-			raylib.DrawRectangle(rightButtonBound.X, rightButtonBound.Y, rightButtonBound.Width, rightButtonBound.Height, raylib.GetColor(int32(style[SpinnerPressedButtonBorderColor])))
-			raylib.DrawRectangle(rightButtonBound.X+2, rightButtonBound.Y+2, rightButtonBound.Width-4, rightButtonBound.Height-4, raylib.GetColor(int32(style[SpinnerPressedButtonInsideColor])))
+			rl.DrawRectangle(rightButtonBound.X, rightButtonBound.Y, rightButtonBound.Width, rightButtonBound.Height, rl.GetColor(int32(style[SpinnerPressedButtonBorderColor])))
+			rl.DrawRectangle(rightButtonBound.X+2, rightButtonBound.Y+2, rightButtonBound.Width-4, rightButtonBound.Height-4, rl.GetColor(int32(style[SpinnerPressedButtonInsideColor])))
 
-			raylib.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(raylib.MeasureText("+", int32(style[GlobalTextFontsize])))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[SpinnerDefaultSymbolColor])))
-			raylib.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(raylib.MeasureText("-", int32(style[GlobalTextFontsize])))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[SpinnerPressedSymbolColor])))
+			rl.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(rl.MeasureText("+", int32(style[GlobalTextFontsize])))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
+			rl.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(rl.MeasureText("-", int32(style[GlobalTextFontsize])))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerPressedSymbolColor])))
 		}
 
-		raylib.DrawRectangle(labelBoxBound.X, labelBoxBound.Y, labelBoxBound.Width, labelBoxBound.Height, raylib.GetColor(int32(style[SpinnerLabelBorderColor])))
-		raylib.DrawRectangle(labelBoxBound.X+1, labelBoxBound.Y+1, labelBoxBound.Width-2, labelBoxBound.Height-2, raylib.GetColor(int32(style[SpinnerLabelInsideColor])))
+		rl.DrawRectangle(labelBoxBound.X, labelBoxBound.Y, labelBoxBound.Width, labelBoxBound.Height, rl.GetColor(int32(style[SpinnerLabelBorderColor])))
+		rl.DrawRectangle(labelBoxBound.X+1, labelBoxBound.Y+1, labelBoxBound.Width-2, labelBoxBound.Height-2, rl.GetColor(int32(style[SpinnerLabelInsideColor])))
 
-		raylib.DrawText(fmt.Sprintf("%d", value), labelBoxBound.X+(labelBoxBound.Width/2-textWidth/2), labelBoxBound.Y+(labelBoxBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), raylib.GetColor(int32(style[SpinnerPressedTextColor])))
+		rl.DrawText(fmt.Sprintf("%d", value), labelBoxBound.X+(labelBoxBound.Width/2-textWidth/2), labelBoxBound.Y+(labelBoxBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerPressedTextColor])))
 		break
 	default:
 		break
@@ -975,27 +975,27 @@ func Spinner(bounds raylib.Rectangle, value, minValue, maxValue int) int {
 }
 
 // TextBox - Text Box element, updates input text
-func TextBox(bounds raylib.Rectangle, text string) string {
+func TextBox(bounds rl.Rectangle, text string) string {
 	b := bounds.ToInt32()
 	state := Normal
 
-	mousePoint := raylib.GetMousePosition()
+	mousePoint := rl.GetMousePosition()
 	letter := int32(-1)
 
 	// Update control
-	if raylib.CheckCollisionPointRec(mousePoint, bounds) {
+	if rl.CheckCollisionPointRec(mousePoint, bounds) {
 		state = Focused // NOTE: PRESSED state is not used on this control
 
 		framesCounter2++
 
-		letter = raylib.GetKeyPressed()
+		letter = rl.GetKeyPressed()
 		if letter != -1 {
 			if letter >= 32 && letter < 127 {
 				text = fmt.Sprintf("%s%c", text, letter)
 			}
 		}
 
-		if raylib.IsKeyPressed(raylib.KeyBackspace) {
+		if rl.IsKeyPressed(rl.KeyBackspace) {
 			if len(text) > 0 {
 				text = text[:len(text)-1]
 			}
@@ -1005,17 +1005,17 @@ func TextBox(bounds raylib.Rectangle, text string) string {
 	// Draw control
 	switch state {
 	case Normal:
-		raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[TextboxBorderColor])))
-		raylib.DrawRectangle(b.X+int32(style[TextboxBorderWidth]), b.Y+int32(style[TextboxBorderWidth]), b.Width-(int32(style[TextboxBorderWidth])*2), b.Height-(int32(style[TextboxBorderWidth])*2), raylib.GetColor(int32(style[TextboxInsideColor])))
-		raylib.DrawText(text, b.X+2, b.Y+int32(style[TextboxBorderWidth])+b.Height/2-int32(style[TextboxTextFontsize])/2, int32(style[TextboxTextFontsize]), raylib.GetColor(int32(style[TextboxTextColor])))
+		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[TextboxBorderColor])))
+		rl.DrawRectangle(b.X+int32(style[TextboxBorderWidth]), b.Y+int32(style[TextboxBorderWidth]), b.Width-(int32(style[TextboxBorderWidth])*2), b.Height-(int32(style[TextboxBorderWidth])*2), rl.GetColor(int32(style[TextboxInsideColor])))
+		rl.DrawText(text, b.X+2, b.Y+int32(style[TextboxBorderWidth])+b.Height/2-int32(style[TextboxTextFontsize])/2, int32(style[TextboxTextFontsize]), rl.GetColor(int32(style[TextboxTextColor])))
 		break
 	case Focused:
-		raylib.DrawRectangle(b.X, b.Y, b.Width, b.Height, raylib.GetColor(int32(style[ToggleActiveBorderColor])))
-		raylib.DrawRectangle(b.X+int32(style[TextboxBorderWidth]), b.Y+int32(style[TextboxBorderWidth]), b.Width-(int32(style[TextboxBorderWidth])*2), b.Height-(int32(style[TextboxBorderWidth])*2), raylib.GetColor(int32(style[TextboxInsideColor])))
-		raylib.DrawText(text, b.X+2, b.Y+int32(style[TextboxBorderWidth])+b.Height/2-int32(style[TextboxTextFontsize])/2, int32(style[TextboxTextFontsize]), raylib.GetColor(int32(style[TextboxTextColor])))
+		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ToggleActiveBorderColor])))
+		rl.DrawRectangle(b.X+int32(style[TextboxBorderWidth]), b.Y+int32(style[TextboxBorderWidth]), b.Width-(int32(style[TextboxBorderWidth])*2), b.Height-(int32(style[TextboxBorderWidth])*2), rl.GetColor(int32(style[TextboxInsideColor])))
+		rl.DrawText(text, b.X+2, b.Y+int32(style[TextboxBorderWidth])+b.Height/2-int32(style[TextboxTextFontsize])/2, int32(style[TextboxTextFontsize]), rl.GetColor(int32(style[TextboxTextColor])))
 
-		if (framesCounter2/20)%2 == 0 && raylib.CheckCollisionPointRec(mousePoint, bounds) {
-			raylib.DrawRectangle(b.X+4+raylib.MeasureText(text, int32(style[GlobalTextFontsize])), b.Y+2, 1, b.Height-4, raylib.GetColor(int32(style[TextboxLineColor])))
+		if (framesCounter2/20)%2 == 0 && rl.CheckCollisionPointRec(mousePoint, bounds) {
+			rl.DrawRectangle(b.X+4+rl.MeasureText(text, int32(style[GlobalTextFontsize])), b.Y+2, 1, b.Height-4, rl.GetColor(int32(style[TextboxLineColor])))
 		}
 		break
 	case Pressed:
@@ -1039,9 +1039,9 @@ func SaveGuiStyle(fileName string) {
 
 // LoadGuiStyle - Load GUI style file
 func LoadGuiStyle(fileName string) {
-	file, err := raylib.OpenAsset(fileName)
+	file, err := rl.OpenAsset(fileName)
 	if err != nil {
-		raylib.TraceLog(raylib.LogWarning, "[%s] GUI style file could not be opened", fileName)
+		rl.TraceLog(rl.LogWarning, "[%s] GUI style file could not be opened", fileName)
 		return
 	}
 	defer file.Close()

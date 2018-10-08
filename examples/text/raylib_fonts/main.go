@@ -10,17 +10,17 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [text] example - raylib fonts")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [text] example - raylib fonts")
 
-	fonts := make([]raylib.Font, maxFonts)
-	fonts[0] = raylib.LoadFont("fonts/alagard.png")
-	fonts[1] = raylib.LoadFont("fonts/pixelplay.png")
-	fonts[2] = raylib.LoadFont("fonts/mecha.png")
-	fonts[3] = raylib.LoadFont("fonts/setback.png")
-	fonts[4] = raylib.LoadFont("fonts/romulus.png")
-	fonts[5] = raylib.LoadFont("fonts/pixantiqua.png")
-	fonts[6] = raylib.LoadFont("fonts/alpha_beta.png")
-	fonts[7] = raylib.LoadFont("fonts/jupiter_crash.png")
+	fonts := make([]rl.Font, maxFonts)
+	fonts[0] = rl.LoadFont("fonts/alagard.png")
+	fonts[1] = rl.LoadFont("fonts/pixelplay.png")
+	fonts[2] = rl.LoadFont("fonts/mecha.png")
+	fonts[3] = rl.LoadFont("fonts/setback.png")
+	fonts[4] = rl.LoadFont("fonts/romulus.png")
+	fonts[5] = rl.LoadFont("fonts/pixantiqua.png")
+	fonts[6] = rl.LoadFont("fonts/alpha_beta.png")
+	fonts[7] = rl.LoadFont("fonts/jupiter_crash.png")
 
 	messages := []string{
 		"ALAGARD FONT designed by Hewett Tsoi",
@@ -34,13 +34,13 @@ func main() {
 	}
 
 	spacings := []float32{2, 4, 8, 4, 3, 4, 4, 1}
-	positions := make([]raylib.Vector2, maxFonts)
+	positions := make([]rl.Vector2, maxFonts)
 
 	var i int32
 	for i = 0; i < maxFonts; i++ {
-		x := screenWidth/2 - int32(raylib.MeasureTextEx(fonts[i], messages[i], float32(fonts[i].BaseSize*2), spacings[i]).X/2)
+		x := screenWidth/2 - int32(rl.MeasureTextEx(fonts[i], messages[i], float32(fonts[i].BaseSize*2), spacings[i]).X/2)
 		y := 60 + fonts[i].BaseSize + 45*i
-		positions[i] = raylib.NewVector2(float32(x), float32(y))
+		positions[i] = rl.NewVector2(float32(x), float32(y))
 	}
 
 	// Small Y position corrections
@@ -48,27 +48,27 @@ func main() {
 	positions[4].Y += 2
 	positions[7].Y -= 8
 
-	colors := []raylib.Color{raylib.Maroon, raylib.Orange, raylib.DarkGreen, raylib.DarkBlue, raylib.DarkPurple, raylib.Lime, raylib.Gold, raylib.DarkBrown}
+	colors := []rl.Color{rl.Maroon, rl.Orange, rl.DarkGreen, rl.DarkBlue, rl.DarkPurple, rl.Lime, rl.Gold, rl.DarkBrown}
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		raylib.BeginDrawing()
+	for !rl.WindowShouldClose() {
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
-		raylib.DrawText("free fonts included with raylib", 250, 20, 20, raylib.DarkGray)
-		raylib.DrawLine(220, 50, 590, 50, raylib.DarkGray)
+		rl.ClearBackground(rl.RayWhite)
+		rl.DrawText("free fonts included with raylib", 250, 20, 20, rl.DarkGray)
+		rl.DrawLine(220, 50, 590, 50, rl.DarkGray)
 
 		for i = 0; i < maxFonts; i++ {
-			raylib.DrawTextEx(fonts[i], messages[i], positions[i], float32(fonts[i].BaseSize*2), spacings[i], colors[i])
+			rl.DrawTextEx(fonts[i], messages[i], positions[i], float32(fonts[i].BaseSize*2), spacings[i], colors[i])
 		}
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
 	for i = 0; i < maxFonts; i++ {
-		raylib.UnloadFont(fonts[i])
+		rl.UnloadFont(fonts[i])
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

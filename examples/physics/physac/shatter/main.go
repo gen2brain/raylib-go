@@ -13,11 +13,11 @@ func main() {
 	screenWidth := float32(800)
 	screenHeight := float32(450)
 
-	raylib.SetConfigFlags(raylib.FlagMsaa4xHint)
-	raylib.InitWindow(int32(screenWidth), int32(screenHeight), "Physac [raylib] - body shatter")
+	rl.SetConfigFlags(rl.FlagMsaa4xHint)
+	rl.InitWindow(int32(screenWidth), int32(screenHeight), "Physac [raylib] - body shatter")
 
 	// Physac logo drawing position
-	logoX := int32(screenWidth) - raylib.MeasureText("Physac", 30) - 10
+	logoX := int32(screenWidth) - rl.MeasureText("Physac", 30) - 10
 	logoY := int32(15)
 
 	// Initialize physics and default physics bodies
@@ -25,30 +25,30 @@ func main() {
 	physics.SetGravity(0, 0)
 
 	// Create random polygon physics body to shatter
-	physics.NewBodyPolygon(raylib.NewVector2(screenWidth/2, screenHeight/2), float32(raylib.GetRandomValue(80, 200)), int(raylib.GetRandomValue(3, 8)), 10)
+	physics.NewBodyPolygon(rl.NewVector2(screenWidth/2, screenHeight/2), float32(rl.GetRandomValue(80, 200)), int(rl.GetRandomValue(3, 8)), 10)
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
+	for !rl.WindowShouldClose() {
 		// Update created physics objects
 		physics.Update()
 
-		if raylib.IsKeyPressed(raylib.KeyR) { // Reset physics input
+		if rl.IsKeyPressed(rl.KeyR) { // Reset physics input
 			physics.Reset()
 
 			// Create random polygon physics body to shatter
-			physics.NewBodyPolygon(raylib.NewVector2(screenWidth/2, screenHeight/2), float32(raylib.GetRandomValue(80, 200)), int(raylib.GetRandomValue(3, 8)), 10)
+			physics.NewBodyPolygon(rl.NewVector2(screenWidth/2, screenHeight/2), float32(rl.GetRandomValue(80, 200)), int(rl.GetRandomValue(3, 8)), 10)
 		}
 
-		if raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
+		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
 			for _, b := range physics.GetBodies() {
-				b.Shatter(raylib.GetMousePosition(), 10/b.InverseMass)
+				b.Shatter(rl.GetMousePosition(), 10/b.InverseMass)
 			}
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.Black)
+		rl.ClearBackground(rl.Black)
 
 		// Draw created physics bodies
 		for i, body := range physics.GetBodies() {
@@ -65,19 +65,19 @@ func main() {
 
 				vertexB := body.GetShapeVertex(jj)
 
-				raylib.DrawLineV(vertexA, vertexB, raylib.Green) // Draw a line between two vertex positions
+				rl.DrawLineV(vertexA, vertexB, rl.Green) // Draw a line between two vertex positions
 			}
 		}
 
-		raylib.DrawText("Left mouse button in polygon area to shatter body\nPress 'R' to reset example", 10, 10, 10, raylib.White)
+		rl.DrawText("Left mouse button in polygon area to shatter body\nPress 'R' to reset example", 10, 10, 10, rl.White)
 
-		raylib.DrawText("Physac", logoX, logoY, 30, raylib.White)
-		raylib.DrawText("Powered by", logoX+50, logoY-7, 10, raylib.White)
+		rl.DrawText("Physac", logoX, logoY, 30, rl.White)
+		rl.DrawText("Powered by", logoX+50, logoY-7, 10, rl.White)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
 	physics.Close() // Unitialize physics
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

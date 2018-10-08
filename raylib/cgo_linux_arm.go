@@ -1,6 +1,6 @@
 // +build linux,arm,!android
 
-package raylib
+package rl
 
 /*
 #cgo linux,arm LDFLAGS: -L/opt/vc/lib -L/opt/vc/lib64 -lbrcmGLESv2 -lbrcmEGL -lpthread -lrt -lm -lbcm_host -lvcos -lvchiq_arm -ldl

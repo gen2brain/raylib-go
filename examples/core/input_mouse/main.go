@@ -5,31 +5,31 @@ import (
 )
 
 func main() {
-	raylib.InitWindow(800, 450, "raylib [core] example - mouse input")
-	raylib.SetTargetFPS(60)
+	rl.InitWindow(800, 450, "raylib [core] example - mouse input")
+	rl.SetTargetFPS(60)
 
-	ballColor := raylib.DarkBlue
+	ballColor := rl.DarkBlue
 
-	for !raylib.WindowShouldClose() {
-		ballPosition := raylib.GetMousePosition()
+	for !rl.WindowShouldClose() {
+		ballPosition := rl.GetMousePosition()
 
-		if raylib.IsMouseButtonPressed(raylib.MouseLeftButton) {
-			ballColor = raylib.Maroon
-		} else if raylib.IsMouseButtonPressed(raylib.MouseMiddleButton) {
-			ballColor = raylib.Lime
-		} else if raylib.IsMouseButtonPressed(raylib.MouseRightButton) {
-			ballColor = raylib.DarkBlue
+		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
+			ballColor = rl.Maroon
+		} else if rl.IsMouseButtonPressed(rl.MouseMiddleButton) {
+			ballColor = rl.Lime
+		} else if rl.IsMouseButtonPressed(rl.MouseRightButton) {
+			ballColor = rl.DarkBlue
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
-		raylib.DrawCircleV(ballPosition, 40, ballColor)
+		rl.ClearBackground(rl.RayWhite)
+		rl.DrawCircleV(ballPosition, 40, ballColor)
 
-		raylib.DrawText("move ball with mouse and click mouse button to change color", 10, 10, 20, raylib.DarkGray)
+		rl.DrawText("move ball with mouse and click mouse button to change color", 10, 10, 20, rl.DarkGray)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

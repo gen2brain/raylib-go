@@ -8,34 +8,34 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [core] example - keyboard input")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [core] example - keyboard input")
 
-	ballPosition := raylib.NewVector2(float32(screenWidth)/2, float32(screenHeight)/2)
+	ballPosition := rl.NewVector2(float32(screenWidth)/2, float32(screenHeight)/2)
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
-		if raylib.IsKeyDown(raylib.KeyRight) {
+	for !rl.WindowShouldClose() {
+		if rl.IsKeyDown(rl.KeyRight) {
 			ballPosition.X += 0.8
 		}
-		if raylib.IsKeyDown(raylib.KeyLeft) {
+		if rl.IsKeyDown(rl.KeyLeft) {
 			ballPosition.X -= 0.8
 		}
-		if raylib.IsKeyDown(raylib.KeyUp) {
+		if rl.IsKeyDown(rl.KeyUp) {
 			ballPosition.Y -= 0.8
 		}
-		if raylib.IsKeyDown(raylib.KeyDown) {
+		if rl.IsKeyDown(rl.KeyDown) {
 			ballPosition.Y += 0.8
 		}
 
-		raylib.BeginDrawing()
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.BeginDrawing()
+		rl.ClearBackground(rl.RayWhite)
 
-		raylib.DrawText("move the ball with arrow keys", 10, 10, 20, raylib.DarkGray)
-		raylib.DrawCircleV(ballPosition, 50, raylib.Maroon)
+		rl.DrawText("move the ball with arrow keys", 10, 10, 20, rl.DarkGray)
+		rl.DrawCircleV(ballPosition, 50, rl.Maroon)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

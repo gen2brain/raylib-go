@@ -8,43 +8,43 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [core] example - drop files")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [core] example - drop files")
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
 	count := int32(0)
 	var droppedFiles []string
 
-	for !raylib.WindowShouldClose() {
-		if raylib.IsFileDropped() {
-			droppedFiles = raylib.GetDroppedFiles(&count)
+	for !rl.WindowShouldClose() {
+		if rl.IsFileDropped() {
+			droppedFiles = rl.GetDroppedFiles(&count)
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 		if count == 0 {
-			raylib.DrawText("Drop your files to this window!", 100, 40, 20, raylib.DarkGray)
+			rl.DrawText("Drop your files to this window!", 100, 40, 20, rl.DarkGray)
 		} else {
-			raylib.DrawText("Dropped files:", 100, 40, 20, raylib.DarkGray)
+			rl.DrawText("Dropped files:", 100, 40, 20, rl.DarkGray)
 
 			for i := int32(0); i < count; i++ {
 				if i%2 == 0 {
-					raylib.DrawRectangle(0, int32(85+40*i), screenWidth, 40, raylib.Fade(raylib.LightGray, 0.5))
+					rl.DrawRectangle(0, int32(85+40*i), screenWidth, 40, rl.Fade(rl.LightGray, 0.5))
 				} else {
-					raylib.DrawRectangle(0, int32(85+40*i), screenWidth, 40, raylib.Fade(raylib.LightGray, 0.3))
+					rl.DrawRectangle(0, int32(85+40*i), screenWidth, 40, rl.Fade(rl.LightGray, 0.3))
 				}
 
-				raylib.DrawText(droppedFiles[i], 120, int32(100+i*40), 10, raylib.Gray)
+				rl.DrawText(droppedFiles[i], 120, int32(100), 10, rl.Gray)
 			}
 
-			raylib.DrawText("Drop new files...", 100, int32(150+count*40), 20, raylib.DarkGray)
+			rl.DrawText("Drop new files...", 100, int32(150), 20, rl.DarkGray)
 		}
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.ClearDroppedFiles()
+	rl.ClearDroppedFiles()
 
-	raylib.CloseWindow()
+	rl.CloseWindow()
 }

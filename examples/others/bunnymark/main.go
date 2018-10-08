@@ -8,33 +8,33 @@ import (
 
 // Bunny type
 type Bunny struct {
-	Position raylib.Vector2
-	Speed    raylib.Vector2
-	Color    raylib.Color
+	Position rl.Vector2
+	Speed    rl.Vector2
+	Color    rl.Color
 }
 
 func main() {
 	screenWidth := int32(1280)
 	screenHeight := int32(960)
 
-	raylib.InitWindow(screenWidth, screenHeight, "raylib [core] example - Bunnymark")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [core] example - Bunnymark")
 
-	texture := raylib.LoadTexture("wabbit_alpha.png")
+	texture := rl.LoadTexture("wabbit_alpha.png")
 
 	bunnies := make([]*Bunny, 0)
 	bunniesCount := 0
 
-	raylib.SetTargetFPS(60)
+	rl.SetTargetFPS(60)
 
-	for !raylib.WindowShouldClose() {
+	for !rl.WindowShouldClose() {
 
-		if raylib.IsMouseButtonDown(raylib.MouseLeftButton) {
+		if rl.IsMouseButtonDown(rl.MouseLeftButton) {
 			// Create more bunnies
 			for i := 0; i < 100; i++ {
 				b := &Bunny{}
-				b.Position = raylib.GetMousePosition()
-				b.Speed.X = float32(raylib.GetRandomValue(250, 500)) / 60.0
-				b.Speed.Y = float32(raylib.GetRandomValue(250, 500)-500) / 60.0
+				b.Position = rl.GetMousePosition()
+				b.Speed.X = float32(rl.GetRandomValue(250, 500)) / 60.0
+				b.Speed.Y = float32(rl.GetRandomValue(250, 500)-500) / 60.0
 
 				bunnies = append(bunnies, b)
 				bunniesCount++
@@ -55,27 +55,27 @@ func main() {
 			}
 		}
 
-		raylib.BeginDrawing()
+		rl.BeginDrawing()
 
-		raylib.ClearBackground(raylib.RayWhite)
+		rl.ClearBackground(rl.RayWhite)
 
 		for _, b := range bunnies {
 			// NOTE: When internal QUADS batch limit is reached, a draw call is launched and
 			// batching buffer starts being filled again; before launching the draw call,
 			// updated vertex data from internal buffer is send to GPU... it seems it generates
 			// a stall and consequently a frame drop, limiting number of bunnies drawn at 60 fps
-			raylib.DrawTexture(texture, int32(b.Position.X), int32(b.Position.Y), raylib.RayWhite)
+			rl.DrawTexture(texture, int32(b.Position.X), int32(b.Position.Y), rl.RayWhite)
 		}
 
-		raylib.DrawRectangle(0, 0, screenWidth, 40, raylib.LightGray)
-		raylib.DrawText("raylib bunnymark", 10, 10, 20, raylib.DarkGray)
-		raylib.DrawText(fmt.Sprintf("bunnies: %d", bunniesCount), 400, 10, 20, raylib.Red)
+		rl.DrawRectangle(0, 0, screenWidth, 40, rl.LightGray)
+		rl.DrawText("raylib bunnymark", 10, 10, 20, rl.DarkGray)
+		rl.DrawText(fmt.Sprintf("bunnies: %d", bunniesCount), 400, 10, 20, rl.Red)
 
-		raylib.DrawFPS(260, 10)
+		rl.DrawFPS(260, 10)
 
-		raylib.EndDrawing()
+		rl.EndDrawing()
 	}
 
-	raylib.UnloadTexture(texture)
-	raylib.CloseWindow()
+	rl.UnloadTexture(texture)
+	rl.CloseWindow()
 }
