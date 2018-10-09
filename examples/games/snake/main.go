@@ -103,7 +103,7 @@ func (g *Game) Init() {
 // Update - Update game
 func (g *Game) Update() {
 	if !g.GameOver {
-		if rl.IsKeyPressed('P') {
+		if rl.IsKeyPressed(rl.KeyP) {
 			g.Pause = !g.Pause
 		}
 
@@ -231,7 +231,7 @@ func (g *Game) Draw() {
 			rl.DrawText("GAME PAUSED", g.ScreenWidth/2-rl.MeasureText("GAME PAUSED", 40)/2, g.ScreenHeight/2-40, 40, rl.Gray)
 		}
 	} else {
-		rl.DrawText("PRESS [ENTER] TO PLAY AGAIN", int32(rl.GetScreenWidth())/2-rl.MeasureText("PRESS [ENTER] TO PLAY AGAIN", 20)/2, int32(rl.GetScreenHeight())/2-50, 20, rl.Gray)
+		rl.DrawText("PRESS [ENTER] TO PLAY AGAIN", rl.GetScreenWidth()/2-rl.MeasureText("PRESS [ENTER] TO PLAY AGAIN", 20)/2, rl.GetScreenHeight()/2-50, 20, rl.Gray)
 	}
 
 	rl.EndDrawing()

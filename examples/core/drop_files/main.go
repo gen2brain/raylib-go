@@ -35,10 +35,10 @@ func main() {
 					rl.DrawRectangle(0, int32(85+40*i), screenWidth, 40, rl.Fade(rl.LightGray, 0.3))
 				}
 
-				rl.DrawText(droppedFiles[i], 120, int32(100), 10, rl.Gray)
+				rl.DrawText(droppedFiles[i], 120, int32(100+i*40), 10, rl.Gray)
 			}
 
-			rl.DrawText("Drop new files...", 100, int32(150), 20, rl.DarkGray)
+			rl.DrawText("Drop new files...", 100, int32(150+count*40), 20, rl.DarkGray)
 		}
 
 		rl.EndDrawing()

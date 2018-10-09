@@ -26,7 +26,7 @@ func main() {
 
 		rl.DrawRectangle(screenWidth/2-40, boxPositionY, 80, 80, rl.Maroon)
 
-		rl.DrawText("Use mouse wheel to move the cube up and down!", 10, 10, 20, rl.Gray)
+		rl.DrawText("Use mouse wheel to move the square up and down!", 10, 10, 20, rl.Gray)
 		rl.DrawText(fmt.Sprintf("Box position Y: %d", boxPositionY), 10, 40, 20, rl.LightGray)
 
 		rl.EndDrawing()

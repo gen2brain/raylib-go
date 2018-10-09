@@ -5,15 +5,11 @@ import (
 )
 
 func main() {
-	screenWidth := int32(1080)
-	screenHeight := int32(600)
-
-	// NOTE: screenWidth/screenHeight should match VR device aspect ratio
-
-	rl.InitWindow(screenWidth, screenHeight, "raylib [core] example - vr simulator")
+	hmd := rl.GetVrDeviceInfo(rl.HmdOculusRiftCv1) // Oculus Rift CV1
+	rl.InitWindow(int32(hmd.HScreenSize), int32(hmd.VScreenSize), "raylib [core] example - vr simulator")
 
 	// NOTE: default device (simulator)
-	rl.InitVrSimulator(rl.GetVrDeviceInfo(rl.HmdOculusRiftCv1)) // Init VR device (Oculus Rift CV1)
+	rl.InitVrSimulator(hmd) // Init VR device
 
 	camera := rl.Camera{}
 	camera.Position = rl.NewVector3(5.0, 2.0, 5.0) // Camera position
