@@ -436,12 +436,12 @@ func (g *Game) Draw() {
 		}
 	} else {
 		// Draw text
-		rl.DrawText("Floppy Gopher", rl.GetScreenWidth()/2-rl.MeasureText("Floppy Gopher", 40)/2, rl.GetScreenHeight()/2-150, 40, rl.RayWhite)
+		rl.DrawText("Floppy Gopher", int32(rl.GetScreenWidth())/2-rl.MeasureText("Floppy Gopher", 40)/2, int32(rl.GetScreenHeight())/2-150, 40, rl.RayWhite)
 
 		if runtime.GOOS == "android" {
-			rl.DrawText("[TAP] TO PLAY", rl.GetScreenWidth()/2-rl.MeasureText("[TAP] TO PLAY", 20)/2, rl.GetScreenHeight()/2-50, 20, rl.Black)
+			rl.DrawText("[TAP] TO PLAY", int32(rl.GetScreenWidth())/2-rl.MeasureText("[TAP] TO PLAY", 20)/2, int32(rl.GetScreenHeight())/2-50, 20, rl.Black)
 		} else {
-			rl.DrawText("[ENTER] TO PLAY", rl.GetScreenWidth()/2-rl.MeasureText("[ENTER] TO PLAY", 20)/2, rl.GetScreenHeight()/2-50, 20, rl.Black)
+			rl.DrawText("[ENTER] TO PLAY", int32(rl.GetScreenWidth())/2-rl.MeasureText("[ENTER] TO PLAY", 20)/2, int32(rl.GetScreenHeight())/2-50, 20, rl.Black)
 		}
 
 		// Draw Gopher
