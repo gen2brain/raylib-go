@@ -42,7 +42,7 @@ func HideCursor() {
 // IsCursorHidden - Returns true if cursor is not visible
 func IsCursorHidden() bool {
 	ret := C.IsCursorHidden()
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 

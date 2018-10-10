@@ -413,7 +413,7 @@ func CheckCollisionSpheres(centerA Vector3, radiusA float32, centerB Vector3, ra
 	ccenterB := centerB.cptr()
 	cradiusB := (C.float)(radiusB)
 	ret := C.CheckCollisionSpheres(*ccenterA, cradiusA, *ccenterB, cradiusB)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -422,7 +422,7 @@ func CheckCollisionBoxes(box1 BoundingBox, box2 BoundingBox) bool {
 	cbox1 := box1.cptr()
 	cbox2 := box2.cptr()
 	ret := C.CheckCollisionBoxes(*cbox1, *cbox2)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -432,7 +432,7 @@ func CheckCollisionBoxSphere(box BoundingBox, centerSphere Vector3, radiusSphere
 	ccenterSphere := centerSphere.cptr()
 	cradiusSphere := (C.float)(radiusSphere)
 	ret := C.CheckCollisionBoxSphere(*cbox, *ccenterSphere, cradiusSphere)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -442,7 +442,7 @@ func CheckCollisionRaySphere(ray Ray, spherePosition Vector3, sphereRadius float
 	cspherePosition := spherePosition.cptr()
 	csphereRadius := (C.float)(sphereRadius)
 	ret := C.CheckCollisionRaySphere(*cray, *cspherePosition, csphereRadius)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -453,7 +453,7 @@ func CheckCollisionRaySphereEx(ray Ray, spherePosition Vector3, sphereRadius flo
 	csphereRadius := (C.float)(sphereRadius)
 	ccollisionPoint := collisionPoint.cptr()
 	ret := C.CheckCollisionRaySphereEx(*cray, *cspherePosition, csphereRadius, ccollisionPoint)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -462,6 +462,6 @@ func CheckCollisionRayBox(ray Ray, box BoundingBox) bool {
 	cray := ray.cptr()
 	cbox := box.cptr()
 	ret := C.CheckCollisionRayBox(*cray, *cbox)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }

@@ -39,7 +39,7 @@ func CloseAudioDevice() {
 // IsAudioDeviceReady - Check if audio device has been initialized successfully
 func IsAudioDeviceReady() bool {
 	ret := C.IsAudioDeviceReady()
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -135,7 +135,7 @@ func StopSound(sound Sound) {
 func IsSoundPlaying(sound Sound) bool {
 	csound := sound.cptr()
 	ret := C.IsSoundPlaying(*csound)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -241,7 +241,7 @@ func ResumeMusicStream(music Music) {
 func IsMusicPlaying(music Music) bool {
 	cmusic := *(*C.Music)(unsafe.Pointer(&music))
 	ret := C.IsMusicPlaying(cmusic)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -311,7 +311,7 @@ func CloseAudioStream(stream AudioStream) {
 func IsAudioBufferProcessed(stream AudioStream) bool {
 	cstream := stream.cptr()
 	ret := C.IsAudioBufferProcessed(*cstream)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 

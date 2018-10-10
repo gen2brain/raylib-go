@@ -58,21 +58,21 @@ func CloseWindow() {
 // IsWindowReady - Check if window has been initialized successfully
 func IsWindowReady() bool {
 	ret := C.IsWindowReady()
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
 // WindowShouldClose - Detect if KEY_ESCAPE pressed or Close icon pressed
 func WindowShouldClose() bool {
 	ret := C.WindowShouldClose()
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
 // IsWindowMinimized - Detect if window has been minimized (or lost focus)
 func IsWindowMinimized() bool {
 	ret := C.IsWindowMinimized()
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -409,7 +409,7 @@ func StorageLoadValue(position int32) int32 {
 func IsKeyPressed(key int32) bool {
 	ckey := (C.int)(key)
 	ret := C.IsKeyPressed(ckey)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -417,7 +417,7 @@ func IsKeyPressed(key int32) bool {
 func IsKeyDown(key int32) bool {
 	ckey := (C.int)(key)
 	ret := C.IsKeyDown(ckey)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -425,7 +425,7 @@ func IsKeyDown(key int32) bool {
 func IsKeyReleased(key int32) bool {
 	ckey := (C.int)(key)
 	ret := C.IsKeyReleased(ckey)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -433,7 +433,7 @@ func IsKeyReleased(key int32) bool {
 func IsKeyUp(key int32) bool {
 	ckey := (C.int)(key)
 	ret := C.IsKeyUp(ckey)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -454,7 +454,7 @@ func SetExitKey(key int32) {
 func IsGamepadAvailable(gamepad int32) bool {
 	cgamepad := (C.int)(gamepad)
 	ret := C.IsGamepadAvailable(cgamepad)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -464,7 +464,7 @@ func IsGamepadName(gamepad int32, name string) bool {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	ret := C.IsGamepadName(cgamepad, cname)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -481,7 +481,7 @@ func IsGamepadButtonPressed(gamepad, button int32) bool {
 	cgamepad := (C.int)(gamepad)
 	cbutton := (C.int)(button)
 	ret := C.IsGamepadButtonPressed(cgamepad, cbutton)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -490,7 +490,7 @@ func IsGamepadButtonDown(gamepad, button int32) bool {
 	cgamepad := (C.int)(gamepad)
 	cbutton := (C.int)(button)
 	ret := C.IsGamepadButtonDown(cgamepad, cbutton)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -499,7 +499,7 @@ func IsGamepadButtonReleased(gamepad, button int32) bool {
 	cgamepad := (C.int)(gamepad)
 	cbutton := (C.int)(button)
 	ret := C.IsGamepadButtonReleased(cgamepad, cbutton)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -508,7 +508,7 @@ func IsGamepadButtonUp(gamepad, button int32) bool {
 	cgamepad := (C.int)(gamepad)
 	cbutton := (C.int)(button)
 	ret := C.IsGamepadButtonUp(cgamepad, cbutton)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -540,7 +540,7 @@ func GetGamepadAxisMovement(gamepad, axis int32) float32 {
 func IsMouseButtonPressed(button int32) bool {
 	cbutton := (C.int)(button)
 	ret := C.IsMouseButtonPressed(cbutton)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -548,7 +548,7 @@ func IsMouseButtonPressed(button int32) bool {
 func IsMouseButtonDown(button int32) bool {
 	cbutton := (C.int)(button)
 	ret := C.IsMouseButtonDown(cbutton)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -556,7 +556,7 @@ func IsMouseButtonDown(button int32) bool {
 func IsMouseButtonReleased(button int32) bool {
 	cbutton := (C.int)(button)
 	ret := C.IsMouseButtonReleased(cbutton)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
@@ -564,7 +564,7 @@ func IsMouseButtonReleased(button int32) bool {
 func IsMouseButtonUp(button int32) bool {
 	cbutton := (C.int)(button)
 	ret := C.IsMouseButtonUp(cbutton)
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 

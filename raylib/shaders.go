@@ -209,7 +209,7 @@ func CloseVrSimulator() {
 // IsVrSimulatorReady - Detect if VR simulator is ready
 func IsVrSimulatorReady() bool {
 	ret := C.IsVrSimulatorReady()
-	v := bool(int(ret) == 1)
+	v := bool(ret)
 	return v
 }
 
