@@ -308,12 +308,20 @@ func ImageDraw(dst, src *Image, srcRec, dstRec Rectangle) {
 }
 
 // ImageDrawRectangle - Draw rectangle within an image
-func ImageDrawRectangle(dst *Image, position Vector2, rec Rectangle, color Color) {
+func ImageDrawRectangle(dst *Image, rec Rectangle, color Color) {
 	cdst := dst.cptr()
-	cposition := position.cptr()
 	crec := rec.cptr()
 	ccolor := color.cptr()
-	C.ImageDrawRectangle(cdst, *cposition, *crec, *ccolor)
+	C.ImageDrawRectangle(cdst, *crec, *ccolor)
+}
+
+// ImageDrawRectangleLines - Draw rectangle lines within an image
+func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int, color Color) {
+	cdst := dst.cptr()
+	crec := rec.cptr()
+	cthick := (C.int)(thick)
+	ccolor := color.cptr()
+	C.ImageDrawRectangleLines(cdst, *crec, cthick, *ccolor)
 }
 
 // ImageDrawText - Draw text (default font) within an image (destination)

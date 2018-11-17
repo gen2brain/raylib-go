@@ -107,6 +107,14 @@ func UnloadSound(sound Sound) {
 	C.UnloadSound(*csound)
 }
 
+// ExportWave - Export wave data to file
+func ExportWave(wave Wave, fileName string) {
+	cwave := wave.cptr()
+	cfileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(cfileName))
+	C.ExportWave(*cwave, cfileName)
+}
+
 // PlaySound - Play a sound
 func PlaySound(sound Sound) {
 	csound := sound.cptr()

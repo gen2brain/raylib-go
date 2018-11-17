@@ -112,12 +112,12 @@ func DrawRectangleRec(rec Rectangle, color Color) {
 }
 
 // DrawRectanglePro - Draw a color-filled rectangle with pro parameters
-func DrawRectanglePro(rec Rectangle, origin Vector2, rotation float32, color Color) {
+func DrawRectanglePro(rec Rectangle, origin Vector2, rotation float32, colors []Color) {
 	crec := rec.cptr()
 	corigin := origin.cptr()
 	crotation := (C.float)(rotation)
-	ccolor := color.cptr()
-	C.DrawRectanglePro(*crec, *corigin, crotation, *ccolor)
+	ccolor := (*C.Color)(unsafe.Pointer(&colors[0]))
+	C.DrawRectanglePro(*crec, *corigin, crotation, ccolor)
 }
 
 // DrawRectangleGradientV - Draw a vertical-gradient-filled rectangle
@@ -289,4 +289,11 @@ func CheckCollisionPointTriangle(point, p1, p2, p3 Vector2) bool {
 	ret := C.CheckCollisionPointTriangle(*cpoint, *cp1, *cp2, *cp3)
 	v := bool(ret)
 	return v
+}
+
+// SetShapesTexture - Define default texture used to draw shapes
+func SetShapesTexture(texture Texture2D, source Rectangle) {
+	ctexture := texture.cptr()
+	csource := source.cptr()
+	C.SetShapesTexture(*ctexture, *csource)
 }

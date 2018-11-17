@@ -190,10 +190,6 @@ extern void LoadDefaultFont(void)
         if (counter > 512) counter = 0;         // Security check...
     }
 
-    //FILE *myimage = fopen("default_font.raw", "wb");
-    //fwrite(image.pixels, 1, 128*128*4, myimage);
-    //fclose(myimage);
-
     Image image = LoadImageEx(imagePixels, imWidth, imHeight);
     ImageFormat(&image, UNCOMPRESSED_GRAY_ALPHA);
 
@@ -204,10 +200,10 @@ extern void LoadDefaultFont(void)
 
     // Reconstruct charSet using charsWidth[], charsHeight, charsDivisor, charsCount
     //------------------------------------------------------------------------------
-    
+
     // Allocate space for our characters info data
     // NOTE: This memory should be freed at end! --> CloseWindow()
-    defaultFont.chars = (CharInfo *)malloc(defaultFont.charsCount*sizeof(CharInfo));    
+    defaultFont.chars = (CharInfo *)malloc(defaultFont.charsCount*sizeof(CharInfo));
 
     int currentLine = 0;
     int currentPosX = charsDivisor;
@@ -242,7 +238,7 @@ extern void LoadDefaultFont(void)
     }
 
     defaultFont.baseSize = (int)defaultFont.chars[0].rec.height;
-    
+
     TraceLog(LOG_INFO, "[TEX ID %i] Default font loaded successfully", defaultFont.texture.id);
 }
 
@@ -262,7 +258,7 @@ Font GetFontDefault()
 #else
     Font font = { 0 };
     return font;
-#endif   
+#endif
 }
 
 // Load Font from file into GPU memory (VRAM)
@@ -276,15 +272,7 @@ Font LoadFont(const char *fileName)
     Font font = { 0 };
 
 #if defined(SUPPORT_FILEFORMAT_TTF)
-    if (IsFileExtension(fileName, ".ttf"))
-    {
-        font.baseSize = DEFAULT_TTF_FONTSIZE;
-        font.charsCount = DEFAULT_TTF_NUMCHARS;
-        font.chars = LoadFontData(fileName, font.baseSize, NULL, font.charsCount, FONT_DEFAULT);
-        Image atlas = GenImageFontAtlas(font.chars, font.charsCount, font.baseSize, 4, 0);
-        font.texture = LoadTextureFromImage(atlas);
-        UnloadImage(atlas);
-    }
+    if (IsFileExtension(fileName, ".ttf")) font = LoadFontEx(fileName, DEFAULT_TTF_FONTSIZE, DEFAULT_TTF_NUMCHARS, NULL);
     else
 #endif
 #if defined(SUPPORT_FILEFORMAT_FNT)
@@ -313,14 +301,19 @@ Font LoadFont(const char *fileName)
 Font LoadFontEx(const char *fileName, int fontSize, int charsCount, int *fontChars)
 {
     Font font = { 0 };
-    
+
     font.baseSize = fontSize;
     font.charsCount = (charsCount > 0) ? charsCount : 95;
     font.chars = LoadFontData(fileName, font.baseSize, fontChars, font.charsCount, FONT_DEFAULT);
-    Image atlas = GenImageFontAtlas(font.chars, font.charsCount, font.baseSize, 2, 0);
-    font.texture = LoadTextureFromImage(atlas);
-    UnloadImage(atlas);
-    
+
+    if (font.chars != NULL)
+    {
+        Image atlas = GenImageFontAtlas(font.chars, font.charsCount, font.baseSize, 2, 0);
+        font.texture = LoadTextureFromImage(atlas);
+        UnloadImage(atlas);
+    }
+    else font = GetFontDefault();
+
     return font;
 }
 
@@ -333,94 +326,100 @@ CharInfo *LoadFontData(const char *fileName, int fontSize, int *fontChars, int c
     #define SDF_CHAR_PADDING            4
     #define SDF_ON_EDGE_VALUE         128
     #define SDF_PIXEL_DIST_SCALE     64.0f
-    
+
     #define BITMAP_ALPHA_THRESHOLD     80
-    
-    // In case no chars count provided, default to 95
-    charsCount = (charsCount > 0) ? charsCount : 95;
-    
-    CharInfo *chars = (CharInfo *)malloc(charsCount*sizeof(CharInfo));
-    
+
+    CharInfo *chars = NULL;
+
     // Load font data (including pixel data) from TTF file
     // NOTE: Loaded information should be enough to generate font image atlas,
     // using any packaging method
     FILE *fontFile = fopen(fileName, "rb");     // Load font file
-    
-    fseek(fontFile, 0, SEEK_END);
-    long size = ftell(fontFile);    // Get file size
-    fseek(fontFile, 0, SEEK_SET);   // Reset file pointer
-    
-    unsigned char *fontBuffer = (unsigned char *)malloc(size);
-    
-    fread(fontBuffer, size, 1, fontFile);
-    fclose(fontFile);
-    
-    // Init font for data reading
-    stbtt_fontinfo fontInfo;
-    if (!stbtt_InitFont(&fontInfo, fontBuffer, 0)) TraceLog(LOG_WARNING, "Failed to init font!");
 
-    // Calculate font scale factor
-    float scaleFactor = stbtt_ScaleForPixelHeight(&fontInfo, (float)fontSize);
+    if (fontFile != NULL)
+    {
+        fseek(fontFile, 0, SEEK_END);
+        long size = ftell(fontFile);    // Get file size
+        fseek(fontFile, 0, SEEK_SET);   // Reset file pointer
 
-    // Calculate font basic metrics
-    // NOTE: ascent is equivalent to font baseline
-    int ascent, descent, lineGap;
-    stbtt_GetFontVMetrics(&fontInfo, &ascent, &descent, &lineGap);
-    
-    // Fill fontChars in case not provided externally
-    // NOTE: By default we fill charsCount consecutevely, starting at 32 (Space)
-    int genFontChars = false;
-    if (fontChars == NULL) genFontChars = true;   
-    if (genFontChars) 
-    {
-        fontChars = (int *)malloc(charsCount*sizeof(int));
-        for (int i = 0; i < charsCount; i++) fontChars[i] = i + 32;
-    }
-    
-    // NOTE: Using simple packaging, one char after another
-    for (int i = 0; i < charsCount; i++) 
-    {
-        int chw = 0, chh = 0;   // Character width and height (on generation)
-        int ch = fontChars[i];  // Character value to get info for
-        chars[i].value = ch;
-        
-        //  Render a unicode codepoint to a bitmap
-        //      stbtt_GetCodepointBitmap()           -- allocates and returns a bitmap
-        //      stbtt_GetCodepointBitmapBox()        -- how big the bitmap must be
-        //      stbtt_MakeCodepointBitmap()          -- renders into bitmap you provide
-        
-        if (type != FONT_SDF) chars[i].data = stbtt_GetCodepointBitmap(&fontInfo, scaleFactor, scaleFactor, ch, &chw, &chh, &chars[i].offsetX, &chars[i].offsetY);
-        else if (ch != 32) chars[i].data = stbtt_GetCodepointSDF(&fontInfo, scaleFactor, ch, SDF_CHAR_PADDING, SDF_ON_EDGE_VALUE, SDF_PIXEL_DIST_SCALE, &chw, &chh, &chars[i].offsetX, &chars[i].offsetY);
-        
-        if (type == FONT_BITMAP)
+        unsigned char *fontBuffer = (unsigned char *)malloc(size);
+
+        fread(fontBuffer, size, 1, fontFile);
+        fclose(fontFile);
+
+        // Init font for data reading
+        stbtt_fontinfo fontInfo;
+        if (!stbtt_InitFont(&fontInfo, fontBuffer, 0)) TraceLog(LOG_WARNING, "Failed to init font!");
+
+        // Calculate font scale factor
+        float scaleFactor = stbtt_ScaleForPixelHeight(&fontInfo, (float)fontSize);
+
+        // Calculate font basic metrics
+        // NOTE: ascent is equivalent to font baseline
+        int ascent, descent, lineGap;
+        stbtt_GetFontVMetrics(&fontInfo, &ascent, &descent, &lineGap);
+
+        // In case no chars count provided, default to 95
+        charsCount = (charsCount > 0) ? charsCount : 95;
+
+        // Fill fontChars in case not provided externally
+        // NOTE: By default we fill charsCount consecutevely, starting at 32 (Space)
+        int genFontChars = false;
+        if (fontChars == NULL)
         {
-            // Aliased bitmap (black & white) font generation, avoiding anti-aliasing
-            // NOTE: For optimum results, bitmap font should be generated at base pixel size
-            for (int p = 0; p < chw*chh; p++)
-            {
-                if (chars[i].data[p] < BITMAP_ALPHA_THRESHOLD) chars[i].data[p] = 0;
-                else chars[i].data[p] = 255;
-            }
+            fontChars = (int *)malloc(charsCount*sizeof(int));
+            for (int i = 0; i < charsCount; i++) fontChars[i] = i + 32;
+            genFontChars = true;
         }
-        
-        chars[i].rec.width = (float)chw;
-        chars[i].rec.height = (float)chh;
-        chars[i].offsetY += (int)((float)ascent*scaleFactor);
-    
-        // Get bounding box for character (may be offset to account for chars that dip above or below the line)
-        int chX1, chY1, chX2, chY2;
-        stbtt_GetCodepointBitmapBox(&fontInfo, ch, scaleFactor, scaleFactor, &chX1, &chY1, &chX2, &chY2);
-        
-        TraceLog(LOG_DEBUG, "Character box measures: %i, %i, %i, %i", chX1, chY1, chX2 - chX1, chY2 - chY1);
-        TraceLog(LOG_DEBUG, "Character offsetY: %i", (int)((float)ascent*scaleFactor) + chY1);
 
-        stbtt_GetCodepointHMetrics(&fontInfo, ch, &chars[i].advanceX, NULL);
-        chars[i].advanceX *= scaleFactor;
+        chars = (CharInfo *)malloc(charsCount*sizeof(CharInfo));
+
+        // NOTE: Using simple packaging, one char after another
+        for (int i = 0; i < charsCount; i++)
+        {
+            int chw = 0, chh = 0;   // Character width and height (on generation)
+            int ch = fontChars[i];  // Character value to get info for
+            chars[i].value = ch;
+
+            //  Render a unicode codepoint to a bitmap
+            //      stbtt_GetCodepointBitmap()           -- allocates and returns a bitmap
+            //      stbtt_GetCodepointBitmapBox()        -- how big the bitmap must be
+            //      stbtt_MakeCodepointBitmap()          -- renders into bitmap you provide
+
+            if (type != FONT_SDF) chars[i].data = stbtt_GetCodepointBitmap(&fontInfo, scaleFactor, scaleFactor, ch, &chw, &chh, &chars[i].offsetX, &chars[i].offsetY);
+            else if (ch != 32) chars[i].data = stbtt_GetCodepointSDF(&fontInfo, scaleFactor, ch, SDF_CHAR_PADDING, SDF_ON_EDGE_VALUE, SDF_PIXEL_DIST_SCALE, &chw, &chh, &chars[i].offsetX, &chars[i].offsetY);
+
+            if (type == FONT_BITMAP)
+            {
+                // Aliased bitmap (black & white) font generation, avoiding anti-aliasing
+                // NOTE: For optimum results, bitmap font should be generated at base pixel size
+                for (int p = 0; p < chw*chh; p++)
+                {
+                    if (chars[i].data[p] < BITMAP_ALPHA_THRESHOLD) chars[i].data[p] = 0;
+                    else chars[i].data[p] = 255;
+                }
+            }
+
+            chars[i].rec.width = (float)chw;
+            chars[i].rec.height = (float)chh;
+            chars[i].offsetY += (int)((float)ascent*scaleFactor);
+
+            // Get bounding box for character (may be offset to account for chars that dip above or below the line)
+            int chX1, chY1, chX2, chY2;
+            stbtt_GetCodepointBitmapBox(&fontInfo, ch, scaleFactor, scaleFactor, &chX1, &chY1, &chX2, &chY2);
+
+            TraceLog(LOG_DEBUG, "Character box measures: %i, %i, %i, %i", chX1, chY1, chX2 - chX1, chY2 - chY1);
+            TraceLog(LOG_DEBUG, "Character offsetY: %i", (int)((float)ascent*scaleFactor) + chY1);
+
+            stbtt_GetCodepointHMetrics(&fontInfo, ch, &chars[i].advanceX, NULL);
+            chars[i].advanceX *= scaleFactor;
+        }
+
+        free(fontBuffer);
+        if (genFontChars) free(fontChars);
     }
-    
-    free(fontBuffer);
-    if (genFontChars) free(fontChars);
-    
+    else TraceLog(LOG_WARNING, "[%s] TTF file could not be opened", fileName);
+
     return chars;
 }
 
@@ -429,25 +428,25 @@ CharInfo *LoadFontData(const char *fileName, int fontSize, int *fontChars, int c
 Image GenImageFontAtlas(CharInfo *chars, int charsCount, int fontSize, int padding, int packMethod)
 {
     Image atlas = { 0 };
-    
+
     // In case no chars count provided we suppose default of 95
     charsCount = (charsCount > 0) ? charsCount : 95;
-    
+
     // Calculate image size based on required pixel area
     // NOTE 1: Image is forced to be squared and POT... very conservative!
-    // NOTE 2: SDF font characters already contain an internal padding, 
+    // NOTE 2: SDF font characters already contain an internal padding,
     // so image size would result bigger than default font type
     float requiredArea = 0;
     for (int i = 0; i < charsCount; i++) requiredArea += ((chars[i].rec.width + 2*padding)*(chars[i].rec.height + 2*padding));
     float guessSize = sqrtf(requiredArea)*1.25f;
     int imageSize = (int)powf(2, ceilf(logf((float)guessSize)/logf(2)));  // Calculate next POT
-    
+
     atlas.width = imageSize;   // Atlas bitmap width
     atlas.height = imageSize;  // Atlas bitmap height
     atlas.data = (unsigned char *)calloc(1, atlas.width*atlas.height);      // Create a bitmap to store characters (8 bpp)
     atlas.format = UNCOMPRESSED_GRAYSCALE;
     atlas.mipmaps = 1;
-    
+
     // DEBUG: We can see padding in the generated image setting a gray background...
     //for (int i = 0; i < atlas.width*atlas.height; i++) ((unsigned char *)atlas.data)[i] = 100;
 
@@ -455,9 +454,9 @@ Image GenImageFontAtlas(CharInfo *chars, int charsCount, int fontSize, int paddi
     {
         int offsetX = padding;
         int offsetY = padding;
-        
+
         // NOTE: Using simple packaging, one char after another
-        for (int i = 0; i < charsCount; i++) 
+        for (int i = 0; i < charsCount; i++)
         {
             // Copy pixel data from fc.data to atlas
             for (int y = 0; y < (int)chars[i].rec.height; y++)
@@ -467,22 +466,22 @@ Image GenImageFontAtlas(CharInfo *chars, int charsCount, int fontSize, int paddi
                     ((unsigned char *)atlas.data)[(offsetY + y)*atlas.width + (offsetX + x)] = chars[i].data[y*(int)chars[i].rec.width + x];
                 }
             }
-            
+
             chars[i].rec.x = (float)offsetX;
             chars[i].rec.y = (float)offsetY;
-            
+
             // Move atlas position X for next character drawing
             offsetX += ((int)chars[i].rec.width + 2*padding);
-            
+
             if (offsetX >= (atlas.width - (int)chars[i].rec.width - padding))
             {
                 offsetX = padding;
-                
-                // NOTE: Be careful on offsetY for SDF fonts, by default SDF 
+
+                // NOTE: Be careful on offsetY for SDF fonts, by default SDF
                 // use an internal padding of 4 pixels, it means char rectangle
                 // height is bigger than fontSize, it could be up to (fontSize + 8)
                 offsetY += (fontSize + 2*padding);
-                
+
                 if (offsetY > (atlas.height - fontSize - padding)) break;
             }
         }
@@ -490,13 +489,13 @@ Image GenImageFontAtlas(CharInfo *chars, int charsCount, int fontSize, int paddi
     else if (packMethod == 1)  // Use Skyline rect packing algorythm (stb_pack_rect)
     {
         TraceLog(LOG_DEBUG, "Using Skyline packing algorythm!");
-        
+
         stbrp_context *context = (stbrp_context *)malloc(sizeof(*context));
         stbrp_node *nodes = (stbrp_node *)malloc(charsCount*sizeof(*nodes));
 
         stbrp_init_target(context, atlas.width, atlas.height, nodes, charsCount);
         stbrp_rect *rects = (stbrp_rect *)malloc(charsCount*sizeof(stbrp_rect));
-        
+
         // Fill rectangles for packaging
         for (int i = 0; i < charsCount; i++)
         {
@@ -507,12 +506,12 @@ Image GenImageFontAtlas(CharInfo *chars, int charsCount, int fontSize, int paddi
 
         // Package rectangles into atlas
         stbrp_pack_rects(context, rects, charsCount);
-        
+
         for (int i = 0; i < charsCount; i++)
         {
             chars[i].rec.x = rects[i].x + (float)padding;
             chars[i].rec.y = rects[i].y + (float)padding;
-            
+
             if (rects[i].was_packed)
             {
                 // Copy pixel data from fc.data to atlas
@@ -527,12 +526,13 @@ Image GenImageFontAtlas(CharInfo *chars, int charsCount, int fontSize, int paddi
             else TraceLog(LOG_WARNING, "Character could not be packed: %i", i);
         }
 
+        free(rects);
         free(nodes);
         free(context);
     }
-    
+
     // TODO: Crop image if required for smaller size
-    
+
     // Convert image data from GRAYSCALE to GRAY_ALPHA
     // WARNING: ImageAlphaMask(&atlas, atlas) does not work in this case, requires manual operation
     unsigned char *dataGrayAlpha = (unsigned char *)malloc(imageSize*imageSize*sizeof(unsigned char)*2); // Two channels
@@ -546,7 +546,7 @@ Image GenImageFontAtlas(CharInfo *chars, int charsCount, int fontSize, int paddi
     free(atlas.data);
     atlas.data = dataGrayAlpha;
     atlas.format = UNCOMPRESSED_GRAY_ALPHA;
-    
+
     return atlas;
 }
 
@@ -561,6 +561,28 @@ void UnloadFont(Font font)
 
         TraceLog(LOG_DEBUG, "Unloaded sprite font data");
     }
+}
+
+// Shows current FPS on top-left corner
+// NOTE: Uses default font
+void DrawFPS(int posX, int posY)
+{
+    // NOTE: We are rendering fps every second for better viewing on high framerates
+
+    static int fps = 0;
+    static int counter = 0;
+    static int refreshRate = 20;
+
+    if (counter < refreshRate) counter++;
+    else
+    {
+        fps = GetFPS();
+        refreshRate = fps;
+        counter = 0;
+    }
+
+    // NOTE: We have rounding errors every frame, so it oscillates a lot
+    DrawText(FormatText("%2i FPS", fps), posX, posY, 20, LIME);
 }
 
 // Draw text (using default font)
@@ -588,10 +610,10 @@ void DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, f
     int length = strlen(text);
     int textOffsetX = 0;        // Offset between characters
     int textOffsetY = 0;        // Required for line break!
-    float scaleFactor;
+    float scaleFactor = 0.0f;
 
-    unsigned char letter;       // Current character
-    int index;                  // Index position in sprite font
+    unsigned char letter = 0;   // Current character
+    int index = 0;              // Index position in sprite font
 
     scaleFactor = fontSize/font.baseSize;
 
@@ -623,7 +645,7 @@ void DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, f
                 i++;
             }
             else index = GetGlyphIndex(font, (unsigned char)text[i]);
-            
+
             if ((unsigned char)text[i] != ' ')
             {
                 DrawTexturePro(font.texture, font.chars[index].rec,
@@ -637,44 +659,6 @@ void DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, f
             else textOffsetX += (int)(font.chars[index].advanceX*scaleFactor + spacing);
         }
     }
-}
-
-// Formatting of text with variables to 'embed'
-const char *FormatText(const char *text, ...)
-{
-    static char buffer[MAX_FORMATTEXT_LENGTH];
-
-    va_list args;
-    va_start(args, text);
-    vsprintf(buffer, text, args);
-    va_end(args);
-
-    return buffer;
-}
-
-// Get a piece of a text string
-const char *SubText(const char *text, int position, int length)
-{
-    static char buffer[MAX_SUBTEXT_LENGTH];
-    int textLength = strlen(text);
-
-    if (position >= textLength)
-    {
-        position = textLength - 1;
-        length = 0;
-    }
-
-    if (length >= textLength) length = textLength;
-
-    for (int c = 0 ; c < length ; c++)
-    {
-        *(buffer + c) = *(text + position);
-        text++;
-    }
-
-    *(buffer + length) = '\0';
-
-    return buffer;
 }
 
 // Measure string width for default font
@@ -702,8 +686,8 @@ Vector2 MeasureTextEx(Font font, const char *text, float fontSize, float spacing
     int tempLen = 0;                // Used to count longer text line num chars
     int lenCounter = 0;
 
-    float textWidth = 0;
-    float tempTextWidth = 0;        // Used to count longer text line width
+    float textWidth = 0.0f;
+    float tempTextWidth = 0.0f;     // Used to count longer text line width
 
     float textHeight = (float)font.baseSize;
     float scaleFactor = fontSize/(float)font.baseSize;
@@ -761,26 +745,88 @@ int GetGlyphIndex(Font font, int character)
 #endif
 }
 
-// Shows current FPS on top-left corner
-// NOTE: Uses default font
-void DrawFPS(int posX, int posY)
+// Formatting of text with variables to 'embed'
+const char *FormatText(const char *text, ...)
 {
-    // NOTE: We are rendering fps every second for better viewing on high framerates
+    static char buffer[MAX_FORMATTEXT_LENGTH];
 
-    static int fps = 0;
-    static int counter = 0;
-    static int refreshRate = 20;
+    va_list args;
+    va_start(args, text);
+    vsprintf(buffer, text, args);
+    va_end(args);
 
-    if (counter < refreshRate) counter++;
-    else
+    return buffer;
+}
+
+// Get a piece of a text string
+const char *SubText(const char *text, int position, int length)
+{
+    static char buffer[MAX_SUBTEXT_LENGTH] = { 0 };
+    int textLength = strlen(text);
+
+    if (position >= textLength)
     {
-        fps = GetFPS();
-        refreshRate = fps;
-        counter = 0;
+        position = textLength - 1;
+        length = 0;
     }
-    
-    // NOTE: We have rounding errors every frame, so it oscillates a lot
-    DrawText(FormatText("%2i FPS", fps), posX, posY, 20, LIME);
+
+    if (length >= textLength) length = textLength;
+
+    for (int c = 0 ; c < length ; c++)
+    {
+        *(buffer + c) = *(text + position);
+        text++;
+    }
+
+    *(buffer + length) = '\0';
+
+    return buffer;
+}
+
+// Split string into multiple strings
+// NOTE: Files count is returned by parameters pointer
+// NOTE: Allocated memory should be manually freed
+char **SplitText(char *text, char delimiter, int *strCount)
+{
+    #define MAX_SUBSTRING_LENGTH 128
+
+    char **strings = NULL;
+    int len = strlen(text);
+    char *strDup = (char *)malloc(len + 1);
+    strcpy(strDup, text);
+    int counter = 1;
+
+    // Count how many substrings we have on string
+    for (int i = 0; i < len; i++) if (text[i] == delimiter) counter++;
+
+    // Memory allocation for substrings
+    strings = (char **)malloc(sizeof(char *)*counter);
+    for (int i = 0; i < counter; i++) strings[i] = (char *)malloc(sizeof(char)*MAX_SUBSTRING_LENGTH);
+
+    char *substrPtr = NULL;
+    char delimiters[1] = { delimiter };         // Only caring for one delimiter
+    substrPtr = strtok(strDup, delimiters);
+
+    for (int i = 0; (i < counter) && (substrPtr != NULL); i++)
+    {
+        strcpy(strings[i], substrPtr);
+        substrPtr = strtok(NULL, delimiters);
+    }
+
+    *strCount = counter;
+    free(strDup);
+
+    return strings;
+}
+
+// Check if two text string are equal
+bool IsEqualText(const char *text1, const char *text2)
+{
+    bool result = false;
+
+    if (strcmp(text1, text2) == 0) result = true;
+
+    return result;
 }
 
 //----------------------------------------------------------------------------------
@@ -815,7 +861,7 @@ static Font LoadImageFont(Image image, Color key, int firstChar)
         {
             if (!COLOR_EQUAL(pixels[y*image.width + x], key)) break;
         }
-        
+
         if (!COLOR_EQUAL(pixels[y*image.width + x], key)) break;
     }
 
@@ -911,17 +957,18 @@ static Font LoadBMFont(const char *fileName)
     Font font = { 0 };
     font.texture.id = 0;
 
-    char buffer[MAX_BUFFER_SIZE];
+    char buffer[MAX_BUFFER_SIZE] = { 0 };
     char *searchPoint = NULL;
 
     int fontSize = 0;
-    int texWidth, texHeight;
+    int texWidth = 0;
+    int texHeight = 0;
     char texFileName[129];
     int charsCount = 0;
 
-    int base;   // Useless data
+    int base = 0;   // Useless data
 
-    FILE *fntFile;
+    FILE *fntFile = NULL;
 
     fntFile = fopen(fileName, "rt");
 
@@ -984,10 +1031,10 @@ static Font LoadBMFont(const char *fileName)
         UnloadImage(imCopy);
     }
     else font.texture = LoadTextureFromImage(imFont);
-    
+
     UnloadImage(imFont);
     free(texPath);
-    
+
 
     // Fill font characters info data
     font.baseSize = fontSize;

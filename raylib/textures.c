@@ -60,7 +60,7 @@
 #include "raylib.h"             // Declares module functions
 
 #include <stdlib.h>             // Required for: malloc(), free()
-#include <string.h>             // Required for: strcmp(), strrchr(), strncmp()
+#include <string.h>             // Required for: strlen()
 
 #include "rlgl.h"               // raylib OpenGL abstraction layer to OpenGL 1.1, 3.3 or ES2
                                 // Required for: rlLoadTexture() rlDeleteTextures(),
@@ -147,8 +147,8 @@ static Image LoadDDS(const char *fileName);   // Load DDS file
 static Image LoadPKM(const char *fileName);   // Load PKM file
 #endif
 #if defined(SUPPORT_FILEFORMAT_KTX)
-static Image LoadKTX(const char *fileName);   // Load KTX file
-static void SaveKTX(Image image, const char *fileName); // Save image data as KTX file
+static Image LoadKTX(const char *fileName);             // Load KTX file
+static int SaveKTX(Image image, const char *fileName);  // Save image data as KTX file
 #endif
 #if defined(SUPPORT_FILEFORMAT_PVR)
 static Image LoadPVR(const char *fileName);   // Load PVR file
@@ -323,7 +323,7 @@ Image LoadImageRaw(const char *fileName, int width, int height, int format, int 
 
         // NOTE: fread() returns num read elements instead of bytes,
         // to get bytes we need to read (1 byte size, elements) instead of (x byte size, 1 element)
-        size_t bytes = fread(image.data, 1, size, rawFile);
+        int bytes = fread(image.data, 1, size, rawFile);
 
         // Check if data has been read successfully
         if (bytes < size)
@@ -424,7 +424,7 @@ Color *GetImageData(Image image)
         if ((image.format == UNCOMPRESSED_R32) ||
             (image.format == UNCOMPRESSED_R32G32B32) ||
             (image.format == UNCOMPRESSED_R32G32B32A32)) TraceLog(LOG_WARNING, "32bit pixel format converted to 8bit per channel");
-                    
+
         for (int i = 0, k = 0; i < image.width*image.height; i++)
         {
             switch (image.format)
@@ -500,7 +500,7 @@ Color *GetImageData(Image image)
                     pixels[i].g = 0;
                     pixels[i].b = 0;
                     pixels[i].a = 255;
-                    
+
                 } break;
                 case UNCOMPRESSED_R32G32B32:
                 {
@@ -508,7 +508,7 @@ Color *GetImageData(Image image)
                     pixels[i].g = (unsigned char)(((float *)image.data)[k + 1]*255.0f);
                     pixels[i].b = (unsigned char)(((float *)image.data)[k + 2]*255.0f);
                     pixels[i].a = 255;
-                    
+
                     k += 3;
                 }
                 case UNCOMPRESSED_R32G32B32A32:
@@ -517,7 +517,7 @@ Color *GetImageData(Image image)
                     pixels[i].g = (unsigned char)(((float *)image.data)[k]*255.0f);
                     pixels[i].b = (unsigned char)(((float *)image.data)[k]*255.0f);
                     pixels[i].a = (unsigned char)(((float *)image.data)[k]*255.0f);
-                    
+
                     k += 4;
                 }
                 default: break;
@@ -532,7 +532,7 @@ Color *GetImageData(Image image)
 Vector4 *GetImageDataNormalized(Image image)
 {
     Vector4 *pixels = (Vector4 *)malloc(image.width*image.height*sizeof(Vector4));
-    
+
     if (image.format >= COMPRESSED_DXT1_RGB) TraceLog(LOG_WARNING, "Pixel data retrieval not supported for compressed image formats");
     else
     {
@@ -611,7 +611,7 @@ Vector4 *GetImageDataNormalized(Image image)
                     pixels[i].y = 0.0f;
                     pixels[i].z = 0.0f;
                     pixels[i].w = 1.0f;
-                    
+
                 } break;
                 case UNCOMPRESSED_R32G32B32:
                 {
@@ -619,7 +619,7 @@ Vector4 *GetImageDataNormalized(Image image)
                     pixels[i].y = ((float *)image.data)[k + 1];
                     pixels[i].z = ((float *)image.data)[k + 2];
                     pixels[i].w = 1.0f;
-                    
+
                     k += 3;
                 }
                 case UNCOMPRESSED_R32G32B32A32:
@@ -628,14 +628,14 @@ Vector4 *GetImageDataNormalized(Image image)
                     pixels[i].y = ((float *)image.data)[k + 1];
                     pixels[i].z = ((float *)image.data)[k + 2];
                     pixels[i].w = ((float *)image.data)[k + 3];
-                    
+
                     k += 4;
                 }
                 default: break;
             }
         }
     }
-    
+
     return pixels;
 }
 
@@ -720,29 +720,66 @@ void UpdateTexture(Texture2D texture, const void *pixels)
 void ExportImage(Image image, const char *fileName)
 {
     int success = 0;
-    
+
     // NOTE: Getting Color array as RGBA unsigned char values
     unsigned char *imgData = (unsigned char *)GetImageData(image);
-    
+
     if (IsFileExtension(fileName, ".png")) success = stbi_write_png(fileName, image.width, image.height, 4, imgData, image.width*4);
     else if (IsFileExtension(fileName, ".bmp")) success = stbi_write_bmp(fileName, image.width, image.height, 4, imgData);
     else if (IsFileExtension(fileName, ".tga")) success = stbi_write_tga(fileName, image.width, image.height, 4, imgData);
     else if (IsFileExtension(fileName, ".jpg")) success = stbi_write_jpg(fileName, image.width, image.height, 4, imgData, 80);  // JPG quality: between 1 and 100
-    else if (IsFileExtension(fileName, ".ktx")) SaveKTX(image, fileName);
-    else if (IsFileExtension(fileName, ".raw")) 
+    else if (IsFileExtension(fileName, ".ktx")) success = SaveKTX(image, fileName);
+    else if (IsFileExtension(fileName, ".raw"))
     {
         // Export raw pixel data (without header)
         // NOTE: It's up to the user to track image parameters
         FILE *rawFile = fopen(fileName, "wb");
-        fwrite(image.data, GetPixelDataSize(image.width, image.height, image.format), 1, rawFile);
+        success = fwrite(image.data, GetPixelDataSize(image.width, image.height, image.format), 1, rawFile);
         fclose(rawFile);
     }
-    else if (IsFileExtension(fileName, ".h")) { }    // TODO: Export pixel data as an array of bytes
-    
+
     if (success != 0) TraceLog(LOG_INFO, "Image exported successfully: %s", fileName);
     else TraceLog(LOG_WARNING, "Image could not be exported.");
-    
+
     free(imgData);
+}
+
+// Export image as code file (.h) defining an array of bytes
+void ExportImageAsCode(Image image, const char *fileName)
+{
+    #define BYTES_TEXT_PER_LINE     20
+
+    char varFileName[256] = { 0 };
+    int dataSize = GetPixelDataSize(image.width, image.height, image.format);
+
+    FILE *txtFile = fopen(fileName, "wt");
+
+    fprintf(txtFile, "\n//////////////////////////////////////////////////////////////////////////////////////\n");
+    fprintf(txtFile, "//                                                                                    //\n");
+    fprintf(txtFile, "// ImageAsCode exporter v1.0 - Image pixel data exported as an array of bytes         //\n");
+    fprintf(txtFile, "//                                                                                    //\n");
+    fprintf(txtFile, "// more info and bugs-report:  github.com/raysan5/raylib                              //\n");
+    fprintf(txtFile, "// feedback and support:       ray[at]raylib.com                                      //\n");
+    fprintf(txtFile, "//                                                                                    //\n");
+    fprintf(txtFile, "// Copyright (c) 2018 Ramon Santamaria (@raysan5)                                     //\n");
+    fprintf(txtFile, "//                                                                                    //\n");
+    fprintf(txtFile, "////////////////////////////////////////////////////////////////////////////////////////\n\n");
+
+    // Get file name from path and convert variable name to uppercase
+    strcpy(varFileName, GetFileNameWithoutExt(fileName));
+    for (int i = 0; varFileName[i] != '\0'; i++) if (varFileName[i] >= 'a' && varFileName[i] <= 'z') { varFileName[i] = varFileName[i] - 32; }
+
+    // Add image information
+    fprintf(txtFile, "// Image data information\n");
+    fprintf(txtFile, "#define %s_WIDTH    %i\n", varFileName, image.width);
+    fprintf(txtFile, "#define %s_HEIGHT   %i\n", varFileName, image.height);
+    fprintf(txtFile, "#define %s_FORMAT   %i          // raylib internal pixel format\n\n", varFileName, image.format);
+
+    fprintf(txtFile, "static unsigned char %s_DATA[%i] = { ", varFileName, dataSize);
+    for (int i = 0; i < dataSize - 1; i++) fprintf(txtFile, ((i%BYTES_TEXT_PER_LINE == 0) ? "0x%x,\n" : "0x%x, "), ((unsigned char *)image.data)[i]);
+    fprintf(txtFile, "0x%x };\n", ((unsigned char *)image.data)[dataSize - 1]);
+
+    fclose(txtFile);
 }
 
 // Copy an image to a new image
@@ -950,7 +987,7 @@ void ImageFormat(Image *image, int newFormat)
                 case UNCOMPRESSED_R32:
                 {
                     // WARNING: Image is converted to GRAYSCALE eqeuivalent 32bit
-                    
+
                     image->data = (float *)malloc(image->width*image->height*sizeof(float));
 
                     for (int i = 0; i < image->width*image->height; i++)
@@ -986,7 +1023,7 @@ void ImageFormat(Image *image, int newFormat)
 
             free(pixels);
             pixels = NULL;
-            
+
             // In case original image had mipmaps, generate mipmaps for formated image
             // NOTE: Original mipmaps are replaced by new ones, if custom mipmaps were used, they are lost
             if (image->mipmaps > 1)
@@ -1050,14 +1087,14 @@ void ImageAlphaMask(Image *image, Image alphaMask)
 void ImageAlphaClear(Image *image, Color color, float threshold)
 {
     Color *pixels = GetImageData(*image);
-    
+
     for (int i = 0; i < image->width*image->height; i++) if (pixels[i].a <= (unsigned char)(threshold*255.0f)) pixels[i] = color;
 
     UnloadImage(*image);
-    
+
     int prevFormat = image->format;
     *image = LoadImageEx(pixels, image->width, image->height);
-    
+
     ImageFormat(image, prevFormat);
 }
 
@@ -1065,13 +1102,13 @@ void ImageAlphaClear(Image *image, Color color, float threshold)
 void ImageAlphaCrop(Image *image, float threshold)
 {
     Rectangle crop = { 0 };
-    
+
     Color *pixels = GetImageData(*image);
-    
+
     int minx = 0;
     int miny = 0;
 
-    for (int i = 0; i < image->width*image->height; i++) 
+    for (int i = 0; i < image->width*image->height; i++)
     {
         if (pixels[i].a > (unsigned char)(threshold*255.0f))
         {
@@ -1090,18 +1127,18 @@ void ImageAlphaCrop(Image *image, float threshold)
             else if (crop.height < (float)miny) crop.height = (float)miny;
         }
     }
-    
+
     crop.width -= (crop.x - 1);
     crop.height -= (crop.y - 1);
-    
+
     TraceLog(LOG_INFO, "Crop rectangle: (%i, %i, %i, %i)", crop.x, crop.y, crop.width, crop.height);
-    
+
     free(pixels);
-    
+
     // NOTE: Added this weird check to avoid additional 1px crop to
     // image data that has already been cropped...
-    if ((crop.x != 1) && 
-        (crop.y != 1) && 
+    if ((crop.x != 1) &&
+        (crop.y != 1) &&
         (crop.width != image->width - 1) &&
         (crop.height != image->height - 1)) ImageCrop(image, crop);
 }
@@ -1111,8 +1148,8 @@ void ImageAlphaPremultiply(Image *image)
 {
     float alpha = 0.0f;
     Color *pixels = GetImageData(*image);
-    
-    for (int i = 0; i < image->width*image->height; i++) 
+
+    for (int i = 0; i < image->width*image->height; i++)
     {
         alpha = (float)pixels[i].a/255.0f;
         pixels[i].r = (unsigned char)((float)pixels[i].r*alpha);
@@ -1121,10 +1158,10 @@ void ImageAlphaPremultiply(Image *image)
     }
 
     UnloadImage(*image);
-    
+
     int prevFormat = image->format;
     *image = LoadImageEx(pixels, image->width, image->height);
-    
+
     ImageFormat(image, prevFormat);
 }
 
@@ -1245,9 +1282,9 @@ void ImageResizeCanvas(Image *image, int newWidth,int newHeight, int offsetX, in
     Image imTemp = GenImageColor(newWidth, newHeight, color);
     Rectangle srcRec = { 0.0f, 0.0f, (float)image->width, (float)image->height };
     Rectangle dstRec = { (float)offsetX, (float)offsetY, (float)srcRec.width, (float)srcRec.height };
-    
+
     // TODO: Review different scaling situations
-    
+
     if ((newWidth > image->width) && (newHeight > image->height))
     {
         ImageDraw(&imTemp, *image, srcRec, dstRec);
@@ -1277,7 +1314,7 @@ void ImageMipmaps(Image *image)
     {
         if (mipWidth != 1) mipWidth /= 2;
         if (mipHeight != 1) mipHeight /= 2;
-        
+
         // Security check for NPOT textures
         if (mipWidth < 1) mipWidth = 1;
         if (mipHeight < 1) mipHeight = 1;
@@ -1295,8 +1332,8 @@ void ImageMipmaps(Image *image)
     if (image->mipmaps < mipCount)
     {
         void *temp = realloc(image->data, mipSize);
-        
-        if (temp != NULL) 
+
+        if (temp != NULL)
         {
             image->data = temp;      // Assign new pointer (new size) to store mipmaps data
             TraceLog(LOG_DEBUG, "Image data memory point reallocated: 0x%x", temp);
@@ -1305,29 +1342,29 @@ void ImageMipmaps(Image *image)
 
         // Pointer to allocated memory point where store next mipmap level data
         unsigned char *nextmip = (unsigned char *)image->data + GetPixelDataSize(image->width, image->height, image->format);
-        
+
         mipWidth = image->width/2;
         mipHeight = image->height/2;
         mipSize = GetPixelDataSize(mipWidth, mipHeight, image->format);
         Image imCopy = ImageCopy(*image);
-        
+
         for (int i = 1; i < mipCount; i++)
         {
             TraceLog(LOG_DEBUG, "Gen mipmap level: %i (%i x %i) - size: %i - offset: 0x%x", i, mipWidth, mipHeight, mipSize, nextmip);
-            
+
             ImageResize(&imCopy, mipWidth, mipHeight);  // Uses internally Mitchell cubic downscale filter
 
             memcpy(nextmip, imCopy.data, mipSize);
             nextmip += mipSize;
             image->mipmaps++;
-            
+
             mipWidth /= 2;
             mipHeight /= 2;
-            
+
             // Security check for NPOT textures
             if (mipWidth < 1) mipWidth = 1;
             if (mipHeight < 1) mipHeight = 1;
-            
+
             mipSize = GetPixelDataSize(mipWidth, mipHeight, image->format);
         }
 
@@ -1445,6 +1482,57 @@ void ImageDither(Image *image, int rBpp, int gBpp, int bBpp, int aBpp)
     }
 }
 
+// Extract color palette from image to maximum size
+// NOTE: Memory allocated should be freed manually!
+Color *ImageExtractPalette(Image image, int maxPaletteSize, int *extractCount)
+{
+    #define COLOR_EQUAL(col1, col2) ((col1.r == col2.r)&&(col1.g == col2.g)&&(col1.b == col2.b)&&(col1.a == col2.a))
+
+    Color *pixels = GetImageData(image);
+    Color *palette = (Color *)malloc(maxPaletteSize*sizeof(Color));
+
+    int palCount = 0;
+    for (int i = 0; i < maxPaletteSize; i++) palette[i] = BLANK;   // Set all colors to BLANK
+
+    for (int i = 0; i < image.width*image.height; i++)
+    {
+        if (pixels[i].a > 0)
+        {
+            bool colorInPalette = false;
+
+            // Check if the color is already on palette
+            for (int j = 0; j < maxPaletteSize; j++)
+            {
+                if (COLOR_EQUAL(pixels[i], palette[j]))
+                {
+                    colorInPalette = true;
+                    break;
+                }
+            }
+
+            // Store color if not on the palette
+            if (!colorInPalette)
+            {
+                palette[palCount] = pixels[i];      // Add pixels[i] to palette
+                palCount++;
+
+                // We reached the limit of colors supported by palette
+                if (palCount >= maxPaletteSize)
+                {
+                    i = image.width*image.height;   // Finish palette get
+                    printf("WARNING: Image palette is greater than %i colors!\n", maxPaletteSize);
+                }
+            }
+        }
+    }
+
+    free(pixels);
+
+    *extractCount = palCount;
+
+    return palette;
+}
+
 // Draw an image (source) within an image (destination)
 // TODO: Feel this function could be simplified...
 void ImageDraw(Image *dst, Image src, Rectangle srcRec, Rectangle dstRec)
@@ -1507,7 +1595,7 @@ void ImageDraw(Image *dst, Image src, Rectangle srcRec, Rectangle dstRec)
     UnloadImage(srcCopy);       // Source copy not required any more...
 
     Vector4 fsrc, fdst, fout;   // float based versions of pixel data
-    
+
     // Blit pixels, copy source image into destination
     // TODO: Probably out-of-bounds blitting could be considered here instead of so much cropping...
     for (int j = (int)dstRec.y; j < (int)(dstRec.y + dstRec.height); j++)
@@ -1515,12 +1603,12 @@ void ImageDraw(Image *dst, Image src, Rectangle srcRec, Rectangle dstRec)
         for (int i = (int)dstRec.x; i < (int)(dstRec.x + dstRec.width); i++)
         {
             // Alpha blending (https://en.wikipedia.org/wiki/Alpha_compositing)
-            
+
             fdst = ColorNormalize(dstPixels[j*(int)dst->width + i]);
             fsrc = ColorNormalize(srcPixels[(j - (int)dstRec.y)*(int)dstRec.width + (i - (int)dstRec.x)]);
 
             fout.w = fsrc.w + fdst.w*(1.0f - fsrc.w);
-            
+
             if (fout.w <= 0.0f)
             {
                 fout.x = 0.0f;
@@ -1534,9 +1622,9 @@ void ImageDraw(Image *dst, Image src, Rectangle srcRec, Rectangle dstRec)
                 fout.z = (fsrc.z*fsrc.w + fdst.z*fdst.w*(1 - fsrc.w))/fout.w;
             }
 
-            dstPixels[j*(int)dst->width + i] = (Color){ (unsigned char)(fout.x*255.0f), 
-                                                        (unsigned char)(fout.y*255.0f), 
-                                                        (unsigned char)(fout.z*255.0f), 
+            dstPixels[j*(int)dst->width + i] = (Color){ (unsigned char)(fout.x*255.0f),
+                                                        (unsigned char)(fout.y*255.0f),
+                                                        (unsigned char)(fout.z*255.0f),
                                                         (unsigned char)(fout.w*255.0f) };
 
             // TODO: Support other blending options
@@ -1574,16 +1662,16 @@ Image ImageTextEx(Font font, const char *text, float fontSize, float spacing, Co
 
     // TODO: ISSUE: Measured text size does not seem to be correct... issue on ImageDraw()
     Vector2 imSize = MeasureTextEx(font, text, (float)font.baseSize, spacing);
-    
+
     TraceLog(LOG_DEBUG, "Text Image size: %f, %f", imSize.x, imSize.y);
 
     // NOTE: glGetTexImage() not available in OpenGL ES
-    // TODO: This is horrible, retrieving font texture from GPU!!! 
+    // TODO: This is horrible, retrieving font texture from GPU!!!
     // Define ImageFont struct? or include Image spritefont in Font struct?
     Image imFont = GetTextureData(font.texture);
-    
+
     ImageFormat(&imFont, UNCOMPRESSED_R8G8B8A8);    // Make sure image format could be properly colored!
-    
+
     ImageColorTint(&imFont, tint);                  // Apply color tint to font
 
     // Create image to store text
@@ -1614,10 +1702,10 @@ Image ImageTextEx(Font font, const char *text, float fontSize, float spacing, Co
             else index = GetGlyphIndex(font, (unsigned char)text[i]);
 
             CharInfo letter = font.chars[index];
-            
+
             if ((unsigned char)text[i] != ' ')
             {
-                ImageDraw(&imText, imFont, letter.rec, (Rectangle){ (float)(posX + letter.offsetX), 
+                ImageDraw(&imText, imFont, letter.rec, (Rectangle){ (float)(posX + letter.offsetX),
                     (float)letter.offsetY, (float)letter.rec.width, (float)letter.rec.height });
             }
 
@@ -1643,15 +1731,20 @@ Image ImageTextEx(Font font, const char *text, float fontSize, float spacing, Co
 }
 
 // Draw rectangle within an image
-void ImageDrawRectangle(Image *dst, Vector2 position, Rectangle rec, Color color)
+void ImageDrawRectangle(Image *dst, Rectangle rec, Color color)
 {
     Image imRec = GenImageColor((int)rec.width, (int)rec.height, color);
-    
-    Rectangle dstRec = { position.x, position.y, (float)imRec.width, (float)imRec.height };
-
-    ImageDraw(dst, imRec, rec, dstRec);
-    
+    ImageDraw(dst, imRec, (Rectangle){ 0, 0, rec.width, rec.height }, rec);
     UnloadImage(imRec);
+}
+
+// Draw rectangle lines within an image
+void ImageDrawRectangleLines(Image *dst, Rectangle rec, int thick, Color color)
+{
+    ImageDrawRectangle(dst, (Rectangle){ rec.x, rec.y, rec.width, thick }, color);
+    ImageDrawRectangle(dst, (Rectangle){ rec.x, rec.y + thick, thick, rec.height - thick*2 }, color);
+    ImageDrawRectangle(dst, (Rectangle){ rec.x + rec.width - thick, rec.y + thick, thick, rec.height - thick*2 }, color);
+    ImageDrawRectangle(dst, (Rectangle){ rec.x, rec.height - thick, rec.width, thick }, color);
 }
 
 // Draw text (default font) within an image (destination)
@@ -1968,13 +2061,13 @@ void ImageColorReplace(Image *image, Color color, Color replace)
 Image GenImageColor(int width, int height, Color color)
 {
     Color *pixels = (Color *)calloc(width*height, sizeof(Color));
-    
+
     for (int i = 0; i < width*height; i++) pixels[i] = color;
-    
+
     Image image = LoadImageEx(pixels, width, height);
-    
+
     free(pixels);
-    
+
     return image;
 }
 
@@ -2032,17 +2125,17 @@ Image GenImageGradientRadial(int width, int height, float density, Color inner, 
 
     float centerX = (float)width/2.0f;
     float centerY = (float)height/2.0f;
-    
+
     for (int y = 0; y < height; y++)
     {
         for (int x = 0; x < width; x++)
         {
             float dist = hypotf((float)x - centerX, (float)y - centerY);
             float factor = (dist - radius*density)/(radius*(1.0f - density));
-            
+
             factor = (float)fmax(factor, 0.f);
             factor = (float)fmin(factor, 1.f); // dist can be bigger than radius so we have to check
-            
+
             pixels[y*width + x].r = (int)((float)outer.r*factor + (float)inner.r*(1.0f - factor));
             pixels[y*width + x].g = (int)((float)outer.g*factor + (float)inner.g*(1.0f - factor));
             pixels[y*width + x].b = (int)((float)outer.b*factor + (float)inner.b*(1.0f - factor));
@@ -2104,7 +2197,7 @@ Image GenImagePerlinNoise(int width, int height, int offsetX, int offsetY, float
         {
             float nx = (float)(x + offsetX)*scale/(float)width;
             float ny = (float)(y + offsetY)*scale/(float)height;
-            
+
             // Typical values to start playing with:
             //   lacunarity = ~2.0   -- spacing between successive octaves (use exactly 2.0 for wrapping output)
             //   gain       =  0.5   -- relative weighting applied to each successive octave
@@ -2112,7 +2205,7 @@ Image GenImagePerlinNoise(int width, int height, int offsetX, int offsetY, float
 
             // NOTE: We need to translate the data from [-1..1] to [0..1]
             float p = (stb_perlin_fbm_noise3(nx, ny, 1.0f, 2.0f, 0.5f, 6, 0, 0, 0) + 1.0f)/2.0f;
-            
+
             int intensity = (int)(p*255.0f);
             pixels[y*width + x] = (Color){intensity, intensity, intensity, 255};
         }
@@ -2145,7 +2238,7 @@ Image GenImageCellular(int width, int height, int tileSize)
     for (int y = 0; y < height; y++)
     {
         int tileY = y/tileSize;
-        
+
         for (int x = 0; x < width; x++)
         {
             int tileX = x/tileSize;
@@ -2175,7 +2268,7 @@ Image GenImageCellular(int width, int height, int tileSize)
             pixels[y*width + x] = (Color){ intensity, intensity, intensity, 255 };
         }
     }
-    
+
     free(seeds);
 
     Image image = LoadImageEx(pixels, width, height);
@@ -2323,7 +2416,7 @@ void DrawTexturePro(Texture2D texture, Rectangle sourceRec, Rectangle destRec, V
     {
         float width = (float)texture.width;
         float height = (float)texture.height;
-        
+
         if (sourceRec.width < 0) sourceRec.x -= sourceRec.width;
         if (sourceRec.height < 0) sourceRec.y -= sourceRec.height;
 
@@ -2618,11 +2711,11 @@ static Image LoadDDS(const char *fileName)
     else
     {
         // Verify the type of file
-        char filecode[4];
+        char ddsHeaderId[4];
 
-        fread(filecode, 4, 1, ddsFile);
+        fread(ddsHeaderId, 4, 1, ddsFile);
 
-        if (strncmp(filecode, "DDS ", 4) != 0)
+        if ((ddsHeaderId[0] != 'D') || (ddsHeaderId[1] != 'D') || (ddsHeaderId[2] != 'S') || (ddsHeaderId[3] != ' '))
         {
             TraceLog(LOG_WARNING, "[%s] DDS file does not seem to be a valid image", fileName);
         }
@@ -2641,7 +2734,7 @@ static Image LoadDDS(const char *fileName)
 
             image.width = ddsHeader.width;
             image.height = ddsHeader.height;
-            
+
             if (ddsHeader.mipmapCount == 0) image.mipmaps = 1;      // Parameter not used
             else image.mipmaps = ddsHeader.mipmapCount;
 
@@ -2729,7 +2822,7 @@ static Image LoadDDS(const char *fileName)
 
                 TraceLog(LOG_DEBUG, "Pitch or linear size: %i", ddsHeader.pitchOrLinearSize);
 
-                image.data = (unsigned char*)malloc(size*sizeof(unsigned char));
+                image.data = (unsigned char *)malloc(size*sizeof(unsigned char));
 
                 fread(image.data, size, 1, ddsFile);
 
@@ -2802,7 +2895,7 @@ static Image LoadPKM(const char *fileName)
         // Get the image header
         fread(&pkmHeader, sizeof(PKMHeader), 1, pkmFile);
 
-        if (strncmp(pkmHeader.id, "PKM ", 4) != 0)
+        if ((pkmHeader.id[0] != 'P') || (pkmHeader.id[1] != 'K') || (pkmHeader.id[2] != 'M') || (pkmHeader.id[3] != ' '))
         {
             TraceLog(LOG_WARNING, "[%s] PKM file does not seem to be a valid image", fileName);
         }
@@ -2826,7 +2919,7 @@ static Image LoadPKM(const char *fileName)
 
             int size = image.width*image.height*bpp/8;  // Total data size in bytes
 
-            image.data = (unsigned char*)malloc(size*sizeof(unsigned char));
+            image.data = (unsigned char *)malloc(size*sizeof(unsigned char));
 
             fread(image.data, size, 1, pkmFile);
 
@@ -2858,9 +2951,9 @@ static Image LoadKTX(const char *fileName)
     // KTX file Header (64 bytes)
     // v1.1 - https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/
     // v2.0 - http://github.khronos.org/KTX-Specification/
-    
+
     // TODO: Support KTX 2.2 specs!
-    
+
     typedef struct {
         char id[12];                        // Identifier: "«KTX 11»\r\n\x1A\n"
         unsigned int endianness;            // Little endian: 0x01 0x02 0x03 0x04
@@ -2920,7 +3013,7 @@ static Image LoadKTX(const char *fileName)
             int dataSize;
             fread(&dataSize, sizeof(unsigned int), 1, ktxFile);
 
-            image.data = (unsigned char*)malloc(dataSize*sizeof(unsigned char));
+            image.data = (unsigned char *)malloc(dataSize*sizeof(unsigned char));
 
             fread(image.data, dataSize, 1, ktxFile);
 
@@ -2937,12 +3030,14 @@ static Image LoadKTX(const char *fileName)
 
 // Save image data as KTX file
 // NOTE: By default KTX 1.1 spec is used, 2.0 is still on draft (01Oct2018)
-static void SaveKTX(Image image, const char *fileName)
+static int SaveKTX(Image image, const char *fileName)
 {
+    int success = 0;
+
     // KTX file Header (64 bytes)
     // v1.1 - https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/
     // v2.0 - http://github.khronos.org/KTX-Specification/ - still on draft, not ready for implementation
-    
+
     typedef struct {
         char id[12];                        // Identifier: "«KTX 11»\r\n\x1A\n"             // KTX 2.0: "«KTX 22»\r\n\x1A\n"
         unsigned int endianness;            // Little endian: 0x01 0x02 0x03 0x04
@@ -2970,11 +3065,11 @@ static void SaveKTX(Image image, const char *fileName)
     else
     {
         KTXHeader ktxHeader;
-        
+
         // KTX identifier (v2.2)
         //unsigned char id[12] = { '«', 'K', 'T', 'X', ' ', '1', '1', '»', '\r', '\n', '\x1A', '\n' };
         //unsigned char id[12] = { 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A };
-        
+
         // Get the image header
         strcpy(ktxHeader.id, "«KTX 11»\r\n\x1A\n");     // KTX 1.1 signature
         ktxHeader.endianness = 0;
@@ -2990,28 +3085,28 @@ static void SaveKTX(Image image, const char *fileName)
         ktxHeader.faces = 1;
         ktxHeader.mipmapLevels = image.mipmaps; // If it was 0, it means mipmaps should be generated on loading (not for compressed formats)
         ktxHeader.keyValueDataSize = 0;         // No extra data after the header
-        
+
         rlGetGlTextureFormats(image.format, &ktxHeader.glInternalFormat, &ktxHeader.glFormat, &ktxHeader.glType);   // rlgl module function
         ktxHeader.glBaseInternalFormat = ktxHeader.glFormat;    // KTX 1.1 only
-        
+
         // NOTE: We can save into a .ktx all PixelFormats supported by raylib, including compressed formats like DXT, ETC or ASTC
-        
+
         if (ktxHeader.glFormat == -1) TraceLog(LOG_WARNING, "Image format not supported for KTX export.");
         else
         {
-            fwrite(&ktxHeader, 1, sizeof(KTXHeader), ktxFile);
-            
+            success = fwrite(&ktxHeader, sizeof(KTXHeader), 1, ktxFile);
+
             int width = image.width;
             int height = image.height;
             int dataOffset = 0;
-            
+
             // Save all mipmaps data
             for (int i = 0; i < image.mipmaps; i++)
             {
                 unsigned int dataSize = GetPixelDataSize(width, height, image.format);
-                fwrite(&dataSize, 1, sizeof(unsigned int), ktxFile);
-                fwrite((unsigned char *)image.data + dataOffset, 1, dataSize, ktxFile);
-                
+                success = fwrite(&dataSize, sizeof(unsigned int), 1, ktxFile);
+                success = fwrite((unsigned char *)image.data + dataOffset, dataSize, 1, ktxFile);
+
                 width /= 2;
                 height /= 2;
                 dataOffset += dataSize;
@@ -3020,6 +3115,9 @@ static void SaveKTX(Image image, const char *fileName)
 
         fclose(ktxFile);    // Close file pointer
     }
+
+    // If all data has been written correctly to file, success = 1
+    return success;
 }
 #endif
 
@@ -3162,7 +3260,7 @@ static Image LoadPVR(const char *fileName)
                 }
 
                 int dataSize = image.width*image.height*bpp/8;  // Total data size in bytes
-                image.data = (unsigned char*)malloc(dataSize*sizeof(unsigned char));
+                image.data = (unsigned char *)malloc(dataSize*sizeof(unsigned char));
 
                 // Read data from file
                 fread(image.data, dataSize, 1, pvrFile);
@@ -3228,7 +3326,7 @@ static Image LoadASTC(const char *fileName)
             TraceLog(LOG_DEBUG, "ASTC image width: %i", image.width);
             TraceLog(LOG_DEBUG, "ASTC image height: %i", image.height);
             TraceLog(LOG_DEBUG, "ASTC image blocks: %ix%i", astcHeader.blockX, astcHeader.blockY);
-            
+
             image.mipmaps = 1;      // NOTE: ASTC format only contains one mipmap level
 
             // NOTE: Each block is always stored in 128bit so we can calculate the bpp

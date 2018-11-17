@@ -199,7 +199,7 @@ typedef unsigned char byte;
         float *tangents;        // vertex tangents (XYZW - 4 components per vertex) (shader-location = 4)
         unsigned char *colors;  // vertex colors (RGBA - 4 components per vertex) (shader-location = 3)
         unsigned short *indices;// vertex indices (in case vertex data comes indexed)
-        
+
         // Animation vertex data
         float *baseVertices;    // Vertex base position (required to apply bones transformations)
         float *baseNormals;     // Vertex base normals (required to apply bones transformations)
@@ -378,7 +378,7 @@ typedef unsigned char byte;
     } VrDevice;
 #endif
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 extern "C" {            // Prevents name mangling of functions
 #endif
 
@@ -516,7 +516,7 @@ void TraceLog(int msgType, const char *text, ...);      // Show trace log messag
 int GetPixelDataSize(int width, int height, int format);// Get pixel data size in bytes (image or texture)
 #endif
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }
 #endif
 
@@ -553,7 +553,7 @@ int GetPixelDataSize(int width, int height, int format);// Get pixel data size i
     #else
         // APIENTRY for OpenGL function pointer declarations is required
         #ifndef APIENTRY
-            #ifdef _WIN32
+            #if defined(_WIN32)
                 #define APIENTRY __stdcall
             #else
                 #define APIENTRY
@@ -729,7 +729,7 @@ typedef struct VrStereoConfig {
 //----------------------------------------------------------------------------------
 #if !defined(GRAPHICS_API_OPENGL_11) && defined(SUPPORT_DISTORTION_SHADER)
     // Distortion shader embedded
-    static char distortionFShaderStr[] = 
+    static char distortionFShaderStr[] =
     #if defined(GRAPHICS_API_OPENGL_21)
     "#version 120                       \n"
     #elif defined(GRAPHICS_API_OPENGL_ES2)
@@ -1217,9 +1217,9 @@ void rlEnd(void)
         // WARNING: If we are between rlPushMatrix() and rlPopMatrix() and we need to force a rlglDraw(),
         // we need to call rlPopMatrix() before to recover *currentMatrix (modelview) for the next forced draw call!
         // Also noted that if we had multiple matrix pushed, it will require "stackCounter" pops before launching the draw
-        
+
         // TODO: Undoubtely, current rlPushMatrix/rlPopMatrix should be redesigned... or removed... it's not working properly
-        
+
         rlPopMatrix();
         rlglDraw();
     }
@@ -1506,9 +1506,17 @@ void rlDeleteTextures(unsigned int id)
 void rlDeleteRenderTextures(RenderTexture2D target)
 {
 #if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
-    if (target.id > 0) glDeleteFramebuffers(1, &target.id);
     if (target.texture.id > 0) glDeleteTextures(1, &target.texture.id);
-    if (target.depth.id > 0) glDeleteTextures(1, &target.depth.id);
+    if (target.depth.id > 0)
+    {
+#if defined(GRAPHICS_API_OPENGL_21) || defined(GRAPHICS_API_OPENGL_ES2)
+        glDeleteRenderbuffers(1, &target.depth.id);
+#elif defined(GRAPHICS_API_OPENGL_33)
+        glDeleteTextures(1, &target.depth.id);
+#endif
+    }
+
+    if (target.id > 0) glDeleteFramebuffers(1, &target.id);
 
     TraceLog(LOG_INFO, "[FBO ID %i] Unloaded render texture data from VRAM (GPU)", target.id);
 #endif
@@ -1620,7 +1628,7 @@ void rlglInit(int width, int height)
     // NOTE: We don't need to check again supported extensions but we do (GLAD already dealt with that)
     glGetIntegerv(GL_NUM_EXTENSIONS, &numExt);
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
     const char **extList = malloc(sizeof(const char *)*numExt);
 #else
     const char *extList[numExt];
@@ -1631,17 +1639,13 @@ void rlglInit(int width, int height)
 #elif defined(GRAPHICS_API_OPENGL_ES2)
     char *extensions = (char *)glGetString(GL_EXTENSIONS);  // One big const string
 
-    // NOTE: We have to duplicate string because glGetString() returns a const value
-    // If not duplicated, it fails in some systems (Raspberry Pi)
-    // Equivalent to function: char *strdup(const char *str)
-    char *extensionsDup;
-    size_t len = strlen(extensions) + 1;
-    void *newstr = malloc(len);
-    if (newstr == NULL) extensionsDup = NULL;
-    extensionsDup = (char *)memcpy(newstr, extensions, len);
+    // NOTE: We have to duplicate string because glGetString() returns a const string
+    int len = strlen(extensions) + 1;
+    char *extensionsDup = (char *)malloc(len);
+    strcpy(extensionsDup, extensions);
 
     // NOTE: String could be splitted using strtok() function (string.h)
-    // NOTE: strtok() modifies the received string, it can not be const
+    // NOTE: strtok() modifies the passed string, it can not be const
 
     char *extList[512];     // Allocate 512 strings pointers (2 KB)
 
@@ -2175,7 +2179,7 @@ void rlUnloadTexture(unsigned int id)
 // Load a texture to be used for rendering (fbo with color and depth attachments)
 RenderTexture2D rlLoadRenderTexture(int width, int height)
 {
-    RenderTexture2D target;
+    RenderTexture2D target = { 0 };
 
     target.id = 0;
 
@@ -2255,8 +2259,16 @@ RenderTexture2D rlLoadRenderTexture(int width, int height)
             default: break;
         }
 
-        glDeleteTextures(1, &target.texture.id);
-        glDeleteTextures(1, &target.depth.id);
+        if (target.texture.id > 0) glDeleteTextures(1, &target.texture.id);
+        if (target.depth.id > 0)
+        {
+#if defined(USE_DEPTH_RENDERBUFFER)
+            glDeleteRenderbuffers(1, &target.depth.id);
+#elif defined(USE_DEPTH_TEXTURE)
+            glDeleteTextures(1, &target.depth.id);
+#endif
+        }
+
         glDeleteFramebuffers(1, &target.id);
     }
     else TraceLog(LOG_INFO, "[FBO ID %i] Framebuffer object created successfully", target.id);
@@ -2724,7 +2736,7 @@ void rlUnloadMesh(Mesh *mesh)
     if (mesh->tangents != NULL) free(mesh->tangents);
     if (mesh->texcoords2 != NULL) free(mesh->texcoords2);
     if (mesh->indices != NULL) free(mesh->indices);
-    
+
     if (mesh->baseVertices != NULL) free(mesh->baseVertices);
     if (mesh->baseNormals != NULL) free(mesh->baseNormals);
     if (mesh->weightBias != NULL) free(mesh->weightBias);
@@ -3807,7 +3819,7 @@ static unsigned int LoadShaderProgram(unsigned int vShaderId, unsigned int fShad
 
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
         char *log = malloc(maxLength);
 #else
         char log[maxLength];
@@ -3816,7 +3828,7 @@ static unsigned int LoadShaderProgram(unsigned int vShaderId, unsigned int fShad
 
         TraceLog(LOG_INFO, "%s", log);
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
         free(log);
 #endif
         glDeleteProgram(program);

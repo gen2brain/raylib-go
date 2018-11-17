@@ -34,7 +34,7 @@ package rl
 #include "external/glfw/src/egl_context.c"
 #include "external/glfw/src/osmesa_context.c"
 
-#cgo linux CFLAGS: -Iexternal -Iexternal/glfw/include -DPLATFORM_DESKTOP -Wno-stringop-overflow
+#cgo linux CFLAGS: -Iexternal/glfw/include -DPLATFORM_DESKTOP -Wno-stringop-overflow
 
 #cgo linux,!wayland LDFLAGS: -lGL -lm -pthread -ldl -lrt -lX11
 #cgo linux,wayland LDFLAGS: -lGL -lm -pthread -ldl -lrt -lwayland-client -lwayland-cursor -lwayland-egl -lxkbcommon
