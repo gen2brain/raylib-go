@@ -2,7 +2,7 @@ version: "{build}"
 
 clone_depth: 1
 
-clone_folder: c:\gopath\src\github.com\gen2brain\raylib-go
+clone_folder: c:\gopath\src\github.com\xzebra\raylib-go
 
 environment:
   GOPATH: c:\gopath
@@ -20,4 +20,4 @@ install:
   - go env
 
 build_script:
-  - bash -lc "cd /c/gopath/src/github.com/gen2brain/raylib-go && go get -t ./... && make"
+  - bash -lc "cd /c/gopath/src/github.com/xzebra/raylib-go && go get -t ./... && make"
