@@ -6,6 +6,7 @@ all: packages
 
 packages:
 	@for pkg in ${PACKAGES}; do \
-		echo "Building package github.com/gen2brain/raylib-go/$$pkg..."; \
-		${GO} build github.com/gen2brain/raylib-go/$$pkg || exit 1; \
+		echo "Building package github.com/xzebra/raylib-go/$$pkg..."; \
+		${GO} build github.com/xzebra/raylib-go/$$pkg || exit 1; \
+		${GO} install github.com/xzebra/raylib-go/$$pkg || exit 1; \
 	done

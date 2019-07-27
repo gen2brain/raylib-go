@@ -22,7 +22,7 @@ import (
 	"golang.org/x/crypto/blowfish"
 	"golang.org/x/crypto/xtea"
 
-	"github.com/gen2brain/raylib-go/raylib"
+	"github.com/xzebra/raylib-go/raylib"
 )
 
 type Data struct {
