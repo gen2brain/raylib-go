@@ -100,6 +100,14 @@ func OpenAsset(name string) (Asset, error) {
 	return a, nil
 }
 
+func ShowKeyboard(show bool) {
+	if show {
+		C.SetAndroidKeyboard((C.int)(1))
+	} else {
+		C.SetAndroidKeyboard((C.int)(0))
+	}
+}
+
 type asset struct {
 	ptr *C.AAsset
 }

@@ -4475,3 +4475,10 @@ static void LogoAnimation(void)
 
     showLogo = false;  // Prevent for repeating when reloading window (Android)
 }
+
+void SetAndroidKeyboard(int show) {
+    if(show != 0)
+        ANativeActivity_showSoftInput(androidApp->activity, ANATIVEACTIVITY_SHOW_SOFT_INPUT_FORCED)
+    else
+        ANativeActivity_hideSoftInput(androidApp->activity, ANATIVEACTIVITY_HIDE_SOFT_INPUT_NOT_ALWAYS)
+}

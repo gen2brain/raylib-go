@@ -79,3 +79,5 @@ func OpenAsset(name string) (Asset, error) {
 	}
 	return f, nil
 }
+
+func ShowKeyboard(show bool) {}

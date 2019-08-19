@@ -912,6 +912,7 @@ RLAPI bool IsGamepadButtonUp(int gamepad, int button);        // Detect if a gam
 RLAPI int GetGamepadButtonPressed(void);                      // Get the last gamepad button pressed
 RLAPI int GetGamepadAxisCount(int gamepad);                   // Return gamepad axis count for a gamepad
 RLAPI float GetGamepadAxisMovement(int gamepad, int axis);    // Return axis movement value for a gamepad axis
+RLAPI void SetAndroidKeyboard(int show);                      // Shows android native keyboard
 
 // Input-related functions: mouse
 RLAPI bool IsMouseButtonPressed(int button);                  // Detect if a mouse button has been pressed once
