@@ -4477,8 +4477,10 @@ static void LogoAnimation(void)
 }
 
 void SetAndroidKeyboard(int show) {
+#if defined(PLATFORM_ANDROID)
     if(show != 0)
-        ANativeActivity_showSoftInput(androidApp->activity, ANATIVEACTIVITY_SHOW_SOFT_INPUT_FORCED)
+        ANativeActivity_showSoftInput(androidApp->activity, ANATIVEACTIVITY_SHOW_SOFT_INPUT_FORCED);
     else
-        ANativeActivity_hideSoftInput(androidApp->activity, ANATIVEACTIVITY_HIDE_SOFT_INPUT_NOT_ALWAYS)
+        ANativeActivity_hideSoftInput(androidApp->activity, ANATIVEACTIVITY_HIDE_SOFT_INPUT_NOT_ALWAYS);
+#endif
 }
