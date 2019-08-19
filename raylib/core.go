@@ -122,16 +122,16 @@ func SetWindowSize(w, h int) {
 }
 
 // GetScreenWidth - Get current screen width
-func GetScreenWidth() int {
+func GetScreenWidth() int32 {
 	ret := C.GetScreenWidth()
-	v := (int)(ret)
+	v := (int32)(ret)
 	return v
 }
 
 // GetScreenHeight - Get current screen height
-func GetScreenHeight() int {
+func GetScreenHeight() int32 {
 	ret := C.GetScreenHeight()
-	v := (int)(ret)
+	v := (int32)(ret)
 	return v
 }
 

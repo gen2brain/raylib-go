@@ -608,7 +608,7 @@ void DrawText(const char *text, int posX, int posY, int fontSize, Color color)
 void DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint)
 {
     int length = strlen(text);
-    float textOffsetX = 0.0f;        // Offset between characters
+    float textOffsetX = 0.0f;   // Offset between characters
     int textOffsetY = 0;        // Required for line break!
     float scaleFactor = 0.0f;
 
@@ -655,8 +655,8 @@ void DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, f
                                         font.chars[index].rec.height*scaleFactor }, (Vector2){ 0, 0 }, 0.0f, tint);
             }
 
-            if (font.chars[index].advanceX == 0) textOffsetX += (int)(font.chars[index].rec.width*scaleFactor + spacing);
-            else textOffsetX += (int)(font.chars[index].advanceX*scaleFactor + spacing);
+            if (font.chars[index].advanceX == 0) textOffsetX += ((float)font.chars[index].rec.width*scaleFactor + spacing);
+            else textOffsetX += ((float)font.chars[index].advanceX*scaleFactor + spacing);
         }
     }
 }
