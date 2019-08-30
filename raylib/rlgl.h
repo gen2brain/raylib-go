@@ -422,6 +422,9 @@ void rlEnableRenderTexture(unsigned int id);            // Enable render texture
 void rlDisableRenderTexture(void);                      // Disable render texture (fbo), return to default framebuffer
 void rlEnableDepthTest(void);                           // Enable depth test
 void rlDisableDepthTest(void);                          // Disable depth test
+void rlEnableScissorTest(void);                         // Enable scissor test
+void rlDisableScissorTest(void);                        // Disable scissor test
+void rlScissor(int x, int y, int width, int height);    // Scissor test
 void rlEnableWireMode(void);                            // Enable wire mode
 void rlDisableWireMode(void);                           // Disable wire mode
 void rlDeleteTextures(unsigned int id);                 // Delete OpenGL texture from GPU
@@ -1476,6 +1479,21 @@ void rlEnableDepthTest(void)
 void rlDisableDepthTest(void)
 {
     glDisable(GL_DEPTH_TEST);
+}
+
+// Enable scissor test
+void rlEnableScissorTest(void) {
+    glEnable(GL_SCISSOR_TEST);
+}
+
+// Disable scissor test
+void rlDisableScissorTest(void) {
+    glDisable(GL_SCISSOR_TEST);
+}
+
+// Scissor test
+void rlScissor(int x, int y, int width, int height) {
+    glScissor(x, y, width, height);
 }
 
 // Enable wire mode

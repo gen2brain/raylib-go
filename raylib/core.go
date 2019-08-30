@@ -231,6 +231,18 @@ func EndTextureMode() {
 	C.EndTextureMode()
 }
 
+func BeginScissorMode(x, y, width, height int32) {
+	cx := (C.int)(x)
+	cy := (C.int)(y)
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	C.BeginScissorMode(cx, cy, cwidth, cheight)
+}
+
+func EndScissorMode() {
+	C.EndScissorMode()
+}
+
 // GetMouseRay - Returns a ray trace from mouse position
 func GetMouseRay(mousePosition Vector2, camera Camera) Ray {
 	cmousePosition := mousePosition.cptr()
