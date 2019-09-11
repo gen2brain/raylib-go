@@ -2065,6 +2065,10 @@ bool IsMouseButtonPressed(int button)
     return pressed;
 }
 
+void ClearMouseState(int button) {
+    currentMouseState[button] = previousMouseState[button];
+}
+
 // Detect if a mouse button is being pressed
 bool IsMouseButtonDown(int button)
 {

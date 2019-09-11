@@ -916,6 +916,7 @@ RLAPI void SetAndroidKeyboard(int show);                      // Shows android n
 
 // Input-related functions: mouse
 RLAPI bool IsMouseButtonPressed(int button);                  // Detect if a mouse button has been pressed once
+RLAPI void ClearMouseState(int button);                       // Future calls of IsMouseButtonPressed will return false
 RLAPI bool IsMouseButtonDown(int button);                     // Detect if a mouse button is being pressed
 RLAPI bool IsMouseButtonReleased(int button);                 // Detect if a mouse button has been released once
 RLAPI bool IsMouseButtonUp(int button);                       // Detect if a mouse button is NOT being pressed

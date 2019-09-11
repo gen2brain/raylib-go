@@ -556,6 +556,12 @@ func IsMouseButtonPressed(button int32) bool {
 	return v
 }
 
+// ClearMouseButtonPressed - Make future calls of IsButtonPressed
+func ClearMouseState(button int32) {
+	cbutton := (C.int)(button)
+	C.ClearMouseState(cbutton)
+}
+
 // IsMouseButtonDown - Detect if a mouse button is being pressed
 func IsMouseButtonDown(button int32) bool {
 	cbutton := (C.int)(button)
