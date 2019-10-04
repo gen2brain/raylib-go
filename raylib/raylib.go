@@ -1113,7 +1113,7 @@ func NewImageFromImage(img image.Image) *Image {
 		for x := 0; x < size.X; x++ {
 			color := img.At(x, y)
 			r, g, b, a := color.RGBA()
-			pixels[x+y*size.Y] = NewColor(uint8(r), uint8(g), uint8(b), uint8(a))
+			pixels[x+y*size.X] = NewColor(uint8(r), uint8(g), uint8(b), uint8(a))
 		}
 	}
 
