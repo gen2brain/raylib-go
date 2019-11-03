@@ -2066,7 +2066,9 @@ bool IsMouseButtonPressed(int button)
 }
 
 void ClearMouseState(int button) {
+#if !defined(PLATFORM_ANDROID)
     currentMouseState[button] = previousMouseState[button];
+#endif
 }
 
 // Detect if a mouse button is being pressed
