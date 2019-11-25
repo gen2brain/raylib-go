@@ -17,7 +17,7 @@ func SetTraceLog(typeFlags int) {
 	logTypeFlags = typeFlags
 
 	ctypeFlags := (C.uchar)(typeFlags)
-	C.SetTraceLog(ctypeFlags)
+	C.SetTraceLogLevel(ctypeFlags)
 }
 
 // TraceLog - Show trace log messages (INFO, WARNING, ERROR, DEBUG)
