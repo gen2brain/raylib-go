@@ -24,7 +24,7 @@ import (
 func SetTraceLog(typeFlags int) {
 	logTypeFlags = typeFlags
 
-	ctypeFlags := (C.uchar)(typeFlags)
+	ctypeFlags := (C.int)(typeFlags)
 	C.SetTraceLogLevel(ctypeFlags)
 }
 
