@@ -38,19 +38,17 @@ func main() {
 
 	camera := rl.Camera2D{}
 	camera.Target = rl.NewVector2(float32(player.X+20), float32(player.Y+20))
-	camera.Offset = rl.NewVector2(0, 0)
+	camera.Offset = rl.NewVector2(float32(screenWidth/2), float32(screenHeight/2))
 	camera.Rotation = 0.0
 	camera.Zoom = 1.0
 
-	rl.SetTargetFPS(30)
+	rl.SetTargetFPS(60)
 
 	for !rl.WindowShouldClose() {
 		if rl.IsKeyDown(rl.KeyRight) {
-			player.X += 2        // Player movement
-			camera.Offset.X -= 2 // Camera displacement with player movement
+			player.X += 2 // Player movement
 		} else if rl.IsKeyDown(rl.KeyLeft) {
-			player.X -= 2        // Player movement
-			camera.Offset.X += 2 // Camera displacement with player movement
+			player.X -= 2 // Player movement
 		}
 
 		// Camera target follows player

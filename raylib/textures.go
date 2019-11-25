@@ -299,12 +299,13 @@ func ImageTextEx(font Font, text string, fontSize, spacing float32, tint Color) 
 }
 
 // ImageDraw - Draw a source image within a destination image
-func ImageDraw(dst, src *Image, srcRec, dstRec Rectangle) {
+func ImageDraw(dst, src *Image, srcRec, dstRec Rectangle, tint Color) {
 	cdst := dst.cptr()
 	csrc := src.cptr()
 	csrcRec := srcRec.cptr()
 	cdstRec := dstRec.cptr()
-	C.ImageDraw(cdst, *csrc, *csrcRec, *cdstRec)
+	ctint := tint.cptr()
+	C.ImageDraw(cdst, *csrc, *csrcRec, *cdstRec, *ctint)
 }
 
 // ImageDrawRectangle - Draw rectangle within an image

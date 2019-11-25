@@ -21,7 +21,8 @@ func main() {
 	dwarf := rl.LoadModel("dwarf.obj")             // Load OBJ model
 	texture := rl.LoadTexture("dwarf_diffuse.png") // Load model texture
 
-	dwarf.Material.Maps[rl.MapDiffuse].Texture = texture // Set dwarf model diffuse texture
+	dwarf.Materials = make([]rl.Material, 1)
+	dwarf.Materials[0].Maps[rl.MapDiffuse].Texture = texture // Set dwarf model diffuse texture
 
 	position := rl.NewVector3(0.0, 0.0, 0.0) // Set model position
 

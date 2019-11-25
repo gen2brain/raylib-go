@@ -3,7 +3,7 @@
 package rl
 
 /*
-#include "external/stb_vorbis.c"
+//#include "external/stb_vorbis.c"
 
 #include "raylib.h"
 #include <stdlib.h>
@@ -54,18 +54,6 @@ func LoadWave(fileName string) Wave {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	ret := C.LoadWave(cfileName)
-	v := newWaveFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// LoadWaveEx - Load wave data from float array data (32bit)
-func LoadWaveEx(data []byte, sampleCount int32, sampleRate int32, sampleSize int32, channels int32) Wave {
-	cdata := unsafe.Pointer(&data[0])
-	csampleCount := (C.int)(sampleCount)
-	csampleRate := (C.int)(sampleRate)
-	csampleSize := (C.int)(sampleSize)
-	cchannels := (C.int)(channels)
-	ret := C.LoadWaveEx(cdata, csampleCount, csampleRate, csampleSize, cchannels)
 	v := newWaveFromPointer(unsafe.Pointer(&ret))
 	return v
 }
@@ -315,10 +303,10 @@ func CloseAudioStream(stream AudioStream) {
 	C.CloseAudioStream(*cstream)
 }
 
-// IsAudioBufferProcessed - Check if any audio stream buffers requires refill
-func IsAudioBufferProcessed(stream AudioStream) bool {
+// IsAudioStreamProcessed - Check if any audio stream buffers requires refill
+func IsAudioStreamProcessed(stream AudioStream) bool {
 	cstream := stream.cptr()
-	ret := C.IsAudioBufferProcessed(*cstream)
+	ret := C.IsAudioStreamProcessed(*cstream)
 	v := bool(ret)
 	return v
 }

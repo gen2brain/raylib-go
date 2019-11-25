@@ -24,8 +24,9 @@ func main() {
 	texture := rl.LoadTexture("dwarf_diffuse.png")                     // Load model texture
 	shader := rl.LoadShader("glsl330/base.vs", "glsl330/grayscale.fs") // Load model shader
 
-	dwarf.Material.Shader = shader                           // Set shader effect to 3d model
-	dwarf.Material.Maps[rl.MapDiffuse].Texture = texture // Set dwarf model diffuse texture
+	dwarf.Materials = make([]rl.Material, 1)
+	dwarf.Materials[0].Shader = shader                       // Set shader effect to 3d model
+	dwarf.Materials[0].Maps[rl.MapDiffuse].Texture = texture // Set dwarf model diffuse texture
 
 	position := rl.NewVector3(0.0, 0.0, 0.0) // Set model position
 

@@ -372,14 +372,9 @@ func Fade(color Color, alpha float32) Color {
 	return v
 }
 
-// ShowLogo - Activates raylib logo at startup (can be done with flags)
-func ShowLogo() {
-	C.ShowLogo()
-}
-
 // SetConfigFlags - Setup some window configuration flags
 func SetConfigFlags(flags byte) {
-	cflags := (C.uchar)(flags)
+	cflags := (C.uint)(flags)
 	C.SetConfigFlags(cflags)
 }
 
@@ -590,15 +585,17 @@ func GetMousePosition() Vector2 {
 }
 
 // SetMousePosition - Set mouse position XY
-func SetMousePosition(position Vector2) {
-	cposition := position.cptr()
-	C.SetMousePosition(*cposition)
+func SetMousePosition(x, y int) {
+	cx := (C.int)(x)
+	cy := (C.int)(y)
+	C.SetMousePosition(cx, cy)
 }
 
 // SetMouseScale - Set mouse scaling
-func SetMouseScale(scale float32) {
-	cscale := (C.float)(scale)
-	C.SetMouseScale(cscale)
+func SetMouseScale(scaleX, scaleY float32) {
+	cscaleX := (C.float)(scaleX)
+	cscaleY := (C.float)(scaleY)
+	C.SetMouseScale(cscaleX, cscaleY)
 }
 
 // GetMouseWheelMove - Returns mouse wheel movement Y

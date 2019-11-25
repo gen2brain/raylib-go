@@ -5,17 +5,19 @@ import (
 )
 
 func main() {
-	hmd := rl.GetVrDeviceInfo(rl.HmdOculusRiftCv1) // Oculus Rift CV1
-	rl.InitWindow(int32(hmd.HScreenSize), int32(hmd.VScreenSize), "raylib [core] example - vr simulator")
+	//hmd := rl.GetVrDeviceInfo(rl.HmdOculusRiftCv1) // Oculus Rift CV1
+	//rl.InitWindow(int32(hmd.HScreenSize), int32(hmd.VScreenSize), "raylib [core] example - vr simulator")
+	rl.InitWindow(800, 450, "raylib [core] example - vr simulator")
 
 	// NOTE: default device (simulator)
-	rl.InitVrSimulator(hmd) // Init VR device
+	//rl.InitVrSimulator(hmd) // Init VR device
+	rl.InitVrSimulator() // Init VR device
 
 	camera := rl.Camera{}
 	camera.Position = rl.NewVector3(5.0, 2.0, 5.0) // Camera position
 	camera.Target = rl.NewVector3(0.0, 2.0, 0.0)   // Camera looking at point
 	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)       // Camera up vector (rotation towards target)
-	camera.Fovy = 60.0                                 // Camera field-of-view Y
+	camera.Fovy = 60.0                             // Camera field-of-view Y
 
 	cubePosition := rl.NewVector3(0.0, 0.0, 0.0)
 

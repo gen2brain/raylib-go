@@ -34,13 +34,13 @@ func LoadFont(fileName string) Font {
 }
 
 // LoadFontEx - Load Font from file with extended parameters
-func LoadFontEx(fileName string, fontSize int32, charsCount int32, fontChars *int32) Font {
+func LoadFontEx(fileName string, fontSize int32, fontChars *int32, charsCount int32) Font {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	cfontSize := (C.int)(fontSize)
-	ccharsCount := (C.int)(charsCount)
 	cfontChars := (*C.int)(unsafe.Pointer(fontChars))
-	ret := C.LoadFontEx(cfileName, cfontSize, ccharsCount, cfontChars)
+	ccharsCount := (C.int)(charsCount)
+	ret := C.LoadFontEx(cfileName, cfontSize, cfontChars, ccharsCount)
 	v := newFontFromPointer(unsafe.Pointer(&ret))
 	return v
 }
