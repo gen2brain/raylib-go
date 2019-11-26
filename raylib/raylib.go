@@ -251,6 +251,7 @@ const (
 
 	// Keyboard Alpha Numeric Keys
 	KeyApostrophe = 39
+	KeyPlus       = 43
 	KeyComma      = 44
 	KeyMinus      = 45
 	KeyPeriod     = 46

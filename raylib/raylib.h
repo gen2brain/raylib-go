@@ -168,6 +168,7 @@
 
 // Keyboard Alpha Numeric Keys
 #define KEY_APOSTROPHE       39
+#define KEY_PLUS             43
 #define KEY_COMMA            44
 #define KEY_MINUS            45
 #define KEY_PERIOD           46
