@@ -12,7 +12,7 @@ func main() {
 
 	// TTF Font loading with custom generation parameters
 	var fontChars int32
-	font := rl.LoadFontEx("fonts/KAISG.ttf", 64, 0, &fontChars)
+	font := rl.LoadFontEx("fonts/KAISG.ttf", 64, &fontChars, 0)
 
 	parrots := rl.LoadImage("parrots.png") // Load image in CPU memory (RAM)
 

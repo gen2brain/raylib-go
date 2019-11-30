@@ -29,10 +29,10 @@ func main() {
 	//b := MustAsset("data.rres")
 	//reader := bytes.NewReader(b)
 
-	res := rres.LoadResource(reader, 0, []byte("passwordpassword"))
-	wav := rl.LoadWaveEx(res.Data, int32(res.Param1), int32(res.Param2), int32(res.Param3), int32(res.Param4))
-	snd := rl.LoadSoundFromWave(wav)
-	rl.UnloadWave(wav)
+	//res := rres.LoadResource(reader, 0, []byte("passwordpassword"))
+	//wav := rl.LoadWaveEx(res.Data, int32(res.Param1), int32(res.Param2), int32(res.Param3), int32(res.Param4))
+	//snd := rl.LoadSoundFromWave(wav)
+	//rl.UnloadWave(wav)
 
 	textures := make([]rl.Texture2D, numTextures)
 	for i := 0; i < numTextures; i++ {
@@ -48,7 +48,7 @@ func main() {
 
 	for !rl.WindowShouldClose() {
 		if rl.IsKeyPressed(rl.KeySpace) {
-			rl.PlaySound(snd)
+			//rl.PlaySound(snd)
 		}
 
 		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
@@ -84,7 +84,7 @@ func main() {
 		rl.EndDrawing()
 	}
 
-	rl.UnloadSound(snd)
+	//rl.UnloadSound(snd)
 
 	for _, t := range textures {
 		rl.UnloadTexture(t)

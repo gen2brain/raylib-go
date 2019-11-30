@@ -74,17 +74,8 @@ func newWaveFromPointer(ptr unsafe.Pointer) Wave {
 
 // Sound source type
 type Sound struct {
-	// Audio source id
-	Source uint32
-	// Audio buffer id
-	Buffer uint32
-	// Audio format specifier
-	Format int32
-}
-
-// NewSound - Returns new Sound
-func NewSound(source, buffer uint32, format int32) Sound {
-	return Sound{source, buffer, format}
+	SampleCount uint32
+	Stream      AudioStream
 }
 
 // newSoundFromPointer - Returns new Sound from pointer
@@ -95,16 +86,11 @@ func newSoundFromPointer(ptr unsafe.Pointer) Sound {
 // Music type (file streaming from memory)
 // NOTE: Anything longer than ~10 seconds should be streamed
 type Music struct {
-	CtxType      uint32
-	_            [4]byte
-	ctxOgg       unsafe.Pointer
-	ctxFlac      unsafe.Pointer
-	ctxXm        unsafe.Pointer
-	ctxMod       unsafe.Pointer
-	Stream       AudioStream
-	LoopCount    int32
-	TotalSamples uint32
-	SamplesLeft  uint32
+	CtxType     int32
+	CtxData     unsafe.Pointer
+	SampleCount uint32
+	LoopCount   uint32
+	Stream      AudioStream
 }
 
 // newMusicFromPointer - Returns new Music from pointer
@@ -121,17 +107,8 @@ type AudioStream struct {
 	SampleSize uint32
 	// Number of channels (1-mono, 2-stereo)
 	Channels uint32
-	// Audio format specifier
-	Format int32
-	// Audio source id
-	Source uint32
-	// Audio buffers (double buffering)
-	Buffers [2]uint32
-}
-
-// NewAudioStream - Returns new AudioStream
-func NewAudioStream(sampleRate, sampleSize, channels uint32, format int32, source uint32, buffers [2]uint32) AudioStream {
-	return AudioStream{sampleRate, sampleSize, channels, format, source, buffers}
+	// Buffer
+	Buffer *_Ctype_struct_rAudioBuffer
 }
 
 // newAudioStreamFromPointer - Returns new AudioStream from pointer
@@ -772,28 +749,31 @@ type Mesh struct {
 	// Number of triangles stored (indexed or not)
 	TriangleCount int32
 	// Vertex position (XYZ - 3 components per vertex) (shader-location = 0)
-	Vertices *[]float32
+	Vertices *float32
 	// Vertex texture coordinates (UV - 2 components per vertex) (shader-location = 1)
-	Texcoords *[]float32
+	Texcoords *float32
 	// Vertex second texture coordinates (useful for lightmaps) (shader-location = 5)
-	Texcoords2 *[]float32
+	Texcoords2 *float32
 	// Vertex normals (XYZ - 3 components per vertex) (shader-location = 2)
-	Normals *[]float32
+	Normals *float32
 	// Vertex tangents (XYZ - 3 components per vertex) (shader-location = 4)
-	Tangents *[]float32
+	Tangents *float32
 	// Vertex colors (RGBA - 4 components per vertex) (shader-location = 3)
-	Colors *[]uint8
+	Colors *uint8
 	// Vertex indices (in case vertex data comes indexed)
-	Indices *[]uint16
+	Indices *uint16
+	// AnimVertices
+	AnimVertices *float32
+	// AnimNormals
+	AnimNormals *float32
+	// BoneIds
+	BoneIds *int32
+	// BoneWeights
+	BoneWeights *float32
 	// OpenGL Vertex Array Object id
 	VaoID uint32
 	// OpenGL Vertex Buffer Objects id (7 types of vertex data)
-	VboID [7]uint32
-}
-
-// NewMesh - Returns new Mesh
-func NewMesh(vertexCount, triangleCount int32, vertices, texcoords, texcoords2, normals, tangents *[]float32, colors *[]uint8, indices *[]uint16, vaoID uint32, vboID [7]uint32) Mesh {
-	return Mesh{vertexCount, triangleCount, vertices, texcoords, texcoords2, normals, tangents, colors, indices, vaoID, vboID}
+	VboID *uint32
 }
 
 // newMeshFromPointer - Returns new Mesh from pointer
@@ -807,15 +787,8 @@ type Material struct {
 	Shader Shader
 	// Maps
 	Maps [MaxMaterialMaps]MaterialMap
-	// Padding
-	_ [4]byte
 	// Generic parameters (if required)
-	Params *[]float32
-}
-
-// NewMaterial - Returns new Material
-func NewMaterial(shader Shader, maps [MaxMaterialMaps]MaterialMap, params *[]float32) Material {
-	return Material{shader, maps, [4]byte{}, params}
+	Params *float32
 }
 
 // newMaterialFromPointer - Returns new Material from pointer
@@ -833,26 +806,35 @@ type MaterialMap struct {
 	Value float32
 }
 
-// Model type
 type Model struct {
-	// Vertex data buffers (RAM and VRAM)
-	Mesh Mesh
 	// Local transform matrix
-	Transform Matrix
-	// Shader and textures data
-	Material Material
-	// Padding
-	_ [4]byte
-}
-
-// NewModel - Returns new Model
-func NewModel(mesh Mesh, transform Matrix, material Material) Model {
-	return Model{mesh, transform, material, [4]byte{}}
+	Transform     Matrix
+	MeshCount     int32
+	Meshes        []Mesh
+	MaterialCount int32
+	Materials     []Material
+	MeshMaterial  *int32
+	BoneCount     int32
+	Bones         []BoneInfo
+	BindPose      []Transform
 }
 
 // newModelFromPointer - Returns new Model from pointer
 func newModelFromPointer(ptr unsafe.Pointer) Model {
 	return *(*Model)(ptr)
+}
+
+// BoneInfo type.
+type BoneInfo struct {
+	Name   [32]int8
+	Parent int32
+}
+
+// Transform type.
+type Transform struct {
+	Translation Vector3
+	Rotation    Vector4
+	Scale       Vector3
 }
 
 // Ray type (useful for raycast)
@@ -889,9 +871,9 @@ const (
 // VrDeviceInfo - Head-Mounted-Display device parameters
 type VrDeviceInfo struct {
 	// HMD horizontal resolution in pixels
-	HResolution int
+	HResolution int32
 	// HMD vertical resolution in pixels
-	VResolution int
+	VResolution int32
 	// HMD horizontal size in meters
 	HScreenSize float32
 	// HMD vertical size in meters
@@ -911,7 +893,7 @@ type VrDeviceInfo struct {
 }
 
 // NewVrDeviceInfo - Returns new VrDeviceInfo
-func NewVrDeviceInfo(hResolution, vResolution int, hScreenSize, vScreenSize, vScreenCenter, eyeToScreenDistance,
+func NewVrDeviceInfo(hResolution, vResolution int32, hScreenSize, vScreenSize, vScreenCenter, eyeToScreenDistance,
 	lensSeparationDistance, interpupillaryDistance float32, lensDistortionValues, chromaAbCorrection [4]float32) VrDeviceInfo {
 
 	return VrDeviceInfo{hResolution, vResolution, hScreenSize, vScreenSize, vScreenCenter, eyeToScreenDistance,
@@ -977,19 +959,16 @@ func newCharInfoFromPointer(ptr unsafe.Pointer) CharInfo {
 
 // Font type, includes texture and charSet array data
 type Font struct {
-	// Font texture
-	Texture Texture2D
 	// Base size (default chars height)
 	BaseSize int32
 	// Number of characters
 	CharsCount int32
+	// Characters texture atlas
+	Texture Texture2D
+	// Characters rectangles in texture
+	Recs *Rectangle
 	// Characters info data
 	Chars *CharInfo
-}
-
-// NewFont - Returns new Font
-func NewFont(texture Texture2D, baseSize, charsCount int32, chars *CharInfo) Font {
-	return Font{texture, baseSize, charsCount, chars}
 }
 
 // newFontFromPointer - Returns new Font from pointer
@@ -1113,7 +1092,7 @@ func NewImageFromImage(img image.Image) *Image {
 		for x := 0; x < size.X; x++ {
 			color := img.At(x, y)
 			r, g, b, a := color.RGBA()
-			pixels[x+y*size.Y] = NewColor(uint8(r), uint8(g), uint8(b), uint8(a))
+			pixels[x+y*size.X] = NewColor(uint8(r), uint8(g), uint8(b), uint8(a))
 		}
 	}
 
@@ -1167,11 +1146,14 @@ func newRenderTexture2DFromPointer(ptr unsafe.Pointer) RenderTexture2D {
 
 // Log message types
 const (
-	LogInfo = 1 << iota
+	LogAll = iota
+	LogTrace
+	LogDebug
+	LogInfo
 	LogWarning
 	LogError
-	LogDebug
-	LogOther
+	LogFatal
+	LogNone
 )
 
 var logTypeFlags = LogInfo | LogWarning | LogError

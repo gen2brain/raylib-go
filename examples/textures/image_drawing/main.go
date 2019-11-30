@@ -11,15 +11,15 @@ func main() {
 	rl.InitWindow(screenWidth, screenHeight, "raylib [textures] example - texture loading and drawing")
 
 	// NOTE: Textures MUST be loaded after Window initialization (OpenGL context is required)
-	cat := rl.LoadImage("cat.png")                            // Load image in CPU memory (RAM)
+	cat := rl.LoadImage("cat.png")                        // Load image in CPU memory (RAM)
 	rl.ImageCrop(cat, rl.NewRectangle(100, 10, 280, 380)) // Crop an image piece
-	rl.ImageFlipHorizontal(cat)                               // Flip cropped image horizontally
-	rl.ImageResize(cat, 150, 200)                             // Resize flipped-cropped image
+	rl.ImageFlipHorizontal(cat)                           // Flip cropped image horizontally
+	rl.ImageResize(cat, 150, 200)                         // Resize flipped-cropped image
 
 	parrots := rl.LoadImage("parrots.png") // Load image in CPU memory (RAM)
 
 	// Draw one image over the other with a scaling of 1.5f
-	rl.ImageDraw(parrots, cat, rl.NewRectangle(0, 0, float32(cat.Width), float32(cat.Height)), rl.NewRectangle(30, 40, float32(cat.Width)*1.5, float32(cat.Height)*1.5))
+	rl.ImageDraw(parrots, cat, rl.NewRectangle(0, 0, float32(cat.Width), float32(cat.Height)), rl.NewRectangle(30, 40, float32(cat.Width)*1.5, float32(cat.Height)*1.5), rl.White)
 	rl.ImageCrop(parrots, rl.NewRectangle(0, 50, float32(parrots.Width), float32(parrots.Height-100))) // Crop resulting image
 
 	rl.UnloadImage(cat) // Unload image from RAM
