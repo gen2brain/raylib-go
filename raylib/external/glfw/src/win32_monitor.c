@@ -2,7 +2,7 @@
 // GLFW 3.3 Win32 - www.glfw.org
 //------------------------------------------------------------------------
 // Copyright (c) 2002-2006 Marcus Geelnard
-// Copyright (c) 2006-2016 Camilla Löwy <elmindreda@glfw.org>
+// Copyright (c) 2006-2019 Camilla Löwy <elmindreda@glfw.org>
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -324,9 +324,9 @@ void _glfwGetMonitorContentScaleWin32(HMONITOR handle, float* xscale, float* ysc
     }
 
     if (xscale)
-        *xscale = xdpi / 96.f;
+        *xscale = xdpi / (float) USER_DEFAULT_SCREEN_DPI;
     if (yscale)
-        *yscale = ydpi / 96.f;
+        *yscale = ydpi / (float) USER_DEFAULT_SCREEN_DPI;
 }
 
 
@@ -359,6 +359,23 @@ void _glfwPlatformGetMonitorContentScale(_GLFWmonitor* monitor,
                                          float* xscale, float* yscale)
 {
     _glfwGetMonitorContentScaleWin32(monitor->win32.handle, xscale, yscale);
+}
+
+void _glfwPlatformGetMonitorWorkarea(_GLFWmonitor* monitor,
+                                     int* xpos, int* ypos,
+                                     int* width, int* height)
+{
+    MONITORINFO mi = { sizeof(mi) };
+    GetMonitorInfo(monitor->win32.handle, &mi);
+
+    if (xpos)
+        *xpos = mi.rcWork.left;
+    if (ypos)
+        *ypos = mi.rcWork.top;
+    if (width)
+        *width = mi.rcWork.right - mi.rcWork.left;
+    if (height)
+        *height = mi.rcWork.bottom - mi.rcWork.top;
 }
 
 GLFWvidmode* _glfwPlatformGetVideoModes(_GLFWmonitor* monitor, int* count)
@@ -455,7 +472,7 @@ void _glfwPlatformGetVideoMode(_GLFWmonitor* monitor, GLFWvidmode* mode)
                   &mode->blueBits);
 }
 
-void _glfwPlatformGetGammaRamp(_GLFWmonitor* monitor, GLFWgammaramp* ramp)
+GLFWbool _glfwPlatformGetGammaRamp(_GLFWmonitor* monitor, GLFWgammaramp* ramp)
 {
     HDC dc;
     WORD values[768];
@@ -469,6 +486,8 @@ void _glfwPlatformGetGammaRamp(_GLFWmonitor* monitor, GLFWgammaramp* ramp)
     memcpy(ramp->red,   values +   0, 256 * sizeof(unsigned short));
     memcpy(ramp->green, values + 256, 256 * sizeof(unsigned short));
     memcpy(ramp->blue,  values + 512, 256 * sizeof(unsigned short));
+
+    return GLFW_TRUE;
 }
 
 void _glfwPlatformSetGammaRamp(_GLFWmonitor* monitor, const GLFWgammaramp* ramp)
