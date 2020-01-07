@@ -12,12 +12,12 @@ import (
 	"os"
 )
 
-// SetTraceLog - Enable trace log message types (bit flags based)
+// SetTraceLog - Enable trace log message types
 func SetTraceLog(typeFlags int) {
 	logTypeFlags = typeFlags
 
-	ctypeFlags := (C.uchar)(typeFlags)
-	C.SetTraceLog(ctypeFlags)
+	ctypeFlags := (C.int)(typeFlags)
+	C.SetTraceLogLevel(ctypeFlags)
 }
 
 // TraceLog - Show trace log messages (INFO, WARNING, ERROR, DEBUG)

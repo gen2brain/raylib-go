@@ -117,7 +117,7 @@ func DrawRectanglePro(rec Rectangle, origin Vector2, rotation float32, colors []
 	corigin := origin.cptr()
 	crotation := (C.float)(rotation)
 	ccolor := (*C.Color)(unsafe.Pointer(&colors[0]))
-	C.DrawRectanglePro(*crec, *corigin, crotation, ccolor)
+	C.DrawRectanglePro(*crec, *corigin, crotation, *ccolor)
 }
 
 // DrawRectangleGradientV - Draw a vertical-gradient-filled rectangle
@@ -204,22 +204,6 @@ func DrawPoly(center Vector2, sides int32, radius, rotation float32, color Color
 	crotation := (C.float)(rotation)
 	ccolor := color.cptr()
 	C.DrawPoly(*ccenter, csides, cradius, crotation, *ccolor)
-}
-
-// DrawPolyEx - Draw a closed polygon defined by points
-func DrawPolyEx(points []Vector2, numPoints int32, color Color) {
-	cpoints := points[0].cptr()
-	cnumPoints := (C.int)(numPoints)
-	ccolor := color.cptr()
-	C.DrawPolyEx(cpoints, cnumPoints, *ccolor)
-}
-
-// DrawPolyExLines - Draw polygon lines
-func DrawPolyExLines(points []Vector2, numPoints int32, color Color) {
-	cpoints := points[0].cptr()
-	cnumPoints := (C.int)(numPoints)
-	ccolor := color.cptr()
-	C.DrawPolyExLines(cpoints, cnumPoints, *ccolor)
 }
 
 // CheckCollisionRecs - Check collision between two rectangles
