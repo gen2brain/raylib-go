@@ -76,9 +76,32 @@ func IsWindowMinimized() bool {
 	return v
 }
 
+// IsWindowResized - Check if window has been resized
+func IsWindowResized() bool {
+	ret := C.IsWindowResized()
+	v := bool(ret)
+	return v
+}
+
+// IsWindowHidden - Check if window is currently hidden
+func IsWindowHidden() bool {
+	ret := C.IsWindowHidden()
+	v := bool(ret)
+	return v
+}
 // ToggleFullscreen - Fullscreen toggle (only PLATFORM_DESKTOP)
 func ToggleFullscreen() {
 	C.ToggleFullscreen()
+}
+
+// UnhideWindow - Show the window
+func UnhideWindow() {
+	C.UnhideWindow()
+}
+
+// HideWindow - Hide the window
+func HideWindow() {
+	C.HideWindow()
 }
 
 // SetWindowIcon - Set icon for window (only PLATFORM_DESKTOP)
@@ -180,6 +203,20 @@ func GetMonitorName(monitor int) string {
 	ret := C.GetMonitorName(cmonitor)
 	v := C.GoString(ret)
 	return v
+}
+
+// GetClipboardText - Get clipboard text content
+func GetClipboardText() string {
+	ret := C.GetClipboardText()
+	v := C.GoString(ret)
+	return v
+}
+
+// SetClipboardText - Set clipboard text content
+func SetClipboardText(data string) {
+	cdata := C.CString(data)
+	defer C.free(unsafe.Pointer(cdata))
+	C.SetClipboardText(cdata)
 }
 
 // ClearBackground - Sets Background Color
@@ -589,6 +626,13 @@ func SetMousePosition(x, y int) {
 	cx := (C.int)(x)
 	cy := (C.int)(y)
 	C.SetMousePosition(cx, cy)
+}
+
+// SetMouseOffset - Set mouse offset
+func SetMouseOffset(offsetX, offsetY int) {
+	ox := (C.int)(offsetX)
+	oy := (C.int)(offsetY)
+	C.SetMouseOffset(ox, oy)
 }
 
 // SetMouseScale - Set mouse scaling
