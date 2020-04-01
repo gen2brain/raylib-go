@@ -22,6 +22,10 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
 ##### Fedora
 
+As of a fresh install of Fedora 31, you may need to do the installs for _both Wayland and X11_ to complete installation. 
+If you get `missing wayland-xdg-shell-client-protocol.h include` or any other missing includes specific to X11/Wayland
+during the install process and you have only completed one of the installs here consider also installing the other set.
+
 ###### X11
 
     dnf install mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel
