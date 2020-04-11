@@ -296,6 +296,15 @@ func GetWorldToScreen2D(position Vector2, camera Camera2D) Vector2 {
 	return v
 }
 
+// GetScreenToWorld2D - Returns the world space position for a 2d camera screen space position
+func GetScreenToWorld2D(position Vector2, camera Camera2D) Vector2 {
+	cposition := position.cptr()
+	ccamera := camera.cptr()
+	ret := C.GetScreenToWorld2D(*cposition, *ccamera)
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // GetCameraMatrix - Returns camera transform matrix (view matrix)
 func GetCameraMatrix(camera Camera) Matrix {
 	ccamera := camera.cptr()
