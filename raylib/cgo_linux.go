@@ -18,6 +18,7 @@ package rl
 #include "external/glfw/src/wayland-relative-pointer-unstable-v1-client-protocol.c"
 #include "external/glfw/src/wayland-idle-inhibit-unstable-v1-client-protocol.c"
 #include "external/glfw/src/wayland-xdg-shell-client-protocol.c"
+#include "external/glfw/src/wayland-xdg-decoration-client-protocol.c"
 #include "external/glfw/src/wayland-viewporter-client-protocol.c"
 #endif
 #ifdef _GLFW_X11

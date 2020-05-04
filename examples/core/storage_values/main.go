@@ -28,12 +28,12 @@ func main() {
 		}
 
 		if rl.IsKeyPressed(rl.KeyEnter) {
-			rl.StorageSaveValue(storageScore, score)
-			rl.StorageSaveValue(storageHiscore, hiscore)
+			rl.SaveStorageValue(storageScore, score)
+			rl.SaveStorageValue(storageHiscore, hiscore)
 		} else if rl.IsKeyPressed(rl.KeySpace) {
 			// NOTE: If requested position could not be found, value 0 is returned
-			score = rl.StorageLoadValue(storageScore)
-			hiscore = rl.StorageLoadValue(storageHiscore)
+			score = rl.LoadStorageValue(storageScore)
+			hiscore = rl.LoadStorageValue(storageHiscore)
 		}
 
 		framesCounter++

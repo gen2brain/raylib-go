@@ -1,5 +1,5 @@
 //========================================================================
-// GLFW 3.3 EGL - www.glfw.org
+// GLFW 3.4 EGL - www.glfw.org
 //------------------------------------------------------------------------
 // Copyright (c) 2002-2006 Marcus Geelnard
 // Copyright (c) 2006-2019 Camilla Löwy <elmindreda@glfw.org>
@@ -23,6 +23,8 @@
 // 3. This notice may not be removed or altered from any source
 //    distribution.
 //
+//========================================================================
+// Please use C89 style variable declarations in this file because VS 2010
 //========================================================================
 
 #include "internal.h"
@@ -121,23 +123,24 @@ static GLFWbool chooseEGLConfig(const _GLFWctxconfig* ctxconfig,
             continue;
 
 #if defined(_GLFW_X11)
-        XVisualInfo vi = {0};
-
-        // Only consider EGLConfigs with associated Visuals
-        vi.visualid = getEGLConfigAttrib(n, EGL_NATIVE_VISUAL_ID);
-        if (!vi.visualid)
-            continue;
-
-        if (desired->transparent)
         {
-            int count;
-            XVisualInfo* vis = XGetVisualInfo(_glfw.x11.display,
-                                              VisualIDMask, &vi,
-                                              &count);
-            if (vis)
+            XVisualInfo vi = {0};
+
+            // Only consider EGLConfigs with associated Visuals
+            vi.visualid = getEGLConfigAttrib(n, EGL_NATIVE_VISUAL_ID);
+            if (!vi.visualid)
+                continue;
+
+            if (desired->transparent)
             {
-                u->transparent = _glfwIsVisualTransparentX11(vis[0].visual);
-                XFree(vis);
+                int count;
+                XVisualInfo* vis =
+                    XGetVisualInfo(_glfw.x11.display, VisualIDMask, &vi, &count);
+                if (vis)
+                {
+                    u->transparent = _glfwIsVisualTransparentX11(vis[0].visual);
+                    XFree(vis);
+                }
             }
         }
 #endif // _GLFW_X11

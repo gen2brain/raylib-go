@@ -20,7 +20,7 @@
 *
 *   LICENSE: zlib/libpng
 *
-*   Copyright (c) 2015-2019 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2015-2020 Ramon Santamaria (@raysan5)
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -135,7 +135,7 @@
 typedef struct float3 { float v[3]; } float3;
 typedef struct float16 { float v[16]; } float16;
 
-#include <math.h>       // Required for: sinf(), cosf(), tan(), fabs()
+#include <math.h>       // Required for: sinf(), cosf(), sqrtf(), tan(), fabs()
 
 //----------------------------------------------------------------------------------
 // Module Functions Definition - Utils math
@@ -268,6 +268,14 @@ RMDEF Vector2 Vector2Lerp(Vector2 v1, Vector2 v2, float amount)
     return result;
 }
 
+// Rotate Vector by float in Degrees.
+RMDEF Vector2 Vector2Rotate(Vector2 v, float degs)
+{
+    float rads = degs*DEG2RAD;
+    Vector2 result = {v.x * cosf(rads) - v.y * sinf(rads) , v.x * sinf(rads) + v.y * cosf(rads) };
+    return result;
+}
+
 //----------------------------------------------------------------------------------
 // Module Functions Definition - Vector3 math
 //----------------------------------------------------------------------------------
@@ -301,14 +309,14 @@ RMDEF Vector3 Vector3Subtract(Vector3 v1, Vector3 v2)
 }
 
 // Multiply vector by scalar
-RMDEF Vector3 Vector3Multiply(Vector3 v, float scalar)
+RMDEF Vector3 Vector3Scale(Vector3 v, float scalar)
 {
     Vector3 result = { v.x*scalar, v.y*scalar, v.z*scalar };
     return result;
 }
 
 // Multiply vector by vector
-RMDEF Vector3 Vector3MultiplyV(Vector3 v1, Vector3 v2)
+RMDEF Vector3 Vector3Multiply(Vector3 v1, Vector3 v2)
 {
     Vector3 result = { v1.x*v2.x, v1.y*v2.y, v1.z*v2.z };
     return result;
@@ -368,13 +376,6 @@ RMDEF float Vector3Distance(Vector3 v1, Vector3 v2)
     float dy = v2.y - v1.y;
     float dz = v2.z - v1.z;
     float result = sqrtf(dx*dx + dy*dy + dz*dz);
-    return result;
-}
-
-// Scale provided vector
-RMDEF Vector3 Vector3Scale(Vector3 v, float scale)
-{
-    Vector3 result = { v.x*scale, v.y*scale, v.z*scale };
     return result;
 }
 
@@ -553,20 +554,18 @@ RMDEF float3 Vector3ToFloatV(Vector3 v)
 // Compute matrix determinant
 RMDEF float MatrixDeterminant(Matrix mat)
 {
-    float result = { 0 };
-
     // Cache the matrix values (speed optimization)
     float a00 = mat.m0, a01 = mat.m1, a02 = mat.m2, a03 = mat.m3;
     float a10 = mat.m4, a11 = mat.m5, a12 = mat.m6, a13 = mat.m7;
     float a20 = mat.m8, a21 = mat.m9, a22 = mat.m10, a23 = mat.m11;
     float a30 = mat.m12, a31 = mat.m13, a32 = mat.m14, a33 = mat.m15;
 
-    result = a30*a21*a12*a03 - a20*a31*a12*a03 - a30*a11*a22*a03 + a10*a31*a22*a03 +
-             a20*a11*a32*a03 - a10*a21*a32*a03 - a30*a21*a02*a13 + a20*a31*a02*a13 +
-             a30*a01*a22*a13 - a00*a31*a22*a13 - a20*a01*a32*a13 + a00*a21*a32*a13 +
-             a30*a11*a02*a23 - a10*a31*a02*a23 - a30*a01*a12*a23 + a00*a31*a12*a23 +
-             a10*a01*a32*a23 - a00*a11*a32*a23 - a20*a11*a02*a33 + a10*a21*a02*a33 +
-             a20*a01*a12*a33 - a00*a21*a12*a33 - a10*a01*a22*a33 + a00*a11*a22*a33;
+    float result = a30*a21*a12*a03 - a20*a31*a12*a03 - a30*a11*a22*a03 + a10*a31*a22*a03 +
+                   a20*a11*a32*a03 - a10*a21*a32*a03 - a30*a21*a02*a13 + a20*a31*a02*a13 +
+                   a30*a01*a22*a13 - a00*a31*a22*a13 - a20*a01*a32*a13 + a00*a21*a32*a13 +
+                   a30*a11*a02*a23 - a10*a31*a02*a23 - a30*a01*a12*a23 + a00*a31*a12*a23 +
+                   a10*a01*a32*a23 - a00*a11*a32*a23 - a20*a11*a02*a33 + a10*a21*a02*a33 +
+                   a20*a01*a12*a33 - a00*a21*a12*a33 - a10*a01*a22*a33 + a00*a11*a22*a33;
 
     return result;
 }
@@ -1142,8 +1141,8 @@ RMDEF Quaternion QuaternionSlerp(Quaternion q1, Quaternion q2, float amount)
     else if (cosHalfTheta > 0.95f) result = QuaternionNlerp(q1, q2, amount);
     else
     {
-        float halfTheta = (float) acos(cosHalfTheta);
-        float sinHalfTheta = (float) sqrt(1.0f - cosHalfTheta*cosHalfTheta);
+        float halfTheta = acosf(cosHalfTheta);
+        float sinHalfTheta = sqrtf(1.0f - cosHalfTheta*cosHalfTheta);
 
         if (fabs(sinHalfTheta) < 0.001f)
         {
@@ -1198,7 +1197,7 @@ RMDEF Quaternion QuaternionFromMatrix(Matrix mat)
 
     if (trace > 0.0f)
     {
-        float s = (float)sqrt(trace + 1)*2.0f;
+        float s = sqrtf(trace + 1)*2.0f;
         float invS = 1.0f/s;
 
         result.w = s*0.25f;
@@ -1222,7 +1221,7 @@ RMDEF Quaternion QuaternionFromMatrix(Matrix mat)
         }
         else if (m11 > m22)
         {
-            float s = (float)sqrt(1.0f + m11 - m00 - m22)*2.0f;
+            float s = sqrtf(1.0f + m11 - m00 - m22)*2.0f;
             float invS = 1.0f/s;
 
             result.w = (mat.m8 - mat.m2)*invS;
@@ -1232,7 +1231,7 @@ RMDEF Quaternion QuaternionFromMatrix(Matrix mat)
         }
         else
         {
-            float s = (float)sqrt(1.0f + m22 - m00 - m11)*2.0f;
+            float s = sqrtf(1.0f + m22 - m00 - m11)*2.0f;
             float invS = 1.0f/s;
 
             result.w = (mat.m1 - mat.m4)*invS;
@@ -1322,10 +1321,8 @@ RMDEF void QuaternionToAxisAngle(Quaternion q, Vector3 *outAxis, float *outAngle
     if (fabs(q.w) > 1.0f) q = QuaternionNormalize(q);
 
     Vector3 resAxis = { 0.0f, 0.0f, 0.0f };
-    float resAngle = 0.0f;
-
-    resAngle = 2.0f*(float)acos(q.w);
-    float den = (float)sqrt(1.0f - q.w*q.w);
+    float resAngle = 2.0f*acosf(q.w);
+    float den = sqrtf(1.0f - q.w*q.w);
 
     if (den > 0.0001f)
     {

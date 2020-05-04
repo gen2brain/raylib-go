@@ -309,11 +309,14 @@ func ImageDraw(dst, src *Image, srcRec, dstRec Rectangle, tint Color) {
 }
 
 // ImageDrawRectangle - Draw rectangle within an image
-func ImageDrawRectangle(dst *Image, rec Rectangle, color Color) {
+func ImageDrawRectangle(dst *Image, x, y, width, height int32, color Color) {
 	cdst := dst.cptr()
-	crec := rec.cptr()
+	cx := (C.int)(x)
+	cy := (C.int)(y)
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
 	ccolor := color.cptr()
-	C.ImageDrawRectangle(cdst, *crec, *ccolor)
+	C.ImageDrawRectangle(cdst, cx, cy, cwidth, cheight, *ccolor)
 }
 
 // ImageDrawRectangleLines - Draw rectangle lines within an image

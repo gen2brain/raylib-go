@@ -463,17 +463,17 @@ func TakeScreenshot(name string) {
 	C.TakeScreenshot(cname)
 }
 
-// StorageSaveValue - Storage save integer value (to defined position)
-func StorageSaveValue(position, value int32) {
-	cposition := (C.int)(position)
+// SaveStorageValue - Storage save integer value (to defined position)
+func SaveStorageValue(position, value int32) {
+	cposition := (C.uint)(position)
 	cvalue := (C.int)(value)
-	C.StorageSaveValue(cposition, cvalue)
+	C.SaveStorageValue(cposition, cvalue)
 }
 
-// StorageLoadValue - Storage load integer value (from defined position)
-func StorageLoadValue(position int32) int32 {
-	cposition := (C.int)(position)
-	ret := C.StorageLoadValue(cposition)
+// LoadStorageValue - Storage load integer value (from defined position)
+func LoadStorageValue(position int32) int32 {
+	cposition := (C.uint)(position)
+	ret := C.LoadStorageValue(cposition)
 	v := (int32)(ret)
 	return v
 }
