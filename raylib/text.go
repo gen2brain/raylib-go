@@ -45,6 +45,29 @@ func LoadFontEx(fileName string, fontSize int32, fontChars *int32, charsCount in
 	return v
 }
 
+// LoadFontFromImage - Loads an Image font file (XNA style)
+func LoadFontFromImage(image Image, key Color, firstChar int32) Font {
+	cimage := image.cptr()
+	ckey := key.cptr()
+	cfirstChar := (C.int)(firstChar)
+	ret := C.LoadFontFromImage(*cimage, *ckey, cfirstChar)
+	v := newFontFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// LoadFontData - Load font data for further use
+func LoadFontData(fileName string, fontSize int32, fontChars *int32, charsCount, typ int32) *CharInfo {
+	cfileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(cfileName))
+	cfontSize := (C.int)(fontSize)
+	cfontChars := (*C.int)(unsafe.Pointer(fontChars))
+	ccharsCount := (C.int)(charsCount)
+	ctype := (C.int)(typ)
+	ret := C.LoadFontData(cfileName, cfontSize, cfontChars, ccharsCount, ctype)
+	v := newCharInfoFromPointer(unsafe.Pointer(&ret))
+	return &v
+}
+
 // UnloadFont - Unload Font from GPU memory (VRAM)
 func UnloadFont(font Font) {
 	cfont := font.cptr()
@@ -74,6 +97,36 @@ func DrawTextEx(font Font, text string, position Vector2, fontSize float32, spac
 	C.DrawTextEx(*cfont, ctext, *cposition, cfontSize, cspacing, *ctint)
 }
 
+// DrawTextRec - Draw text using font inside rectangle limits
+func DrawTextRec(font Font, text string, rec Rectangle, fontSize, spacing float32, wordWrap bool, tint Color) {
+	cfont := font.cptr()
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+	crec := rec.cptr()
+	cfontSize := (C.float)(fontSize)
+	cspacing := (C.float)(spacing)
+	cwordWrap := (C.bool)(wordWrap)
+	ctint := tint.cptr()
+	C.DrawTextRec(*cfont, ctext, *crec, cfontSize, cspacing, cwordWrap, *ctint)
+}
+
+// DrawTextRecEx - Draw text using font inside rectangle limits with support for text selection
+func DrawTextRecEx(font Font, text string, rec Rectangle, fontSize, spacing float32, wordWrap bool, tint Color, selectStart, selectLength int32, selectText, selectBack Color) {
+	cfont := font.cptr()
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+	crec := rec.cptr()
+	cfontSize := (C.float)(fontSize)
+	cspacing := (C.float)(spacing)
+	cwordWrap := (C.bool)(wordWrap)
+	ctint := tint.cptr()
+	cselectStart := (C.int)(selectStart)
+	cselectLength := (C.int)(selectLength)
+	cselectText := selectText.cptr()
+	cselectBack := selectBack.cptr()
+	C.DrawTextRecEx(*cfont, ctext, *crec, cfontSize, cspacing, cwordWrap, *ctint, cselectStart, cselectLength, *cselectText, *cselectBack)
+}
+
 // MeasureText - Measure string width for default font
 func MeasureText(text string, fontSize int32) int32 {
 	ctext := C.CString(text)
@@ -93,6 +146,15 @@ func MeasureTextEx(font Font, text string, fontSize float32, spacing float32) Ve
 	cspacing := (C.float)(spacing)
 	ret := C.MeasureTextEx(*cfont, ctext, cfontSize, cspacing)
 	v := newVector2FromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetGlyphIndex - Returns index position for a unicode character on spritefont
+func GetGlyphIndex(font Font, character int32) int32 {
+	cfont := font.cptr()
+	ccharacter := (C.int)(character)
+	ret := C.GetGlyphIndex(*cfont, ccharacter)
+	v := (int32)(ret)
 	return v
 }
 
