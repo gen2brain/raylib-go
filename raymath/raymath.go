@@ -34,7 +34,7 @@ func Vector2Length(v rl.Vector2) float32 {
 
 // Vector2DotProduct - Calculate two vectors dot product
 func Vector2DotProduct(v1, v2 rl.Vector2) float32 {
-	return (v1.X*v2.X + v1.Y*v2.Y)
+	return v1.X*v2.X + v1.Y*v2.Y
 }
 
 // Vector2Distance - Calculate distance between two vectors
@@ -59,6 +59,11 @@ func Vector2Scale(v *rl.Vector2, scale float32) {
 	v.Y *= scale
 }
 
+// Vector2Multiply - Multiply vector by vector
+func Vector2Multiply(v1, v2 *rl.Vector2) rl.Vector2 {
+	return rl.NewVector2(v1.X*v2.X, v1.Y*v2.Y)
+}
+
 // Vector2Negate - Negate vector
 func Vector2Negate(v *rl.Vector2) {
 	v.X = -v.X
@@ -71,9 +76,19 @@ func Vector2Divide(v *rl.Vector2, div float32) {
 	v.Y = v.Y / div
 }
 
+// Vector2DivideV - Divide vector by vector
+func Vector2DivideV(v1, v2 *rl.Vector2) rl.Vector2 {
+	return rl.NewVector2(v1.X/v2.X, v1.Y/v2.Y)
+}
+
 // Vector2Normalize - Normalize provided vector
 func Vector2Normalize(v *rl.Vector2) {
 	Vector2Divide(v, Vector2Length(*v))
+}
+
+// Vector2Lerp - Calculate linear interpolation between two vectors
+func Vector2Lerp(v1, v2 *rl.Vector2, amount float32) rl.Vector2 {
+	return rl.NewVector2(v1.X+amount*(v2.X-v1.X), v1.Y+amount*(v2.Y-v1.Y))
 }
 
 // Vector2CrossProduct - Calculate two vectors cross product
@@ -724,9 +739,9 @@ func MatrixPerspective(fovy, aspect, near, far float32) rl.Matrix {
 func MatrixOrtho(left, right, bottom, top, near, far float32) rl.Matrix {
 	var result rl.Matrix
 
-	rl := (right - left)
-	tb := (top - bottom)
-	fn := (far - near)
+	rl := right - left
+	tb := top - bottom
+	fn := far - near
 
 	result.M0 = 2.0 / rl
 	result.M1 = 0.0
@@ -851,18 +866,18 @@ func QuaternionSlerp(q1, q2 rl.Quaternion, amount float32) rl.Quaternion {
 		sinHalfTheta := float32(math.Sqrt(float64(1.0 - cosHalfTheta*cosHalfTheta)))
 
 		if math.Abs(float64(sinHalfTheta)) < 0.001 {
-			result.X = (q1.X*0.5 + q2.X*0.5)
-			result.Y = (q1.Y*0.5 + q2.Y*0.5)
-			result.Z = (q1.Z*0.5 + q2.Z*0.5)
-			result.W = (q1.W*0.5 + q2.W*0.5)
+			result.X = q1.X*0.5 + q2.X*0.5
+			result.Y = q1.Y*0.5 + q2.Y*0.5
+			result.Z = q1.Z*0.5 + q2.Z*0.5
+			result.W = q1.W*0.5 + q2.W*0.5
 		} else {
 			ratioA := float32(math.Sin(float64((1-amount)*halfTheta))) / sinHalfTheta
 			ratioB := float32(math.Sin(float64(amount*halfTheta))) / sinHalfTheta
 
-			result.X = (q1.X*ratioA + q2.X*ratioB)
-			result.Y = (q1.Y*ratioA + q2.Y*ratioB)
-			result.Z = (q1.Z*ratioA + q2.Z*ratioB)
-			result.W = (q1.W*ratioA + q2.W*ratioB)
+			result.X = q1.X*ratioA + q2.X*ratioB
+			result.Y = q1.Y*ratioA + q2.Y*ratioB
+			result.Z = q1.Z*ratioA + q2.Z*ratioB
+			result.W = q1.W*ratioA + q2.W*ratioB
 		}
 	}
 
