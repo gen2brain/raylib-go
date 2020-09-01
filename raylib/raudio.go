@@ -334,3 +334,21 @@ func StopAudioStream(stream AudioStream) {
 	cstream := stream.cptr()
 	C.StopAudioStream(*cstream)
 }
+
+// PlaySoundMulti - Play a sound (using multichannel buffer pool)
+func PlaySoundMulti(sound Sound) {
+	csound := sound.cptr()
+	C.PlaySoundMulti(*csound)
+}
+
+// GetSoundsPlaying - Get number of sounds playing in the multichannel
+func GetSoundsPlaying() int {
+	ret := C.GetSoundsPlaying()
+	v := int(ret)
+	return v
+}
+
+// StopSoundMulti - Stop any sound playing (using multichannel buffer pool)
+func StopSoundMulti() {
+	C.StopSoundMulti()
+}
