@@ -51,26 +51,28 @@
 #ifndef INCLUDE_JAR_XM_H
 #define INCLUDE_JAR_XM_H
 
+#include <stdint.h>
+
 #define JAR_XM_DEBUG 0
 #define JAR_XM_LINEAR_INTERPOLATION 1 // speed increase with decrease in quality
 #define JAR_XM_DEFENSIVE 1
 #define JAR_XM_RAMPING 1
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <limits.h>
-#include <string.h>
-
-
-
-//-------------------------------------------------------------------------------
-#ifdef __cplusplus
-extern "C" {
+// Allow custom memory allocators
+#ifndef JARXM_MALLOC
+    #define JARXM_MALLOC(sz)    malloc(sz)
+#endif
+#ifndef JARXM_FREE
+    #define JARXM_FREE(p)       free(p)
 #endif
 
+//-------------------------------------------------------------------------------
 struct jar_xm_context_s;
 typedef struct jar_xm_context_s jar_xm_context_t;
+
+#ifdef __cplusplus
+extern "C" { 
+#endif
 
 /** Create a XM context.
  *
@@ -133,7 +135,7 @@ void jar_xm_generate_samples(jar_xm_context_t* ctx, float* output, size_t numsam
  */
 void jar_xm_generate_samples_16bit(jar_xm_context_t* ctx, short* output, size_t numsamples)
 {
-    float* musicBuffer = malloc((2*numsamples)*sizeof(float));
+    float* musicBuffer = JARXM_MALLOC((2*numsamples)*sizeof(float));
     jar_xm_generate_samples(ctx, musicBuffer, numsamples);
 
     if(output){
@@ -142,7 +144,7 @@ void jar_xm_generate_samples_16bit(jar_xm_context_t* ctx, short* output, size_t 
             output[x] = musicBuffer[x] * SHRT_MAX;
     }
 
-    free(musicBuffer);
+    JARXM_FREE(musicBuffer);
 }
 
 /** Play the module, resample from 32 bit to 8 bit, and put the sound samples in an output buffer.
@@ -152,7 +154,7 @@ void jar_xm_generate_samples_16bit(jar_xm_context_t* ctx, short* output, size_t 
  */
 void jar_xm_generate_samples_8bit(jar_xm_context_t* ctx, char* output, size_t numsamples)
 {
-    float* musicBuffer = malloc((2*numsamples)*sizeof(float));
+    float* musicBuffer = JARXM_MALLOC((2*numsamples)*sizeof(float));
     jar_xm_generate_samples(ctx, musicBuffer, numsamples);
 
     if(output){
@@ -161,7 +163,7 @@ void jar_xm_generate_samples_8bit(jar_xm_context_t* ctx, char* output, size_t nu
             output[x] = musicBuffer[x] * CHAR_MAX;
     }
 
-    free(musicBuffer);
+    JARXM_FREE(musicBuffer);
 }
 
 
@@ -306,6 +308,9 @@ uint64_t jar_xm_get_remaining_samples(jar_xm_context_t* ctx);
 #ifdef JAR_XM_IMPLEMENTATION
 
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
 #include <string.h>
 
 #if JAR_XM_DEBUG            //JAR_XM_DEBUG defined as 0
@@ -630,10 +635,10 @@ int jar_xm_create_context_safe(jar_xm_context_t** ctxp, const char* moddata, siz
 #endif
 
     bytes_needed = jar_xm_get_memory_needed_for_context(moddata, moddata_length);
-    mempool = malloc(bytes_needed);
+    mempool = JARXM_MALLOC(bytes_needed);
     if(mempool == NULL && bytes_needed > 0) {
-        /* malloc() failed, trouble ahead */
-        DEBUG("call to malloc() failed, returned %p", (void*)mempool);
+        /* JARXM_MALLOC() failed, trouble ahead */
+        DEBUG("call to JARXM_MALLOC() failed, returned %p", (void*)mempool);
         return 2;
     }
 
@@ -641,7 +646,7 @@ int jar_xm_create_context_safe(jar_xm_context_t** ctxp, const char* moddata, siz
     memset(mempool, 0, bytes_needed);
 
     ctx = (*ctxp = (jar_xm_context_t *)mempool);
-    ctx->allocated_memory = mempool; /* Keep original pointer for free() */
+    ctx->allocated_memory = mempool; /* Keep original pointer for JARXM_FREE() */
     mempool += sizeof(jar_xm_context_t);
 
     ctx->rate = rate;
@@ -691,7 +696,7 @@ int jar_xm_create_context_safe(jar_xm_context_t** ctxp, const char* moddata, siz
 }
 
 void jar_xm_free_context(jar_xm_context_t* ctx) {
-    free(ctx->allocated_memory);
+    JARXM_FREE(ctx->allocated_memory);
 }
 
 void jar_xm_set_max_loop_count(jar_xm_context_t* ctx, uint8_t loopcnt) {
@@ -2620,11 +2625,11 @@ int jar_xm_create_context_from_file(jar_xm_context_t** ctx, uint32_t rate, const
         return 4;
     }
 
-    char* data = malloc(size + 1);
+    char* data = JARXM_MALLOC(size + 1);
     if(!data || fread(data, 1, size, xmf) < size) {
         fclose(xmf);
-        DEBUG_ERR(data ? "fread() failed" : "malloc() failed");
-        free(data);
+        DEBUG_ERR(data ? "fread() failed" : "JARXM_MALLOC() failed");
+        JARXM_FREE(data);
         *ctx = NULL;
         return 5;
     }
@@ -2632,7 +2637,7 @@ int jar_xm_create_context_from_file(jar_xm_context_t** ctx, uint32_t rate, const
     fclose(xmf);
 
     ret = jar_xm_create_context_safe(ctx, data, size, rate);
-    free(data);
+    JARXM_FREE(data);
 
     switch(ret) {
     case 0:
@@ -2670,7 +2675,7 @@ void jar_xm_reset(jar_xm_context_t* ctx)
         jar_xm_cut_note(&ctx->channels[i]);
     }
     ctx->current_row = 0;
-    ctx->current_table_index = ctx->module.restart_position;
+    ctx->current_table_index = 0;
     ctx->current_tick = 0;
 }
 
