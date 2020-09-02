@@ -35,6 +35,11 @@ Example:
 */
 package rl
 
+/*
+#include "raylib.h"
+#include <stdlib.h>
+*/
+import "C"
 import (
 	"image"
 	"io"
@@ -108,7 +113,7 @@ type AudioStream struct {
 	// Number of channels (1-mono, 2-stereo)
 	Channels uint32
 	// Buffer
-	Buffer *_Ctype_struct_rAudioBuffer
+	Buffer *C.rAudioBuffer
 }
 
 // newAudioStreamFromPointer - Returns new AudioStream from pointer
@@ -910,9 +915,12 @@ type BlendMode int32
 
 // Color blending modes (pre-defined)
 const (
-	BlendAlpha BlendMode = iota
-	BlendAdditive
-	BlendMultiplied
+	BlendAlpha          BlendMode = iota // Blend textures considering alpha (default)
+	BlendAdditive                        // Blend textures adding colors
+	BlendMultiplied                      // Blend textures multiplying colors
+	BlendAddColors                       // Blend textures adding colors (alternative)
+	BlendSubtractColors                  // Blend textures subtracting colors (alternative)
+	BlendCustom                          // Blend textures using custom src/dst factors (use SetBlendModeCustom())
 )
 
 // Shader type (generic shader)
@@ -1086,17 +1094,26 @@ func newImageFromPointer(ptr unsafe.Pointer) *Image {
 // NewImageFromImage - Returns new Image from Go image.Image
 func NewImageFromImage(img image.Image) *Image {
 	size := img.Bounds().Size()
-	pixels := make([]Color, size.X*size.Y)
+
+	cx := (C.int)(size.X)
+	cy := (C.int)(size.Y)
+	ccolor := White.cptr()
+	ret := C.GenImageColor(cx, cy, *ccolor)
 
 	for y := 0; y < size.Y; y++ {
 		for x := 0; x < size.X; x++ {
 			color := img.At(x, y)
 			r, g, b, a := color.RGBA()
-			pixels[x+y*size.X] = NewColor(uint8(r), uint8(g), uint8(b), uint8(a))
+			rcolor := NewColor(uint8(r), uint8(g), uint8(b), uint8(a))
+			ccolor = rcolor.cptr()
+
+			cx = (C.int)(x)
+			cy = (C.int)(y)
+			C.ImageDrawPixel(&ret, cx, cy, *ccolor)
 		}
 	}
-
-	return LoadImageEx(pixels, int32(size.X), int32(size.Y))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return v
 }
 
 // Texture2D type, bpp always RGBA (32bit)

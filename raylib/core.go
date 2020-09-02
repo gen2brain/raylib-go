@@ -100,9 +100,9 @@ func UnhideWindow() {
 	C.UnhideWindow()
 }
 
-// HideWindow - Hide the window
-func HideWindow() {
-	C.HideWindow()
+// DecorateWindow - Decorate the window (only PLATFORM_DESKTOP)
+func DecorateWindow() {
+	C.DecorateWindow()
 }
 
 // SetWindowIcon - Set icon for window (only PLATFORM_DESKTOP)

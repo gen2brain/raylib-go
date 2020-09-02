@@ -49,27 +49,6 @@ func LoadImage(fileName string) *Image {
 	return v
 }
 
-// LoadImageEx - Load image data from Color array data (RGBA - 32bit)
-func LoadImageEx(pixels []Color, width, height int32) *Image {
-	cpixels := pixels[0].cptr()
-	cwidth := (C.int)(width)
-	cheight := (C.int)(height)
-	ret := C.LoadImageEx(cpixels, cwidth, cheight)
-	v := newImageFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// LoadImagePro - Load image from raw data with parameters
-func LoadImagePro(data []byte, width, height int32, format PixelFormat) *Image {
-	cdata := unsafe.Pointer(&data[0])
-	cwidth := (C.int)(width)
-	cheight := (C.int)(height)
-	cformat := (C.int)(format)
-	ret := C.LoadImagePro(cdata, cwidth, cheight, cformat)
-	v := newImageFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // LoadImageRaw - Load image data from RAW file
 func LoadImageRaw(fileName string, width, height int32, format PixelFormat, headerSize int32) *Image {
 	cfileName := C.CString(fileName)
@@ -163,6 +142,14 @@ func UpdateTexture(texture Texture2D, pixels []Color) {
 	ctexture := texture.cptr()
 	cpixels := unsafe.Pointer(&pixels[0])
 	C.UpdateTexture(*ctexture, cpixels)
+}
+
+// UpdateTextureRec - Update GPU texture rectangle with new data
+func UpdateTextureRec(texture Texture2D, rec Rectangle, pixels []Color) {
+	ctexture := texture.cptr()
+	cpixels := unsafe.Pointer(&pixels[0])
+	crec := rec.cptr()
+	C.UpdateTextureRec(*ctexture, *crec, cpixels)
 }
 
 // ExportImage - Export image as a PNG file
@@ -329,14 +316,15 @@ func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int, color Color) 
 }
 
 // ImageDrawText - Draw text (default font) within an image (destination)
-func ImageDrawText(dst *Image, position Vector2, text string, fontSize int32, color Color) {
+func ImageDrawText(dst *Image, posX, posY int32, text string, fontSize int32, color Color) {
 	cdst := dst.cptr()
-	cposition := position.cptr()
+	posx := (C.int)(posX)
+	posy := (C.int)(posY)
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
 	cfontSize := (C.int)(fontSize)
 	ccolor := color.cptr()
-	C.ImageDrawText(cdst, *cposition, ctext, cfontSize, *ccolor)
+	C.ImageDrawText(cdst, ctext, posx, posy, cfontSize, *ccolor)
 }
 
 // ImageDrawTextEx - Draw text (custom sprite font) within an image (destination)
@@ -349,7 +337,7 @@ func ImageDrawTextEx(dst *Image, position Vector2, font Font, text string, fontS
 	cfontSize := (C.float)(fontSize)
 	cspacing := (C.float)(spacing)
 	ccolor := color.cptr()
-	C.ImageDrawTextEx(cdst, *cposition, *cfont, ctext, cfontSize, cspacing, *ccolor)
+	C.ImageDrawTextEx(cdst, *cfont, ctext, *cposition, cfontSize, cspacing, *ccolor)
 }
 
 // ImageFlipVertical - Flip image vertically
