@@ -34,10 +34,11 @@ func main() {
 		}
 	}
 
+	// LoadImageEx was removed from raylib
 	// Load pixels data into an image structure and create texture
-	checkedIm := rl.LoadImageEx(pixels, int32(width), int32(height))
-	checked := rl.LoadTextureFromImage(checkedIm)
-	rl.UnloadImage(checkedIm) // Unload CPU (RAM) image data
+	// checkedIm := rl.LoadImageEx(pixels, int32(width), int32(height))
+	// checked := rl.LoadTextureFromImage(checkedIm)
+	// rl.UnloadImage(checkedIm) // Unload CPU (RAM) image data
 
 	rl.SetTargetFPS(60)
 
@@ -46,7 +47,7 @@ func main() {
 
 		rl.ClearBackground(rl.RayWhite)
 
-		rl.DrawTexture(checked, screenWidth/2-checked.Width/2, screenHeight/2-checked.Height/2, rl.Fade(rl.White, 0.5))
+		//rl.DrawTexture(checked, screenWidth/2-checked.Width/2, screenHeight/2-checked.Height/2, rl.Fade(rl.White, 0.5))
 		rl.DrawTexture(fudesumi, 430, -30, rl.White)
 
 		rl.DrawText("CHECKED TEXTURE ", 84, 100, 30, rl.Brown)
@@ -57,7 +58,7 @@ func main() {
 	}
 
 	rl.UnloadTexture(fudesumi) // Texture unloading
-	rl.UnloadTexture(checked)  // Texture unloading
+	//rl.UnloadTexture(checked)  // Texture unloading
 
 	rl.CloseWindow()
 }
