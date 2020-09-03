@@ -18,7 +18,7 @@ Export sysroot path:
 And compile shared library:
 
     CC=arm-linux-androideabi-gcc \
-    CGO_CFLAGS="-I${ANDROID_SYSROOT}/usr/include --sysroot=${ANDROID_SYSROOT}" \
+    CGO_CFLAGS="-I${ANDROID_SYSROOT}/usr/include --sysroot=${ANDROID_SYSROOT} -D__ANDROID_API__=16" \
     CGO_LDFLAGS="-L${ANDROID_SYSROOT}/usr/lib --sysroot=${ANDROID_SYSROOT}" \
     CGO_ENABLED=1 GOOS=android GOARCH=arm \
     go build -buildmode=c-shared -ldflags="-s -w -extldflags=-Wl,-soname,libexample.so" \
