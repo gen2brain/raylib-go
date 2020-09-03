@@ -556,8 +556,9 @@ void android_main(struct android_app *app)
     char arg0[] = "raylib";     // NOTE: argv[] are mutable
     CORE.Android.app = app;
 
+    (void)android_run();
     // TODO: Should we maybe report != 0 return codes somewhere?
-    (void)main(1, (char *[]) { arg0, NULL });
+    //(void)main(1, (char *[]) { arg0, NULL });
 }
 
 // TODO: Add this to header (if apps really need it)
