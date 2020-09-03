@@ -255,14 +255,6 @@ func SetMusicPitch(music Music, pitch float32) {
 	C.SetMusicPitch(cmusic, cpitch)
 }
 
-// SetMusicLoopCount - Set music loop count (loop repeats)
-// NOTE: If set to -1, means infinite loop
-func SetMusicLoopCount(music Music, count int32) {
-	cmusic := *(*C.Music)(unsafe.Pointer(&music))
-	ccount := (C.int)(count)
-	C.SetMusicLoopCount(cmusic, ccount)
-}
-
 // GetMusicTimeLength - Get music time length (in seconds)
 func GetMusicTimeLength(music Music) float32 {
 	cmusic := *(*C.Music)(unsafe.Pointer(&music))
