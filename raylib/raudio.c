@@ -2028,7 +2028,7 @@ static Wave LoadMP3(const char *fileName)
     unsigned char *fileData = LoadFileData(fileName, &fileSize);
     
     // Decode an entire MP3 file in one go
-    unsigned long long int totalFrameCount = 0;
+    drmp3_uint64 totalFrameCount = 0;
     drmp3_config config = { 0 };
     wave.data = drmp3_open_memory_and_read_f32(fileData, fileSize, &config, &totalFrameCount);
 
