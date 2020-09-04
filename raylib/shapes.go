@@ -94,6 +94,26 @@ func DrawCircleLines(centerX, centerY int32, radius float32, color Color) {
 	C.DrawCircleLines(ccenterX, ccenterY, cradius, *ccolor)
 }
 
+// DrawEllipse - Draw ellipse
+func DrawEllipse(centerX, centerY int32, radiusH, radiusV float32, color Color) {
+	ccenterX := (C.int)(centerX)
+	ccenterY := (C.int)(centerY)
+	cradiusH := (C.float)(radiusH)
+	cradiusV := (C.float)(radiusV)
+	ccolor := color.cptr()
+	C.DrawEllipse(ccenterX, ccenterY, cradiusH, cradiusV, *ccolor)
+}
+
+// DrawEllipseLines - Draw ellipse outline
+func DrawEllipseLines(centerX, centerY int32, radiusH, radiusV float32, color Color) {
+	ccenterX := (C.int)(centerX)
+	ccenterY := (C.int)(centerY)
+	cradiusH := (C.float)(radiusH)
+	cradiusV := (C.float)(radiusV)
+	ccolor := color.cptr()
+	C.DrawEllipseLines(ccenterX, ccenterY, cradiusH, cradiusV, *ccolor)
+}
+
 // DrawRectangle - Draw a color-filled rectangle
 func DrawRectangle(posX, posY, width, height int32, color Color) {
 	cposX := (C.int)(posX)
