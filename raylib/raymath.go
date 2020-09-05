@@ -1,50 +1,47 @@
-// Package raymath - Some useful functions to work with Vector2, Vector3, Matrix and Quaternions
-package raymath
+package rl
 
 import (
 	"math"
-
-	"github.com/gen2brain/raylib-go/raylib"
 )
 
 // Vector2Zero - Vector with components value 0.0
-func Vector2Zero() rl.Vector2 {
-	return rl.NewVector2(0.0, 0.0)
+func Vector2Zero() Vector2 {
+	return NewVector2(0.0, 0.0)
 }
 
 // Vector2One - Vector with components value 1.0
-func Vector2One() rl.Vector2 {
-	return rl.NewVector2(1.0, 1.0)
+func Vector2One() Vector2 {
+	return NewVector2(1.0, 1.0)
 }
 
 // Vector2Add - Add two vectors (v1 + v2)
-func Vector2Add(v1, v2 rl.Vector2) rl.Vector2 {
-	return rl.NewVector2(v1.X+v2.X, v1.Y+v2.Y)
+func Vector2Add(v1, v2 Vector2) Vector2 {
+	return NewVector2(v1.X+v2.X, v1.Y+v2.Y)
 }
 
 // Vector2Subtract - Subtract two vectors (v1 - v2)
-func Vector2Subtract(v1, v2 rl.Vector2) rl.Vector2 {
-	return rl.NewVector2(v1.X-v2.X, v1.Y-v2.Y)
+func Vector2Subtract(v1, v2 Vector2) Vector2 {
+	return NewVector2(v1.X-v2.X, v1.Y-v2.Y)
 }
 
 // Vector2Length - Calculate vector length
-func Vector2Length(v rl.Vector2) float32 {
+func Vector2Length(v Vector2) float32 {
 	return float32(math.Sqrt(float64((v.X * v.X) + (v.Y * v.Y))))
 }
 
 // Vector2DotProduct - Calculate two vectors dot product
-func Vector2DotProduct(v1, v2 rl.Vector2) float32 {
+func Vector2DotProduct(v1, v2 Vector2) float32 {
 	return v1.X*v2.X + v1.Y*v2.Y
 }
 
 // Vector2Distance - Calculate distance between two vectors
-func Vector2Distance(v1, v2 rl.Vector2) float32 {
+func Vector2Distance(v1, v2 Vector2) float32 {
 	return float32(math.Sqrt(float64((v1.X-v2.X)*(v1.X-v2.X) + (v1.Y-v2.Y)*(v1.Y-v2.Y))))
 }
 
 // Vector2Angle - Calculate angle between two vectors in X-axis
-func Vector2Angle(v1, v2 rl.Vector2) float32 {
-	angle := float32(math.Atan2(float64(v2.Y-v1.Y), float64(v2.X-v1.X)) * (180.0 / float64(rl.Pi)))
+func Vector2Angle(v1, v2 Vector2) float32 {
+	angle := float32(math.Atan2(float64(v2.Y-v1.Y), float64(v2.X-v1.X)) * (180.0 / float64(Pi)))
 
 	if angle < 0 {
 		angle += 360.0
@@ -54,60 +51,60 @@ func Vector2Angle(v1, v2 rl.Vector2) float32 {
 }
 
 // Vector2Scale - Scale vector (multiply by value)
-func Vector2Scale(v rl.Vector2, scale float32) rl.Vector2 {
-	return rl.NewVector2(v.X*scale, v.Y*scale)
+func Vector2Scale(v Vector2, scale float32) Vector2 {
+	return NewVector2(v.X*scale, v.Y*scale)
 }
 
 // Vector2Multiply - Multiply vector by vector
-func Vector2Multiply(v1, v2 rl.Vector2) rl.Vector2 {
-	return rl.NewVector2(v1.X*v2.X, v1.Y*v2.Y)
+func Vector2Multiply(v1, v2 Vector2) Vector2 {
+	return NewVector2(v1.X*v2.X, v1.Y*v2.Y)
 }
 
 // Vector2Negate - Negate vector
-func Vector2Negate(v rl.Vector2) rl.Vector2 {
-	return rl.NewVector2(-v.X, -v.Y)
+func Vector2Negate(v Vector2) Vector2 {
+	return NewVector2(-v.X, -v.Y)
 }
 
 // Vector2Divide - Divide vector by vector
-func Vector2DivideV(v1, v2 rl.Vector2) rl.Vector2 {
-	return rl.NewVector2(v1.X/v2.X, v1.Y/v2.Y)
+func Vector2DivideV(v1, v2 Vector2) Vector2 {
+	return NewVector2(v1.X/v2.X, v1.Y/v2.Y)
 }
 
 // Vector2Normalize - Normalize provided vector
-func Vector2Normalize(v rl.Vector2) rl.Vector2 {
+func Vector2Normalize(v Vector2) Vector2 {
 	return Vector2Scale(v, 1/Vector2Length(v))
 }
 
 // Vector2Lerp - Calculate linear interpolation between two vectors
-func Vector2Lerp(v1, v2 rl.Vector2, amount float32) rl.Vector2 {
-	return rl.NewVector2(v1.X+amount*(v2.X-v1.X), v1.Y+amount*(v2.Y-v1.Y))
+func Vector2Lerp(v1, v2 Vector2, amount float32) Vector2 {
+	return NewVector2(v1.X+amount*(v2.X-v1.X), v1.Y+amount*(v2.Y-v1.Y))
 }
 
 // Vector2CrossProduct - Calculate two vectors cross product
-func Vector2CrossProduct(v1, v2 rl.Vector2) float32 {
+func Vector2CrossProduct(v1, v2 Vector2) float32 {
 	return v1.X*v2.Y - v1.Y*v2.X
 }
 
 // Vector2Cross - Calculate the cross product of a vector and a value
-func Vector2Cross(value float32, vector rl.Vector2) rl.Vector2 {
-	return rl.NewVector2(-value*vector.Y, value*vector.X)
+func Vector2Cross(value float32, vector Vector2) Vector2 {
+	return NewVector2(-value*vector.Y, value*vector.X)
 }
 
 // Vector2LenSqr - Returns the len square root of a vector
-func Vector2LenSqr(vector rl.Vector2) float32 {
+func Vector2LenSqr(vector Vector2) float32 {
 	return vector.X*vector.X + vector.Y*vector.Y
 }
 
 // Mat2Radians - Creates a matrix 2x2 from a given radians value
-func Mat2Radians(radians float32) rl.Mat2 {
+func Mat2Radians(radians float32) Mat2 {
 	c := float32(math.Cos(float64(radians)))
 	s := float32(math.Sin(float64(radians)))
 
-	return rl.NewMat2(c, -s, s, c)
+	return NewMat2(c, -s, s, c)
 }
 
 // Mat2Set - Set values from radians to a created matrix 2x2
-func Mat2Set(matrix *rl.Mat2, radians float32) {
+func Mat2Set(matrix *Mat2, radians float32) {
 	cos := float32(math.Cos(float64(radians)))
 	sin := float32(math.Sin(float64(radians)))
 
@@ -118,33 +115,33 @@ func Mat2Set(matrix *rl.Mat2, radians float32) {
 }
 
 // Mat2Transpose - Returns the transpose of a given matrix 2x2
-func Mat2Transpose(matrix rl.Mat2) rl.Mat2 {
-	return rl.NewMat2(matrix.M00, matrix.M10, matrix.M01, matrix.M11)
+func Mat2Transpose(matrix Mat2) Mat2 {
+	return NewMat2(matrix.M00, matrix.M10, matrix.M01, matrix.M11)
 }
 
 // Mat2MultiplyVector2 - Multiplies a vector by a matrix 2x2
-func Mat2MultiplyVector2(matrix rl.Mat2, vector rl.Vector2) rl.Vector2 {
-	return rl.NewVector2(matrix.M00*vector.X+matrix.M01*vector.Y, matrix.M10*vector.X+matrix.M11*vector.Y)
+func Mat2MultiplyVector2(matrix Mat2, vector Vector2) Vector2 {
+	return NewVector2(matrix.M00*vector.X+matrix.M01*vector.Y, matrix.M10*vector.X+matrix.M11*vector.Y)
 }
 
 // Vector3Zero - Vector with components value 0.0
-func Vector3Zero() rl.Vector3 {
-	return rl.NewVector3(0.0, 0.0, 0.0)
+func Vector3Zero() Vector3 {
+	return NewVector3(0.0, 0.0, 0.0)
 }
 
 // Vector3One - Vector with components value 1.0
-func Vector3One() rl.Vector3 {
-	return rl.NewVector3(1.0, 1.0, 1.0)
+func Vector3One() Vector3 {
+	return NewVector3(1.0, 1.0, 1.0)
 }
 
 // Vector3Add - Add two vectors
-func Vector3Add(v1, v2 rl.Vector3) rl.Vector3 {
-	return rl.NewVector3(v1.X+v2.X, v1.Y+v2.Y, v1.Z+v2.Z)
+func Vector3Add(v1, v2 Vector3) Vector3 {
+	return NewVector3(v1.X+v2.X, v1.Y+v2.Y, v1.Z+v2.Z)
 }
 
 // Vector3Multiply - Multiply vector by scalar
-func Vector3Multiply(v rl.Vector3, scalar float32) rl.Vector3 {
-	result := rl.Vector3{}
+func Vector3Multiply(v Vector3, scalar float32) Vector3 {
+	result := Vector3{}
 
 	result.X = v.X * scalar
 	result.Y = v.Y * scalar
@@ -154,8 +151,8 @@ func Vector3Multiply(v rl.Vector3, scalar float32) rl.Vector3 {
 }
 
 // Vector3MultiplyV - Multiply vector by vector
-func Vector3MultiplyV(v1, v2 rl.Vector3) rl.Vector3 {
-	result := rl.Vector3{}
+func Vector3MultiplyV(v1, v2 Vector3) Vector3 {
+	result := Vector3{}
 
 	result.X = v1.X * v2.X
 	result.Y = v1.Y * v2.Y
@@ -165,13 +162,13 @@ func Vector3MultiplyV(v1, v2 rl.Vector3) rl.Vector3 {
 }
 
 // Vector3Subtract - Subtract two vectors
-func Vector3Subtract(v1, v2 rl.Vector3) rl.Vector3 {
-	return rl.NewVector3(v1.X-v2.X, v1.Y-v2.Y, v1.Z-v2.Z)
+func Vector3Subtract(v1, v2 Vector3) Vector3 {
+	return NewVector3(v1.X-v2.X, v1.Y-v2.Y, v1.Z-v2.Z)
 }
 
 // Vector3CrossProduct - Calculate two vectors cross product
-func Vector3CrossProduct(v1, v2 rl.Vector3) rl.Vector3 {
-	result := rl.Vector3{}
+func Vector3CrossProduct(v1, v2 Vector3) Vector3 {
+	result := Vector3{}
 
 	result.X = v1.Y*v2.Z - v1.Z*v2.Y
 	result.Y = v1.Z*v2.X - v1.X*v2.Z
@@ -181,19 +178,19 @@ func Vector3CrossProduct(v1, v2 rl.Vector3) rl.Vector3 {
 }
 
 // Vector3Perpendicular - Calculate one vector perpendicular vector
-func Vector3Perpendicular(v rl.Vector3) rl.Vector3 {
-	result := rl.Vector3{}
+func Vector3Perpendicular(v Vector3) Vector3 {
+	result := Vector3{}
 
 	min := math.Abs(float64(v.X))
-	cardinalAxis := rl.NewVector3(1.0, 0.0, 0.0)
+	cardinalAxis := NewVector3(1.0, 0.0, 0.0)
 
 	if math.Abs(float64(v.Y)) < min {
 		min = math.Abs(float64(v.Y))
-		cardinalAxis = rl.NewVector3(0.0, 1.0, 0.0)
+		cardinalAxis = NewVector3(0.0, 1.0, 0.0)
 	}
 
 	if math.Abs(float64(v.Z)) < min {
-		cardinalAxis = rl.NewVector3(0.0, 0.0, 1.0)
+		cardinalAxis = NewVector3(0.0, 0.0, 1.0)
 	}
 
 	result = Vector3CrossProduct(v, cardinalAxis)
@@ -202,17 +199,17 @@ func Vector3Perpendicular(v rl.Vector3) rl.Vector3 {
 }
 
 // Vector3Length - Calculate vector length
-func Vector3Length(v rl.Vector3) float32 {
+func Vector3Length(v Vector3) float32 {
 	return float32(math.Sqrt(float64(v.X*v.X + v.Y*v.Y + v.Z*v.Z)))
 }
 
 // Vector3DotProduct - Calculate two vectors dot product
-func Vector3DotProduct(v1, v2 rl.Vector3) float32 {
+func Vector3DotProduct(v1, v2 Vector3) float32 {
 	return v1.X*v2.X + v1.Y*v2.Y + v1.Z*v2.Z
 }
 
 // Vector3Distance - Calculate distance between two vectors
-func Vector3Distance(v1, v2 rl.Vector3) float32 {
+func Vector3Distance(v1, v2 Vector3) float32 {
 	dx := v2.X - v1.X
 	dy := v2.Y - v1.Y
 	dz := v2.Z - v1.Z
@@ -221,17 +218,17 @@ func Vector3Distance(v1, v2 rl.Vector3) float32 {
 }
 
 // Vector3Scale - Scale provided vector
-func Vector3Scale(v rl.Vector3, scale float32) rl.Vector3 {
-	return rl.NewVector3(v.X*scale, v.Y*scale, v.Z*scale)
+func Vector3Scale(v Vector3, scale float32) Vector3 {
+	return NewVector3(v.X*scale, v.Y*scale, v.Z*scale)
 }
 
 // Vector3Negate - Negate provided vector (invert direction)
-func Vector3Negate(v rl.Vector3) rl.Vector3 {
-	return rl.NewVector3(-v.X, -v.Y, -v.Z)
+func Vector3Negate(v Vector3) Vector3 {
+	return NewVector3(-v.X, -v.Y, -v.Z)
 }
 
 // Vector3Normalize - Normalize provided vector
-func Vector3Normalize(v rl.Vector3) rl.Vector3 {
+func Vector3Normalize(v Vector3) Vector3 {
 	result := v
 
 	var length, ilength float32
@@ -252,8 +249,8 @@ func Vector3Normalize(v rl.Vector3) rl.Vector3 {
 }
 
 // Vector3Transform - Transforms a Vector3 by a given Matrix
-func Vector3Transform(v rl.Vector3, mat rl.Matrix) rl.Vector3 {
-	result := rl.Vector3{}
+func Vector3Transform(v Vector3, mat Matrix) Vector3 {
+	result := Vector3{}
 
 	x := v.X
 	y := v.Y
@@ -267,8 +264,8 @@ func Vector3Transform(v rl.Vector3, mat rl.Matrix) rl.Vector3 {
 }
 
 // Vector3Lerp - Calculate linear interpolation between two vectors
-func Vector3Lerp(v1, v2 rl.Vector3, amount float32) rl.Vector3 {
-	result := rl.Vector3{}
+func Vector3Lerp(v1, v2 Vector3, amount float32) Vector3 {
+	result := Vector3{}
 
 	result.X = v1.X + amount*(v2.X-v1.X)
 	result.Y = v1.Y + amount*(v2.Y-v1.Y)
@@ -278,12 +275,12 @@ func Vector3Lerp(v1, v2 rl.Vector3, amount float32) rl.Vector3 {
 }
 
 // Vector3Reflect - Calculate reflected vector to normal
-func Vector3Reflect(vector, normal rl.Vector3) rl.Vector3 {
+func Vector3Reflect(vector, normal Vector3) Vector3 {
 	// I is the original vector
 	// N is the normal of the incident plane
 	// R = I - (2*N*( DotProduct[ I,N] ))
 
-	result := rl.Vector3{}
+	result := Vector3{}
 
 	dotProduct := Vector3DotProduct(vector, normal)
 
@@ -295,8 +292,8 @@ func Vector3Reflect(vector, normal rl.Vector3) rl.Vector3 {
 }
 
 // Vector3Min - Return min value for each pair of components
-func Vector3Min(vec1, vec2 rl.Vector3) rl.Vector3 {
-	result := rl.Vector3{}
+func Vector3Min(vec1, vec2 Vector3) Vector3 {
+	result := Vector3{}
 
 	result.X = float32(math.Min(float64(vec1.X), float64(vec2.X)))
 	result.Y = float32(math.Min(float64(vec1.Y), float64(vec2.Y)))
@@ -306,8 +303,8 @@ func Vector3Min(vec1, vec2 rl.Vector3) rl.Vector3 {
 }
 
 // Vector3Max - Return max value for each pair of components
-func Vector3Max(vec1, vec2 rl.Vector3) rl.Vector3 {
-	result := rl.Vector3{}
+func Vector3Max(vec1, vec2 Vector3) Vector3 {
+	result := Vector3{}
 
 	result.X = float32(math.Max(float64(vec1.X), float64(vec2.X)))
 	result.Y = float32(math.Max(float64(vec1.Y), float64(vec2.Y)))
@@ -317,7 +314,7 @@ func Vector3Max(vec1, vec2 rl.Vector3) rl.Vector3 {
 }
 
 // Vector3Barycenter - Barycenter coords for p in triangle abc
-func Vector3Barycenter(p, a, b, c rl.Vector3) rl.Vector3 {
+func Vector3Barycenter(p, a, b, c Vector3) Vector3 {
 	v0 := Vector3Subtract(b, a)
 	v1 := Vector3Subtract(c, a)
 	v2 := Vector3Subtract(p, a)
@@ -329,7 +326,7 @@ func Vector3Barycenter(p, a, b, c rl.Vector3) rl.Vector3 {
 
 	denom := d00*d11 - d01*d01
 
-	result := rl.Vector3{}
+	result := Vector3{}
 
 	result.Y = (d11*d20 - d01*d21) / denom
 	result.Z = (d00*d21 - d01*d20) / denom
@@ -339,7 +336,7 @@ func Vector3Barycenter(p, a, b, c rl.Vector3) rl.Vector3 {
 }
 
 // MatrixDeterminant - Compute matrix determinant
-func MatrixDeterminant(mat rl.Matrix) float32 {
+func MatrixDeterminant(mat Matrix) float32 {
 	var result float32
 
 	a00 := mat.M0
@@ -370,13 +367,13 @@ func MatrixDeterminant(mat rl.Matrix) float32 {
 }
 
 // MatrixTrace - Returns the trace of the matrix (sum of the values along the diagonal)
-func MatrixTrace(mat rl.Matrix) float32 {
+func MatrixTrace(mat Matrix) float32 {
 	return mat.M0 + mat.M5 + mat.M10 + mat.M15
 }
 
 // MatrixTranspose - Transposes provided matrix
-func MatrixTranspose(mat rl.Matrix) rl.Matrix {
-	var result rl.Matrix
+func MatrixTranspose(mat Matrix) Matrix {
+	var result Matrix
 
 	result.M0 = mat.M0
 	result.M1 = mat.M4
@@ -399,8 +396,8 @@ func MatrixTranspose(mat rl.Matrix) rl.Matrix {
 }
 
 // MatrixInvert - Invert provided matrix
-func MatrixInvert(mat rl.Matrix) rl.Matrix {
-	var result rl.Matrix
+func MatrixInvert(mat Matrix) Matrix {
+	var result Matrix
 
 	a00 := mat.M0
 	a01 := mat.M1
@@ -456,8 +453,8 @@ func MatrixInvert(mat rl.Matrix) rl.Matrix {
 }
 
 // MatrixNormalize - Normalize provided matrix
-func MatrixNormalize(mat rl.Matrix) rl.Matrix {
-	var result rl.Matrix
+func MatrixNormalize(mat Matrix) Matrix {
+	var result Matrix
 
 	det := MatrixDeterminant(mat)
 
@@ -482,8 +479,8 @@ func MatrixNormalize(mat rl.Matrix) rl.Matrix {
 }
 
 // MatrixIdentity - Returns identity matrix
-func MatrixIdentity() rl.Matrix {
-	return rl.NewMatrix(
+func MatrixIdentity() Matrix {
+	return NewMatrix(
 		1.0, 0.0, 0.0, 0.0,
 		0.0, 1.0, 0.0, 0.0,
 		0.0, 0.0, 1.0, 0.0,
@@ -491,7 +488,7 @@ func MatrixIdentity() rl.Matrix {
 }
 
 // MatrixAdd - Add two matrices
-func MatrixAdd(left, right rl.Matrix) rl.Matrix {
+func MatrixAdd(left, right Matrix) Matrix {
 	result := MatrixIdentity()
 
 	result.M0 = left.M0 + right.M0
@@ -515,7 +512,7 @@ func MatrixAdd(left, right rl.Matrix) rl.Matrix {
 }
 
 // MatrixSubtract - Subtract two matrices (left - right)
-func MatrixSubtract(left, right rl.Matrix) rl.Matrix {
+func MatrixSubtract(left, right Matrix) Matrix {
 	result := MatrixIdentity()
 
 	result.M0 = left.M0 - right.M0
@@ -539,8 +536,8 @@ func MatrixSubtract(left, right rl.Matrix) rl.Matrix {
 }
 
 // MatrixTranslate - Returns translation matrix
-func MatrixTranslate(x, y, z float32) rl.Matrix {
-	return rl.NewMatrix(
+func MatrixTranslate(x, y, z float32) Matrix {
+	return NewMatrix(
 		1.0, 0.0, 0.0, x,
 		0.0, 1.0, 0.0, y,
 		0.0, 0.0, 1.0, z,
@@ -548,8 +545,8 @@ func MatrixTranslate(x, y, z float32) rl.Matrix {
 }
 
 // MatrixRotate - Returns rotation matrix for an angle around an specified axis (angle in radians)
-func MatrixRotate(axis rl.Vector3, angle float32) rl.Matrix {
-	var result rl.Matrix
+func MatrixRotate(axis Vector3, angle float32) Matrix {
+	var result Matrix
 
 	mat := MatrixIdentity()
 
@@ -617,7 +614,7 @@ func MatrixRotate(axis rl.Vector3, angle float32) rl.Matrix {
 }
 
 // MatrixRotateX - Returns x-rotation matrix (angle in radians)
-func MatrixRotateX(angle float32) rl.Matrix {
+func MatrixRotateX(angle float32) Matrix {
 	result := MatrixIdentity()
 
 	cosres := float32(math.Cos(float64(angle)))
@@ -632,7 +629,7 @@ func MatrixRotateX(angle float32) rl.Matrix {
 }
 
 // MatrixRotateY - Returns y-rotation matrix (angle in radians)
-func MatrixRotateY(angle float32) rl.Matrix {
+func MatrixRotateY(angle float32) Matrix {
 	result := MatrixIdentity()
 
 	cosres := float32(math.Cos(float64(angle)))
@@ -647,7 +644,7 @@ func MatrixRotateY(angle float32) rl.Matrix {
 }
 
 // MatrixRotateZ - Returns z-rotation matrix (angle in radians)
-func MatrixRotateZ(angle float32) rl.Matrix {
+func MatrixRotateZ(angle float32) Matrix {
 	result := MatrixIdentity()
 
 	cosres := float32(math.Cos(float64(angle)))
@@ -662,8 +659,8 @@ func MatrixRotateZ(angle float32) rl.Matrix {
 }
 
 // MatrixScale - Returns scaling matrix
-func MatrixScale(x, y, z float32) rl.Matrix {
-	result := rl.NewMatrix(
+func MatrixScale(x, y, z float32) Matrix {
+	result := NewMatrix(
 		x, 0.0, 0.0, 0.0,
 		0.0, y, 0.0, 0.0,
 		0.0, 0.0, z, 0.0,
@@ -673,8 +670,8 @@ func MatrixScale(x, y, z float32) rl.Matrix {
 }
 
 // MatrixMultiply - Returns two matrix multiplication
-func MatrixMultiply(left, right rl.Matrix) rl.Matrix {
-	var result rl.Matrix
+func MatrixMultiply(left, right Matrix) Matrix {
+	var result Matrix
 
 	result.M0 = right.M0*left.M0 + right.M1*left.M4 + right.M2*left.M8 + right.M3*left.M12
 	result.M1 = right.M0*left.M1 + right.M1*left.M5 + right.M2*left.M9 + right.M3*left.M13
@@ -697,8 +694,8 @@ func MatrixMultiply(left, right rl.Matrix) rl.Matrix {
 }
 
 // MatrixFrustum - Returns perspective projection matrix
-func MatrixFrustum(left, right, bottom, top, near, far float32) rl.Matrix {
-	var result rl.Matrix
+func MatrixFrustum(left, right, bottom, top, near, far float32) Matrix {
+	var result Matrix
 
 	rl := right - left
 	tb := top - bottom
@@ -728,16 +725,16 @@ func MatrixFrustum(left, right, bottom, top, near, far float32) rl.Matrix {
 }
 
 // MatrixPerspective - Returns perspective projection matrix
-func MatrixPerspective(fovy, aspect, near, far float32) rl.Matrix {
-	top := near * float32(math.Tan(float64(fovy*rl.Pi)/360.0))
+func MatrixPerspective(fovy, aspect, near, far float32) Matrix {
+	top := near * float32(math.Tan(float64(fovy*Pi)/360.0))
 	right := top * aspect
 
 	return MatrixFrustum(-right, right, -top, top, near, far)
 }
 
 // MatrixOrtho - Returns orthographic projection matrix
-func MatrixOrtho(left, right, bottom, top, near, far float32) rl.Matrix {
-	var result rl.Matrix
+func MatrixOrtho(left, right, bottom, top, near, far float32) Matrix {
+	var result Matrix
 
 	rl := right - left
 	tb := top - bottom
@@ -764,8 +761,8 @@ func MatrixOrtho(left, right, bottom, top, near, far float32) rl.Matrix {
 }
 
 // MatrixLookAt - Returns camera look-at matrix (view matrix)
-func MatrixLookAt(eye, target, up rl.Vector3) rl.Matrix {
-	var result rl.Matrix
+func MatrixLookAt(eye, target, up Vector3) Matrix {
+	var result Matrix
 
 	z := Vector3Subtract(eye, target)
 	z = Vector3Normalize(z)
@@ -795,13 +792,13 @@ func MatrixLookAt(eye, target, up rl.Vector3) rl.Matrix {
 }
 
 // QuaternionLength - Compute the length of a quaternion
-func QuaternionLength(quat rl.Quaternion) float32 {
+func QuaternionLength(quat Quaternion) float32 {
 	return float32(math.Sqrt(float64(quat.X*quat.X + quat.Y*quat.Y + quat.Z*quat.Z + quat.W*quat.W)))
 }
 
 // QuaternionNormalize - Normalize provided quaternion
-func QuaternionNormalize(q rl.Quaternion) rl.Quaternion {
-	var result rl.Quaternion
+func QuaternionNormalize(q Quaternion) Quaternion {
+	var result Quaternion
 
 	var length, ilength float32
 
@@ -822,7 +819,7 @@ func QuaternionNormalize(q rl.Quaternion) rl.Quaternion {
 }
 
 // QuaternionInvert - Invert provided quaternion
-func QuaternionInvert(quat rl.Quaternion) rl.Quaternion {
+func QuaternionInvert(quat Quaternion) Quaternion {
 	result := quat
 
 	length := QuaternionLength(quat)
@@ -841,8 +838,8 @@ func QuaternionInvert(quat rl.Quaternion) rl.Quaternion {
 }
 
 // QuaternionMultiply - Calculate two quaternion multiplication
-func QuaternionMultiply(q1, q2 rl.Quaternion) rl.Quaternion {
-	var result rl.Quaternion
+func QuaternionMultiply(q1, q2 Quaternion) Quaternion {
+	var result Quaternion
 
 	qax := q1.X
 	qay := q1.Y
@@ -862,8 +859,8 @@ func QuaternionMultiply(q1, q2 rl.Quaternion) rl.Quaternion {
 }
 
 // QuaternionSlerp - Calculates spherical linear interpolation between two quaternions
-func QuaternionSlerp(q1, q2 rl.Quaternion, amount float32) rl.Quaternion {
-	var result rl.Quaternion
+func QuaternionSlerp(q1, q2 Quaternion, amount float32) Quaternion {
+	var result Quaternion
 
 	cosHalfTheta := q1.X*q2.X + q1.Y*q2.Y + q1.Z*q2.Z + q1.W*q2.W
 
@@ -893,8 +890,8 @@ func QuaternionSlerp(q1, q2 rl.Quaternion, amount float32) rl.Quaternion {
 }
 
 // QuaternionFromMatrix - Returns a quaternion for a given rotation matrix
-func QuaternionFromMatrix(matrix rl.Matrix) rl.Quaternion {
-	var result rl.Quaternion
+func QuaternionFromMatrix(matrix Matrix) Quaternion {
+	var result Quaternion
 
 	trace := MatrixTrace(matrix)
 
@@ -942,8 +939,8 @@ func QuaternionFromMatrix(matrix rl.Matrix) rl.Quaternion {
 }
 
 // QuaternionToMatrix - Returns a matrix for a given quaternion
-func QuaternionToMatrix(q rl.Quaternion) rl.Matrix {
-	var result rl.Matrix
+func QuaternionToMatrix(q Quaternion) Matrix {
+	var result Matrix
 
 	x := q.X
 	y := q.Y
@@ -987,8 +984,8 @@ func QuaternionToMatrix(q rl.Quaternion) rl.Matrix {
 }
 
 // QuaternionFromAxisAngle - Returns rotation quaternion for an angle and axis
-func QuaternionFromAxisAngle(axis rl.Vector3, angle float32) rl.Quaternion {
-	result := rl.NewQuaternion(0.0, 0.0, 0.0, 1.0)
+func QuaternionFromAxisAngle(axis Vector3, angle float32) Quaternion {
+	result := NewQuaternion(0.0, 0.0, 0.0, 1.0)
 
 	if Vector3Length(axis) != 0.0 {
 		angle *= 0.5
@@ -1010,12 +1007,12 @@ func QuaternionFromAxisAngle(axis rl.Vector3, angle float32) rl.Quaternion {
 }
 
 // QuaternionToAxisAngle - Returns the rotation angle and axis for a given quaternion
-func QuaternionToAxisAngle(q rl.Quaternion, outAxis *rl.Vector3, outAngle *float32) {
+func QuaternionToAxisAngle(q Quaternion, outAxis *Vector3, outAngle *float32) {
 	if math.Abs(float64(q.W)) > 1.0 {
 		q = QuaternionNormalize(q)
 	}
 
-	resAxis := rl.NewVector3(0.0, 0.0, 0.0)
+	resAxis := NewVector3(0.0, 0.0, 0.0)
 
 	resAngle := 2.0 * float32(math.Acos(float64(q.W)))
 	den := float32(math.Sqrt(float64(1.0 - q.W*q.W)))
@@ -1035,8 +1032,8 @@ func QuaternionToAxisAngle(q rl.Quaternion, outAxis *rl.Vector3, outAngle *float
 }
 
 // QuaternionTransform - Transform a quaternion given a transformation matrix
-func QuaternionTransform(q rl.Quaternion, mat rl.Matrix) rl.Quaternion {
-	var result rl.Quaternion
+func QuaternionTransform(q Quaternion, mat Matrix) Quaternion {
+	var result Quaternion
 
 	x := q.X
 	y := q.Y

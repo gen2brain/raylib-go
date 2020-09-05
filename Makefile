@@ -1,4 +1,4 @@
-PACKAGES= raylib raygui raymath easings physics rres
+PACKAGES= raylib raygui easings physics rres
 
 GO?= go
 

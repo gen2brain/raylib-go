@@ -7,7 +7,6 @@ import (
 	"math"
 
 	"github.com/gen2brain/raylib-go/raylib"
-	"github.com/gen2brain/raylib-go/raymath"
 )
 
 // ShapeType type
@@ -196,7 +195,7 @@ func NewBodyRectangle(pos rl.Vector2, width, height, density float32) *Body {
 		}
 		p2 := newBody.Shape.VertexData.Vertices[nextIndex]
 
-		D := raymath.Vector2CrossProduct(p1, p2)
+		D := rl.Vector2CrossProduct(p1, p2)
 		triangleArea := D / 2
 
 		area += triangleArea
@@ -276,7 +275,7 @@ func NewBodyPolygon(pos rl.Vector2, radius float32, sides int, density float32) 
 		}
 		position2 := newBody.Shape.VertexData.Vertices[nextIndex]
 
-		cross := raymath.Vector2CrossProduct(position1, position2)
+		cross := rl.Vector2CrossProduct(position1, position2)
 		triangleArea := cross / 2
 
 		area += triangleArea
@@ -502,7 +501,7 @@ func Close() {
 
 // AddForce - Adds a force to a physics body
 func (b *Body) AddForce(force rl.Vector2) {
-	b.Force = raymath.Vector2Add(b.Force, force)
+	b.Force = rl.Vector2Add(b.Force, force)
 }
 
 // AddTorque - Adds an angular force to a physics body
@@ -521,14 +520,14 @@ func (b *Body) Shatter(position rl.Vector2, force float32) {
 
 	for i := 0; i < vertexData.VertexCount; i++ {
 		positionA := b.Position
-		positionB := raymath.Mat2MultiplyVector2(vertexData.Transform, raymath.Vector2Add(b.Position, vertexData.Vertices[i]))
+		positionB := rl.Mat2MultiplyVector2(vertexData.Transform, rl.Vector2Add(b.Position, vertexData.Vertices[i]))
 
 		nextIndex := 0
 		if i+1 < vertexData.VertexCount {
 			nextIndex = i + 1
 		}
 
-		positionC := raymath.Mat2MultiplyVector2(vertexData.Transform, raymath.Vector2Add(b.Position, vertexData.Vertices[nextIndex]))
+		positionC := rl.Mat2MultiplyVector2(vertexData.Transform, rl.Vector2Add(b.Position, vertexData.Vertices[nextIndex]))
 
 		// Check collision between each triangle
 		alpha := ((positionB.Y-positionC.Y)*(position.X-positionC.X) + (positionC.X-positionB.X)*(position.Y-positionC.Y)) /
@@ -565,8 +564,8 @@ func (b *Body) Shatter(position rl.Vector2, force float32) {
 			}
 
 			center := triangleBarycenter(vertices[i], vertices[nextIndex], rl.NewVector2(0, 0))
-			center = raymath.Vector2Add(bodyPos, center)
-			offset := raymath.Vector2Subtract(center, bodyPos)
+			center = rl.Vector2Add(bodyPos, center)
+			offset := rl.Vector2Subtract(center, bodyPos)
 
 			newBody := NewBodyPolygon(center, 10, 3, 10) // Create polygon physics body with relevant values
 
@@ -574,9 +573,9 @@ func (b *Body) Shatter(position rl.Vector2, force float32) {
 			newData.VertexCount = 3
 			newData.Transform = trans
 
-			newData.Vertices[0] = raymath.Vector2Subtract(vertices[i], offset)
-			newData.Vertices[1] = raymath.Vector2Subtract(vertices[nextIndex], offset)
-			newData.Vertices[2] = raymath.Vector2Subtract(position, center)
+			newData.Vertices[0] = rl.Vector2Subtract(vertices[i], offset)
+			newData.Vertices[1] = rl.Vector2Subtract(vertices[nextIndex], offset)
+			newData.Vertices[2] = rl.Vector2Subtract(position, center)
 
 			// Separate vertices to avoid unnecessary physics collisions
 			newData.Vertices[0].X *= 0.95
@@ -593,7 +592,7 @@ func (b *Body) Shatter(position rl.Vector2, force float32) {
 					nextVertex = j + 1
 				}
 
-				face := raymath.Vector2Subtract(newData.Vertices[nextVertex], newData.Vertices[j])
+				face := rl.Vector2Subtract(newData.Vertices[nextVertex], newData.Vertices[j])
 
 				newData.Normals[j] = rl.NewVector2(face.Y, -face.X)
 				normalize(&newData.Normals[j])
@@ -617,7 +616,7 @@ func (b *Body) Shatter(position rl.Vector2, force float32) {
 				}
 				p2 := newBody.Shape.VertexData.Vertices[nextVertex]
 
-				D := raymath.Vector2CrossProduct(p1, p2)
+				D := rl.Vector2CrossProduct(p1, p2)
 				triangleArea := D / 2
 
 				area += triangleArea
@@ -647,10 +646,10 @@ func (b *Body) Shatter(position rl.Vector2, force float32) {
 
 			// Calculate explosion force direction
 			pointA := newBody.Position
-			pointB := raymath.Vector2Subtract(newData.Vertices[1], newData.Vertices[0])
+			pointB := rl.Vector2Subtract(newData.Vertices[1], newData.Vertices[0])
 			pointB.X /= 2
 			pointB.Y /= 2
-			forceDirection := raymath.Vector2Subtract(raymath.Vector2Add(pointA, raymath.Vector2Add(newData.Vertices[0], pointB)), newBody.Position)
+			forceDirection := rl.Vector2Subtract(rl.Vector2Add(pointA, rl.Vector2Add(newData.Vertices[0], pointB)), newBody.Position)
 			normalize(&forceDirection)
 			forceDirection.X *= force
 			forceDirection.Y *= force
@@ -671,7 +670,7 @@ func (b *Body) GetShapeVertex(vertex int) rl.Vector2 {
 		position.Y = b.Position.Y + float32(math.Sin(360/float64(circleVertices)*float64(vertex)*rl.Deg2rad))*b.Shape.Radius
 		break
 	case PolygonShape:
-		position = raymath.Vector2Add(b.Position, raymath.Mat2MultiplyVector2(b.Shape.VertexData.Transform, b.Shape.VertexData.Vertices[vertex]))
+		position = rl.Vector2Add(b.Position, rl.Mat2MultiplyVector2(b.Shape.VertexData.Transform, b.Shape.VertexData.Vertices[vertex]))
 		break
 	}
 
@@ -683,7 +682,7 @@ func (b *Body) SetRotation(radians float32) {
 	b.Orient = radians
 
 	if b.Shape.Type == PolygonShape {
-		b.Shape.VertexData.Transform = raymath.Mat2Radians(radians)
+		b.Shape.VertexData.Transform = rl.Mat2Radians(radians)
 	}
 }
 
@@ -700,7 +699,7 @@ func (b *Body) integrateVelocity() {
 		b.Orient += b.AngularVelocity * deltaTime
 	}
 
-	raymath.Mat2Set(&b.Shape.VertexData.Transform, b.Orient)
+	rl.Mat2Set(&b.Shape.VertexData.Transform, b.Orient)
 
 	b.integrateForces()
 }
@@ -730,7 +729,7 @@ func newRandomPolygon(radius float32, sides int) Polygon {
 	data.VertexCount = sides
 
 	orient := rl.GetRandomValue(0, 360)
-	data.Transform = raymath.Mat2Radians(float32(orient) * rl.Deg2rad)
+	data.Transform = rl.Mat2Radians(float32(orient) * rl.Deg2rad)
 
 	// Calculate polygon vertices positions
 	for i := 0; i < data.VertexCount; i++ {
@@ -745,7 +744,7 @@ func newRandomPolygon(radius float32, sides int) Polygon {
 			nextIndex = i + 1
 		}
 
-		face := raymath.Vector2Subtract(data.Vertices[nextIndex], data.Vertices[i])
+		face := rl.Vector2Subtract(data.Vertices[nextIndex], data.Vertices[i])
 
 		data.Normals[i] = rl.NewVector2(face.Y, -face.X)
 		normalize(&data.Normals[i])
@@ -759,7 +758,7 @@ func newRectanglePolygon(pos, size rl.Vector2) Polygon {
 	data := Polygon{}
 
 	data.VertexCount = 4
-	data.Transform = raymath.Mat2Radians(0)
+	data.Transform = rl.Mat2Radians(0)
 
 	// Calculate polygon vertices positions
 	data.Vertices[0] = rl.NewVector2(pos.X+size.X/2, pos.Y-size.Y/2)
@@ -773,7 +772,7 @@ func newRectanglePolygon(pos, size rl.Vector2) Polygon {
 		if i+1 < data.VertexCount {
 			nextIndex = i + 1
 		}
-		face := raymath.Vector2Subtract(data.Vertices[nextIndex], data.Vertices[i])
+		face := rl.Vector2Subtract(data.Vertices[nextIndex], data.Vertices[i])
 
 		data.Normals[i] = rl.NewVector2(face.Y, -face.X)
 		normalize(&data.Normals[i])
@@ -852,9 +851,9 @@ func (m *manifold) solveCircleToCircle() {
 	bodyB := m.BodyB
 
 	// Calculate translational vector, which is normal
-	normal := raymath.Vector2Subtract(bodyB.Position, bodyA.Position)
+	normal := rl.Vector2Subtract(bodyB.Position, bodyA.Position)
 
-	distSqr := raymath.Vector2LenSqr(normal)
+	distSqr := rl.Vector2LenSqr(normal)
 	radius := bodyA.Shape.Radius + bodyB.Shape.Radius
 
 	// Check if circles are not in contact
@@ -888,7 +887,7 @@ func (m *manifold) solveCircleToPolygon() {
 
 	// Transform circle center to polygon transform space
 	center := m.BodyA.Position
-	center = raymath.Mat2MultiplyVector2(raymath.Mat2Transpose(m.BodyB.Shape.VertexData.Transform), raymath.Vector2Subtract(center, m.BodyB.Position))
+	center = rl.Mat2MultiplyVector2(rl.Mat2Transpose(m.BodyB.Shape.VertexData.Transform), rl.Vector2Subtract(center, m.BodyB.Position))
 
 	// Find edge with minimum penetration
 	// It is the same concept as using support points in solvePolygonToPolygon
@@ -897,7 +896,7 @@ func (m *manifold) solveCircleToPolygon() {
 	vertexData := m.BodyB.Shape.VertexData
 
 	for i := 0; i < vertexData.VertexCount; i++ {
-		currentSeparation := raymath.Vector2DotProduct(vertexData.Normals[i], raymath.Vector2Subtract(center, vertexData.Vertices[i]))
+		currentSeparation := rl.Vector2DotProduct(vertexData.Normals[i], rl.Vector2Subtract(center, vertexData.Vertices[i]))
 
 		if currentSeparation > m.BodyA.Shape.Radius {
 			return
@@ -920,7 +919,7 @@ func (m *manifold) solveCircleToPolygon() {
 	// Check to see if center is within polygon
 	if separation < epsilon {
 		m.ContactsCount = 1
-		normal := raymath.Mat2MultiplyVector2(vertexData.Transform, vertexData.Normals[faceNormal])
+		normal := rl.Mat2MultiplyVector2(vertexData.Transform, vertexData.Normals[faceNormal])
 		m.Normal = rl.NewVector2(-normal.X, -normal.Y)
 		m.Contacts[0] = rl.NewVector2(m.Normal.X*m.BodyA.Shape.Radius+m.BodyA.Position.X, m.Normal.Y*m.BodyA.Shape.Radius+m.BodyA.Position.Y)
 		m.Penetration = m.BodyA.Shape.Radius
@@ -928,44 +927,44 @@ func (m *manifold) solveCircleToPolygon() {
 	}
 
 	// Determine which voronoi region of the edge center of circle lies within
-	dot1 := raymath.Vector2DotProduct(raymath.Vector2Subtract(center, v1), raymath.Vector2Subtract(v2, v1))
-	dot2 := raymath.Vector2DotProduct(raymath.Vector2Subtract(center, v2), raymath.Vector2Subtract(v1, v2))
+	dot1 := rl.Vector2DotProduct(rl.Vector2Subtract(center, v1), rl.Vector2Subtract(v2, v1))
+	dot2 := rl.Vector2DotProduct(rl.Vector2Subtract(center, v2), rl.Vector2Subtract(v1, v2))
 	m.Penetration = m.BodyA.Shape.Radius - separation
 
 	if dot1 <= 0 { // Closest to v1
-		if raymath.Vector2Distance(center, v1) > m.BodyA.Shape.Radius*m.BodyA.Shape.Radius {
+		if rl.Vector2Distance(center, v1) > m.BodyA.Shape.Radius*m.BodyA.Shape.Radius {
 			return
 		}
 
 		m.ContactsCount = 1
-		normal := raymath.Vector2Subtract(v1, center)
-		normal = raymath.Mat2MultiplyVector2(vertexData.Transform, normal)
+		normal := rl.Vector2Subtract(v1, center)
+		normal = rl.Mat2MultiplyVector2(vertexData.Transform, normal)
 		normalize(&normal)
 		m.Normal = normal
-		v1 = raymath.Mat2MultiplyVector2(vertexData.Transform, v1)
-		v1 = raymath.Vector2Add(v1, m.BodyB.Position)
+		v1 = rl.Mat2MultiplyVector2(vertexData.Transform, v1)
+		v1 = rl.Vector2Add(v1, m.BodyB.Position)
 		m.Contacts[0] = v1
 	} else if dot2 <= 0 { // Closest to v2
-		if raymath.Vector2Distance(center, v2) > m.BodyA.Shape.Radius*m.BodyA.Shape.Radius {
+		if rl.Vector2Distance(center, v2) > m.BodyA.Shape.Radius*m.BodyA.Shape.Radius {
 			return
 		}
 
 		m.ContactsCount = 1
-		normal := raymath.Vector2Subtract(v2, center)
-		v2 = raymath.Mat2MultiplyVector2(vertexData.Transform, v2)
-		v2 = raymath.Vector2Add(v2, m.BodyB.Position)
+		normal := rl.Vector2Subtract(v2, center)
+		v2 = rl.Mat2MultiplyVector2(vertexData.Transform, v2)
+		v2 = rl.Vector2Add(v2, m.BodyB.Position)
 		m.Contacts[0] = v2
-		normal = raymath.Mat2MultiplyVector2(vertexData.Transform, normal)
+		normal = rl.Mat2MultiplyVector2(vertexData.Transform, normal)
 		normalize(&normal)
 		m.Normal = normal
 	} else { // Closest to face
 		normal := vertexData.Normals[faceNormal]
 
-		if raymath.Vector2DotProduct(raymath.Vector2Subtract(center, v1), normal) > m.BodyA.Shape.Radius {
+		if rl.Vector2DotProduct(rl.Vector2Subtract(center, v1), normal) > m.BodyA.Shape.Radius {
 			return
 		}
 
-		normal = raymath.Mat2MultiplyVector2(vertexData.Transform, normal)
+		normal = rl.Mat2MultiplyVector2(vertexData.Transform, normal)
 		m.Normal = rl.NewVector2(-normal.X, -normal.Y)
 		m.Contacts[0] = rl.NewVector2(m.Normal.X*m.BodyA.Shape.Radius+m.BodyA.Position.X, m.Normal.Y*m.BodyA.Shape.Radius+m.BodyA.Position.Y)
 		m.ContactsCount = 1
@@ -1038,20 +1037,20 @@ func (m *manifold) solvePolygonToPolygon() {
 	v2 := refData.Vertices[referenceIndex]
 
 	// Transform vertices to world space
-	v1 = raymath.Mat2MultiplyVector2(refData.Transform, v1)
-	v1 = raymath.Vector2Add(v1, refPoly.Body.Position)
-	v2 = raymath.Mat2MultiplyVector2(refData.Transform, v2)
-	v2 = raymath.Vector2Add(v2, refPoly.Body.Position)
+	v1 = rl.Mat2MultiplyVector2(refData.Transform, v1)
+	v1 = rl.Vector2Add(v1, refPoly.Body.Position)
+	v2 = rl.Mat2MultiplyVector2(refData.Transform, v2)
+	v2 = rl.Vector2Add(v2, refPoly.Body.Position)
 
 	// Calculate reference face side normal in world space
-	sidePlaneNormal := raymath.Vector2Subtract(v2, v1)
+	sidePlaneNormal := rl.Vector2Subtract(v2, v1)
 	normalize(&sidePlaneNormal)
 
 	// Orthogonalize
 	refFaceNormal := rl.NewVector2(sidePlaneNormal.Y, -sidePlaneNormal.X)
-	refC := raymath.Vector2DotProduct(refFaceNormal, v1)
-	negSide := raymath.Vector2DotProduct(sidePlaneNormal, v1) * -1
-	posSide := raymath.Vector2DotProduct(sidePlaneNormal, v2)
+	refC := rl.Vector2DotProduct(refFaceNormal, v1)
+	negSide := rl.Vector2DotProduct(sidePlaneNormal, v1) * -1
+	posSide := rl.Vector2DotProduct(sidePlaneNormal, v2)
 
 	// clip incident face to reference face side planes (due to floating point error, possible to not have required points
 	if clip(rl.NewVector2(-sidePlaneNormal.X, -sidePlaneNormal.Y), negSide, &incidentFace0, &incidentFace1) < 2 {
@@ -1070,7 +1069,7 @@ func (m *manifold) solvePolygonToPolygon() {
 
 	// Keep points behind reference face
 	currentPoint := 0 // clipped points behind reference face
-	separation := raymath.Vector2DotProduct(refFaceNormal, incidentFace0) - refC
+	separation := rl.Vector2DotProduct(refFaceNormal, incidentFace0) - refC
 	if separation <= 0 {
 		m.Contacts[currentPoint] = incidentFace0
 		m.Penetration = -separation
@@ -1079,7 +1078,7 @@ func (m *manifold) solvePolygonToPolygon() {
 		m.Penetration = 0
 	}
 
-	separation = raymath.Vector2DotProduct(refFaceNormal, incidentFace1) - refC
+	separation = rl.Vector2DotProduct(refFaceNormal, incidentFace1) - refC
 
 	if separation <= 0 {
 		m.Contacts[currentPoint] = incidentFace1
@@ -1105,11 +1104,11 @@ func (m *manifold) initializeManifolds() {
 
 	for i := 0; i < 2; i++ {
 		// Caculate radius from center of mass to contact
-		radiusA := raymath.Vector2Subtract(m.Contacts[i], bodyA.Position)
-		radiusB := raymath.Vector2Subtract(m.Contacts[i], bodyB.Position)
+		radiusA := rl.Vector2Subtract(m.Contacts[i], bodyA.Position)
+		radiusB := rl.Vector2Subtract(m.Contacts[i], bodyB.Position)
 
-		crossA := raymath.Vector2Cross(bodyA.AngularVelocity, radiusA)
-		crossB := raymath.Vector2Cross(bodyB.AngularVelocity, radiusB)
+		crossA := rl.Vector2Cross(bodyA.AngularVelocity, radiusA)
+		crossB := rl.Vector2Cross(bodyB.AngularVelocity, radiusB)
 
 		radiusV := rl.Vector2{}
 		radiusV.X = bodyB.Velocity.X + crossB.X - bodyA.Velocity.X - crossA.X
@@ -1117,7 +1116,7 @@ func (m *manifold) initializeManifolds() {
 
 		// Determine if we should perform a resting collision or not;
 		// The idea is if the only thing moving this object is gravity, then the collision should be performed without any restitution
-		if raymath.Vector2LenSqr(radiusV) < (raymath.Vector2LenSqr(rl.NewVector2(gravityForce.X*deltaTime/1000, gravityForce.Y*deltaTime/1000)) + epsilon) {
+		if rl.Vector2LenSqr(radiusV) < (rl.Vector2LenSqr(rl.NewVector2(gravityForce.X*deltaTime/1000, gravityForce.Y*deltaTime/1000)) + epsilon) {
 			m.Restitution = 0
 		}
 	}
@@ -1137,24 +1136,24 @@ func (m *manifold) integrateImpulses() {
 
 	for i := 0; i < m.ContactsCount; i++ {
 		// Calculate radius from center of mass to contact
-		radiusA := raymath.Vector2Subtract(m.Contacts[i], bodyA.Position)
-		radiusB := raymath.Vector2Subtract(m.Contacts[i], bodyB.Position)
+		radiusA := rl.Vector2Subtract(m.Contacts[i], bodyA.Position)
+		radiusB := rl.Vector2Subtract(m.Contacts[i], bodyB.Position)
 
 		// Calculate relative velocity
 		radiusV := rl.Vector2{}
-		radiusV.X = bodyB.Velocity.X + raymath.Vector2Cross(bodyB.AngularVelocity, radiusB).X - bodyA.Velocity.X - raymath.Vector2Cross(bodyA.AngularVelocity, radiusA).X
-		radiusV.Y = bodyB.Velocity.Y + raymath.Vector2Cross(bodyB.AngularVelocity, radiusB).Y - bodyA.Velocity.Y - raymath.Vector2Cross(bodyA.AngularVelocity, radiusA).Y
+		radiusV.X = bodyB.Velocity.X + rl.Vector2Cross(bodyB.AngularVelocity, radiusB).X - bodyA.Velocity.X - rl.Vector2Cross(bodyA.AngularVelocity, radiusA).X
+		radiusV.Y = bodyB.Velocity.Y + rl.Vector2Cross(bodyB.AngularVelocity, radiusB).Y - bodyA.Velocity.Y - rl.Vector2Cross(bodyA.AngularVelocity, radiusA).Y
 
 		// Relative velocity along the normal
-		contactVelocity := raymath.Vector2DotProduct(radiusV, m.Normal)
+		contactVelocity := rl.Vector2DotProduct(radiusV, m.Normal)
 
 		// Do not resolve if velocities are separating
 		if contactVelocity > 0 {
 			return
 		}
 
-		raCrossN := raymath.Vector2CrossProduct(radiusA, m.Normal)
-		rbCrossN := raymath.Vector2CrossProduct(radiusB, m.Normal)
+		raCrossN := rl.Vector2CrossProduct(radiusA, m.Normal)
+		rbCrossN := rl.Vector2CrossProduct(radiusB, m.Normal)
 
 		inverseMassSum := bodyA.InverseMass + bodyB.InverseMass + (raCrossN*raCrossN)*bodyA.InverseInertia + (rbCrossN*rbCrossN)*bodyB.InverseInertia
 
@@ -1170,7 +1169,7 @@ func (m *manifold) integrateImpulses() {
 			bodyA.Velocity.X += bodyA.InverseMass * (-impulseV.X)
 			bodyA.Velocity.Y += bodyA.InverseMass * (-impulseV.Y)
 			if !bodyA.FreezeOrient {
-				bodyA.AngularVelocity += bodyA.InverseInertia * raymath.Vector2CrossProduct(radiusA, rl.NewVector2(-impulseV.X, -impulseV.Y))
+				bodyA.AngularVelocity += bodyA.InverseInertia * rl.Vector2CrossProduct(radiusA, rl.NewVector2(-impulseV.X, -impulseV.Y))
 			}
 		}
 
@@ -1178,19 +1177,19 @@ func (m *manifold) integrateImpulses() {
 			bodyB.Velocity.X += bodyB.InverseMass * (impulseV.X)
 			bodyB.Velocity.Y += bodyB.InverseMass * (impulseV.Y)
 			if !bodyB.FreezeOrient {
-				bodyB.AngularVelocity += bodyB.InverseInertia * raymath.Vector2CrossProduct(radiusB, impulseV)
+				bodyB.AngularVelocity += bodyB.InverseInertia * rl.Vector2CrossProduct(radiusB, impulseV)
 			}
 		}
 
 		// Apply friction impulse to each physics body
-		radiusV.X = bodyB.Velocity.X + raymath.Vector2Cross(bodyB.AngularVelocity, radiusB).X - bodyA.Velocity.X - raymath.Vector2Cross(bodyA.AngularVelocity, radiusA).X
-		radiusV.Y = bodyB.Velocity.Y + raymath.Vector2Cross(bodyB.AngularVelocity, radiusB).Y - bodyA.Velocity.Y - raymath.Vector2Cross(bodyA.AngularVelocity, radiusA).Y
+		radiusV.X = bodyB.Velocity.X + rl.Vector2Cross(bodyB.AngularVelocity, radiusB).X - bodyA.Velocity.X - rl.Vector2Cross(bodyA.AngularVelocity, radiusA).X
+		radiusV.Y = bodyB.Velocity.Y + rl.Vector2Cross(bodyB.AngularVelocity, radiusB).Y - bodyA.Velocity.Y - rl.Vector2Cross(bodyA.AngularVelocity, radiusA).Y
 
-		tangent := rl.NewVector2(radiusV.X-(m.Normal.X*raymath.Vector2DotProduct(radiusV, m.Normal)), radiusV.Y-(m.Normal.Y*raymath.Vector2DotProduct(radiusV, m.Normal)))
+		tangent := rl.NewVector2(radiusV.X-(m.Normal.X*rl.Vector2DotProduct(radiusV, m.Normal)), radiusV.Y-(m.Normal.Y*rl.Vector2DotProduct(radiusV, m.Normal)))
 		normalize(&tangent)
 
 		// Calculate impulse tangent magnitude
-		impulseTangent := -(raymath.Vector2DotProduct(radiusV, tangent))
+		impulseTangent := -(rl.Vector2DotProduct(radiusV, tangent))
 		impulseTangent /= inverseMassSum
 		impulseTangent /= float32(m.ContactsCount)
 
@@ -1215,7 +1214,7 @@ func (m *manifold) integrateImpulses() {
 			bodyA.Velocity.Y += bodyA.InverseMass * (-tangentImpulse.Y)
 
 			if !bodyA.FreezeOrient {
-				bodyA.AngularVelocity += bodyA.InverseInertia * raymath.Vector2CrossProduct(radiusA, rl.NewVector2(-tangentImpulse.X, -tangentImpulse.Y))
+				bodyA.AngularVelocity += bodyA.InverseInertia * rl.Vector2CrossProduct(radiusA, rl.NewVector2(-tangentImpulse.X, -tangentImpulse.Y))
 			}
 		}
 
@@ -1224,7 +1223,7 @@ func (m *manifold) integrateImpulses() {
 			bodyB.Velocity.Y += bodyB.InverseMass * (tangentImpulse.Y)
 
 			if !bodyB.FreezeOrient {
-				bodyB.AngularVelocity += bodyB.InverseInertia * raymath.Vector2CrossProduct(radiusB, tangentImpulse)
+				bodyB.AngularVelocity += bodyB.InverseInertia * rl.Vector2CrossProduct(radiusB, tangentImpulse)
 			}
 		}
 	}
@@ -1257,7 +1256,7 @@ func getSupport(shape Shape, dir rl.Vector2) rl.Vector2 {
 
 	for i := 0; i < shape.VertexData.VertexCount; i++ {
 		vertex := shape.VertexData.Vertices[i]
-		projection := raymath.Vector2DotProduct(vertex, dir)
+		projection := rl.Vector2DotProduct(vertex, dir)
 
 		if projection > bestProjection {
 			bestVertex = vertex
@@ -1279,24 +1278,24 @@ func findAxisLeastPenetration(shapeA, shapeB Shape) (int, float32) {
 	for i := 0; i < dataA.VertexCount; i++ {
 		// Retrieve a face normal from A shape
 		normal := dataA.Normals[i]
-		transNormal := raymath.Mat2MultiplyVector2(dataA.Transform, normal)
+		transNormal := rl.Mat2MultiplyVector2(dataA.Transform, normal)
 
 		// Transform face normal into B shape's model space
-		buT := raymath.Mat2Transpose(dataB.Transform)
-		normal = raymath.Mat2MultiplyVector2(buT, transNormal)
+		buT := rl.Mat2Transpose(dataB.Transform)
+		normal = rl.Mat2MultiplyVector2(buT, transNormal)
 
 		// Retrieve support point from B shape along -n
 		support := getSupport(shapeB, rl.NewVector2(-normal.X, -normal.Y))
 
 		// Retrieve vertex on face from A shape, transform into B shape's model space
 		vertex := dataA.Vertices[i]
-		vertex = raymath.Mat2MultiplyVector2(dataA.Transform, vertex)
-		vertex = raymath.Vector2Add(vertex, shapeA.Body.Position)
-		vertex = raymath.Vector2Subtract(vertex, shapeB.Body.Position)
-		vertex = raymath.Mat2MultiplyVector2(buT, vertex)
+		vertex = rl.Mat2MultiplyVector2(dataA.Transform, vertex)
+		vertex = rl.Vector2Add(vertex, shapeA.Body.Position)
+		vertex = rl.Vector2Subtract(vertex, shapeB.Body.Position)
+		vertex = rl.Mat2MultiplyVector2(buT, vertex)
 
 		// Compute penetration distance in B shape's model space
-		distance := raymath.Vector2DotProduct(normal, raymath.Vector2Subtract(support, vertex))
+		distance := rl.Vector2DotProduct(normal, rl.Vector2Subtract(support, vertex))
 
 		// Store greatest distance
 		if distance > bestDistance {
@@ -1316,15 +1315,15 @@ func findIncidentFace(v0, v1 *rl.Vector2, ref, inc Shape, index int) {
 	referenceNormal := refData.Normals[index]
 
 	// Calculate normal in incident's frame of reference
-	referenceNormal = raymath.Mat2MultiplyVector2(refData.Transform, referenceNormal)                        // To world space
-	referenceNormal = raymath.Mat2MultiplyVector2(raymath.Mat2Transpose(incData.Transform), referenceNormal) // To incident's model space
+	referenceNormal = rl.Mat2MultiplyVector2(refData.Transform, referenceNormal)                        // To world space
+	referenceNormal = rl.Mat2MultiplyVector2(rl.Mat2Transpose(incData.Transform), referenceNormal) // To incident's model space
 
 	// Find most anti-normal face on polygon
 	incidentFace := 0
 	minDot := float32(fltMax)
 
 	for i := 0; i < incData.VertexCount; i++ {
-		dot := raymath.Vector2DotProduct(referenceNormal, incData.Normals[i])
+		dot := rl.Vector2DotProduct(referenceNormal, incData.Normals[i])
 
 		if dot < minDot {
 			minDot = dot
@@ -1333,8 +1332,8 @@ func findIncidentFace(v0, v1 *rl.Vector2, ref, inc Shape, index int) {
 	}
 
 	// Assign face vertices for incident face
-	*v0 = raymath.Mat2MultiplyVector2(incData.Transform, incData.Vertices[incidentFace])
-	*v0 = raymath.Vector2Add(*v0, inc.Body.Position)
+	*v0 = rl.Mat2MultiplyVector2(incData.Transform, incData.Vertices[incidentFace])
+	*v0 = rl.Vector2Add(*v0, inc.Body.Position)
 
 	if incidentFace+1 < incData.VertexCount {
 		incidentFace = incidentFace + 1
@@ -1342,8 +1341,8 @@ func findIncidentFace(v0, v1 *rl.Vector2, ref, inc Shape, index int) {
 		incidentFace = 0
 	}
 
-	*v1 = raymath.Mat2MultiplyVector2(incData.Transform, incData.Vertices[incidentFace])
-	*v1 = raymath.Vector2Add(*v1, inc.Body.Position)
+	*v1 = rl.Mat2MultiplyVector2(incData.Transform, incData.Vertices[incidentFace])
+	*v1 = rl.Vector2Add(*v1, inc.Body.Position)
 }
 
 // clip - Calculates clipping based on a normal and two faces
@@ -1355,8 +1354,8 @@ func clip(normal rl.Vector2, clip float32, faceA, faceB *rl.Vector2) int {
 	out[1] = *faceB
 
 	// Retrieve distances from each endpoint to the line
-	distanceA := raymath.Vector2DotProduct(normal, *faceA) - clip
-	distanceB := raymath.Vector2DotProduct(normal, *faceB) - clip
+	distanceA := rl.Vector2DotProduct(normal, *faceA) - clip
+	distanceB := rl.Vector2DotProduct(normal, *faceB) - clip
 
 	// If negative (behind plane)
 	if distanceA <= 0 {
@@ -1373,10 +1372,10 @@ func clip(normal rl.Vector2, clip float32, faceA, faceB *rl.Vector2) int {
 		// Push intersection point
 		alpha := distanceA / (distanceA - distanceB)
 		out[sp] = *faceA
-		delta := raymath.Vector2Subtract(*faceB, *faceA)
+		delta := rl.Vector2Subtract(*faceB, *faceA)
 		delta.X *= alpha
 		delta.Y *= alpha
-		out[sp] = raymath.Vector2Add(out[sp], delta)
+		out[sp] = rl.Vector2Add(out[sp], delta)
 		sp++
 	}
 
