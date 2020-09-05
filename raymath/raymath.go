@@ -54,40 +54,32 @@ func Vector2Angle(v1, v2 rl.Vector2) float32 {
 }
 
 // Vector2Scale - Scale vector (multiply by value)
-func Vector2Scale(v *rl.Vector2, scale float32) {
-	v.X *= scale
-	v.Y *= scale
+func Vector2Scale(v rl.Vector2, scale float32) rl.Vector2 {
+	return rl.NewVector2(v.X*scale, v.Y*scale)
 }
 
 // Vector2Multiply - Multiply vector by vector
-func Vector2Multiply(v1, v2 *rl.Vector2) rl.Vector2 {
+func Vector2Multiply(v1, v2 rl.Vector2) rl.Vector2 {
 	return rl.NewVector2(v1.X*v2.X, v1.Y*v2.Y)
 }
 
 // Vector2Negate - Negate vector
-func Vector2Negate(v *rl.Vector2) {
-	v.X = -v.X
-	v.Y = -v.Y
+func Vector2Negate(v rl.Vector2) rl.Vector2 {
+	return rl.NewVector2(-v.X, -v.Y)
 }
 
-// Vector2Divide - Divide vector by a float value
-func Vector2Divide(v *rl.Vector2, div float32) {
-	v.X = v.X / div
-	v.Y = v.Y / div
-}
-
-// Vector2DivideV - Divide vector by vector
-func Vector2DivideV(v1, v2 *rl.Vector2) rl.Vector2 {
+// Vector2Divide - Divide vector by vector
+func Vector2DivideV(v1, v2 rl.Vector2) rl.Vector2 {
 	return rl.NewVector2(v1.X/v2.X, v1.Y/v2.Y)
 }
 
 // Vector2Normalize - Normalize provided vector
-func Vector2Normalize(v *rl.Vector2) {
-	Vector2Divide(v, Vector2Length(*v))
+func Vector2Normalize(v rl.Vector2) rl.Vector2 {
+	return Vector2Scale(v, 1/Vector2Length(v))
 }
 
 // Vector2Lerp - Calculate linear interpolation between two vectors
-func Vector2Lerp(v1, v2 *rl.Vector2, amount float32) rl.Vector2 {
+func Vector2Lerp(v1, v2 rl.Vector2, amount float32) rl.Vector2 {
 	return rl.NewVector2(v1.X+amount*(v2.X-v1.X), v1.Y+amount*(v2.Y-v1.Y))
 }
 
@@ -229,24 +221,22 @@ func Vector3Distance(v1, v2 rl.Vector3) float32 {
 }
 
 // Vector3Scale - Scale provided vector
-func Vector3Scale(v *rl.Vector3, scale float32) {
-	v.X *= scale
-	v.Y *= scale
-	v.Z *= scale
+func Vector3Scale(v rl.Vector3, scale float32) rl.Vector3 {
+	return rl.NewVector3(v.X*scale, v.Y*scale, v.Z*scale)
 }
 
 // Vector3Negate - Negate provided vector (invert direction)
-func Vector3Negate(v *rl.Vector3) {
-	v.X = -v.X
-	v.Y = -v.Y
-	v.Z = -v.Z
+func Vector3Negate(v rl.Vector3) rl.Vector3 {
+	return rl.NewVector3(-v.X, -v.Y, -v.Z)
 }
 
 // Vector3Normalize - Normalize provided vector
-func Vector3Normalize(v *rl.Vector3) {
+func Vector3Normalize(v rl.Vector3) rl.Vector3 {
+	result := v
+
 	var length, ilength float32
 
-	length = Vector3Length(*v)
+	length = Vector3Length(v)
 
 	if length == 0 {
 		length = 1.0
@@ -254,20 +244,26 @@ func Vector3Normalize(v *rl.Vector3) {
 
 	ilength = 1.0 / length
 
-	v.X *= ilength
-	v.Y *= ilength
-	v.Z *= ilength
+	result.X *= ilength
+	result.Y *= ilength
+	result.Z *= ilength
+
+	return result
 }
 
 // Vector3Transform - Transforms a Vector3 by a given Matrix
-func Vector3Transform(v *rl.Vector3, mat rl.Matrix) {
+func Vector3Transform(v rl.Vector3, mat rl.Matrix) rl.Vector3 {
+	result := rl.Vector3{}
+
 	x := v.X
 	y := v.Y
 	z := v.Z
 
-	v.X = mat.M0*x + mat.M4*y + mat.M8*z + mat.M12
-	v.Y = mat.M1*x + mat.M5*y + mat.M9*z + mat.M13
-	v.Z = mat.M2*x + mat.M6*y + mat.M10*z + mat.M14
+	result.X = mat.M0*x + mat.M4*y + mat.M8*z + mat.M12
+	result.Y = mat.M1*x + mat.M5*y + mat.M9*z + mat.M13
+	result.Z = mat.M2*x + mat.M6*y + mat.M10*z + mat.M14
+
+	return result
 }
 
 // Vector3Lerp - Calculate linear interpolation between two vectors
@@ -379,32 +375,32 @@ func MatrixTrace(mat rl.Matrix) float32 {
 }
 
 // MatrixTranspose - Transposes provided matrix
-func MatrixTranspose(mat *rl.Matrix) {
-	var temp rl.Matrix
+func MatrixTranspose(mat rl.Matrix) rl.Matrix {
+	var result rl.Matrix
 
-	temp.M0 = mat.M0
-	temp.M1 = mat.M4
-	temp.M2 = mat.M8
-	temp.M3 = mat.M12
-	temp.M4 = mat.M1
-	temp.M5 = mat.M5
-	temp.M6 = mat.M9
-	temp.M7 = mat.M13
-	temp.M8 = mat.M2
-	temp.M9 = mat.M6
-	temp.M10 = mat.M10
-	temp.M11 = mat.M14
-	temp.M12 = mat.M3
-	temp.M13 = mat.M7
-	temp.M14 = mat.M11
-	temp.M15 = mat.M15
+	result.M0 = mat.M0
+	result.M1 = mat.M4
+	result.M2 = mat.M8
+	result.M3 = mat.M12
+	result.M4 = mat.M1
+	result.M5 = mat.M5
+	result.M6 = mat.M9
+	result.M7 = mat.M13
+	result.M8 = mat.M2
+	result.M9 = mat.M6
+	result.M10 = mat.M10
+	result.M11 = mat.M14
+	result.M12 = mat.M3
+	result.M13 = mat.M7
+	result.M14 = mat.M11
+	result.M15 = mat.M15
 
-	mat = &temp
+	return result
 }
 
 // MatrixInvert - Invert provided matrix
-func MatrixInvert(mat *rl.Matrix) {
-	var temp rl.Matrix
+func MatrixInvert(mat rl.Matrix) rl.Matrix {
+	var result rl.Matrix
 
 	a00 := mat.M0
 	a01 := mat.M1
@@ -439,46 +435,50 @@ func MatrixInvert(mat *rl.Matrix) {
 	// Calculate the invert determinant (inlined to avoid double-caching)
 	invDet := 1.0 / (b00*b11 - b01*b10 + b02*b09 + b03*b08 - b04*b07 + b05*b06)
 
-	temp.M0 = (a11*b11 - a12*b10 + a13*b09) * invDet
-	temp.M1 = (-a01*b11 + a02*b10 - a03*b09) * invDet
-	temp.M2 = (a31*b05 - a32*b04 + a33*b03) * invDet
-	temp.M3 = (-a21*b05 + a22*b04 - a23*b03) * invDet
-	temp.M4 = (-a10*b11 + a12*b08 - a13*b07) * invDet
-	temp.M5 = (a00*b11 - a02*b08 + a03*b07) * invDet
-	temp.M6 = (-a30*b05 + a32*b02 - a33*b01) * invDet
-	temp.M7 = (a20*b05 - a22*b02 + a23*b01) * invDet
-	temp.M8 = (a10*b10 - a11*b08 + a13*b06) * invDet
-	temp.M9 = (-a00*b10 + a01*b08 - a03*b06) * invDet
-	temp.M10 = (a30*b04 - a31*b02 + a33*b00) * invDet
-	temp.M11 = (-a20*b04 + a21*b02 - a23*b00) * invDet
-	temp.M12 = (-a10*b09 + a11*b07 - a12*b06) * invDet
-	temp.M13 = (a00*b09 - a01*b07 + a02*b06) * invDet
-	temp.M14 = (-a30*b03 + a31*b01 - a32*b00) * invDet
-	temp.M15 = (a20*b03 - a21*b01 + a22*b00) * invDet
+	result.M0 = (a11*b11 - a12*b10 + a13*b09) * invDet
+	result.M1 = (-a01*b11 + a02*b10 - a03*b09) * invDet
+	result.M2 = (a31*b05 - a32*b04 + a33*b03) * invDet
+	result.M3 = (-a21*b05 + a22*b04 - a23*b03) * invDet
+	result.M4 = (-a10*b11 + a12*b08 - a13*b07) * invDet
+	result.M5 = (a00*b11 - a02*b08 + a03*b07) * invDet
+	result.M6 = (-a30*b05 + a32*b02 - a33*b01) * invDet
+	result.M7 = (a20*b05 - a22*b02 + a23*b01) * invDet
+	result.M8 = (a10*b10 - a11*b08 + a13*b06) * invDet
+	result.M9 = (-a00*b10 + a01*b08 - a03*b06) * invDet
+	result.M10 = (a30*b04 - a31*b02 + a33*b00) * invDet
+	result.M11 = (-a20*b04 + a21*b02 - a23*b00) * invDet
+	result.M12 = (-a10*b09 + a11*b07 - a12*b06) * invDet
+	result.M13 = (a00*b09 - a01*b07 + a02*b06) * invDet
+	result.M14 = (-a30*b03 + a31*b01 - a32*b00) * invDet
+	result.M15 = (a20*b03 - a21*b01 + a22*b00) * invDet
 
-	mat = &temp
+	return result
 }
 
 // MatrixNormalize - Normalize provided matrix
-func MatrixNormalize(mat *rl.Matrix) {
-	det := MatrixDeterminant(*mat)
+func MatrixNormalize(mat rl.Matrix) rl.Matrix {
+	var result rl.Matrix
 
-	mat.M0 /= det
-	mat.M1 /= det
-	mat.M2 /= det
-	mat.M3 /= det
-	mat.M4 /= det
-	mat.M5 /= det
-	mat.M6 /= det
-	mat.M7 /= det
-	mat.M8 /= det
-	mat.M9 /= det
-	mat.M10 /= det
-	mat.M11 /= det
-	mat.M12 /= det
-	mat.M13 /= det
-	mat.M14 /= det
-	mat.M15 /= det
+	det := MatrixDeterminant(mat)
+
+	result.M0 /= det
+	result.M1 /= det
+	result.M2 /= det
+	result.M3 /= det
+	result.M4 /= det
+	result.M5 /= det
+	result.M6 /= det
+	result.M7 /= det
+	result.M8 /= det
+	result.M9 /= det
+	result.M10 /= det
+	result.M11 /= det
+	result.M12 /= det
+	result.M13 /= det
+	result.M14 /= det
+	result.M15 /= det
+
+	return result
 }
 
 // MatrixIdentity - Returns identity matrix
@@ -768,11 +768,11 @@ func MatrixLookAt(eye, target, up rl.Vector3) rl.Matrix {
 	var result rl.Matrix
 
 	z := Vector3Subtract(eye, target)
-	Vector3Normalize(&z)
+	z = Vector3Normalize(z)
 	x := Vector3CrossProduct(up, z)
-	Vector3Normalize(&x)
+	x = Vector3Normalize(x)
 	y := Vector3CrossProduct(z, x)
-	Vector3Normalize(&y)
+	y = Vector3Normalize(y)
 
 	result.M0 = x.X
 	result.M1 = x.Y
@@ -800,10 +800,12 @@ func QuaternionLength(quat rl.Quaternion) float32 {
 }
 
 // QuaternionNormalize - Normalize provided quaternion
-func QuaternionNormalize(q *rl.Quaternion) {
+func QuaternionNormalize(q rl.Quaternion) rl.Quaternion {
+	var result rl.Quaternion
+
 	var length, ilength float32
 
-	length = QuaternionLength(*q)
+	length = QuaternionLength(q)
 
 	if length == 0.0 {
 		length = 1.0
@@ -811,25 +813,31 @@ func QuaternionNormalize(q *rl.Quaternion) {
 
 	ilength = 1.0 / length
 
-	q.X *= ilength
-	q.Y *= ilength
-	q.Z *= ilength
-	q.W *= ilength
+	result.X *= ilength
+	result.Y *= ilength
+	result.Z *= ilength
+	result.W *= ilength
+
+	return result
 }
 
 // QuaternionInvert - Invert provided quaternion
-func QuaternionInvert(quat *rl.Quaternion) {
-	length := QuaternionLength(*quat)
+func QuaternionInvert(quat rl.Quaternion) rl.Quaternion {
+	result := quat
+
+	length := QuaternionLength(quat)
 	lengthSq := length * length
 
 	if lengthSq != 0.0 {
 		i := 1.0 / lengthSq
 
-		quat.X *= -i
-		quat.Y *= -i
-		quat.Z *= -i
-		quat.W *= i
+		result.X *= -i
+		result.Y *= -i
+		result.Z *= -i
+		result.W *= i
 	}
+
+	return result
 }
 
 // QuaternionMultiply - Calculate two quaternion multiplication
@@ -986,7 +994,7 @@ func QuaternionFromAxisAngle(axis rl.Vector3, angle float32) rl.Quaternion {
 		angle *= 0.5
 	}
 
-	Vector3Normalize(&axis)
+	axis = Vector3Normalize(axis)
 
 	sinres := float32(math.Sin(float64(angle)))
 	cosres := float32(math.Cos(float64(angle)))
@@ -996,7 +1004,7 @@ func QuaternionFromAxisAngle(axis rl.Vector3, angle float32) rl.Quaternion {
 	result.Z = axis.Z * sinres
 	result.W = cosres
 
-	QuaternionNormalize(&result)
+	result = QuaternionNormalize(result)
 
 	return result
 }
@@ -1004,7 +1012,7 @@ func QuaternionFromAxisAngle(axis rl.Vector3, angle float32) rl.Quaternion {
 // QuaternionToAxisAngle - Returns the rotation angle and axis for a given quaternion
 func QuaternionToAxisAngle(q rl.Quaternion, outAxis *rl.Vector3, outAngle *float32) {
 	if math.Abs(float64(q.W)) > 1.0 {
-		QuaternionNormalize(&q)
+		q = QuaternionNormalize(q)
 	}
 
 	resAxis := rl.NewVector3(0.0, 0.0, 0.0)
@@ -1027,16 +1035,20 @@ func QuaternionToAxisAngle(q rl.Quaternion, outAxis *rl.Vector3, outAngle *float
 }
 
 // QuaternionTransform - Transform a quaternion given a transformation matrix
-func QuaternionTransform(q *rl.Quaternion, mat rl.Matrix) {
+func QuaternionTransform(q rl.Quaternion, mat rl.Matrix) rl.Quaternion {
+	var result rl.Quaternion
+
 	x := q.X
 	y := q.Y
 	z := q.Z
 	w := q.W
 
-	q.X = mat.M0*x + mat.M4*y + mat.M8*z + mat.M12*w
-	q.Y = mat.M1*x + mat.M5*y + mat.M9*z + mat.M13*w
-	q.Z = mat.M2*x + mat.M6*y + mat.M10*z + mat.M14*w
-	q.W = mat.M3*x + mat.M7*y + mat.M11*z + mat.M15*w
+	result.X = mat.M0*x + mat.M4*y + mat.M8*z + mat.M12*w
+	result.Y = mat.M1*x + mat.M5*y + mat.M9*z + mat.M13*w
+	result.Z = mat.M2*x + mat.M6*y + mat.M10*z + mat.M14*w
+	result.W = mat.M3*x + mat.M7*y + mat.M11*z + mat.M15*w
+
+	return result
 }
 
 // Clamp - Clamp float value
