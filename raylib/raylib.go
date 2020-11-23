@@ -201,7 +201,7 @@ const (
 	KeyLeftShift    = 340
 	KeyLeftControl  = 341
 	KeyLeftAlt      = 342
-	KeyLeftSuper    = 347
+	KeyLeftSuper    = 343
 	KeyRightShift   = 344
 	KeyRightControl = 345
 	KeyRightAlt     = 346
