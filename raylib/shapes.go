@@ -307,6 +307,16 @@ func DrawPoly(center Vector2, sides int32, radius, rotation float32, color Color
 	C.DrawPoly(*ccenter, csides, cradius, crotation, *ccolor)
 }
 
+// DrawPolyLines - Draw a polygon outline of n sides
+func DrawPolyLines(center Vector2, sides int32, radius, rotation float32, color Color) {
+	ccenter := center.cptr()
+	csides := (C.int)(sides)
+	cradius := (C.float)(radius)
+	crotation := (C.float)(rotation)
+	ccolor := color.cptr()
+	C.DrawPolyLines(*ccenter, csides, cradius, crotation, *ccolor)
+}
+
 // CheckCollisionRecs - Check collision between two rectangles
 func CheckCollisionRecs(rec1, rec2 Rectangle) bool {
 	crec1 := rec1.cptr()
