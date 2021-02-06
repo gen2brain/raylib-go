@@ -136,6 +136,30 @@ func DrawEllipseLines(centerX, centerY int32, radiusH, radiusV float32, color Co
 	C.DrawEllipseLines(ccenterX, ccenterY, cradiusH, cradiusV, *ccolor)
 }
 
+// DrawRing -
+func DrawRing(center Vector2, innerRadius, outerRadius float32, startAngle, endAngle, segments int32, color Color) {
+	ccenter := center.cptr()
+	cinnerRadius := (C.float)(innerRadius)
+	couterRadius := (C.float)(outerRadius)
+	cstartAngle := (C.int)(startAngle)
+	cendAngle := (C.int)(endAngle)
+	csegments := (C.int)(segments)
+	ccolor := color.cptr()
+	C.DrawRing(*ccenter, cinnerRadius, couterRadius, cstartAngle, cendAngle, csegments, *ccolor)
+}
+
+// DrawRingLines -
+func DrawRingLines(center Vector2, innerRadius, outerRadius float32, startAngle, endAngle, segments int32, color Color) {
+	ccenter := center.cptr()
+	cinnerRadius := (C.float)(innerRadius)
+	couterRadius := (C.float)(outerRadius)
+	cstartAngle := (C.int)(startAngle)
+	cendAngle := (C.int)(endAngle)
+	csegments := (C.int)(segments)
+	ccolor := color.cptr()
+	C.DrawRingLines(*ccenter, cinnerRadius, couterRadius, cstartAngle, cendAngle, csegments, *ccolor)
+}
+
 // DrawRectangle - Draw a color-filled rectangle
 func DrawRectangle(posX, posY, width, height int32, color Color) {
 	cposX := (C.int)(posX)
