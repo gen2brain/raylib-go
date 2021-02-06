@@ -286,7 +286,7 @@ func DrawTriangleFan(points []Vector2, color Color) {
 	cpoints := (*C.Vector2)(unsafe.Pointer(&points[0]))
 	cpointsCount := (C.int)(int32(len(points)))
 	ccolor := color.cptr()
-	C.DrawTriangleLines(*cpoints, cpointsCount, *ccolor)
+	C.DrawTriangleFan(cpoints, cpointsCount, *ccolor)
 }
 
 // DrawTriangleStrip - Draw a triangle strip defined by points
@@ -294,7 +294,7 @@ func DrawTriangleStrip(points []Vector2, color Color) {
 	cpoints := (*C.Vector2)(unsafe.Pointer(&points[0]))
 	cpointsCount := (C.int)(int32(len(points)))
 	ccolor := color.cptr()
-	C.DrawTriangleStrip(*cpoints, cpointsCount, *ccolor)
+	C.DrawTriangleStrip(cpoints, cpointsCount, *ccolor)
 }
 
 // DrawPoly - Draw a regular polygon (Vector version)
