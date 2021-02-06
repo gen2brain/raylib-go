@@ -67,6 +67,28 @@ func DrawCircle(centerX, centerY int32, radius float32, color Color) {
 	C.DrawCircle(ccenterX, ccenterY, cradius, *ccolor)
 }
 
+// DrawCircleSector - Draw a piece of a circle
+func DrawCircleSector(center Vector2, radius float32, startAngle, endAngle, segments int32, color Color) {
+	ccenter := center.cptr()
+	cradius := (C.float)(radius)
+	cstartAngle := (C.int)(startAngle)
+	cendAngle := (C.int)(endAngle)
+	csegments := (C.int)(segments)
+	ccolor := color.cptr()
+	C.DrawCircleSector(*ccenter, cradius, cstartAngle, cendAngle, csegments, *ccolor)
+}
+
+// DrawCircleSectorLines -
+func DrawCircleSectorLines(center Vector2, radius float32, startAngle, endAngle, segments int32, color Color) {
+	ccenter := center.cptr()
+	cradius := (C.float)(radius)
+	cstartAngle := (C.int)(startAngle)
+	cendAngle := (C.int)(endAngle)
+	csegments := (C.int)(segments)
+	ccolor := color.cptr()
+	C.DrawCircleSectorLines(*ccenter, cradius, cstartAngle, cendAngle, csegments, *ccolor)
+}
+
 // DrawCircleGradient - Draw a gradient-filled circle
 func DrawCircleGradient(centerX, centerY int32, radius float32, color1, color2 Color) {
 	ccenterX := (C.int)(centerX)
