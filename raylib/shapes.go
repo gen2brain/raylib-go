@@ -67,6 +67,28 @@ func DrawCircle(centerX, centerY int32, radius float32, color Color) {
 	C.DrawCircle(ccenterX, ccenterY, cradius, *ccolor)
 }
 
+// DrawCircleSector - Draw a piece of a circle
+func DrawCircleSector(center Vector2, radius float32, startAngle, endAngle, segments int32, color Color) {
+	ccenter := center.cptr()
+	cradius := (C.float)(radius)
+	cstartAngle := (C.int)(startAngle)
+	cendAngle := (C.int)(endAngle)
+	csegments := (C.int)(segments)
+	ccolor := color.cptr()
+	C.DrawCircleSector(*ccenter, cradius, cstartAngle, cendAngle, csegments, *ccolor)
+}
+
+// DrawCircleSectorLines -
+func DrawCircleSectorLines(center Vector2, radius float32, startAngle, endAngle, segments int32, color Color) {
+	ccenter := center.cptr()
+	cradius := (C.float)(radius)
+	cstartAngle := (C.int)(startAngle)
+	cendAngle := (C.int)(endAngle)
+	csegments := (C.int)(segments)
+	ccolor := color.cptr()
+	C.DrawCircleSectorLines(*ccenter, cradius, cstartAngle, cendAngle, csegments, *ccolor)
+}
+
 // DrawCircleGradient - Draw a gradient-filled circle
 func DrawCircleGradient(centerX, centerY int32, radius float32, color1, color2 Color) {
 	ccenterX := (C.int)(centerX)
@@ -112,6 +134,30 @@ func DrawEllipseLines(centerX, centerY int32, radiusH, radiusV float32, color Co
 	cradiusV := (C.float)(radiusV)
 	ccolor := color.cptr()
 	C.DrawEllipseLines(ccenterX, ccenterY, cradiusH, cradiusV, *ccolor)
+}
+
+// DrawRing -
+func DrawRing(center Vector2, innerRadius, outerRadius float32, startAngle, endAngle, segments int32, color Color) {
+	ccenter := center.cptr()
+	cinnerRadius := (C.float)(innerRadius)
+	couterRadius := (C.float)(outerRadius)
+	cstartAngle := (C.int)(startAngle)
+	cendAngle := (C.int)(endAngle)
+	csegments := (C.int)(segments)
+	ccolor := color.cptr()
+	C.DrawRing(*ccenter, cinnerRadius, couterRadius, cstartAngle, cendAngle, csegments, *ccolor)
+}
+
+// DrawRingLines -
+func DrawRingLines(center Vector2, innerRadius, outerRadius float32, startAngle, endAngle, segments int32, color Color) {
+	ccenter := center.cptr()
+	cinnerRadius := (C.float)(innerRadius)
+	couterRadius := (C.float)(outerRadius)
+	cstartAngle := (C.int)(startAngle)
+	cendAngle := (C.int)(endAngle)
+	csegments := (C.int)(segments)
+	ccolor := color.cptr()
+	C.DrawRingLines(*ccenter, cinnerRadius, couterRadius, cstartAngle, cendAngle, csegments, *ccolor)
 }
 
 // DrawRectangle - Draw a color-filled rectangle
@@ -198,6 +244,25 @@ func DrawRectangleLinesEx(rec Rectangle, lineThick int32, color Color) {
 	C.DrawRectangleLinesEx(*crec, clineThick, *ccolor)
 }
 
+// DrawRectangleRounded - Draw rectangle with rounded edges
+func DrawRectangleRounded(rec Rectangle, roundness float32, segments int32, color Color) {
+	crec := rec.cptr()
+	croundness := (C.float)(roundness)
+	csegments := (C.int)(segments)
+	ccolor := color.cptr()
+	C.DrawRectangleRounded(*crec, croundness, csegments, *ccolor)
+}
+
+// DrawRectangleRoundedLines - Draw rectangle with rounded edges outline
+func DrawRectangleRoundedLines(rec Rectangle, roundness float32, segments, lineThick int32, color Color) {
+	crec := rec.cptr()
+	croundness := (C.float)(roundness)
+	csegments := (C.int)(segments)
+	clineThick := (C.int)(lineThick)
+	ccolor := color.cptr()
+	C.DrawRectangleRoundedLines(*crec, croundness, csegments, clineThick, *ccolor)
+}
+
 // DrawTriangle - Draw a color-filled triangle
 func DrawTriangle(v1, v2, v3 Vector2, color Color) {
 	cv1 := v1.cptr()
@@ -216,6 +281,22 @@ func DrawTriangleLines(v1, v2, v3 Vector2, color Color) {
 	C.DrawTriangleLines(*cv1, *cv2, *cv3, *ccolor)
 }
 
+// DrawTriangleFan - Draw a triangle fan defined by points
+func DrawTriangleFan(points []Vector2, color Color) {
+	cpoints := (*C.Vector2)(unsafe.Pointer(&points[0]))
+	cpointsCount := (C.int)(int32(len(points)))
+	ccolor := color.cptr()
+	C.DrawTriangleFan(cpoints, cpointsCount, *ccolor)
+}
+
+// DrawTriangleStrip - Draw a triangle strip defined by points
+func DrawTriangleStrip(points []Vector2, color Color) {
+	cpoints := (*C.Vector2)(unsafe.Pointer(&points[0]))
+	cpointsCount := (C.int)(int32(len(points)))
+	ccolor := color.cptr()
+	C.DrawTriangleStrip(cpoints, cpointsCount, *ccolor)
+}
+
 // DrawPoly - Draw a regular polygon (Vector version)
 func DrawPoly(center Vector2, sides int32, radius, rotation float32, color Color) {
 	ccenter := center.cptr()
@@ -224,6 +305,16 @@ func DrawPoly(center Vector2, sides int32, radius, rotation float32, color Color
 	crotation := (C.float)(rotation)
 	ccolor := color.cptr()
 	C.DrawPoly(*ccenter, csides, cradius, crotation, *ccolor)
+}
+
+// DrawPolyLines - Draw a polygon outline of n sides
+func DrawPolyLines(center Vector2, sides int32, radius, rotation float32, color Color) {
+	ccenter := center.cptr()
+	csides := (C.int)(sides)
+	cradius := (C.float)(radius)
+	crotation := (C.float)(rotation)
+	ccolor := color.cptr()
+	C.DrawPolyLines(*ccenter, csides, cradius, crotation, *ccolor)
 }
 
 // CheckCollisionRecs - Check collision between two rectangles
