@@ -244,6 +244,25 @@ func DrawRectangleLinesEx(rec Rectangle, lineThick int32, color Color) {
 	C.DrawRectangleLinesEx(*crec, clineThick, *ccolor)
 }
 
+// DrawRectangleRounded - Draw rectangle with rounded edges
+func DrawRectangleRounded(rec Rectangle, roundness float32, segments int32, color Color) {
+	crec := rec.cptr()
+	croundness := (C.float)(roundness)
+	csegments := (C.int)(segments)
+	ccolor := color.cptr()
+	C.DrawRectangleRounded(*crec, croundness, csegments, *ccolor)
+}
+
+// DrawRectangleRoundedLines - Draw rectangle with rounded edges outline
+func DrawRectangleRoundedLines(rec Rectangle, roundness float32, segments, lineThick int32, color Color) {
+	crec := rec.cptr()
+	croundness := (C.float)(roundness)
+	csegments := (C.int)(segments)
+	clineThick := (C.int)(lineThick)
+	ccolor := color.cptr()
+	C.DrawRectangleRoundedLines(*crec, croundness, csegments, clineThick, *ccolor)
+}
+
 // DrawTriangle - Draw a color-filled triangle
 func DrawTriangle(v1, v2, v3 Vector2, color Color) {
 	cv1 := v1.cptr()
