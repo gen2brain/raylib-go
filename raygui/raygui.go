@@ -362,8 +362,8 @@ func Label(bounds rl.Rectangle, text string) {
 func LabelEx(bounds rl.Rectangle, text string, textColor, border, inner rl.Color) {
 	b := bounds.ToInt32()
 	// Update control
-	textWidth := rl.MeasureText(text, int32(style[GlobalTextFontsize]))
 	textHeight := int32(style[GlobalTextFontsize])
+	textWidth := rl.MeasureText(text, textHeight)
 
 	if b.Width < textWidth {
 		b.Width = textWidth + int32(style[LabelTextPadding])
@@ -375,7 +375,7 @@ func LabelEx(bounds rl.Rectangle, text string, textColor, border, inner rl.Color
 	// Draw control
 	rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, border)
 	rl.DrawRectangle(b.X+int32(style[LabelBorderWidth]), b.Y+int32(style[LabelBorderWidth]), b.Width-(2*int32(style[LabelBorderWidth])), b.Height-(2*int32(style[LabelBorderWidth])), inner)
-	rl.DrawText(text, b.X+((b.Width/2)-(textWidth/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), textColor)
+	rl.DrawText(text, b.X+((b.Width/2)-(textWidth/2)), b.Y+((b.Height/2)-(textHeight/2)), textHeight, textColor)
 }
 
 // Button - Button element, returns true when clicked
@@ -385,8 +385,8 @@ func Button(bounds rl.Rectangle, text string) bool {
 	mousePoint := rl.GetMousePosition()
 	clicked := false
 
-	textWidth := rl.MeasureText(text, int32(style[GlobalTextFontsize]))
 	textHeight := int32(style[GlobalTextFontsize])
+	textWidth := rl.MeasureText(text, textHeight)
 
 	// Update control
 	if b.Width < textWidth {
@@ -412,19 +412,19 @@ func Button(bounds rl.Rectangle, text string) bool {
 	case Normal:
 		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ButtonDefaultBorderColor])))
 		rl.DrawRectangle(b.X+int32(style[ButtonBorderWidth]), b.Y+int32(style[ButtonBorderWidth]), b.Width-(2*int32(style[ButtonBorderWidth])), b.Height-(2*int32(style[ButtonBorderWidth])), rl.GetColor(int32(style[ButtonDefaultInsideColor])))
-		rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ButtonDefaultTextColor])))
+		rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, textHeight)/2)), b.Y+((b.Height/2)-(textHeight/2)), textHeight, rl.GetColor(int32(style[ButtonDefaultTextColor])))
 		break
 
 	case Focused:
 		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ButtonHoverBorderColor])))
 		rl.DrawRectangle(b.X+int32(style[ButtonBorderWidth]), b.Y+int32(style[ButtonBorderWidth]), b.Width-(2*int32(style[ButtonBorderWidth])), b.Height-(2*int32(style[ButtonBorderWidth])), rl.GetColor(int32(style[ButtonHoverInsideColor])))
-		rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ButtonHoverTextColor])))
+		rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, textHeight)/2)), b.Y+((b.Height/2)-(textHeight/2)), textHeight, rl.GetColor(int32(style[ButtonHoverTextColor])))
 		break
 
 	case Pressed:
 		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ButtonPressedBorderColor])))
 		rl.DrawRectangle(b.X+int32(style[ButtonBorderWidth]), b.Y+int32(style[ButtonBorderWidth]), b.Width-(2*int32(style[ButtonBorderWidth])), b.Height-(2*int32(style[ButtonBorderWidth])), rl.GetColor(int32(style[ButtonPressedInsideColor])))
-		rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ButtonPressedTextColor])))
+		rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, textHeight)/2)), b.Y+((b.Height/2)-(textHeight/2)), textHeight, rl.GetColor(int32(style[ButtonPressedTextColor])))
 		break
 
 	default:
@@ -444,8 +444,8 @@ func ToggleButton(bounds rl.Rectangle, text string, active bool) bool {
 	state := Normal
 	mousePoint := rl.GetMousePosition()
 
-	textWidth := rl.MeasureText(text, int32(style[GlobalTextFontsize]))
 	textHeight := int32(style[GlobalTextFontsize])
+	textWidth := rl.MeasureText(text, textHeight)
 
 	// Update control
 	if b.Width < textWidth {
@@ -472,22 +472,22 @@ func ToggleButton(bounds rl.Rectangle, text string, active bool) bool {
 		if active {
 			rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ToggleActiveBorderColor])))
 			rl.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), rl.GetColor(int32(style[ToggleActiveInsideColor])))
-			rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ToggleDefaultTextColor])))
+			rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, textHeight)/2)), b.Y+((b.Height/2)-(textHeight/2)), textHeight, rl.GetColor(int32(style[ToggleDefaultTextColor])))
 		} else {
 			rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ToggleDefaultBorderColor])))
 			rl.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), rl.GetColor(int32(style[ToggleDefaultInsideColor])))
-			rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ToggleDefaultTextColor])))
+			rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, textHeight)/2)), b.Y+((b.Height/2)-(textHeight/2)), textHeight, rl.GetColor(int32(style[ToggleDefaultTextColor])))
 		}
 		break
 	case Focused:
 		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ToggleHoverBorderColor])))
 		rl.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), rl.GetColor(int32(style[ToggleHoverInsideColor])))
-		rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ToggleHoverTextColor])))
+		rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, textHeight)/2)), b.Y+((b.Height/2)-(textHeight/2)), textHeight, rl.GetColor(int32(style[ToggleHoverTextColor])))
 		break
 	case Pressed:
 		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[TogglePressedBorderColor])))
 		rl.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), rl.GetColor(int32(style[TogglePressedInsideColor])))
-		rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[TogglePressedTextColor])))
+		rl.DrawText(text, b.X+((b.Width/2)-(rl.MeasureText(text, textHeight)/2)), b.Y+((b.Height/2)-(textHeight/2)), textHeight, rl.GetColor(int32(style[TogglePressedTextColor])))
 		break
 	default:
 		break
@@ -509,89 +509,89 @@ func ToggleGroup(bounds rl.Rectangle, toggleText []string, active int) int {
 	return active
 }
 
-// ComboBox - Combo Box element, returns selected item index
+// ComboBox draws a simplified version of a ComboBox allowing the user to select a string
+// from a list accompanied by an N/M counter. The widget does not provide a drop-down/completion
+// or any input support.
 func ComboBox(bounds rl.Rectangle, comboText []string, active int) int {
-	b := bounds.ToInt32()
-	state := Normal
-
-	clicked := false
-	click := rl.NewRectangle(bounds.X+bounds.Width+float32(style[ComboboxPadding]), bounds.Y, float32(style[boundsWidth]), float32(style[boundsHeight]))
-	c := click.ToInt32()
-
-	mousePoint := rl.GetMousePosition()
-
-	textWidth := int32(0)
-	textHeight := int32(style[GlobalTextFontsize])
-
+	// Reject invalid selections and disable rendering.
 	comboCount := len(comboText)
+	if active < 0 || active >= comboCount {
+		rl.TraceLog(rl.LogWarning, "ComboBox active expects 0 <= active <= %d", comboCount)
+		return -1
+	}
 
-	for i := 0; i < comboCount; i++ {
-		if i == active {
-			// Update control
-			textWidth = rl.MeasureText(comboText[i], int32(style[GlobalTextFontsize]))
+	activeText := comboText[active]
 
-			if b.Width < textWidth {
-				b.Width = textWidth + int32(style[ToggleTextPadding])
-			}
-			if b.Height < textHeight {
-				b.Height = textHeight + int32(style[ToggleTextPadding])/2
-			}
+	// style sizing.
+	textHeight := int32(style[GlobalTextFontsize])
+	textWidth := rl.MeasureText(activeText, textHeight)
+	borderWidth := int32(style[ComboboxBorderWidth])
+	textPadding := int32(style[ToggleTextPadding])
 
-			if rl.CheckCollisionPointRec(mousePoint, bounds) || rl.CheckCollisionPointRec(mousePoint, click) {
-				if rl.IsMouseButtonDown(rl.MouseLeftButton) {
-					state = Pressed
-				} else if rl.IsMouseButtonReleased(rl.MouseLeftButton) || rl.IsMouseButtonPressed(rl.MouseLeftButton) {
-					clicked = true
-				} else {
-					state = Focused
-				}
-			}
+	b := bounds.ToInt32()
+	if b.Width < textWidth {
+		b.Width = textWidth + textPadding
+		bounds.Width = float32(b.Width)
+	}
+	if b.Height < textHeight {
+		b.Height = textHeight + textPadding
+		bounds.Height = float32(b.Height)
+	}
 
-			// Draw control
-			switch state {
-			case Normal:
-				rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ComboboxDefaultBorderColor])))
-				rl.DrawRectangle(b.X+int32(style[ComboboxBorderWidth]), b.Y+int32(style[ComboboxBorderWidth]), b.Width-(2*int32(style[ComboboxBorderWidth])), b.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxDefaultInsideColor])))
+	// Identify what the counter is going to look like with max digits so we don't resize it.
+	clickWidth := rl.MeasureText(fmt.Sprintf("%d/%d", comboCount, comboCount), b.Height)
 
-				rl.DrawRectangle(c.X, c.Y, c.Width, c.Height, rl.GetColor(int32(style[ComboboxDefaultBorderColor])))
-				rl.DrawRectangle(c.X+int32(style[ComboboxBorderWidth]), c.Y+int32(style[ComboboxBorderWidth]), c.Width-(2*int32(style[ComboboxBorderWidth])), c.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxDefaultInsideColor])))
-				rl.DrawText(fmt.Sprintf("%d/%d", active+1, comboCount), c.X+((c.Width/2)-(rl.MeasureText(fmt.Sprintf("%d/%d", active+1, comboCount), int32(style[GlobalTextFontsize]))/2)), c.Y+((c.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxDefaultListTextColor])))
-				rl.DrawText(comboText[i], b.X+((b.Width/2)-(rl.MeasureText(comboText[i], int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxDefaultTextColor])))
-				break
-			case Focused:
-				rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ComboboxHoverBorderColor])))
-				rl.DrawRectangle(b.X+int32(style[ComboboxBorderWidth]), b.Y+int32(style[ComboboxBorderWidth]), b.Width-(2*int32(style[ComboboxBorderWidth])), b.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxHoverInsideColor])))
-
-				rl.DrawRectangle(c.X, c.Y, c.Width, c.Height, rl.GetColor(int32(style[ComboboxHoverBorderColor])))
-				rl.DrawRectangle(c.X+int32(style[ComboboxBorderWidth]), c.Y+int32(style[ComboboxBorderWidth]), c.Width-(2*int32(style[ComboboxBorderWidth])), c.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxHoverInsideColor])))
-				rl.DrawText(fmt.Sprintf("%d/%d", active+1, comboCount), c.X+((c.Width/2)-(rl.MeasureText(fmt.Sprintf("%d/%d", active+1, comboCount), int32(style[GlobalTextFontsize]))/2)), c.Y+((c.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxHoverListTextColor])))
-				rl.DrawText(comboText[i], b.X+((b.Width/2)-(rl.MeasureText(comboText[i], int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxHoverTextColor])))
-				break
-			case Pressed:
-				rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ComboboxPressedBorderColor])))
-				rl.DrawRectangle(b.X+int32(style[ComboboxBorderWidth]), b.Y+int32(style[ComboboxBorderWidth]), b.Width-(2*int32(style[ComboboxBorderWidth])), b.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxPressedInsideColor])))
-
-				rl.DrawRectangle(c.X, c.Y, c.Width, c.Height, rl.GetColor(int32(style[ComboboxPressedListBorderColor])))
-				rl.DrawRectangle(c.X+int32(style[ComboboxBorderWidth]), c.Y+int32(style[ComboboxBorderWidth]), c.Width-(2*int32(style[ComboboxBorderWidth])), c.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxPressedListInsideColor])))
-				rl.DrawText(fmt.Sprintf("%d/%d", active+1, comboCount), c.X+((c.Width/2)-(rl.MeasureText(fmt.Sprintf("%d/%d", active+1, comboCount), int32(style[GlobalTextFontsize]))/2)), c.Y+((c.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxPressedListTextColor])))
-				rl.DrawText(comboText[i], b.X+((b.Width/2)-(rl.MeasureText(comboText[i], int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxPressedTextColor])))
-				break
-			default:
-				break
-			}
-
-			if clicked {
-				rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[ComboboxPressedBorderColor])))
-				rl.DrawRectangle(b.X+int32(style[ComboboxBorderWidth]), b.Y+int32(style[ComboboxBorderWidth]), b.Width-(2*int32(style[ComboboxBorderWidth])), b.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxPressedInsideColor])))
-
-				rl.DrawRectangle(c.X, c.Y, c.Width, c.Height, rl.GetColor(int32(style[ComboboxPressedListBorderColor])))
-				rl.DrawRectangle(c.X+int32(style[ComboboxBorderWidth]), c.Y+int32(style[ComboboxBorderWidth]), c.Width-(2*int32(style[ComboboxBorderWidth])), c.Height-(2*int32(style[ComboboxBorderWidth])), rl.GetColor(int32(style[ComboboxPressedListInsideColor])))
-				rl.DrawText(fmt.Sprintf("%d/%d", active+1, comboCount), c.X+((c.Width/2)-(rl.MeasureText(fmt.Sprintf("%d/%d", active+1, comboCount), int32(style[GlobalTextFontsize]))/2)), c.Y+((c.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxPressedListTextColor])))
-				rl.DrawText(comboText[i], b.X+((b.Width/2)-(rl.MeasureText(comboText[i], int32(style[GlobalTextFontsize]))/2)), b.Y+((b.Height/2)-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[ComboboxPressedTextColor])))
-			}
-
+	click := rl.NewRectangle(bounds.X+bounds.Width+float32(style[ComboboxPadding]), bounds.Y, float32(clickWidth), float32(b.Height))
+	c := click.ToInt32()
+	mousePoint := rl.GetMousePosition()
+	state := Normal
+	if rl.CheckCollisionPointRec(mousePoint, bounds) || rl.CheckCollisionPointRec(mousePoint, click) {
+		if rl.IsMouseButtonDown(rl.MouseLeftButton) {
+			state = Pressed
+		} else if rl.IsMouseButtonReleased(rl.MouseLeftButton) || rl.IsMouseButtonPressed(rl.MouseLeftButton) {
+			state = Pressed
+		} else {
+			state = Focused
 		}
 	}
+
+	// Draw control
+	var borderColor, insideColor, listColor, textColor rl.Color
+
+	switch state {
+	case Normal:
+		borderColor = rl.GetColor(int32(style[ComboboxDefaultBorderColor]))
+		insideColor = rl.GetColor(int32(style[ComboboxDefaultInsideColor]))
+		listColor = rl.GetColor(int32(style[ComboboxDefaultListTextColor]))
+		textColor = rl.GetColor(int32(style[ComboboxDefaultTextColor]))
+
+	case Focused:
+		borderColor = rl.GetColor(int32(style[ComboboxHoverBorderColor]))
+		insideColor = rl.GetColor(int32(style[ComboboxHoverInsideColor]))
+		listColor = rl.GetColor(int32(style[ComboboxHoverListTextColor]))
+		textColor = rl.GetColor(int32(style[ComboboxHoverTextColor]))
+
+	case Pressed:
+		borderColor = rl.GetColor(int32(style[ComboboxPressedBorderColor]))
+		insideColor = rl.GetColor(int32(style[ComboboxPressedInsideColor]))
+		listColor = rl.GetColor(int32(style[ComboboxPressedListTextColor]))
+		textColor = rl.GetColor(int32(style[ComboboxPressedTextColor]))
+
+	default:
+		rl.TraceLog(rl.LogWarning, "ComboBox in unrecognized state %d", state)
+		return -1
+	}
+
+	// Render the box itself
+	rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, borderColor)
+	rl.DrawRectangle(b.X+borderWidth, b.Y+borderWidth, b.Width-(2*borderWidth), b.Height-(2*borderWidth), insideColor)
+	rl.DrawText(activeText, b.X+((b.Width/2)-(rl.MeasureText(activeText, textHeight)/2)), b.Y+((b.Height/2)-(textHeight/2)), textHeight, textColor)
+
+	// Render the accompanying "clicks" box showing the element counter.
+	rl.DrawRectangle(c.X, c.Y, c.Width, c.Height, borderColor)
+	rl.DrawRectangle(c.X+borderWidth, c.Y+borderWidth, c.Width-(2*borderWidth), c.Height-(2*borderWidth), insideColor)
+	companionText := fmt.Sprintf("%d/%d", active+1, comboCount)
+	rl.DrawText(companionText, c.X+((c.Width/2)-(rl.MeasureText(companionText, textHeight)/2)), c.Y+((c.Height/2)-(textHeight/2)), textHeight, listColor)
 
 	if rl.CheckCollisionPointRec(mousePoint, bounds) || rl.CheckCollisionPointRec(mousePoint, click) {
 		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
@@ -822,7 +822,8 @@ func Spinner(bounds rl.Rectangle, value, minValue, maxValue int) int {
 	leftButtonBound := rl.RectangleInt32{b.X, b.Y, b.Width / 4, b.Height}
 	rightButtonBound := rl.RectangleInt32{b.X + b.Width - b.Width/4 + 1, b.Y, b.Width / 4, b.Height}
 
-	textWidth := rl.MeasureText(fmt.Sprintf("%d", value), int32(style[GlobalTextFontsize]))
+	textHeight := int32(style[GlobalTextFontsize])
+	textWidth := rl.MeasureText(fmt.Sprintf("%d", value), textHeight)
 
 	buttonSide := 0
 
@@ -907,13 +908,13 @@ func Spinner(bounds rl.Rectangle, value, minValue, maxValue int) int {
 		rl.DrawRectangle(rightButtonBound.X, rightButtonBound.Y, rightButtonBound.Width, rightButtonBound.Height, rl.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
 		rl.DrawRectangle(rightButtonBound.X+2, rightButtonBound.Y+2, rightButtonBound.Width-4, rightButtonBound.Height-4, rl.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
 
-		rl.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(rl.MeasureText("+", int32(style[GlobalTextFontsize])))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
-		rl.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(rl.MeasureText("-", int32(style[GlobalTextFontsize])))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
+		rl.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(rl.MeasureText("+", textHeight))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(textHeight/2)), textHeight, rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
+		rl.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(rl.MeasureText("-", textHeight))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(textHeight/2)), textHeight, rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
 
 		rl.DrawRectangle(labelBoxBound.X, labelBoxBound.Y, labelBoxBound.Width, labelBoxBound.Height, rl.GetColor(int32(style[SpinnerLabelBorderColor])))
 		rl.DrawRectangle(labelBoxBound.X+1, labelBoxBound.Y+1, labelBoxBound.Width-2, labelBoxBound.Height-2, rl.GetColor(int32(style[SpinnerLabelInsideColor])))
 
-		rl.DrawText(fmt.Sprintf("%d", value), labelBoxBound.X+(labelBoxBound.Width/2-textWidth/2), labelBoxBound.Y+(labelBoxBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerDefaultTextColor])))
+		rl.DrawText(fmt.Sprintf("%d", value), labelBoxBound.X+(labelBoxBound.Width/2-textWidth/2), labelBoxBound.Y+(labelBoxBound.Height/2-(textHeight/2)), textHeight, rl.GetColor(int32(style[SpinnerDefaultTextColor])))
 		break
 	case Focused:
 		if buttonSide == 1 {
@@ -923,8 +924,8 @@ func Spinner(bounds rl.Rectangle, value, minValue, maxValue int) int {
 			rl.DrawRectangle(rightButtonBound.X, rightButtonBound.Y, rightButtonBound.Width, rightButtonBound.Height, rl.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
 			rl.DrawRectangle(rightButtonBound.X+2, rightButtonBound.Y+2, rightButtonBound.Width-4, rightButtonBound.Height-4, rl.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
 
-			rl.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(rl.MeasureText("+", int32(style[GlobalTextFontsize])))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerHoverSymbolColor])))
-			rl.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(rl.MeasureText("-", int32(style[GlobalTextFontsize])))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
+			rl.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(rl.MeasureText("+", textHeight))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(textHeight/2)), textHeight, rl.GetColor(int32(style[SpinnerHoverSymbolColor])))
+			rl.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(rl.MeasureText("-", textHeight))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(textHeight/2)), textHeight, rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
 		} else if buttonSide == 2 {
 			rl.DrawRectangle(leftButtonBound.X, leftButtonBound.Y, leftButtonBound.Width, leftButtonBound.Height, rl.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
 			rl.DrawRectangle(leftButtonBound.X+2, leftButtonBound.Y+2, leftButtonBound.Width-4, leftButtonBound.Height-4, rl.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
@@ -932,14 +933,14 @@ func Spinner(bounds rl.Rectangle, value, minValue, maxValue int) int {
 			rl.DrawRectangle(rightButtonBound.X, rightButtonBound.Y, rightButtonBound.Width, rightButtonBound.Height, rl.GetColor(int32(style[SpinnerHoverButtonBorderColor])))
 			rl.DrawRectangle(rightButtonBound.X+2, rightButtonBound.Y+2, rightButtonBound.Width-4, rightButtonBound.Height-4, rl.GetColor(int32(style[SpinnerHoverButtonInsideColor])))
 
-			rl.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(rl.MeasureText("+", int32(style[GlobalTextFontsize])))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
-			rl.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(rl.MeasureText("-", int32(style[GlobalTextFontsize])))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerHoverSymbolColor])))
+			rl.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(rl.MeasureText("+", textHeight))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(textHeight/2)), textHeight, rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
+			rl.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(rl.MeasureText("-", textHeight))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(textHeight/2)), textHeight, rl.GetColor(int32(style[SpinnerHoverSymbolColor])))
 		}
 
 		rl.DrawRectangle(labelBoxBound.X, labelBoxBound.Y, labelBoxBound.Width, labelBoxBound.Height, rl.GetColor(int32(style[SpinnerLabelBorderColor])))
 		rl.DrawRectangle(labelBoxBound.X+1, labelBoxBound.Y+1, labelBoxBound.Width-2, labelBoxBound.Height-2, rl.GetColor(int32(style[SpinnerLabelInsideColor])))
 
-		rl.DrawText(fmt.Sprintf("%d", value), labelBoxBound.X+(labelBoxBound.Width/2-textWidth/2), labelBoxBound.Y+(labelBoxBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerHoverTextColor])))
+		rl.DrawText(fmt.Sprintf("%d", value), labelBoxBound.X+(labelBoxBound.Width/2-textWidth/2), labelBoxBound.Y+(labelBoxBound.Height/2-(textHeight/2)), textHeight, rl.GetColor(int32(style[SpinnerHoverTextColor])))
 		break
 	case Pressed:
 		if buttonSide == 1 {
@@ -949,8 +950,8 @@ func Spinner(bounds rl.Rectangle, value, minValue, maxValue int) int {
 			rl.DrawRectangle(rightButtonBound.X, rightButtonBound.Y, rightButtonBound.Width, rightButtonBound.Height, rl.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
 			rl.DrawRectangle(rightButtonBound.X+2, rightButtonBound.Y+2, rightButtonBound.Width-4, rightButtonBound.Height-4, rl.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
 
-			rl.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(rl.MeasureText("+", int32(style[GlobalTextFontsize])))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerPressedSymbolColor])))
-			rl.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(rl.MeasureText("-", int32(style[GlobalTextFontsize])))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
+			rl.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(rl.MeasureText("+", textHeight))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(textHeight/2)), textHeight, rl.GetColor(int32(style[SpinnerPressedSymbolColor])))
+			rl.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(rl.MeasureText("-", textHeight))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(textHeight/2)), textHeight, rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
 		} else if buttonSide == 2 {
 			rl.DrawRectangle(leftButtonBound.X, leftButtonBound.Y, leftButtonBound.Width, leftButtonBound.Height, rl.GetColor(int32(style[SpinnerDefaultButtonBorderColor])))
 			rl.DrawRectangle(leftButtonBound.X+2, leftButtonBound.Y+2, leftButtonBound.Width-4, leftButtonBound.Height-4, rl.GetColor(int32(style[SpinnerDefaultButtonInsideColor])))
@@ -958,14 +959,14 @@ func Spinner(bounds rl.Rectangle, value, minValue, maxValue int) int {
 			rl.DrawRectangle(rightButtonBound.X, rightButtonBound.Y, rightButtonBound.Width, rightButtonBound.Height, rl.GetColor(int32(style[SpinnerPressedButtonBorderColor])))
 			rl.DrawRectangle(rightButtonBound.X+2, rightButtonBound.Y+2, rightButtonBound.Width-4, rightButtonBound.Height-4, rl.GetColor(int32(style[SpinnerPressedButtonInsideColor])))
 
-			rl.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(rl.MeasureText("+", int32(style[GlobalTextFontsize])))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
-			rl.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(rl.MeasureText("-", int32(style[GlobalTextFontsize])))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerPressedSymbolColor])))
+			rl.DrawText("-", leftButtonBound.X+(leftButtonBound.Width/2-(rl.MeasureText("+", textHeight))/2), leftButtonBound.Y+(leftButtonBound.Height/2-(textHeight/2)), textHeight, rl.GetColor(int32(style[SpinnerDefaultSymbolColor])))
+			rl.DrawText("+", rightButtonBound.X+(rightButtonBound.Width/2-(rl.MeasureText("-", textHeight))/2), rightButtonBound.Y+(rightButtonBound.Height/2-(textHeight/2)), textHeight, rl.GetColor(int32(style[SpinnerPressedSymbolColor])))
 		}
 
 		rl.DrawRectangle(labelBoxBound.X, labelBoxBound.Y, labelBoxBound.Width, labelBoxBound.Height, rl.GetColor(int32(style[SpinnerLabelBorderColor])))
 		rl.DrawRectangle(labelBoxBound.X+1, labelBoxBound.Y+1, labelBoxBound.Width-2, labelBoxBound.Height-2, rl.GetColor(int32(style[SpinnerLabelInsideColor])))
 
-		rl.DrawText(fmt.Sprintf("%d", value), labelBoxBound.X+(labelBoxBound.Width/2-textWidth/2), labelBoxBound.Y+(labelBoxBound.Height/2-(int32(style[GlobalTextFontsize])/2)), int32(style[GlobalTextFontsize]), rl.GetColor(int32(style[SpinnerPressedTextColor])))
+		rl.DrawText(fmt.Sprintf("%d", value), labelBoxBound.X+(labelBoxBound.Width/2-textWidth/2), labelBoxBound.Y+(labelBoxBound.Height/2-(textHeight/2)), textHeight, rl.GetColor(int32(style[SpinnerPressedTextColor])))
 		break
 	default:
 		break
