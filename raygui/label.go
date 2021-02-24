@@ -12,15 +12,10 @@ func LabelEx(bounds rl.Rectangle, text string, textColor, border, inner rl.Color
 	textHeight := GetStyle32(GlobalTextFontsize)
 	textWidth := rl.MeasureText(text, textHeight)
 
-	b := bounds.ToInt32()
-	if b.Width < textWidth {
-		b.Width = textWidth + GetStyle32(LabelTextPadding)
-	}
-	if b.Height < textHeight {
-		b.Height = textHeight + GetStyle32(LabelTextPadding)/2
-	}
+	ConstrainRectangle(&bounds, textWidth, textWidth + GetStyle32(LabelTextPadding), textHeight, textHeight + GetStyle32(LabelTextPadding) / 2)
 
 	// Draw control
+	b := bounds.ToInt32()
 	DrawBorderedRectangle(b, GetStyle32(LabelBorderWidth), border, inner)
 	rl.DrawText(text, b.X+((b.Width/2)-(textWidth/2)), b.Y+((b.Height/2)-(textHeight/2)), textHeight, textColor)
 }
