@@ -2,44 +2,38 @@ package raygui
 
 import "github.com/gen2brain/raylib-go/raylib"
 
+// checkboxColoring describes the per-state properties for a CheckBox control.
+type checkboxColoring struct {
+	Border, Inside Property
+}
+
+// checkboxColors lists the styling for each supported state.
+var checkboxColors = map[ControlState]checkboxColoring{
+	Normal: {CheckboxDefaultBorderColor, CheckboxDefaultInsideColor},
+	Clicked: {CheckboxDefaultBorderColor, CheckboxDefaultInsideColor},
+	Pressed: {CheckboxClickBorderColor, CheckboxClickInsideColor},
+	Focused: {CheckboxHoverBorderColor, CheckboxHoverInsideColor},
+}
+
 // CheckBox - Check Box element, returns true when active
 func CheckBox(bounds rl.Rectangle, checked bool) bool {
-	b := bounds.ToInt32()
-	state := Normal
-	mousePoint := rl.GetMousePosition()
+	state := GetInteractionState(bounds)
+	colors, exists := checkboxColors[state]
+	if !exists {
+		return checked
+	}
 
 	// Update control
-	if rl.CheckCollisionPointRec(mousePoint, bounds) {
-		if rl.IsMouseButtonDown(rl.MouseLeftButton) {
-			state = Pressed
-		} else if rl.IsMouseButtonReleased(rl.MouseLeftButton) || rl.IsMouseButtonPressed(rl.MouseLeftButton) {
-			state = Normal
-			checked = !checked
-		} else {
-			state = Focused
-		}
+	if state == Clicked {
+		checked = !checked
 	}
 
-	// Draw control
-	switch state {
-	case Normal:
-		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[CheckboxDefaultBorderColor])))
-		rl.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), rl.GetColor(int32(style[CheckboxDefaultInsideColor])))
-		break
-	case Focused:
-		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[CheckboxHoverBorderColor])))
-		rl.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), rl.GetColor(int32(style[CheckboxHoverInsideColor])))
-		break
-	case Pressed:
-		rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[CheckboxClickBorderColor])))
-		rl.DrawRectangle(b.X+int32(style[ToggleBorderWidth]), b.Y+int32(style[ToggleBorderWidth]), b.Width-(2*int32(style[ToggleBorderWidth])), b.Height-(2*int32(style[ToggleBorderWidth])), rl.GetColor(int32(style[CheckboxClickInsideColor])))
-		break
-	default:
-		break
-	}
-
+	// Render control
+	box := bounds.ToInt32()
+	DrawBorderedRectangle(box, GetStyle32(ToggleBorderWidth), GetStyleColor(colors.Border), GetStyleColor(colors.Inside))
 	if checked {
-		rl.DrawRectangle(b.X+int32(style[CheckboxInsideWidth]), b.Y+int32(style[CheckboxInsideWidth]), b.Width-(2*int32(style[CheckboxInsideWidth])), b.Height-(2*int32(style[CheckboxInsideWidth])), rl.GetColor(int32(style[CheckboxDefaultActiveColor])))
+		// Show the inner button.
+		DrawInsetRectangle(box, GetStyle32(CheckboxInsideWidth), GetStyleColor(CheckboxDefaultActiveColor))
 	}
 
 	return checked
