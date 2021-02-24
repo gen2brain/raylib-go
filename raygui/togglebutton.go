@@ -8,8 +8,8 @@ type togglebuttonColoring struct {
 }
 
 // togglebuttonColors lists the styling for each supported state.
-var togglebuttonColors = map[ControlState]togglebuttonColoring {
-	Normal:  {ToggleDefaultBorderColor, ToggleDefaultInsideColor, ToggleDefaultTextColor},
+var togglebuttonColors = map[ControlState]togglebuttonColoring{
+	Normal: {ToggleDefaultBorderColor, ToggleDefaultInsideColor, ToggleDefaultTextColor},
 	// Hijacking 'Clicked' for the 'active' state.
 	Clicked: {ToggleActiveBorderColor, ToggleActiveInsideColor, ToggleDefaultTextColor},
 	Pressed: {TogglePressedBorderColor, TogglePressedInsideColor, TogglePressedTextColor},
@@ -21,7 +21,7 @@ func ToggleButton(bounds rl.Rectangle, text string, active bool) bool {
 	textHeight := int32(style[GlobalTextFontsize])
 	textWidth := rl.MeasureText(text, textHeight)
 
-	ConstrainRectangle(&bounds, textWidth, textWidth + GetStyle32(ToggleTextPadding), textHeight, textHeight + GetStyle32(ToggleTextPadding))
+	ConstrainRectangle(&bounds, textWidth, textWidth+GetStyle32(ToggleTextPadding), textHeight, textHeight+GetStyle32(ToggleTextPadding))
 
 	state := GetInteractionState(bounds)
 	if state == Clicked {
