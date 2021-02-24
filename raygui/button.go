@@ -20,13 +20,7 @@ func Button(bounds rl.Rectangle, text string) bool {
 	textHeight := int32(style[GlobalTextFontsize])
 	textWidth := rl.MeasureText(text, textHeight)
 
-	// Update control
-	if int32(bounds.Height) < textHeight {
-		bounds.Height = float32(textHeight + GetStyle32(ButtonTextPadding)/2)
-	}
-	if int32(bounds.Width) < textWidth {
-		bounds.Width = float32(textWidth + GetStyle32(ButtonTextPadding))
-	}
+	ConstrainRectangle(&bounds, textWidth, textWidth+GetStyle32(ButtonTextPadding), textHeight, textHeight+GetStyle32(ButtonTextPadding)/2)
 
 	// Determine what state we're in and whether its valid.
 	state := GetInteractionState(bounds)
