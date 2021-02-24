@@ -5,6 +5,22 @@ import (
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
+// comboboxColoring describes the per-state colors for a Combobox control.
+type comboboxColoring struct {
+	Border Property
+	Inside Property
+	List   Property
+	Text   Property
+}
+
+// comboboxColors lists the styling for each supported state.
+var comboboxColors = map[ControlState]comboboxColoring {
+	Normal: {ComboboxDefaultBorderColor, ComboboxDefaultInsideColor, ComboboxDefaultListTextColor, ComboboxDefaultTextColor},
+	Clicked: {ComboboxDefaultBorderColor, ComboboxDefaultInsideColor, ComboboxDefaultListTextColor, ComboboxDefaultTextColor},
+	Focused: {ComboboxHoverBorderColor, ComboboxHoverInsideColor, ComboboxHoverListTextColor, ComboboxHoverTextColor},
+	Pressed: {ComboboxPressedBorderColor, ComboboxPressedInsideColor, ComboboxPressedListTextColor, ComboboxPressedTextColor},
+}
+
 // ComboBox draws a simplified version of a ComboBox allowing the user to select a string
 // from a list accompanied by an N/M counter. The widget does not provide a drop-down/completion
 // or any input support.
@@ -16,87 +32,48 @@ func ComboBox(bounds rl.Rectangle, comboText []string, active int) int {
 		return -1
 	}
 
+	// Calculate text dimensions.
+	textHeight := GetStyle32(GlobalTextFontsize)
 	activeText := comboText[active]
-
-	// style sizing.
-	textHeight := int32(style[GlobalTextFontsize])
 	textWidth := rl.MeasureText(activeText, textHeight)
-	borderWidth := int32(style[ComboboxBorderWidth])
-	textPadding := int32(style[ToggleTextPadding])
 
+	// Ensure box is large enough.
+	if int32(bounds.Width) < textWidth {
+		bounds.Width = float32(textWidth + GetStyle32(ToggleTextPadding))
+	}
+	if int32(bounds.Height) < textHeight {
+		bounds.Height = float32(textHeight + GetStyle32(ToggleTextPadding))
+	}
 	b := bounds.ToInt32()
-	if b.Width < textWidth {
-		b.Width = textWidth + textPadding
-		bounds.Width = float32(b.Width)
-	}
-	if b.Height < textHeight {
-		b.Height = textHeight + textPadding
-		bounds.Height = float32(b.Height)
-	}
 
-	// Identify what the counter is going to look like with max digits so we don't resize it.
+	// Generate the worst-case sizing of the counter so we can avoid resizing it as the numbers go up/down.
 	clickWidth := rl.MeasureText(fmt.Sprintf("%d/%d", comboCount, comboCount), b.Height)
 
-	click := rl.NewRectangle(bounds.X+bounds.Width+float32(style[ComboboxPadding]), bounds.Y, float32(clickWidth), float32(b.Height))
-	c := click.ToInt32()
-	mousePoint := rl.GetMousePosition()
-	state := Normal
-	if rl.CheckCollisionPointRec(mousePoint, bounds) || rl.CheckCollisionPointRec(mousePoint, click) {
-		if rl.IsMouseButtonDown(rl.MouseLeftButton) {
-			state = Pressed
-		} else if rl.IsMouseButtonReleased(rl.MouseLeftButton) || rl.IsMouseButtonPressed(rl.MouseLeftButton) {
-			state = Pressed
-		} else {
-			state = Focused
-		}
+	// Counter shows the index of the selection and the maximum number, e.g. "1/3".
+	counter := rl.NewRectangle(bounds.X+bounds.Width+float32(style[ComboboxPadding]), bounds.Y, float32(clickWidth), float32(b.Height))
+	c := counter.ToInt32()
+
+	// Determine if the user is interacting with the control, and if so, which state it is in.
+	state := GetInteractionState(bounds, counter)
+	colors, exists := comboboxColors[state]
+	if !exists {
+		return active
 	}
 
-	// Draw control
-	var borderColor, insideColor, listColor, textColor rl.Color
-
-	switch state {
-	case Normal:
-		borderColor = rl.GetColor(int32(style[ComboboxDefaultBorderColor]))
-		insideColor = rl.GetColor(int32(style[ComboboxDefaultInsideColor]))
-		listColor = rl.GetColor(int32(style[ComboboxDefaultListTextColor]))
-		textColor = rl.GetColor(int32(style[ComboboxDefaultTextColor]))
-
-	case Focused:
-		borderColor = rl.GetColor(int32(style[ComboboxHoverBorderColor]))
-		insideColor = rl.GetColor(int32(style[ComboboxHoverInsideColor]))
-		listColor = rl.GetColor(int32(style[ComboboxHoverListTextColor]))
-		textColor = rl.GetColor(int32(style[ComboboxHoverTextColor]))
-
-	case Pressed:
-		borderColor = rl.GetColor(int32(style[ComboboxPressedBorderColor]))
-		insideColor = rl.GetColor(int32(style[ComboboxPressedInsideColor]))
-		listColor = rl.GetColor(int32(style[ComboboxPressedListTextColor]))
-		textColor = rl.GetColor(int32(style[ComboboxPressedTextColor]))
-
-	default:
-		rl.TraceLog(rl.LogWarning, "ComboBox in unrecognized state %d", state)
-		return -1
+	// Update the control when the user releases the mouse over it.
+	if state == Clicked {
+		// increment but wrap to 0 on reaching end-of-list.
+		active = (active + 1) % comboCount
 	}
 
 	// Render the box itself
-	rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, borderColor)
-	rl.DrawRectangle(b.X+borderWidth, b.Y+borderWidth, b.Width-(2*borderWidth), b.Height-(2*borderWidth), insideColor)
-	rl.DrawText(activeText, b.X+((b.Width/2)-(rl.MeasureText(activeText, textHeight)/2)), b.Y+((b.Height/2)-(textHeight/2)), textHeight, textColor)
+	DrawBorderedRectangle(b, GetStyle32(ComboboxBorderWidth), GetStyleColor(colors.Border), GetStyleColor(colors.Inside))
+	rl.DrawText(activeText, b.X+((b.Width/2)-(rl.MeasureText(activeText, textHeight)/2)), b.Y+((b.Height/2)-(textHeight/2)), textHeight, GetStyleColor(colors.Text))
 
 	// Render the accompanying "clicks" box showing the element counter.
-	rl.DrawRectangle(c.X, c.Y, c.Width, c.Height, borderColor)
-	rl.DrawRectangle(c.X+borderWidth, c.Y+borderWidth, c.Width-(2*borderWidth), c.Height-(2*borderWidth), insideColor)
-	companionText := fmt.Sprintf("%d/%d", active+1, comboCount)
-	rl.DrawText(companionText, c.X+((c.Width/2)-(rl.MeasureText(companionText, textHeight)/2)), c.Y+((c.Height/2)-(textHeight/2)), textHeight, listColor)
-
-	if rl.CheckCollisionPointRec(mousePoint, bounds) || rl.CheckCollisionPointRec(mousePoint, click) {
-		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
-			active++
-			if active >= comboCount {
-				active = 0
-			}
-		}
-	}
+	DrawBorderedRectangle(c, GetStyle32(ComboboxBorderWidth), GetStyleColor(colors.Border), GetStyleColor(colors.Inside))
+	counterText := fmt.Sprintf("%d/%d", active+1, comboCount)
+	rl.DrawText(counterText, c.X+((c.Width/2)-(rl.MeasureText(counterText, textHeight)/2)), c.Y+((c.Height/2)-(textHeight/2)), textHeight, GetStyleColor(colors.List))
 
 	return active
 }
