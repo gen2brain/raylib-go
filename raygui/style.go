@@ -382,6 +382,11 @@ func SetStyleProperty(guiProperty Property, value int64) {
 	style[guiProperty] = value
 }
 
+// SetStyleColor - Set one style property to a color value
+func SetStyleColor(guiProperty Property, value rl.Color) {
+	style[guiProperty] = int64(rl.ColorToInt(value))
+}
+
 // GetStyleProperty - Get one style property
 func GetStyleProperty(guiProperty Property) int64 {
 	return style[int(guiProperty)]
