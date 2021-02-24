@@ -38,12 +38,7 @@ func ComboBox(bounds rl.Rectangle, comboText []string, active int) int {
 	textWidth := rl.MeasureText(activeText, textHeight)
 
 	// Ensure box is large enough.
-	if int32(bounds.Width) < textWidth {
-		bounds.Width = float32(textWidth + GetStyle32(ToggleTextPadding))
-	}
-	if int32(bounds.Height) < textHeight {
-		bounds.Height = float32(textHeight + GetStyle32(ToggleTextPadding))
-	}
+	ConstrainRectangle(&bounds, textWidth, textWidth + GetStyle32(ToggleTextPadding), textHeight, textHeight + GetStyle32(ToggleTextPadding))
 	b := bounds.ToInt32()
 
 	// Generate the worst-case sizing of the counter so we can avoid resizing it as the numbers go up/down.
