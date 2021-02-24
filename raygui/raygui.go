@@ -46,6 +46,17 @@ func GetInteractionState(rectangles ...rl.Rectangle) ControlState {
 	}
 }
 
+// Constrain rectangle will ensure that if width/height are below given minimums, they will
+// be set to an ideal minimum.
+func ConstrainRectangle(bounds *rl.Rectangle, minWidth, idealWidth, minHeight, idealHeight int32) {
+	if int32(bounds.Width) < minWidth {
+		bounds.Width = float32(idealWidth)
+	}
+	if int32(bounds.Height) < minHeight {
+		bounds.Height = float32(idealHeight)
+	}
+}
+
 // InsetRectangle returns the dimensions of a rectangle inset by a margin within an outer rectangle.
 func InsetRectangle(outer rl.RectangleInt32, inset int32) rl.RectangleInt32 {
 	return rl.RectangleInt32{
