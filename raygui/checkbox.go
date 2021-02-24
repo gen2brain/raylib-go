@@ -9,7 +9,7 @@ type checkboxColoring struct {
 
 // checkboxColors lists the styling for each supported state.
 var checkboxColors = map[ControlState]checkboxColoring{
-	Normal: {CheckboxDefaultBorderColor, CheckboxDefaultInsideColor},
+	Normal:  {CheckboxDefaultBorderColor, CheckboxDefaultInsideColor},
 	Clicked: {CheckboxDefaultBorderColor, CheckboxDefaultInsideColor},
 	Pressed: {CheckboxClickBorderColor, CheckboxClickInsideColor},
 	Focused: {CheckboxHoverBorderColor, CheckboxHoverInsideColor},

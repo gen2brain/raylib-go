@@ -9,8 +9,8 @@ type buttonColoring struct {
 
 // buttonColors lists the styling for each supported state.
 var buttonColors = map[ControlState]buttonColoring{
-	Normal: {ButtonDefaultBorderColor, ButtonDefaultInsideColor, ButtonDefaultTextColor},
-	Clicked:  {ButtonDefaultBorderColor, ButtonDefaultInsideColor, ButtonDefaultTextColor},
+	Normal:  {ButtonDefaultBorderColor, ButtonDefaultInsideColor, ButtonDefaultTextColor},
+	Clicked: {ButtonDefaultBorderColor, ButtonDefaultInsideColor, ButtonDefaultTextColor},
 	Focused: {ButtonHoverBorderColor, ButtonHoverInsideColor, ButtonHoverTextColor},
 	Pressed: {ButtonPressedBorderColor, ButtonPressedInsideColor, ButtonPressedTextColor},
 }

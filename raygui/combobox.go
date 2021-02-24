@@ -14,8 +14,8 @@ type comboboxColoring struct {
 }
 
 // comboboxColors lists the styling for each supported state.
-var comboboxColors = map[ControlState]comboboxColoring {
-	Normal: {ComboboxDefaultBorderColor, ComboboxDefaultInsideColor, ComboboxDefaultListTextColor, ComboboxDefaultTextColor},
+var comboboxColors = map[ControlState]comboboxColoring{
+	Normal:  {ComboboxDefaultBorderColor, ComboboxDefaultInsideColor, ComboboxDefaultListTextColor, ComboboxDefaultTextColor},
 	Clicked: {ComboboxDefaultBorderColor, ComboboxDefaultInsideColor, ComboboxDefaultListTextColor, ComboboxDefaultTextColor},
 	Focused: {ComboboxHoverBorderColor, ComboboxHoverInsideColor, ComboboxHoverListTextColor, ComboboxHoverTextColor},
 	Pressed: {ComboboxPressedBorderColor, ComboboxPressedInsideColor, ComboboxPressedListTextColor, ComboboxPressedTextColor},

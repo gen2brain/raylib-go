@@ -416,4 +416,3 @@ func GetStyle32(property Property) int32 {
 func GetStyleColor(property Property) rl.Color {
 	return rl.GetColor(int32(style[property]))
 }
-

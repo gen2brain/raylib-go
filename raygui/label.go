@@ -9,7 +9,6 @@ func Label(bounds rl.Rectangle, text string) {
 
 // LabelEx - Label element extended, configurable colors
 func LabelEx(bounds rl.Rectangle, text string, textColor, border, inner rl.Color) {
-	// Update control
 	textHeight := GetStyle32(GlobalTextFontsize)
 	textWidth := rl.MeasureText(text, textHeight)
 
