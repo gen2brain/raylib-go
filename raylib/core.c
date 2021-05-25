@@ -566,6 +566,7 @@ static void InitGamepad(void);                          // Init raw gamepad inpu
 static void *GamepadThread(void *arg);                  // Mouse reading thread
 
 #if defined(PLATFORM_DRM)
+typedef unsigned int uint;
 static int FindMatchingConnectorMode(const drmModeConnector *connector, const drmModeModeInfo *mode);                               // Search matching DRM mode in connector's mode list
 static int FindExactConnectorMode(const drmModeConnector *connector, uint width, uint height, uint fps, bool allowInterlaced);      // Search exactly matching DRM connector mode in connector's list
 static int FindNearestConnectorMode(const drmModeConnector *connector, uint width, uint height, uint fps, bool allowInterlaced);    // Search the nearest matching DRM connector mode in connector's list

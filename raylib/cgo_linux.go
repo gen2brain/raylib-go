@@ -1,4 +1,4 @@
-// +build linux,!arm,!arm64
+// +build linux,!drm,!rpi,!android
 
 package rl
 
