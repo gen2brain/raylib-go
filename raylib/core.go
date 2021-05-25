@@ -135,6 +135,18 @@ func SetWindowSize(w, h int) {
 	C.SetWindowSize(cw, ch)
 }
 
+// SetWindowState - Set window configuration state using flags
+func SetWindowState(flags byte) {
+	cflags := (C.uint)(flags)
+	C.SetWindowState(cflags)
+}
+
+// ClearWindowState - Clear window configuration state flags
+func ClearWindowState(flags byte) {
+	cflags := (C.uint)(flags)
+	C.ClearWindowState(cflags)
+}
+
 // GetScreenWidth - Get current screen width
 func GetScreenWidth() int {
 	ret := C.GetScreenWidth()
