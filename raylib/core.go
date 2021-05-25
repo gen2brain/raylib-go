@@ -375,6 +375,22 @@ func GetMouseRay(mousePosition Vector2, camera Camera) Ray {
 	return v
 }
 
+// GetCameraMatrix - Returns camera transform matrix (view matrix)
+func GetCameraMatrix(camera Camera) Matrix {
+	ccamera := camera.cptr()
+	ret := C.GetCameraMatrix(*ccamera)
+	v := newMatrixFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetCameraMatrix2D - Returns camera 2d transform matrix
+func GetCameraMatrix2D(camera Camera2D) Matrix {
+	ccamera := camera.cptr()
+	ret := C.GetCameraMatrix2D(*ccamera)
+	v := newMatrixFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // GetWorldToScreen - Returns the screen space position from a 3d world space position
 func GetWorldToScreen(position Vector3, camera Camera) Vector2 {
 	cposition := position.cptr()
@@ -399,22 +415,6 @@ func GetScreenToWorld2D(position Vector2, camera Camera2D) Vector2 {
 	ccamera := camera.cptr()
 	ret := C.GetScreenToWorld2D(*cposition, *ccamera)
 	v := newVector2FromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// GetCameraMatrix - Returns camera transform matrix (view matrix)
-func GetCameraMatrix(camera Camera) Matrix {
-	ccamera := camera.cptr()
-	ret := C.GetCameraMatrix(*ccamera)
-	v := newMatrixFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// GetCameraMatrix2D - Returns camera 2d transform matrix
-func GetCameraMatrix2D(camera Camera2D) Matrix {
-	ccamera := camera.cptr()
-	ret := C.GetCameraMatrix2D(*ccamera)
-	v := newMatrixFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
