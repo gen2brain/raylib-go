@@ -21,6 +21,11 @@ func (v *Vector3) cptr() *C.Vector3 {
 }
 
 // cptr returns C pointer
+func (v *Vector4) cptr() *C.Vector4 {
+	return (*C.Vector4)(unsafe.Pointer(v))
+}
+
+// cptr returns C pointer
 func (m *Matrix) cptr() *C.Matrix {
 	return (*C.Matrix)(unsafe.Pointer(m))
 }
@@ -445,10 +450,11 @@ func GetTime() float32 {
 	return v
 }
 
-// GetColor - Returns a Color struct from hexadecimal value
-func GetColor(hexValue int32) Color {
-	chexValue := (C.int)(hexValue)
-	ret := C.GetColor(chexValue)
+// Fade - Returns color with alpha applied, alpha goes from 0.0f to 1.0f
+func Fade(color Color, alpha float32) Color {
+	ccolor := color.cptr()
+	calpha := (C.float)(alpha)
+	ret := C.Fade(*ccolor, calpha)
 	v := newColorFromPointer(unsafe.Pointer(&ret))
 	return v
 }
@@ -461,15 +467,6 @@ func ColorToInt(color Color) int32 {
 	return v
 }
 
-// ColorToHSV - Returns HSV values for a Color
-// NOTE: Hue is returned as degrees [0..360]
-func ColorToHSV(color Color) Vector3 {
-	ccolor := color.cptr()
-	ret := C.ColorToHSV(*ccolor)
-	v := newVector3FromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // ColorNormalize - Returns color normalized as float [0..1]
 func ColorNormalize(color Color) Vector4 {
 	result := Vector4{}
@@ -479,6 +476,65 @@ func ColorNormalize(color Color) Vector4 {
 	result.W = float32(color.A) / 255
 
 	return result
+}
+
+// ColorFromNormalized - Returns Color from normalized values [0..1]
+func ColorFromNormalized(normalized Vector4) Color {
+	cnormalized := normalized.cptr()
+	ret := C.ColorFromNormalized(*cnormalized)
+	v := newColorFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// ColorToHSV - Returns HSV values for a Color, hue [0..360], saturation/value [0..1]
+func ColorToHSV(color Color) Vector3 {
+	ccolor := color.cptr()
+	ret := C.ColorToHSV(*ccolor)
+	v := newVector3FromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// ColorFromHSV - Returns a Color from HSV values, hue [0..360], saturation/value [0..1]
+func ColorFromHSV(hue, saturation, value float32) Color {
+	chue := (C.float)(hue)
+	csaturation := (C.float)(saturation)
+	cvalue := (C.float)(value)
+	ret := C.ColorFromHSV(chue, csaturation, cvalue)
+	v := newColorFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// ColorAlpha - Returns color with alpha applied, alpha goes from 0.0f to 1.0f
+func ColorAlpha(color Color, alpha float32) Color {
+	return Fade(color, alpha)
+}
+
+// ColorAlphaBlend - Returns src alpha-blended into dst color with tint
+func ColorAlphaBlend(src, dst, tint Color) Color {
+	csrc := src.cptr()
+	cdst := dst.cptr()
+	ctint := tint.cptr()
+	ret := C.ColorAlphaBlend(*csrc, *cdst, *ctint)
+	v := newColorFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetColor - Returns a Color struct from hexadecimal value
+func GetColor(hexValue int32) Color {
+	chexValue := (C.int)(hexValue)
+	ret := C.GetColor(chexValue)
+	v := newColorFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetPixelDataSize - Get pixel data size in bytes for certain format
+func GetPixelDataSize(width, height, format int32) int32 {
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	cformat := (C.int)(format)
+	ret := C.GetPixelDataSize(cwidth, cheight, cformat)
+	v := (int32)(ret)
+	return v
 }
 
 // Vector3ToFloat - Converts Vector3 to float32 slice
@@ -521,15 +577,6 @@ func GetRandomValue(min, max int32) int32 {
 	cmax := (C.int)(max)
 	ret := C.GetRandomValue(cmin, cmax)
 	v := (int32)(ret)
-	return v
-}
-
-// Fade - Color fade-in or fade-out, alpha goes from 0.0f to 1.0f
-func Fade(color Color, alpha float32) Color {
-	ccolor := color.cptr()
-	calpha := (C.float)(alpha)
-	ret := C.Fade(*ccolor, calpha)
-	v := newColorFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -689,6 +736,15 @@ func GetGamepadAxisMovement(gamepad, axis int32) float32 {
 	caxis := (C.int)(axis)
 	ret := C.GetGamepadAxisMovement(cgamepad, caxis)
 	v := (float32)(ret)
+	return v
+}
+
+// SetGamepadMappings - Set internal gamepad mappings (SDL_GameControllerDB)
+func SetGamepadMapping(mappings string) int32 {
+	cmappings := C.CString(mappings)
+	defer C.free(unsafe.Pointer(cmappings))
+	ret := C.SetGamepadMappings(cmappings)
+	v := (int32)(ret)
 	return v
 }
 

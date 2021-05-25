@@ -123,15 +123,6 @@ func GetImageData(img *Image) []Color {
 	return (*[1 << 24]Color)(unsafe.Pointer(ret))[0 : img.Width*img.Height]
 }
 
-// GetPixelDataSize - Get pixel data size in bytes (image or texture)
-func GetPixelDataSize(width, height, format int32) int32 {
-	cwidth := (C.int)(width)
-	cheight := (C.int)(height)
-	cformat := (C.int)(format)
-	ret := C.GetPixelDataSize(cwidth, cheight, cformat)
-	return int32(ret)
-}
-
 // GetTextureData - Get pixel data from GPU texture and return an Image
 func GetTextureData(texture Texture2D) *Image {
 	ctexture := texture.cptr()
