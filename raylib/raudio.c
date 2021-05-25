@@ -1,3 +1,5 @@
+// +build !noaudio
+
 /**********************************************************************************************
 *
 *   raudio v1.0 - A simple and easy-to-use audio library based on miniaudio
