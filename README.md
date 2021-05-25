@@ -53,10 +53,12 @@ You can also build binary in [MSYS2](https://msys2.github.io/) shell.
 
 ### Build tags
 
+* `drm` - build for Linux native mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM)
+* `rpi` - build for Raspberry Pi platform (PLATFORM_RPI)
+* `wayland` - build against Wayland libraries
 * `noaudio` - disables audio functions
 * `opengl21` - uses OpenGL 2.1 backend (default is 3.3 on desktop)
 * `opengl11` - uses OpenGL 1.1 backend (pseudo OpenGL 1.1 style)
-* `wayland` - builds against Wayland libraries
 
 ### Documentation
 
