@@ -1,6 +1,6 @@
 /**********************************************************************************************
 *
-*   raudio - A simple and easy-to-use audio library based on miniaudio
+*   raudio v1.0 - A simple and easy-to-use audio library based on miniaudio
 *
 *   FEATURES:
 *       - Manage audio device (init/close)
@@ -31,7 +31,7 @@
 *
 *   LICENSE: zlib/libpng
 *
-*   Copyright (c) 2014-2020 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2014-2021 Ramon Santamaria (@raysan5)
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -138,13 +138,14 @@ void SetMasterVolume(float volume);                             // Set master vo
 
 // Wave/Sound loading/unloading functions
 Wave LoadWave(const char *fileName);                            // Load wave data from file
+Wave LoadWaveFromMemory(const char *fileType, const unsigned char *fileData, int dataSize); // Load wave from memory buffer, fileType refers to extension: i.e. ".wav"
 Sound LoadSound(const char *fileName);                          // Load sound from file
 Sound LoadSoundFromWave(Wave wave);                             // Load sound from wave data
 void UpdateSound(Sound sound, const void *data, int samplesCount);// Update sound buffer with new data
 void UnloadWave(Wave wave);                                     // Unload wave data
 void UnloadSound(Sound sound);                                  // Unload sound
-void ExportWave(Wave wave, const char *fileName);               // Export wave data to file
-void ExportWaveAsCode(Wave wave, const char *fileName);         // Export wave sample data to code (.h)
+bool ExportWave(Wave wave, const char *fileName);               // Export wave data to file, returns true on success
+bool ExportWaveAsCode(Wave wave, const char *fileName);         // Export wave sample data to code (.h), returns true on success
 
 // Wave/Sound management functions
 void PlaySound(Sound sound);                                    // Play a sound
@@ -160,17 +161,19 @@ void SetSoundPitch(Sound sound, float pitch);                   // Set pitch for
 void WaveFormat(Wave *wave, int sampleRate, int sampleSize, int channels);  // Convert wave data to desired format
 Wave WaveCopy(Wave wave);                                       // Copy a wave to a new wave
 void WaveCrop(Wave *wave, int initSample, int finalSample);     // Crop a wave to defined samples range
-float *GetWaveData(Wave wave);                                  // Get samples data from wave as a floats array
+float *LoadWaveSamples(Wave wave);                              // Load samples data from wave as a floats array
+void UnloadWaveSamples(float *samples);                         // Unload samples data loaded with LoadWaveSamples()
 
 // Music management functions
 Music LoadMusicStream(const char *fileName);                    // Load music stream from file
+Music LoadMusicStreamFromMemory(const char *fileType, unsigned char* data, int dataSize); // Load music stream from data
 void UnloadMusicStream(Music music);                            // Unload music stream
 void PlayMusicStream(Music music);                              // Start music playing
+bool IsMusicStreamPlaying(Music music);                         // Check if music is playing
 void UpdateMusicStream(Music music);                            // Updates buffers for music streaming
 void StopMusicStream(Music music);                              // Stop music playing
 void PauseMusicStream(Music music);                             // Pause music playing
 void ResumeMusicStream(Music music);                            // Resume playing paused music
-bool IsMusicPlaying(Music music);                               // Check if music is playing
 void SetMusicVolume(Music music, float volume);                 // Set volume for music (1.0 is max level)
 void SetMusicPitch(Music music, float pitch);                   // Set pitch for a music (1.0 is base level)
 float GetMusicTimeLength(Music music);                          // Get music time length (in seconds)
