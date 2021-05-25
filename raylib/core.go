@@ -50,6 +50,13 @@ func (b *BoundingBox) cptr() *C.BoundingBox {
 	return (*C.BoundingBox)(unsafe.Pointer(b))
 }
 
+// WindowShouldClose - Check if KEY_ESCAPE pressed or Close icon pressed
+func WindowShouldClose() bool {
+	ret := C.WindowShouldClose()
+	v := bool(ret)
+	return v
+}
+
 // CloseWindow - Close Window and Terminate Context
 func CloseWindow() {
 	C.CloseWindow()
@@ -62,23 +69,9 @@ func IsWindowReady() bool {
 	return v
 }
 
-// WindowShouldClose - Detect if KEY_ESCAPE pressed or Close icon pressed
-func WindowShouldClose() bool {
-	ret := C.WindowShouldClose()
-	v := bool(ret)
-	return v
-}
-
-// IsWindowMinimized - Detect if window has been minimized (or lost focus)
-func IsWindowMinimized() bool {
-	ret := C.IsWindowMinimized()
-	v := bool(ret)
-	return v
-}
-
-// IsWindowResized - Check if window has been resized
-func IsWindowResized() bool {
-	ret := C.IsWindowResized()
+// IsWindowFullscreen - Check if window is currently fullscreen
+func IsWindowFullscreen() bool {
+	ret := C.IsWindowFullscreen()
 	v := bool(ret)
 	return v
 }
@@ -90,9 +83,72 @@ func IsWindowHidden() bool {
 	return v
 }
 
+// IsWindowMinimized - Check if window is currently minimized
+func IsWindowMinimized() bool {
+	ret := C.IsWindowMinimized()
+	v := bool(ret)
+	return v
+}
+
+// IsWindowMaximized - Check if window is currently maximized
+func IsWindowMaximized() bool {
+	ret := C.IsWindowMaximized()
+	v := bool(ret)
+	return v
+}
+
+// IsWindowFocused - Check if window is currently focused
+func IsWindowFocused() bool {
+	ret := C.IsWindowFocused()
+	v := bool(ret)
+	return v
+}
+
+// IsWindowResized - Check if window has been resized
+func IsWindowResized() bool {
+	ret := C.IsWindowResized()
+	v := bool(ret)
+	return v
+}
+
+// IsWindowState - Check if one specific window flag is enabled
+func IsWindowState(flag byte) bool {
+	cflag := (C.uint)(flag)
+	ret := C.IsWindowState(cflag)
+	v := bool(ret)
+	return v
+}
+
+// SetWindowState - Set window configuration state using flags
+func SetWindowState(flags byte) {
+	cflags := (C.uint)(flags)
+	C.SetWindowState(cflags)
+}
+
+// ClearWindowState - Clear window configuration state flags
+func ClearWindowState(flags byte) {
+	cflags := (C.uint)(flags)
+	C.ClearWindowState(cflags)
+}
+
 // ToggleFullscreen - Fullscreen toggle (only PLATFORM_DESKTOP)
 func ToggleFullscreen() {
 	C.ToggleFullscreen()
+}
+
+// MaximizeWindow - Set window state: maximized, if resizable
+func MaximizeWindow() {
+	C.MaximizeWindow()
+}
+
+// MinimizeWindow - Set window state: minimized, if resizable
+func MinimizeWindow() {
+	C.MinimizeWindow()
+}
+
+// RestoreWindow - Set window state: not minimized/maximized
+func RestoreWindow() {
+	C.RestoreWindow()
 }
 
 // SetWindowIcon - Set icon for window (only PLATFORM_DESKTOP)
@@ -135,18 +191,6 @@ func SetWindowSize(w, h int) {
 	C.SetWindowSize(cw, ch)
 }
 
-// SetWindowState - Set window configuration state using flags
-func SetWindowState(flags byte) {
-	cflags := (C.uint)(flags)
-	C.SetWindowState(cflags)
-}
-
-// ClearWindowState - Clear window configuration state flags
-func ClearWindowState(flags byte) {
-	cflags := (C.uint)(flags)
-	C.ClearWindowState(cflags)
-}
-
 // GetScreenWidth - Get current screen width
 func GetScreenWidth() int {
 	ret := C.GetScreenWidth()
@@ -165,6 +209,21 @@ func GetScreenHeight() int {
 func GetMonitorCount() int {
 	ret := C.GetMonitorCount()
 	v := (int)(ret)
+	return v
+}
+
+// GetCurrentMonitor - Get current connected monitor
+func GetCurrentMonitor() int {
+	ret := C.GetCurrentMonitor()
+	v := (int)(ret)
+	return v
+}
+
+// GetMonitorPosition - Get specified monitor position
+func GetMonitorPosition(monitor int) Vector2 {
+	cmonitor := (C.int)(monitor)
+	ret := C.GetMonitorPosition(cmonitor)
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
@@ -200,17 +259,32 @@ func GetMonitorPhysicalHeight(monitor int) int {
 	return v
 }
 
+// GetMonitorRefreshRate - Get specified monitor refresh rate
+func GetMonitorRefreshRate(monitor int) int {
+	cmonitor := (C.int)(monitor)
+	ret := C.GetMonitorRefreshRate(cmonitor)
+	v := (int)(ret)
+	return v
+}
+
+// GetWindowPosition - Get window position XY on monitor
+func GetWindowPosition() Vector2 {
+	ret := C.GetWindowPosition()
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetWindowScaleDPI - Get window scale DPI factor
+func GetWindowScaleDPI() Vector2 {
+	ret := C.GetWindowScaleDPI()
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // GetMonitorName - Get the human-readable, UTF-8 encoded name of the primary monitor
 func GetMonitorName(monitor int) string {
 	cmonitor := (C.int)(monitor)
 	ret := C.GetMonitorName(cmonitor)
-	v := C.GoString(ret)
-	return v
-}
-
-// GetClipboardText - Get clipboard text content
-func GetClipboardText() string {
-	ret := C.GetClipboardText()
 	v := C.GoString(ret)
 	return v
 }
@@ -220,6 +294,13 @@ func SetClipboardText(data string) {
 	cdata := C.CString(data)
 	defer C.free(unsafe.Pointer(cdata))
 	C.SetClipboardText(cdata)
+}
+
+// GetClipboardText - Get clipboard text content
+func GetClipboardText() string {
+	ret := C.GetClipboardText()
+	v := C.GoString(ret)
+	return v
 }
 
 // ClearBackground - Sets Background Color

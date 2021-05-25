@@ -91,45 +91,6 @@ func OpenAsset(name string) (Asset, error) {
 	return f, nil
 }
 
-// IsWindowMaximized - Check if window has been maximized (only PLATFORM_DESKTOP)
-func IsWindowMaximized() bool {
-	ret := C.IsWindowMaximized()
-	v := bool(ret)
-	return v
-}
-
-// IsWindowFocused - Check if window has been focused
-func IsWindowFocused() bool {
-	ret := C.IsWindowFocused()
-	v := bool(ret)
-	return v
-}
-
-// MaximizeWindow - Maximize the window, if resizable (only PLATFORM_DESKTOP)
-func MaximizeWindow() {
-	C.MaximizeWindow()
-}
-
-// RestoreWindow - Restore the window, if resizable (only PLATFORM_DESKTOP)
-func RestoreWindow() {
-	C.RestoreWindow()
-}
-
-// GetMonitorRefreshRate - Get primary monitor refresh rate
-func GetMonitorRefreshRate(monitor int) int {
-	cmonitor := (C.int)(monitor)
-	ret := C.GetMonitorRefreshRate(cmonitor)
-	v := (int)(ret)
-	return v
-}
-
-// GetWindowScaleDPI - Get window scale DPI factor
-func GetWindowScaleDPI() Vector2 {
-	ret := C.GetWindowScaleDPI()
-	v := newVector2FromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // IsCursorOnScreen - Check if cursor is on the current screen.
 func IsCursorOnScreen() bool {
 	ret := C.IsCursorOnScreen()
