@@ -46,6 +46,13 @@ func IsCursorHidden() bool {
 	return v
 }
 
+// IsCursorOnScreen - Check if cursor is on the current screen.
+func IsCursorOnScreen() bool {
+	ret := C.IsCursorOnScreen()
+	v := bool(ret)
+	return v
+}
+
 // EnableCursor - Enables cursor
 func EnableCursor() {
 	C.EnableCursor()
@@ -89,11 +96,4 @@ func OpenAsset(name string) (Asset, error) {
 		return nil, err
 	}
 	return f, nil
-}
-
-// IsCursorOnScreen - Check if cursor is on the current screen.
-func IsCursorOnScreen() bool {
-	ret := C.IsCursorOnScreen()
-	v := bool(ret)
-	return v
 }

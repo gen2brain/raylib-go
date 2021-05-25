@@ -62,6 +62,11 @@ func IsCursorHidden() bool {
 	return false
 }
 
+// IsCursorOnScreen - Check if cursor is on the current screen.
+func IsCursorOnScreen() bool {
+	return false
+}
+
 // EnableCursor - Enables cursor
 func EnableCursor() {
 	return
