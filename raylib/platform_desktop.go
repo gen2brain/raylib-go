@@ -105,11 +105,6 @@ func IsWindowFocused() bool {
 	return v
 }
 
-// UndecorateWindow - Undecorate the window (only PLATFORM_DESKTOP)
-func UndecorateWindow() {
-	C.UndecorateWindow()
-}
-
 // MaximizeWindow - Maximize the window, if resizable (only PLATFORM_DESKTOP)
 func MaximizeWindow() {
 	C.MaximizeWindow()
@@ -118,11 +113,6 @@ func MaximizeWindow() {
 // RestoreWindow - Restore the window, if resizable (only PLATFORM_DESKTOP)
 func RestoreWindow() {
 	C.RestoreWindow()
-}
-
-// DecorateWindow - Decorate the window (only PLATFORM_DESKTOP)
-func DecorateWindow() {
-	C.DecorateWindow()
 }
 
 // GetMonitorRefreshRate - Get primary monitor refresh rate

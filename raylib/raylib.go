@@ -1147,13 +1147,11 @@ type RenderTexture2D struct {
 	ID uint32
 	// Color buffer attachment texture
 	Texture Texture2D
-	// Depth buffer attachment texture
-	Depth Texture2D
 }
 
 // NewRenderTexture2D - Returns new RenderTexture2D
-func NewRenderTexture2D(id uint32, texture, depth Texture2D) RenderTexture2D {
-	return RenderTexture2D{id, texture, depth}
+func NewRenderTexture2D(id uint32, texture Texture2D) RenderTexture2D {
+	return RenderTexture2D{id, texture}
 }
 
 // newRenderTexture2DFromPointer - Returns new RenderTexture2D from pointer

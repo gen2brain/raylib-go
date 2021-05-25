@@ -68,22 +68,22 @@ func DrawCircle(centerX, centerY int32, radius float32, color Color) {
 }
 
 // DrawCircleSector - Draw a piece of a circle
-func DrawCircleSector(center Vector2, radius float32, startAngle, endAngle, segments int32, color Color) {
+func DrawCircleSector(center Vector2, radius, startAngle, endAngle float32, segments int32, color Color) {
 	ccenter := center.cptr()
 	cradius := (C.float)(radius)
-	cstartAngle := (C.int)(startAngle)
-	cendAngle := (C.int)(endAngle)
+	cstartAngle := (C.float)(startAngle)
+	cendAngle := (C.float)(endAngle)
 	csegments := (C.int)(segments)
 	ccolor := color.cptr()
 	C.DrawCircleSector(*ccenter, cradius, cstartAngle, cendAngle, csegments, *ccolor)
 }
 
 // DrawCircleSectorLines -
-func DrawCircleSectorLines(center Vector2, radius float32, startAngle, endAngle, segments int32, color Color) {
+func DrawCircleSectorLines(center Vector2, radius, startAngle, endAngle float32, segments int32, color Color) {
 	ccenter := center.cptr()
 	cradius := (C.float)(radius)
-	cstartAngle := (C.int)(startAngle)
-	cendAngle := (C.int)(endAngle)
+	cstartAngle := (C.float)(startAngle)
+	cendAngle := (C.float)(endAngle)
 	csegments := (C.int)(segments)
 	ccolor := color.cptr()
 	C.DrawCircleSectorLines(*ccenter, cradius, cstartAngle, cendAngle, csegments, *ccolor)
@@ -137,24 +137,24 @@ func DrawEllipseLines(centerX, centerY int32, radiusH, radiusV float32, color Co
 }
 
 // DrawRing -
-func DrawRing(center Vector2, innerRadius, outerRadius float32, startAngle, endAngle, segments int32, color Color) {
+func DrawRing(center Vector2, innerRadius, outerRadius, startAngle, endAngle float32, segments int32, color Color) {
 	ccenter := center.cptr()
 	cinnerRadius := (C.float)(innerRadius)
 	couterRadius := (C.float)(outerRadius)
-	cstartAngle := (C.int)(startAngle)
-	cendAngle := (C.int)(endAngle)
+	cstartAngle := (C.float)(startAngle)
+	cendAngle := (C.float)(endAngle)
 	csegments := (C.int)(segments)
 	ccolor := color.cptr()
 	C.DrawRing(*ccenter, cinnerRadius, couterRadius, cstartAngle, cendAngle, csegments, *ccolor)
 }
 
 // DrawRingLines -
-func DrawRingLines(center Vector2, innerRadius, outerRadius float32, startAngle, endAngle, segments int32, color Color) {
+func DrawRingLines(center Vector2, innerRadius, outerRadius, startAngle, endAngle float32, segments int32, color Color) {
 	ccenter := center.cptr()
 	cinnerRadius := (C.float)(innerRadius)
 	couterRadius := (C.float)(outerRadius)
-	cstartAngle := (C.int)(startAngle)
-	cendAngle := (C.int)(endAngle)
+	cstartAngle := (C.float)(startAngle)
+	cendAngle := (C.float)(endAngle)
 	csegments := (C.int)(segments)
 	ccolor := color.cptr()
 	C.DrawRingLines(*ccenter, cinnerRadius, couterRadius, cstartAngle, cendAngle, csegments, *ccolor)
@@ -237,9 +237,9 @@ func DrawRectangleLines(posX, posY, width, height int32, color Color) {
 }
 
 // DrawRectangleLinesEx - Draw rectangle outline with extended parameters
-func DrawRectangleLinesEx(rec Rectangle, lineThick int32, color Color) {
+func DrawRectangleLinesEx(rec Rectangle, lineThick float32, color Color) {
 	crec := rec.cptr()
-	clineThick := (C.int)(lineThick)
+	clineThick := (C.float)(lineThick)
 	ccolor := color.cptr()
 	C.DrawRectangleLinesEx(*crec, clineThick, *ccolor)
 }
@@ -254,11 +254,11 @@ func DrawRectangleRounded(rec Rectangle, roundness float32, segments int32, colo
 }
 
 // DrawRectangleRoundedLines - Draw rectangle with rounded edges outline
-func DrawRectangleRoundedLines(rec Rectangle, roundness float32, segments, lineThick int32, color Color) {
+func DrawRectangleRoundedLines(rec Rectangle, roundness float32, segments, lineThick float32, color Color) {
 	crec := rec.cptr()
 	croundness := (C.float)(roundness)
 	csegments := (C.int)(segments)
-	clineThick := (C.int)(lineThick)
+	clineThick := (C.float)(lineThick)
 	ccolor := color.cptr()
 	C.DrawRectangleRoundedLines(*crec, croundness, csegments, clineThick, *ccolor)
 }

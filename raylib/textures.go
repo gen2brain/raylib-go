@@ -113,13 +113,6 @@ func GetImageData(img *Image) []Color {
 	return (*[1 << 24]Color)(unsafe.Pointer(ret))[0 : img.Width*img.Height]
 }
 
-// GetImageDataNormalized - Get pixel data from image as Vector4 slice (float normalized)
-func GetImageDataNormalized(img *Image) []Vector4 {
-	cimg := img.cptr()
-	ret := C.GetImageDataNormalized(*cimg)
-	return (*[1 << 24]Vector4)(unsafe.Pointer(ret))[0 : img.Width*img.Height]
-}
-
 // GetPixelDataSize - Get pixel data size in bytes (image or texture)
 func GetPixelDataSize(width, height, format int32) int32 {
 	cwidth := (C.int)(width)

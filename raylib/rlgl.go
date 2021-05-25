@@ -2,6 +2,7 @@ package rl
 
 /*
 #include "raylib.h"
+#include "rlgl.h"
 #include <stdlib.h>
 */
 import "C"
@@ -38,15 +39,15 @@ func LoadShader(vsFileName string, fsFileName string) Shader {
 	return v
 }
 
-// LoadShaderCode - Load shader from code strings and bind default locations
-func LoadShaderCode(vsCode string, fsCode string) Shader {
+// LoadShaderFromMemory - Load shader from code strings and bind default locations
+func LoadShaderFromMemory(vsCode string, fsCode string) Shader {
 	cvsCode := C.CString(vsCode)
 	defer C.free(unsafe.Pointer(cvsCode))
 
 	cfsCode := C.CString(fsCode)
 	defer C.free(unsafe.Pointer(cfsCode))
 
-	ret := C.LoadShaderCode(cvsCode, cfsCode)
+	ret := C.LoadShaderFromMemory(cvsCode, cfsCode)
 	v := newShaderFromPointer(unsafe.Pointer(&ret))
 
 	return v
@@ -60,14 +61,14 @@ func UnloadShader(shader Shader) {
 
 // GetShaderDefault - Get default shader
 func GetShaderDefault() Shader {
-	ret := C.GetShaderDefault()
+	ret := C.rlGetShaderDefault()
 	v := newShaderFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
 // GetTextureDefault - Get default texture
 func GetTextureDefault() *Texture2D {
-	ret := C.GetTextureDefault()
+	ret := C.rlGetTextureDefault()
 	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
 	return &v
 }
@@ -103,56 +104,13 @@ func SetShaderValueMatrix(shader Shader, uniformLoc int32, mat Matrix) {
 // SetMatrixProjection - Set a custom projection matrix (replaces internal projection matrix)
 func SetMatrixProjection(proj Matrix) {
 	cproj := proj.cptr()
-	C.SetMatrixProjection(*cproj)
+	C.rlSetMatrixProjection(*cproj)
 }
 
 // SetMatrixModelview - Set a custom modelview matrix (replaces internal modelview matrix)
 func SetMatrixModelview(view Matrix) {
 	cview := view.cptr()
-	C.SetMatrixModelview(*cview)
-}
-
-// GenTextureCubemap - Generate cubemap texture from HDR texture
-func GenTextureCubemap(shader Shader, skyHDR Texture2D, size int) Texture2D {
-	cshader := shader.cptr()
-	cskyHDR := skyHDR.cptr()
-	csize := (C.int)(size)
-
-	ret := C.GenTextureCubemap(*cshader, *cskyHDR, csize)
-	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// GenTextureIrradiance - Generate irradiance texture using cubemap data
-func GenTextureIrradiance(shader Shader, cubemap Texture2D, size int) Texture2D {
-	cshader := shader.cptr()
-	ccubemap := cubemap.cptr()
-	csize := (C.int)(size)
-
-	ret := C.GenTextureIrradiance(*cshader, *ccubemap, csize)
-	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// GenTexturePrefilter - Generate prefilter texture using cubemap data
-func GenTexturePrefilter(shader Shader, cubemap Texture2D, size int) Texture2D {
-	cshader := shader.cptr()
-	ccubemap := cubemap.cptr()
-	csize := (C.int)(size)
-
-	ret := C.GenTexturePrefilter(*cshader, *ccubemap, csize)
-	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// GenTextureBRDF - Generate BRDF texture using cubemap data
-func GenTextureBRDF(shader Shader, size int) Texture2D {
-	cshader := shader.cptr()
-	csize := (C.int)(size)
-
-	ret := C.GenTextureBRDF(*cshader, csize)
-	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
-	return v
+	C.rlSetMatrixModelview(*cview)
 }
 
 // BeginShaderMode - Begin custom shader drawing
@@ -175,42 +133,4 @@ func BeginBlendMode(mode BlendMode) {
 // EndBlendMode - End blending mode (reset to default: alpha blending)
 func EndBlendMode() {
 	C.EndBlendMode()
-}
-
-// InitVrSimulator - Init VR simulator for selected device
-func InitVrSimulator() {
-	C.InitVrSimulator()
-}
-
-// CloseVrSimulator - Close VR simulator for current device
-func CloseVrSimulator() {
-	C.CloseVrSimulator()
-}
-
-// IsVrSimulatorReady - Detect if VR simulator is ready
-func IsVrSimulatorReady() bool {
-	ret := C.IsVrSimulatorReady()
-	v := bool(ret)
-	return v
-}
-
-// UpdateVrTracking - Update VR tracking (position and orientation) and camera
-func UpdateVrTracking(camera *Camera) {
-	ccamera := camera.cptr()
-	C.UpdateVrTracking(ccamera)
-}
-
-// ToggleVrMode - Enable/Disable VR experience (device or simulator)
-func ToggleVrMode() {
-	C.ToggleVrMode()
-}
-
-// BeginVrDrawing - Begin VR simulator stereo rendering
-func BeginVrDrawing() {
-	C.BeginVrDrawing()
-}
-
-// EndVrDrawing - End VR simulator stereo rendering
-func EndVrDrawing() {
-	C.EndVrDrawing()
 }

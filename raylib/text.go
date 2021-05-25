@@ -56,14 +56,14 @@ func LoadFontFromImage(image Image, key Color, firstChar int32) Font {
 }
 
 // LoadFontData - Load font data for further use
-func LoadFontData(fileName string, fontSize int32, fontChars *int32, charsCount, typ int32) *CharInfo {
-	cfileName := C.CString(fileName)
-	defer C.free(unsafe.Pointer(cfileName))
+func LoadFontData(fileData []byte, dataSize int32, fontSize int32, fontChars *int32, charsCount, typ int32) *CharInfo {
+	cfileData := (*C.uchar)(unsafe.Pointer(&fileData[0]))
+	cdataSize := (C.int)(dataSize)
 	cfontSize := (C.int)(fontSize)
 	cfontChars := (*C.int)(unsafe.Pointer(fontChars))
 	ccharsCount := (C.int)(charsCount)
 	ctype := (C.int)(typ)
-	ret := C.LoadFontData(cfileName, cfontSize, cfontChars, ccharsCount, ctype)
+	ret := C.LoadFontData(cfileData, cdataSize, cfontSize, cfontChars, ccharsCount, ctype)
 	v := newCharInfoFromPointer(unsafe.Pointer(&ret))
 	return &v
 }

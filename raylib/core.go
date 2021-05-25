@@ -95,16 +95,6 @@ func ToggleFullscreen() {
 	C.ToggleFullscreen()
 }
 
-// UnhideWindow - Show the window
-func UnhideWindow() {
-	C.UnhideWindow()
-}
-
-// HideWindow - Hide the window
-func HideWindow() {
-	C.HideWindow()
-}
-
 // SetWindowIcon - Set icon for window (only PLATFORM_DESKTOP)
 func SetWindowIcon(image Image) {
 	cimage := image.cptr()

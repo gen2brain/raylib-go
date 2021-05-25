@@ -156,22 +156,6 @@ func DrawGrid(slices int32, spacing float32) {
 	C.DrawGrid(cslices, cspacing)
 }
 
-// DrawGizmo - Draw simple gizmo
-func DrawGizmo(position Vector3) {
-	cposition := position.cptr()
-	C.DrawGizmo(*cposition)
-}
-
-// LoadMeshes - Load mesh from file
-func LoadMeshes(fileName string) Mesh {
-	cfileName := C.CString(fileName)
-	defer C.free(unsafe.Pointer(cfileName))
-	ccount := C.int(0)
-	ret := C.LoadMeshes(cfileName, &ccount)
-	v := newMeshFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // LoadModel - Load model from file
 func LoadModel(fileName string) Model {
 	cfileName := C.CString(fileName)
@@ -390,20 +374,20 @@ func DrawBillboard(camera Camera, texture Texture2D, center Vector3, size float3
 }
 
 // DrawBillboardRec - Draw a billboard texture defined by sourceRec
-func DrawBillboardRec(camera Camera, texture Texture2D, sourceRec Rectangle, center Vector3, size float32, tint Color) {
+func DrawBillboardRec(camera Camera, texture Texture2D, sourceRec Rectangle, center Vector3, size Vector2, tint Color) {
 	ccamera := camera.cptr()
 	ctexture := texture.cptr()
 	csourceRec := sourceRec.cptr()
 	ccenter := center.cptr()
-	csize := (C.float)(size)
+	csize := size.cptr()
 	ctint := tint.cptr()
-	C.DrawBillboardRec(*ccamera, *ctexture, *csourceRec, *ccenter, csize, *ctint)
+	C.DrawBillboardRec(*ccamera, *ctexture, *csourceRec, *ccenter, *csize, *ctint)
 }
 
-// MeshBoundingBox - Compute mesh bounding box limits
-func MeshBoundingBox(mesh Mesh) BoundingBox {
+// GetMeshBoundingBox - Compute mesh bounding box limits
+func GetMeshBoundingBox(mesh Mesh) BoundingBox {
 	cmesh := mesh.cptr()
-	ret := C.MeshBoundingBox(*cmesh)
+	ret := C.GetMeshBoundingBox(*cmesh)
 	v := newBoundingBoxFromPointer(unsafe.Pointer(&ret))
 	return v
 }

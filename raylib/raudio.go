@@ -174,11 +174,11 @@ func WaveCrop(wave Wave, initSample int32, finalSample int32) {
 	C.WaveCrop(cwave, cinitSample, cfinalSample)
 }
 
-// GetWaveData - Get samples data from wave as a floats array
-func GetWaveData(wave Wave) []float32 {
+// LoadWaveSamples - Get samples data from wave as a floats array
+func LoadWaveSamples(wave Wave) []float32 {
 	var data []float32
 	cwave := wave.cptr()
-	ret := C.GetWaveData(*cwave)
+	ret := C.LoadWaveSamples(*cwave)
 
 	sliceHeader := (*reflect.SliceHeader)((unsafe.Pointer(&data)))
 	sliceHeader.Cap = int(wave.SampleCount)
@@ -233,10 +233,10 @@ func ResumeMusicStream(music Music) {
 	C.ResumeMusicStream(cmusic)
 }
 
-// IsMusicPlaying - Check if music is playing
-func IsMusicPlaying(music Music) bool {
+// IsMusicStreamPlaying - Check if music is playing
+func IsMusicStreamPlaying(music Music) bool {
 	cmusic := *(*C.Music)(unsafe.Pointer(&music))
-	ret := C.IsMusicPlaying(cmusic)
+	ret := C.IsMusicStreamPlaying(cmusic)
 	v := bool(ret)
 	return v
 }
