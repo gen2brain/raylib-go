@@ -347,15 +347,6 @@ func CheckCollisionCircleRec(center Vector2, radius float32, rec Rectangle) bool
 	return v
 }
 
-// GetCollisionRec - Get collision rectangle for two rectangles collision
-func GetCollisionRec(rec1, rec2 Rectangle) Rectangle {
-	crec1 := rec1.cptr()
-	crec2 := rec2.cptr()
-	ret := C.GetCollisionRec(*crec1, *crec2)
-	v := newRectangleFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // CheckCollisionPointRec - Check if point is inside rectangle
 func CheckCollisionPointRec(point Vector2, rec Rectangle) bool {
 	cpoint := point.cptr()
@@ -383,6 +374,27 @@ func CheckCollisionPointTriangle(point, p1, p2, p3 Vector2) bool {
 	cp3 := p3.cptr()
 	ret := C.CheckCollisionPointTriangle(*cpoint, *cp1, *cp2, *cp3)
 	v := bool(ret)
+	return v
+}
+
+// CheckCollisionLines - Check the collision between two lines defined by two points each, returns collision point by reference
+func CheckCollisionLines(startPos1, endPos1, startPos2, endPos2 Vector2, point *Vector2) bool {
+	cstartPos1 := startPos1.cptr()
+	cendPos1 := endPos1.cptr()
+	cstartPos2 := startPos2.cptr()
+	cendPos2 := endPos2.cptr()
+	cpoint := point.cptr()
+	ret := C.CheckCollisionLines(*cstartPos1, *cendPos1, *cstartPos2, *cendPos2, cpoint)
+	v := bool(ret)
+	return v
+}
+
+// GetCollisionRec - Get collision rectangle for two rectangles collision
+func GetCollisionRec(rec1, rec2 Rectangle) Rectangle {
+	crec1 := rec1.cptr()
+	crec2 := rec2.cptr()
+	ret := C.GetCollisionRec(*crec1, *crec2)
+	v := newRectangleFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 

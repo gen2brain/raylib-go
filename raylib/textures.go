@@ -62,6 +62,16 @@ func LoadImageRaw(fileName string, width, height int32, format PixelFormat, head
 	return v
 }
 
+// LoadImageAnim - Load image sequence from file (frames appended to image.data)
+func LoadImageAnim(fileName string, frames *int32) *Image {
+	cfileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(cfileName))
+	cframes := (*C.int)(frames)
+	ret := C.LoadImageAnim(cfileName, cframes)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // LoadTexture - Load an image as texture into GPU memory
 func LoadTexture(fileName string) Texture2D {
 	cfileName := C.CString(fileName)
