@@ -316,6 +316,22 @@ func UnloadMaterial(material Material) {
 	C.UnloadMaterial(*cmaterial)
 }
 
+// SetMaterialTexture - Set texture for a material map type (MATERIAL_MAP_DIFFUSE, MATERIAL_MAP_SPECULAR...)
+func SetMaterialTexture(material *Material, mapType int32, texture Texture2D) {
+	cmaterial := material.cptr()
+	cmapType := (C.int)(mapType)
+	ctexture := texture.cptr()
+	C.SetMaterialTexture(cmaterial, cmapType, *ctexture)
+}
+
+// SetModelMeshMaterial - Set material for a mesh
+func SetModelMeshMaterial(model *Model, meshId int32, materialId int32) {
+	cmodel := model.cptr()
+	cmeshId := (C.int)(meshId)
+	cmaterialId := (C.int)(materialId)
+	C.SetModelMeshMaterial(cmodel, cmeshId, cmaterialId)
+}
+
 // DrawModel - Draw a model (with texture if set)
 func DrawModel(model Model, position Vector3, scale float32, tint Color) {
 	cmodel := model.cptr()

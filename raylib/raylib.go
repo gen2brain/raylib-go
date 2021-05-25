@@ -706,9 +706,10 @@ const (
 	LocVertexTangent
 	LocVertexColor
 	LocMatrixMvp
-	LocMatrixModel
 	LocMatrixView
 	LocMatrixProjection
+	LocMatrixModel
+	LocMatrixNormal
 	LocVectorView
 	LocColorDiffuse
 	LocColorSpecular
@@ -736,13 +737,10 @@ const (
 	MapOcclusion
 	MapEmission
 	MapHeight
-	// NOTE: Uses GL_TEXTURE_CUBE_MAP
+	MapBrdg
 	MapCubemap
-	// NOTE: Uses GL_TEXTURE_CUBE_MAP
 	MapIrradiance
-	// NOTE: Uses GL_TEXTURE_CUBE_MAP
 	MapPrefilter
-	MapBrdf
 )
 
 // Material map type
@@ -807,7 +805,7 @@ type Material struct {
 	// Maps
 	Maps [MaxMaterialMaps]MaterialMap
 	// Generic parameters (if required)
-	Params *float32
+	Params [4]float32
 }
 
 // newMaterialFromPointer - Returns new Material from pointer
@@ -829,13 +827,13 @@ type Model struct {
 	// Local transform matrix
 	Transform     Matrix
 	MeshCount     int32
-	Meshes        []Mesh
 	MaterialCount int32
-	Materials     []Material
+	Meshes        *Mesh
+	Materials     *Material
 	MeshMaterial  *int32
 	BoneCount     int32
-	Bones         []BoneInfo
-	BindPose      []Transform
+	Bones         *BoneInfo
+	BindPose      *Transform
 }
 
 // newModelFromPointer - Returns new Model from pointer
@@ -872,56 +870,6 @@ func NewRay(position, direction Vector3) Ray {
 // newRayFromPointer - Returns new Ray from pointer
 func newRayFromPointer(ptr unsafe.Pointer) Ray {
 	return *(*Ray)(ptr)
-}
-
-// VrDevice type
-type VrDevice int32
-
-// Head Mounted Display devices
-const (
-	HmdDefaultDevice VrDevice = iota
-	HmdOculusRiftDk2
-	HmdOculusRiftCv1
-	HmdOculusGo
-	HmdValveHtcVive
-	HmdSonyPsvr
-)
-
-// VrDeviceInfo - Head-Mounted-Display device parameters
-type VrDeviceInfo struct {
-	// HMD horizontal resolution in pixels
-	HResolution int32
-	// HMD vertical resolution in pixels
-	VResolution int32
-	// HMD horizontal size in meters
-	HScreenSize float32
-	// HMD vertical size in meters
-	VScreenSize float32
-	// HMD screen center in meters
-	VScreenCenter float32
-	// HMD distance between eye and display in meters
-	EyeToScreenDistance float32
-	// HMD lens separation distance in meters
-	LensSeparationDistance float32
-	// HMD IPD (distance between pupils) in meters
-	InterpupillaryDistance float32
-	// HMD lens distortion constant parameters
-	LensDistortionValues [4]float32
-	// HMD chromatic aberration correction parameters
-	ChromaAbCorrection [4]float32
-}
-
-// NewVrDeviceInfo - Returns new VrDeviceInfo
-func NewVrDeviceInfo(hResolution, vResolution int32, hScreenSize, vScreenSize, vScreenCenter, eyeToScreenDistance,
-	lensSeparationDistance, interpupillaryDistance float32, lensDistortionValues, chromaAbCorrection [4]float32) VrDeviceInfo {
-
-	return VrDeviceInfo{hResolution, vResolution, hScreenSize, vScreenSize, vScreenCenter, eyeToScreenDistance,
-		lensSeparationDistance, interpupillaryDistance, lensDistortionValues, chromaAbCorrection}
-}
-
-// newVrDeviceInfoFromPointer - Returns new VrDeviceInfo from pointer
-func newVrDeviceInfoFromPointer(ptr unsafe.Pointer) VrDeviceInfo {
-	return *(*VrDeviceInfo)(ptr)
 }
 
 // BlendMode type

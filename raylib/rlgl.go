@@ -10,11 +10,6 @@ import "unsafe"
 import "reflect"
 
 // cptr returns C pointer
-func (v *VrDeviceInfo) cptr() *C.VrDeviceInfo {
-	return (*C.VrDeviceInfo)(unsafe.Pointer(v))
-}
-
-// cptr returns C pointer
 func (s *Shader) cptr() *C.Shader {
 	return (*C.Shader)(unsafe.Pointer(s))
 }
