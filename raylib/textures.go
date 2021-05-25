@@ -164,11 +164,36 @@ func ExportImage(image Image, name string) {
 	C.ExportImage(*cimage, cname)
 }
 
-// ImageToPOT - Convert image to POT (power-of-two)
-func ImageToPOT(image *Image, fillColor Color) {
+// ImageCopy - Create an image duplicate (useful for transformations)
+func ImageCopy(image *Image) *Image {
 	cimage := image.cptr()
-	cfillColor := fillColor.cptr()
-	C.ImageToPOT(cimage, *cfillColor)
+	ret := C.ImageCopy(*cimage)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// ImageText - Create an image from text (default font)
+func ImageText(text string, fontSize int32, color Color) *Image {
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+	cfontSize := (C.int)(fontSize)
+	ccolor := color.cptr()
+	ret := C.ImageText(ctext, cfontSize, *ccolor)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// ImageTextEx - Create an image from text (custom sprite font)
+func ImageTextEx(font Font, text string, fontSize, spacing float32, tint Color) *Image {
+	cfont := font.cptr()
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+	cfontSize := (C.float)(fontSize)
+	cspacing := (C.float)(spacing)
+	ctint := tint.cptr()
+	ret := C.ImageTextEx(*cfont, ctext, cfontSize, cspacing, *ctint)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return v
 }
 
 // ImageFormat - Convert image data to desired format
@@ -178,11 +203,25 @@ func ImageFormat(image *Image, newFormat PixelFormat) {
 	C.ImageFormat(cimage, cnewFormat)
 }
 
-// ImageAlphaMask - Apply alpha mask to image
-func ImageAlphaMask(image, alphaMask *Image) {
+// ImageToPOT - Convert image to POT (power-of-two)
+func ImageToPOT(image *Image, fillColor Color) {
 	cimage := image.cptr()
-	calphaMask := alphaMask.cptr()
-	C.ImageAlphaMask(cimage, *calphaMask)
+	cfillColor := fillColor.cptr()
+	C.ImageToPOT(cimage, *cfillColor)
+}
+
+// ImageCrop - Crop an image to a defined rectangle
+func ImageCrop(image *Image, crop Rectangle) {
+	cimage := image.cptr()
+	ccrop := crop.cptr()
+	C.ImageCrop(cimage, *ccrop)
+}
+
+// ImageAlphaCrop - Crop image depending on alpha value
+func ImageAlphaCrop(image *Image, threshold float32) {
+	cimage := image.cptr()
+	cthreshold := (C.float)(threshold)
+	C.ImageAlphaCrop(cimage, cthreshold)
 }
 
 // ImageAlphaClear - Apply alpha mask to image
@@ -193,42 +232,17 @@ func ImageAlphaClear(image *Image, color Color, threshold float32) {
 	C.ImageAlphaClear(cimage, *ccolor, cthreshold)
 }
 
-// ImageAlphaCrop - Crop image depending on alpha value
-func ImageAlphaCrop(image *Image, threshold float32) {
+// ImageAlphaMask - Apply alpha mask to image
+func ImageAlphaMask(image, alphaMask *Image) {
 	cimage := image.cptr()
-	cthreshold := (C.float)(threshold)
-	C.ImageAlphaCrop(cimage, cthreshold)
+	calphaMask := alphaMask.cptr()
+	C.ImageAlphaMask(cimage, *calphaMask)
 }
 
 // ImageAlphaPremultiply - Premultiply alpha channel
 func ImageAlphaPremultiply(image *Image) {
 	cimage := image.cptr()
 	C.ImageAlphaPremultiply(cimage)
-}
-
-// ImageDither - Dither image data to 16bpp or lower (Floyd-Steinberg dithering)
-func ImageDither(image *Image, rBpp, gBpp, bBpp, aBpp int32) {
-	cimage := image.cptr()
-	crBpp := (C.int)(rBpp)
-	cgBpp := (C.int)(gBpp)
-	cbBpp := (C.int)(bBpp)
-	caBpp := (C.int)(aBpp)
-	C.ImageDither(cimage, crBpp, cgBpp, cbBpp, caBpp)
-}
-
-// ImageCopy - Create an image duplicate (useful for transformations)
-func ImageCopy(image *Image) *Image {
-	cimage := image.cptr()
-	ret := C.ImageCopy(*cimage)
-	v := newImageFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// ImageCrop - Crop an image to a defined rectangle
-func ImageCrop(image *Image, crop Rectangle) {
-	cimage := image.cptr()
-	ccrop := crop.cptr()
-	C.ImageCrop(cimage, *ccrop)
 }
 
 // ImageResize - Resize an image (bilinear filtering)
@@ -264,83 +278,14 @@ func ImageMipmaps(image *Image) {
 	C.ImageMipmaps(cimage)
 }
 
-// ImageText - Create an image from text (default font)
-func ImageText(text string, fontSize int32, color Color) *Image {
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
-	cfontSize := (C.int)(fontSize)
-	ccolor := color.cptr()
-	ret := C.ImageText(ctext, cfontSize, *ccolor)
-	v := newImageFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// ImageTextEx - Create an image from text (custom sprite font)
-func ImageTextEx(font Font, text string, fontSize, spacing float32, tint Color) *Image {
-	cfont := font.cptr()
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
-	cfontSize := (C.float)(fontSize)
-	cspacing := (C.float)(spacing)
-	ctint := tint.cptr()
-	ret := C.ImageTextEx(*cfont, ctext, cfontSize, cspacing, *ctint)
-	v := newImageFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// ImageDraw - Draw a source image within a destination image
-func ImageDraw(dst, src *Image, srcRec, dstRec Rectangle, tint Color) {
-	cdst := dst.cptr()
-	csrc := src.cptr()
-	csrcRec := srcRec.cptr()
-	cdstRec := dstRec.cptr()
-	ctint := tint.cptr()
-	C.ImageDraw(cdst, *csrc, *csrcRec, *cdstRec, *ctint)
-}
-
-// ImageDrawRectangle - Draw rectangle within an image
-func ImageDrawRectangle(dst *Image, x, y, width, height int32, color Color) {
-	cdst := dst.cptr()
-	cx := (C.int)(x)
-	cy := (C.int)(y)
-	cwidth := (C.int)(width)
-	cheight := (C.int)(height)
-	ccolor := color.cptr()
-	C.ImageDrawRectangle(cdst, cx, cy, cwidth, cheight, *ccolor)
-}
-
-// ImageDrawRectangleLines - Draw rectangle lines within an image
-func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int, color Color) {
-	cdst := dst.cptr()
-	crec := rec.cptr()
-	cthick := (C.int)(thick)
-	ccolor := color.cptr()
-	C.ImageDrawRectangleLines(cdst, *crec, cthick, *ccolor)
-}
-
-// ImageDrawText - Draw text (default font) within an image (destination)
-func ImageDrawText(dst *Image, posX, posY int32, text string, fontSize int32, color Color) {
-	cdst := dst.cptr()
-	posx := (C.int)(posX)
-	posy := (C.int)(posY)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
-	cfontSize := (C.int)(fontSize)
-	ccolor := color.cptr()
-	C.ImageDrawText(cdst, ctext, posx, posy, cfontSize, *ccolor)
-}
-
-// ImageDrawTextEx - Draw text (custom sprite font) within an image (destination)
-func ImageDrawTextEx(dst *Image, position Vector2, font Font, text string, fontSize, spacing float32, color Color) {
-	cdst := dst.cptr()
-	cposition := position.cptr()
-	cfont := font.cptr()
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
-	cfontSize := (C.float)(fontSize)
-	cspacing := (C.float)(spacing)
-	ccolor := color.cptr()
-	C.ImageDrawTextEx(cdst, *cfont, ctext, *cposition, cfontSize, cspacing, *ccolor)
+// ImageDither - Dither image data to 16bpp or lower (Floyd-Steinberg dithering)
+func ImageDither(image *Image, rBpp, gBpp, bBpp, aBpp int32) {
+	cimage := image.cptr()
+	crBpp := (C.int)(rBpp)
+	cgBpp := (C.int)(gBpp)
+	cbBpp := (C.int)(bBpp)
+	caBpp := (C.int)(aBpp)
+	C.ImageDither(cimage, crBpp, cgBpp, cbBpp, caBpp)
 }
 
 // ImageFlipVertical - Flip image vertically
@@ -406,6 +351,61 @@ func ImageColorReplace(image *Image, color, replace Color) {
 	ccolor := color.cptr()
 	creplace := replace.cptr()
 	C.ImageColorReplace(cimage, *ccolor, *creplace)
+}
+
+// ImageDraw - Draw a source image within a destination image
+func ImageDraw(dst, src *Image, srcRec, dstRec Rectangle, tint Color) {
+	cdst := dst.cptr()
+	csrc := src.cptr()
+	csrcRec := srcRec.cptr()
+	cdstRec := dstRec.cptr()
+	ctint := tint.cptr()
+	C.ImageDraw(cdst, *csrc, *csrcRec, *cdstRec, *ctint)
+}
+
+// ImageDrawRectangle - Draw rectangle within an image
+func ImageDrawRectangle(dst *Image, x, y, width, height int32, color Color) {
+	cdst := dst.cptr()
+	cx := (C.int)(x)
+	cy := (C.int)(y)
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	ccolor := color.cptr()
+	C.ImageDrawRectangle(cdst, cx, cy, cwidth, cheight, *ccolor)
+}
+
+// ImageDrawRectangleLines - Draw rectangle lines within an image
+func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int, color Color) {
+	cdst := dst.cptr()
+	crec := rec.cptr()
+	cthick := (C.int)(thick)
+	ccolor := color.cptr()
+	C.ImageDrawRectangleLines(cdst, *crec, cthick, *ccolor)
+}
+
+// ImageDrawText - Draw text (default font) within an image (destination)
+func ImageDrawText(dst *Image, posX, posY int32, text string, fontSize int32, color Color) {
+	cdst := dst.cptr()
+	posx := (C.int)(posX)
+	posy := (C.int)(posY)
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+	cfontSize := (C.int)(fontSize)
+	ccolor := color.cptr()
+	C.ImageDrawText(cdst, ctext, posx, posy, cfontSize, *ccolor)
+}
+
+// ImageDrawTextEx - Draw text (custom sprite font) within an image (destination)
+func ImageDrawTextEx(dst *Image, position Vector2, font Font, text string, fontSize, spacing float32, color Color) {
+	cdst := dst.cptr()
+	cposition := position.cptr()
+	cfont := font.cptr()
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+	cfontSize := (C.float)(fontSize)
+	cspacing := (C.float)(spacing)
+	ccolor := color.cptr()
+	C.ImageDrawTextEx(cdst, *cfont, ctext, *cposition, cfontSize, cspacing, *ccolor)
 }
 
 // GenImageColor - Generate image: plain color
