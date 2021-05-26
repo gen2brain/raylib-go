@@ -21,12 +21,11 @@ func main() {
 	dwarf := rl.LoadModel("dwarf.obj")             // Load OBJ model
 	texture := rl.LoadTexture("dwarf_diffuse.png") // Load model texture
 
-	dwarf.Materials = make([]rl.Material, 1)
-	dwarf.Materials[0].Maps[rl.MapDiffuse].Texture = texture // Set dwarf model diffuse texture
+	rl.SetMaterialTexture(dwarf.Materials, rl.MapDiffuse, texture) // Set dwarf model diffuse texture
 
 	position := rl.NewVector3(0.0, 0.0, 0.0) // Set model position
 
-	shader := rl.LoadShader("glsl330/base.vs", "glsl330/swirl.fs") // Load postpro shader
+	shader := rl.LoadShader("", "glsl330/swirl.fs")
 
 	// Get variable (uniform) location on the shader to connect with the program
 	// NOTE: If uniform variable could not be found in the shader, function returns -1
@@ -53,7 +52,7 @@ func main() {
 		swirlCenter[1] = float32(screenHeight) - mousePosition.Y
 
 		// Send new value to the shader to be used on drawing
-		rl.SetShaderValue(shader, swirlCenterLoc, swirlCenter, 2)
+		rl.SetShaderValue(shader, swirlCenterLoc, swirlCenter, 1)
 
 		rl.UpdateCamera(&camera) // Update camera
 

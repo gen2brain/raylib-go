@@ -22,12 +22,11 @@ func main() {
 	texture := rl.LoadTextureFromImage(image) // Convert image to texture (VRAM)
 
 	mesh := rl.GenMeshHeightmap(*image, rl.NewVector3(16, 8, 16)) // Generate heightmap mesh (RAM and VRAM)
-	//fmt.Printf("%+v\n", mesh)
-	model := rl.LoadModelFromMesh(mesh) // Load model from generated mesh
-	//fmt.Printf("%+v\n", model)
-	model.Materials = make([]rl.Material, 1)
-	model.Materials[0].Maps[rl.MapDiffuse].Texture = texture // Set map diffuse texture
-	mapPosition := rl.NewVector3(-8.0, 0.0, -8.0)            // Set model position
+	model := rl.LoadModelFromMesh(mesh)                           // Load model from generated mesh
+
+	rl.SetMaterialTexture(model.Materials, rl.MapDiffuse, texture) // Set map diffuse texture
+
+	mapPosition := rl.NewVector3(-8.0, 0.0, -8.0) // Set model position
 
 	rl.UnloadImage(image) // Unload heightmap image from RAM, already uploaded to VRAM
 

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -17,20 +15,16 @@ func main() {
 	camera.Target = rl.NewVector3(0.0, 0.0, 0.0)
 	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
-	camera.Type = rl.CameraPerspective
 
 	image := rl.LoadImage("cubicmap.png")      // Load cubicmap image (RAM)
 	cubicmap := rl.LoadTextureFromImage(image) // Convert image to texture to display (VRAM)
 
 	mesh := rl.GenMeshCubicmap(*image, rl.NewVector3(1.0, 1.0, 1.0))
-	fmt.Printf("%+v\n", mesh)
-
 	model := rl.LoadModelFromMesh(mesh)
 
 	// NOTE: By default each cube is mapped to one part of texture atlas
-	texture := rl.LoadTexture("cubicmap_atlas.png") // Load map texture
-	model.Materials = make([]rl.Material, 1)
-	model.Materials[0].Maps[rl.MapDiffuse].Texture = texture // Set map diffuse texture
+	texture := rl.LoadTexture("cubicmap_atlas.png")                // Load map texture
+	rl.SetMaterialTexture(model.Materials, rl.MapDiffuse, texture) // Set map diffuse texture
 
 	mapPosition := rl.NewVector3(-16.0, 0.0, -8.0) // Set model position
 

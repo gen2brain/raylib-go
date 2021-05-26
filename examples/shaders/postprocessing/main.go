@@ -40,20 +40,19 @@ func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
 
-	rl.SetConfigFlags(rl.FlagMsaa4xHint | rl.FlagVsyncHint) // Enable Multi Sampling Anti Aliasing 4x (if available)
+	rl.SetConfigFlags(rl.FlagMsaa4xHint) // Enable Multi Sampling Anti Aliasing 4x (if available)
 
 	rl.InitWindow(screenWidth, screenHeight, "raylib [shaders] example - postprocessing shader")
 
 	camera := rl.Camera{}
-	camera.Position = rl.NewVector3(3.0, 3.0, 3.0)
-	camera.Target = rl.NewVector3(0.0, 1.5, 0.0)
+	camera.Position = rl.NewVector3(2.0, 3.0, 2.0)
+	camera.Target = rl.NewVector3(0.0, 1.0, 0.0)
 	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
 
-	dwarf := rl.LoadModel("dwarf.obj")             // Load OBJ model
-	texture := rl.LoadTexture("dwarf_diffuse.png") // Load model texture
-	dwarf.Materials = make([]rl.Material, 1)
-	dwarf.Materials[0].Maps[rl.MapDiffuse].Texture = texture // Set dwarf model diffuse texture
+	obj := rl.LoadModel("church.obj")                            // Load OBJ model
+	texture := rl.LoadTexture("church_diffuse.png")              // Load model texture
+	rl.SetMaterialTexture(obj.Materials, rl.MapDiffuse, texture) // Set obj model diffuse texture
 
 	position := rl.NewVector3(0.0, 0.0, 0.0) // Set model position
 
@@ -105,7 +104,7 @@ func main() {
 
 		rl.BeginMode3D(camera)
 
-		rl.DrawModel(dwarf, position, 2.0, rl.White) // Draw 3d model with texture
+		rl.DrawModel(obj, position, 0.1, rl.White) // Draw 3d model with texture
 
 		rl.DrawGrid(10, 1.0) // Draw a grid
 
@@ -123,7 +122,7 @@ func main() {
 
 		rl.DrawRectangle(0, 9, 580, 30, rl.Fade(rl.LightGray, 0.7))
 
-		rl.DrawText("(c) Dwarf 3D model by David Moreno", screenWidth-200, screenHeight-20, 10, rl.DarkGray)
+		rl.DrawText("(c) Church 3D model by Alberto Cano", screenWidth-200, screenHeight-20, 10, rl.DarkGray)
 
 		rl.DrawText("CURRENT POSTPRO SHADER:", 10, 15, 20, rl.Black)
 		rl.DrawText(postproShaderText[currentShader], 330, 15, 20, rl.Red)
@@ -140,7 +139,7 @@ func main() {
 	}
 
 	rl.UnloadTexture(texture)      // Unload texture
-	rl.UnloadModel(dwarf)          // Unload model
+	rl.UnloadModel(obj)            // Unload model
 	rl.UnloadRenderTexture(target) // Unload render texture
 
 	rl.CloseWindow()
