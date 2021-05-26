@@ -72,6 +72,17 @@ func LoadImageAnim(fileName string, frames *int32) *Image {
 	return v
 }
 
+// LoadImageFromMemory - Load image from memory buffer, fileType refers to extension: i.e. ".png"
+func LoadImageFromMemory(fileType string, fileData []byte, dataSize int32) *Image {
+	cfileType := C.CString(fileType)
+	defer C.free(unsafe.Pointer(cfileType))
+	cfileData := (*C.uchar)(unsafe.Pointer(&fileData[0]))
+	cdataSize := (C.int)(dataSize)
+	ret := C.LoadImageFromMemory(cfileType, cfileData, cdataSize)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // LoadTexture - Load an image as texture into GPU memory
 func LoadTexture(fileName string) Texture2D {
 	cfileName := C.CString(fileName)

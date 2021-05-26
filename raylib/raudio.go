@@ -58,6 +58,17 @@ func LoadWave(fileName string) Wave {
 	return v
 }
 
+// LoadWaveFromMemory - Load wave from memory buffer, fileType refers to extension: i.e. ".wav"
+func LoadWaveFromMemory(fileType string, fileData []byte, dataSize int32) Wave {
+	cfileType := C.CString(fileType)
+	defer C.free(unsafe.Pointer(cfileType))
+	cfileData := (*C.uchar)(unsafe.Pointer(&fileData[0]))
+	cdataSize := (C.int)(dataSize)
+	ret := C.LoadWaveFromMemory(cfileType, cfileData, cdataSize)
+	v := newWaveFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // LoadSound - Load sound to memory
 func LoadSound(fileName string) Sound {
 	cfileName := C.CString(fileName)
@@ -193,7 +204,18 @@ func LoadMusicStream(fileName string) Music {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	ret := C.LoadMusicStream(cfileName)
-	v := *(*Music)(unsafe.Pointer(&ret))
+	v := newMusicFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// LoadMusicStreamFromMemory - Load music stream from data
+func LoadMusicStreamFromMemory(fileType string, fileData []byte, dataSize int32) Music {
+	cfileType := C.CString(fileType)
+	defer C.free(unsafe.Pointer(cfileType))
+	cfileData := (*C.uchar)(unsafe.Pointer(&fileData[0]))
+	cdataSize := (C.int)(dataSize)
+	ret := C.LoadMusicStreamFromMemory(cfileType, cfileData, cdataSize)
+	v := newMusicFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
