@@ -16,10 +16,8 @@ func main() {
 
 	// NOTE: Textures/Fonts MUST be loaded after Window initialization (OpenGL context is required)
 
-	fontChars := int32(0)
-
 	// TTF Font loading with custom generation parameters
-	font := rl.LoadFontEx("fonts/KAISG.ttf", 96, &fontChars, 0)
+	font := rl.LoadFontEx("fonts/KAISG.ttf", 96, nil, 0)
 
 	// Generate mipmap levels to use trilinear filtering
 	// NOTE: On 2D drawing it won't be noticeable, it looks like FILTER_BILINEAR
@@ -69,7 +67,7 @@ func main() {
 
 			if count == 1 { // Only support one ttf file dropped
 				rl.UnloadFont(font)
-				font = rl.LoadFontEx(droppedFiles[0], fontSize, &fontChars, 0)
+				font = rl.LoadFontEx(droppedFiles[0], fontSize, nil, 0)
 				rl.ClearDroppedFiles()
 			}
 		}
