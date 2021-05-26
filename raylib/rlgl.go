@@ -79,21 +79,50 @@ func GetShaderLocation(shader Shader, uniformName string) int32 {
 	return v
 }
 
-// SetShaderValue - Set shader uniform value (float)
-func SetShaderValue(shader Shader, uniformLoc int32, value []float32, size int32) {
+// GetShaderLocationAttrib - Get shader attribute location
+func GetShaderLocationAttrib(shader Shader, attribName string) int32 {
 	cshader := shader.cptr()
-	cuniformLoc := (C.int)(uniformLoc)
+	cuniformName := C.CString(attribName)
+	defer C.free(unsafe.Pointer(cuniformName))
+
+	ret := C.GetShaderLocationAttrib(*cshader, cuniformName)
+	v := (int32)(ret)
+	return v
+}
+
+// SetShaderValue - Set shader uniform value (float)
+func SetShaderValue(shader Shader, locIndex int32, value []float32, uniformType ShaderUniformDataType) {
+	cshader := shader.cptr()
+	clocIndex := (C.int)(locIndex)
 	cvalue := unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&value)).Data)
-	csize := (C.int)(size)
-	C.SetShaderValue(*cshader, cuniformLoc, cvalue, csize)
+	cuniformType := (C.int)(uniformType)
+	C.SetShaderValue(*cshader, clocIndex, cvalue, cuniformType)
+}
+
+// SetShaderValueV - Set shader uniform value (float)
+func SetShaderValueV(shader Shader, locIndex int32, value []float32, uniformType ShaderUniformDataType, count int32) {
+	cshader := shader.cptr()
+	clocIndex := (C.int)(locIndex)
+	cvalue := unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&value)).Data)
+	cuniformType := (C.int)(uniformType)
+	ccount := (C.int)(count)
+	C.SetShaderValueV(*cshader, clocIndex, cvalue, cuniformType, ccount)
 }
 
 // SetShaderValueMatrix - Set shader uniform value (matrix 4x4)
-func SetShaderValueMatrix(shader Shader, uniformLoc int32, mat Matrix) {
+func SetShaderValueMatrix(shader Shader, locIndex int32, mat Matrix) {
 	cshader := shader.cptr()
-	cuniformLoc := (C.int)(uniformLoc)
+	clocIndex := (C.int)(locIndex)
 	cmat := mat.cptr()
-	C.SetShaderValueMatrix(*cshader, cuniformLoc, *cmat)
+	C.SetShaderValueMatrix(*cshader, clocIndex, *cmat)
+}
+
+// SetShaderValueTexture - Set shader uniform value for texture (sampler2d)
+func SetShaderValueTexture(shader Shader, locIndex int32, texture Texture2D) {
+	cshader := shader.cptr()
+	clocIndex := (C.int)(locIndex)
+	ctexture := texture.cptr()
+	C.SetShaderValueTexture(*cshader, clocIndex, *ctexture)
 }
 
 // SetMatrixProjection - Set a custom projection matrix (replaces internal projection matrix)

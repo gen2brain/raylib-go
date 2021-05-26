@@ -144,6 +144,22 @@ const (
 	CameraOrthographic
 )
 
+// ShaderUniformDataType type
+type ShaderUniformDataType int32
+
+// ShaderUniformDataType enumeration
+const (
+	ShaderUniformFloat ShaderUniformDataType = iota
+	ShaderUniformVec2
+	ShaderUniformVec3
+	ShaderUniformVec4
+	ShaderUniformInt
+	ShaderUniformIvec2
+	ShaderUniformIvec3
+	ShaderUniformIvec4
+	ShaderUniformSampler2d
+)
+
 // Some basic Defines
 const (
 	Pi      = 3.1415927

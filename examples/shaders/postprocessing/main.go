@@ -102,6 +102,8 @@ func main() {
 
 		rl.BeginTextureMode(target) // Enable drawing to texture
 
+		rl.ClearBackground(rl.RayWhite)
+
 		rl.BeginMode3D(camera)
 
 		rl.DrawModel(obj, position, 0.1, rl.White) // Draw 3d model with texture
