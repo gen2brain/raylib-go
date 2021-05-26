@@ -618,7 +618,7 @@ type Camera3D struct {
 	// Camera field-of-view apperture in Y (degrees) in perspective, used as near plane width in orthographic
 	Fovy float32
 	// Camera type, controlling projection type, either CameraPerspective or CameraOrthographic.
-	Type CameraProjection
+	Projection CameraProjection
 }
 
 // Camera type fallback, defaults to Camera3D

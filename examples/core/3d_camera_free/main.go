@@ -12,7 +12,7 @@ func main() {
 	camera.Target = rl.NewVector3(0.0, 0.0, 0.0)
 	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)
 	camera.Fovy = 45.0
-	camera.Type = rl.CameraPerspective
+	camera.Projection = rl.CameraPerspective
 
 	cubePosition := rl.NewVector3(0.0, 0.0, 0.0)
 
