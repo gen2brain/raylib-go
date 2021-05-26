@@ -79,8 +79,9 @@ func newWaveFromPointer(ptr unsafe.Pointer) Wave {
 
 // Sound source type
 type Sound struct {
-	SampleCount uint32
 	Stream      AudioStream
+	SampleCount uint32
+	_           [4]byte
 }
 
 // newSoundFromPointer - Returns new Sound from pointer
@@ -91,11 +92,11 @@ func newSoundFromPointer(ptr unsafe.Pointer) Sound {
 // Music type (file streaming from memory)
 // NOTE: Anything longer than ~10 seconds should be streamed
 type Music struct {
+	Stream      AudioStream
+	SampleCount uint32
+	Looping     bool
 	CtxType     int32
 	CtxData     unsafe.Pointer
-	SampleCount uint32
-	LoopCount   uint32
-	Stream      AudioStream
 }
 
 // newMusicFromPointer - Returns new Music from pointer
@@ -106,14 +107,15 @@ func newMusicFromPointer(ptr unsafe.Pointer) Music {
 // AudioStream type
 // NOTE: Useful to create custom audio streams not bound to a specific file
 type AudioStream struct {
+	// Buffer
+	Buffer *C.rAudioBuffer
 	// Frequency (samples per second)
 	SampleRate uint32
 	// Bit depth (bits per sample): 8, 16, 32 (24 not supported)
 	SampleSize uint32
 	// Number of channels (1-mono, 2-stereo)
 	Channels uint32
-	// Buffer
-	Buffer *C.rAudioBuffer
+	_        [4]byte
 }
 
 // newAudioStreamFromPointer - Returns new AudioStream from pointer
@@ -133,12 +135,12 @@ const (
 	CameraThirdPerson
 )
 
-// CameraType type
-type CameraType int32
+// CameraProjection type
+type CameraProjection int32
 
 // Camera projection modes
 const (
-	CameraPerspective CameraType = iota
+	CameraPerspective CameraProjection = iota
 	CameraOrthographic
 )
 
@@ -616,14 +618,14 @@ type Camera3D struct {
 	// Camera field-of-view apperture in Y (degrees) in perspective, used as near plane width in orthographic
 	Fovy float32
 	// Camera type, controlling projection type, either CameraPerspective or CameraOrthographic.
-	Type CameraType
+	Type CameraProjection
 }
 
 // Camera type fallback, defaults to Camera3D
 type Camera = Camera3D
 
 // NewCamera3D - Returns new Camera3D
-func NewCamera3D(pos, target, up Vector3, fovy float32, ct CameraType) Camera3D {
+func NewCamera3D(pos, target, up Vector3, fovy float32, ct CameraProjection) Camera3D {
 	return Camera3D{pos, target, up, fovy, ct}
 }
 
@@ -729,7 +731,6 @@ const (
 
 // Material map type
 const (
-	// MapDiffuse
 	MapAlbedo = iota
 	MapMetalness
 	MapNormal
@@ -803,7 +804,7 @@ type Material struct {
 	// Shader
 	Shader Shader
 	// Maps
-	Maps [MaxMaterialMaps]MaterialMap
+	Maps *MaterialMap
 	// Generic parameters (if required)
 	Params [4]float32
 }
@@ -890,11 +891,11 @@ type Shader struct {
 	// Shader program id
 	ID uint32
 	// Shader locations array
-	Locs [MaxShaderLocations]int32
+	Locs *int32
 }
 
 // NewShader - Returns new Shader
-func NewShader(id uint32, locs [MaxShaderLocations]int32) Shader {
+func NewShader(id uint32, locs *int32) Shader {
 	return Shader{id, locs}
 }
 
@@ -907,19 +908,19 @@ func newShaderFromPointer(ptr unsafe.Pointer) Shader {
 type CharInfo struct {
 	// Character value (Unicode)
 	Value int32
-	// Character rectangle in sprite font
-	Rec Rectangle
 	// Character offset X when drawing
 	OffsetX int32
 	// Character offset Y when drawing
 	OffsetY int32
 	// Character advance position X
 	AdvanceX int32
+	// Character image data
+	Image Image
 }
 
 // NewCharInfo - Returns new CharInfo
-func NewCharInfo(value int32, rec Rectangle, offsetX, offsetY, advanceX int32) CharInfo {
-	return CharInfo{value, rec, offsetX, offsetY, advanceX}
+func NewCharInfo(value int32, offsetX, offsetY, advanceX int32, image Image) CharInfo {
+	return CharInfo{value, offsetX, offsetY, advanceX, image}
 }
 
 // newCharInfoFromPointer - Returns new CharInfo from pointer
@@ -933,6 +934,8 @@ type Font struct {
 	BaseSize int32
 	// Number of characters
 	CharsCount int32
+	// Padding around the chars
+	CharsPadding int32
 	// Characters texture atlas
 	Texture Texture2D
 	// Characters rectangles in texture
@@ -1024,7 +1027,8 @@ type TextureWrapMode int32
 const (
 	WrapRepeat TextureWrapMode = iota
 	WrapClamp
-	WrapMirror
+	WrapMirrorRepeat
+	WrapMirrorClamp
 )
 
 // Image type, bpp always RGBA (32bit)
@@ -1109,11 +1113,13 @@ type RenderTexture2D struct {
 	ID uint32
 	// Color buffer attachment texture
 	Texture Texture2D
+	// Depth buffer attachment texture
+	Depth Texture2D
 }
 
 // NewRenderTexture2D - Returns new RenderTexture2D
-func NewRenderTexture2D(id uint32, texture Texture2D) RenderTexture2D {
-	return RenderTexture2D{id, texture}
+func NewRenderTexture2D(id uint32, texture, depth Texture2D) RenderTexture2D {
+	return RenderTexture2D{id, texture, depth}
 }
 
 // newRenderTexture2DFromPointer - Returns new RenderTexture2D from pointer
