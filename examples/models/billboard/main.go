@@ -33,9 +33,9 @@ func main() {
 
 		rl.BeginMode3D(camera)
 
-		rl.DrawBillboard(camera, bill, billPosition, 2.0, rl.White)
-
 		rl.DrawGrid(10, 1.0) // Draw a grid
+
+		rl.DrawBillboard(camera, bill, billPosition, 2.0, rl.White)
 
 		rl.EndMode3D()
 
