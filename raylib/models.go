@@ -400,6 +400,16 @@ func DrawBillboardRec(camera Camera, texture Texture2D, sourceRec Rectangle, cen
 	C.DrawBillboardRec(*ccamera, *ctexture, *csourceRec, *ccenter, *csize, *ctint)
 }
 
+// DrawMesh - Draw a single mesh
+func DrawMesh(mesh Mesh, material Material, transform Matrix) {
+	C.DrawMesh(*mesh.cptr(), *material.cptr(), *transform.cptr())
+}
+
+// DrawMeshInstanced - Draw mesh with instanced rendering
+func DrawMeshInstanced(mesh Mesh, material Material, transforms []Matrix, instances int) {
+	C.DrawMeshInstanced(*mesh.cptr(), *material.cptr(), transforms[0].cptr(), C.int(instances))
+}
+
 // GetMeshBoundingBox - Compute mesh bounding box limits
 func GetMeshBoundingBox(mesh Mesh) BoundingBox {
 	cmesh := mesh.cptr()

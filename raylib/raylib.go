@@ -830,6 +830,11 @@ func newMaterialFromPointer(ptr unsafe.Pointer) Material {
 	return *(*Material)(ptr)
 }
 
+// GetMap - Get pointer to MaterialMap by map type
+func (mt Material) GetMap(index int32) *MaterialMap {
+	return (*MaterialMap)(unsafe.Pointer(uintptr(unsafe.Pointer(mt.Maps)) + uintptr(index)*uintptr(unsafe.Sizeof(MaterialMap{}))))
+}
+
 // MaterialMap type
 type MaterialMap struct {
 	// Texture
@@ -918,6 +923,16 @@ func NewShader(id uint32, locs *int32) Shader {
 // newShaderFromPointer - Returns new Shader from pointer
 func newShaderFromPointer(ptr unsafe.Pointer) Shader {
 	return *(*Shader)(ptr)
+}
+
+// GetLocation - Get shader value's location
+func (sh Shader) GetLocation(index int32) int32 {
+	return *(*int32)(unsafe.Pointer(uintptr(unsafe.Pointer(sh.Locs)) + uintptr(index*4)))
+}
+
+// UpdateLocation - Update shader value's location
+func (sh Shader) UpdateLocation(index int32, loc int32) {
+	*(*int32)(unsafe.Pointer(uintptr(unsafe.Pointer(sh.Locs)) + uintptr(index*4))) = loc
 }
 
 // CharInfo - Font character info
