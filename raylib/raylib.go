@@ -716,8 +716,10 @@ const (
 )
 
 // Shader location point type
+type LocationPointType int32
+
 const (
-	LocVertexPosition = iota
+	LocVertexPosition LocationPointType = iota
 	LocVertexTexcoord01
 	LocVertexTexcoord02
 	LocVertexNormal
@@ -746,8 +748,10 @@ const (
 )
 
 // Material map type
+type MaterialMapType int32
+
 const (
-	MapAlbedo = iota
+	MapAlbedo MaterialMapType = iota
 	MapMetalness
 	MapNormal
 	MapRoughness
@@ -828,6 +832,11 @@ type Material struct {
 // newMaterialFromPointer - Returns new Material from pointer
 func newMaterialFromPointer(ptr unsafe.Pointer) Material {
 	return *(*Material)(ptr)
+}
+
+// GetMap - Get pointer to MaterialMap by map type
+func (mt Material) GetMap(index MaterialMapType) *MaterialMap {
+	return (*MaterialMap)(unsafe.Pointer(uintptr(unsafe.Pointer(mt.Maps)) + uintptr(index)*uintptr(unsafe.Sizeof(MaterialMap{}))))
 }
 
 // MaterialMap type
@@ -918,6 +927,16 @@ func NewShader(id uint32, locs *int32) Shader {
 // newShaderFromPointer - Returns new Shader from pointer
 func newShaderFromPointer(ptr unsafe.Pointer) Shader {
 	return *(*Shader)(ptr)
+}
+
+// GetLocation - Get shader value's location
+func (sh Shader) GetLocation(index LocationPointType) int32 {
+	return *(*int32)(unsafe.Pointer(uintptr(unsafe.Pointer(sh.Locs)) + uintptr(index*4)))
+}
+
+// UpdateLocation - Update shader value's location
+func (sh Shader) UpdateLocation(index LocationPointType, loc int32) {
+	*(*int32)(unsafe.Pointer(uintptr(unsafe.Pointer(sh.Locs)) + uintptr(index*4))) = loc
 }
 
 // CharInfo - Font character info
