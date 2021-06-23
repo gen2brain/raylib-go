@@ -169,33 +169,33 @@ const (
 	// Raylib Config Flags
 
 	// Set to try enabling V-Sync on GPU
-	FlagVsyncHint = C.FLAG_VSYNC_HINT
+	FlagVsyncHint = 0x00000040
 	// Set to run program in fullscreen
-	FlagFullscreenMode = C.FLAG_FULLSCREEN_MODE
+	FlagFullscreenMode = 0x00000002
 	// Set to allow resizable window
-	FlagWindowResizable = C.FLAG_WINDOW_RESIZABLE
+	FlagWindowResizable = 0x00000004
 	// Set to disable window decoration (frame and buttons)
-	FlagWindowUndecorated = C.FLAG_WINDOW_UNDECORATED
+	FlagWindowUndecorated = 0x00000008
 	// Set to hide window
-	FlagWindowHidden = C.FLAG_WINDOW_HIDDEN
+	FlagWindowHidden = 0x00000080
 	// Set to minimize window (iconify)
-	FlagWindowMinimized = C.FLAG_WINDOW_MINIMIZED
+	FlagWindowMinimized = 0x00000200
 	// Set to maximize window (expanded to monitor)
-	FlagWindowMaximized = C.FLAG_WINDOW_MAXIMIZED
+	FlagWindowMaximized = 0x00000400
 	// Set to window non focused
-	FlagWindowUnfocused = C.FLAG_WINDOW_UNFOCUSED
+	FlagWindowUnfocused = 0x00000800
 	// Set to window always on top
-	FlagWindowTopmost = C.FLAG_WINDOW_TOPMOST
+	FlagWindowTopmost = 0x00001000
 	// Set to allow windows running while minimized
-	FlagWindowAlwaysRun = C.FLAG_WINDOW_ALWAYS_RUN
+	FlagWindowAlwaysRun = 0x00000100
 	// Set to allow transparent window
-	FlagWindowTransparent = C.FLAG_WINDOW_TRANSPARENT
+	FlagWindowTransparent = 0x00000010
 	// Set to support HighDPI
-	FlagWindowHighdpi = C.FLAG_WINDOW_HIGHDPI
+	FlagWindowHighdpi = 0x00002000
 	// Set to try enabling MSAA 4X
-	FlagMsaa4xHint = C.FLAG_MSAA_4X_HINT
+	FlagMsaa4xHint = 0x00000020
 	// Set to try enabling interlaced video format (for V3D)
-	FlagInterlacedHint = C.FLAG_INTERLACED_HINT
+	FlagInterlacedHint = 0x00010000
 
 	// Keyboard Function Keys
 	KeySpace        = 32
