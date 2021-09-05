@@ -647,6 +647,13 @@ func GetKeyPressed() int32 {
 	return v
 }
 
+// GetCharPressed - Get the last char pressed
+func GetCharPressed() int32 {
+	ret := C.GetCharPressed()
+	v := (int32)(ret)
+	return v
+}
+
 // SetExitKey - Set a custom key to exit program (default is ESC)
 func SetExitKey(key int32) {
 	ckey := (C.int)(key)
