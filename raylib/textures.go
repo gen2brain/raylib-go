@@ -355,6 +355,13 @@ func ImageColorReplace(image *Image, color, replace Color) {
 	C.ImageColorReplace(cimage, *ccolor, *creplace)
 }
 
+// ImageClearBackground - Clear image background with given color
+func ImageClearBackground(dst *Image, color Color) {
+	cdst := dst.cptr()
+	ccolor := color.cptr()
+	C.ImageClearBackground(cdst, *ccolor)
+}
+
 // ImageDraw - Draw a source image within a destination image
 func ImageDraw(dst, src *Image, srcRec, dstRec Rectangle, tint Color) {
 	cdst := dst.cptr()
@@ -363,6 +370,42 @@ func ImageDraw(dst, src *Image, srcRec, dstRec Rectangle, tint Color) {
 	cdstRec := dstRec.cptr()
 	ctint := tint.cptr()
 	C.ImageDraw(cdst, *csrc, *csrcRec, *cdstRec, *ctint)
+}
+
+// ImageDrawCircle - Draw circle within an image
+func ImageDrawCircle(dst *Image, centerX, centerY, radius int32, color Color) {
+	cdst := dst.cptr()
+	ccenterX := (C.int)(centerX)
+	ccenterY := (C.int)(centerY)
+	cradius := (C.int)(radius)
+	ccolor := color.cptr()
+	C.ImageDrawCircle(cdst, ccenterX, ccenterY, cradius, *ccolor)
+}
+
+// ImageDrawCircleV - Draw circle within an image
+func ImageDrawCircleV(dst *Image, center Vector2, radius int32, color Color) {
+	cdst := dst.cptr()
+	ccenter := center.cptr()
+	cradius := (C.int)(radius)
+	ccolor := color.cptr()
+	C.ImageDrawCircle(cdst, *ccenter, cradius, *ccolor)
+}
+
+// ImageDrawPixel - Draw pixel within an image
+func ImageDrawPixel(dst *Image, posX, posY int32, color Color) {
+	cdst := dst.cptr()
+	cposX := (C.int)(posX)
+	cposY := (C.int)(posY)
+	ccolor := color.cptr()
+	C.ImageDrawPixel(cdst, cposX, cposY, *ccolor)
+}
+
+// ImageDrawPixelV - Draw pixel within an image (Vector version)
+func ImageDrawPixelV(dst *Image, position Vector2, color Color) {
+	cdst := dst.cptr()
+	cposition := position.cptr()
+	ccolor := color.cptr()
+	C.ImageDrawPixelV(cdst, *cposition, *ccolor)
 }
 
 // ImageDrawRectangle - Draw rectangle within an image
@@ -376,6 +419,15 @@ func ImageDrawRectangle(dst *Image, x, y, width, height int32, color Color) {
 	C.ImageDrawRectangle(cdst, cx, cy, cwidth, cheight, *ccolor)
 }
 
+// ImageDrawRectangleV - Draw rectangle within an image (Vector version)
+func ImageDrawRectangleV(dst *Image, position, size Vector2, color Color) {
+	cdst := dst.cptr()
+	cposition := position.cptr()
+	csize := size.cptr()
+	ccolor := color.cptr()
+	C.ImageDrawRectangleV(cdst, *cposition, *csize, *ccolor)
+}
+
 // ImageDrawRectangleLines - Draw rectangle lines within an image
 func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int, color Color) {
 	cdst := dst.cptr()
@@ -383,6 +435,14 @@ func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int, color Color) 
 	cthick := (C.int)(thick)
 	ccolor := color.cptr()
 	C.ImageDrawRectangleLines(cdst, *crec, cthick, *ccolor)
+}
+
+// ImageDrawRectangleRec - Draw rectangle within an image
+func ImageDrawRectangleRec(dst *Image, rec Rectangle, color Color) {
+	cdst := dst.cptr()
+	crec := rec.cptr()
+	ccolor := color.cptr()
+	C.ImageDrawRectangleRec(cdst, *crec, *ccolor)
 }
 
 // ImageDrawText - Draw text (default font) within an image (destination)
