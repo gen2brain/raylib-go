@@ -388,7 +388,7 @@ func ImageDrawCircleV(dst *Image, center Vector2, radius int32, color Color) {
 	ccenter := center.cptr()
 	cradius := (C.int)(radius)
 	ccolor := color.cptr()
-	C.ImageDrawCircle(cdst, *ccenter, cradius, *ccolor)
+	C.ImageDrawCircleV(cdst, *ccenter, cradius, *ccolor)
 }
 
 // ImageDrawPixel - Draw pixel within an image
