@@ -56,9 +56,6 @@
 #ifndef MAX_TRACELOG_MSG_LENGTH
     #define MAX_TRACELOG_MSG_LENGTH     128     // Max length of one trace-log message
 #endif
-#ifndef MAX_UWP_MESSAGES
-    #define MAX_UWP_MESSAGES            512     // Max UWP messages to process
-#endif
 
 //----------------------------------------------------------------------------------
 // Global Variables Definition
@@ -82,8 +79,8 @@ void SetSaveFileTextCallback(SaveFileTextCallback callback) { saveFileText = cal
 
 
 #if defined(PLATFORM_ANDROID)
-static AAssetManager *assetManager = NULL;              // Android assets manager pointer
-static const char *internalDataPath = NULL;             // Android internal data path
+static AAssetManager *assetManager = NULL;          // Android assets manager pointer
+static const char *internalDataPath = NULL;         // Android internal data path
 #endif
 
 //----------------------------------------------------------------------------------
@@ -124,7 +121,7 @@ void TraceLog(int logType, const char *text, ...)
     }
 
 #if defined(PLATFORM_ANDROID)
-    switch(logType)
+    switch (logType)
     {
         case LOG_TRACE: __android_log_vprint(ANDROID_LOG_VERBOSE, "raylib", text, args); break;
         case LOG_DEBUG: __android_log_vprint(ANDROID_LOG_DEBUG, "raylib", text, args); break;
@@ -155,7 +152,7 @@ void TraceLog(int logType, const char *text, ...)
 
     va_end(args);
 
-    if (logType == LOG_ERROR) exit(1);  // If error, exit program
+    if (logType == LOG_FATAL) exit(EXIT_FAILURE);  // If fatal logging, exit program
 
 #endif  // SUPPORT_TRACELOG
 }
@@ -378,8 +375,8 @@ FILE *android_fopen(const char *fileName, const char *mode)
 {
     if (mode[0] == 'w')
     {
-        // TODO: fopen() is mapped to android_fopen() that only grants read access
-        // to assets directory through AAssetManager but we want to also be able to
+        // fopen() is mapped to android_fopen() that only grants read access to
+        // assets directory through AAssetManager but we want to also be able to
         // write data when required using the standard stdio FILE access functions
         // Ref: https://stackoverflow.com/questions/11294487/android-writing-saving-files-from-native-code-only
         #undef fopen
@@ -393,7 +390,7 @@ FILE *android_fopen(const char *fileName, const char *mode)
 
         if (asset != NULL)
         {
-            // Return pointer to file in the assets
+            // Get pointer to file in the assets
             return funopen(asset, android_read, android_write, android_seek, android_close);
         }
         else

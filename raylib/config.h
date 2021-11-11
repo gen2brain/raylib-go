@@ -28,16 +28,16 @@
 //------------------------------------------------------------------------------------
 // Module: core - Configuration Flags
 //------------------------------------------------------------------------------------
-// Camera module is included (camera.h) and multiple predefined cameras are available: free, 1st/3rd person, orbital
+// Camera module is included (rcamera.h) and multiple predefined cameras are available: free, 1st/3rd person, orbital
 #define SUPPORT_CAMERA_SYSTEM       1
-// Gestures module is included (gestures.h) to support gestures detection: tap, hold, swipe, drag
+// Gestures module is included (rgestures.h) to support gestures detection: tap, hold, swipe, drag
 #define SUPPORT_GESTURES_SYSTEM     1
 // Mouse gestures are directly mapped like touches and processed by gestures system
 #define SUPPORT_MOUSE_GESTURES      1
 // Reconfigure standard input to receive key inputs, works with SSH connection.
 #define SUPPORT_SSH_KEYBOARD_RPI    1
 // Draw a mouse pointer on screen
-#define SUPPORT_MOUSE_CURSOR_NATIVE 1
+//#define SUPPORT_MOUSE_CURSOR_POINT   1
 // Setting a higher resolution can improve the accuracy of time-out intervals in wait functions.
 // However, it can also reduce overall system performance, because the thread scheduler switches tasks more often.
 #define SUPPORT_WINMM_HIGHRES_TIMER 1
@@ -55,6 +55,12 @@
 #define SUPPORT_COMPRESSION_API     1
 // Support saving binary data automatically to a generated storage.data file. This file is managed internally.
 #define SUPPORT_DATA_STORAGE        1
+// Support automatic generated events, loading and recording of those events when required
+//#define SUPPORT_EVENTS_AUTOMATION     1
+// Support custom frame control, only for advance users
+// By default EndDrawing() does this job: draws everything + SwapScreenBuffer() + manage frame timming + PollInputEvents()
+// Enabling this flag allows manual control of the frame processes, use at your own risk
+//#define SUPPORT_CUSTOM_FRAME_CONTROL   1
 
 // core: Configuration values
 //------------------------------------------------------------------------------------
@@ -67,7 +73,7 @@
 #define MAX_GAMEPADS                   4        // Max number of gamepads supported
 #define MAX_GAMEPAD_AXIS               8        // Max number of axis supported (per gamepad)
 #define MAX_GAMEPAD_BUTTONS           32        // Max bumber of buttons supported (per gamepad)
-#define MAX_TOUCH_POINTS              10        // Maximum number of touch points supported
+#define MAX_TOUCH_POINTS               8        // Maximum number of touch points supported
 #define MAX_KEY_PRESSED_QUEUE         16        // Max number of characters in the key input queue
 
 #define STORAGE_DATA_FILE  "storage.data"       // Automatic storage filename
@@ -78,33 +84,43 @@
 //------------------------------------------------------------------------------------
 // Module: rlgl - Configuration values
 //------------------------------------------------------------------------------------
+
+// Enable OpenGL Debug Context (only available on OpenGL 4.3)
+//#define RLGL_ENABLE_OPENGL_DEBUG_CONTEXT       1
+
 // Show OpenGL extensions and capabilities detailed logs on init
-//#define SUPPORT_GL_DETAILS_INFO        1
+//#define RLGL_SHOW_GL_DETAILS_INFO              1
 
-#if defined(GRAPHICS_API_OPENGL_11) || defined(GRAPHICS_API_OPENGL_33)
-    #define DEFAULT_BATCH_BUFFER_ELEMENTS   8192    // Default internal render batch limits
-#elif defined(GRAPHICS_API_OPENGL_ES2)
-    #define DEFAULT_BATCH_BUFFER_ELEMENTS   2048    // Default internal render batch limits
-#endif
+//#define RL_DEFAULT_BATCH_BUFFER_ELEMENTS    4096    // Default internal render batch elements limits
+#define RL_DEFAULT_BATCH_BUFFERS               1      // Default number of batch buffers (multi-buffering)
+#define RL_DEFAULT_BATCH_DRAWCALLS           256      // Default number of batch draw calls (by state changes: mode, texture)
+#define RL_DEFAULT_BATCH_MAX_TEXTURE_UNITS     4      // Maximum number of textures units that can be activated on batch drawing (SetShaderValueTexture())
 
-#define DEFAULT_BATCH_BUFFERS            1      // Default number of batch buffers (multi-buffering)
-#define DEFAULT_BATCH_DRAWCALLS        256      // Default number of batch draw calls (by state changes: mode, texture)
+#define RL_MAX_MATRIX_STACK_SIZE              32      // Maximum size of internal Matrix stack
 
-#define MAX_MATRIX_STACK_SIZE           32      // Maximum size of internal Matrix stack
-#define MAX_MESH_VERTEX_BUFFERS          7      // Maximum vertex buffers (VBO) per mesh
-#define MAX_SHADER_LOCATIONS            32      // Maximum number of shader locations supported
-#define MAX_MATERIAL_MAPS               12      // Maximum number of shader maps supported
+#define RL_MAX_SHADER_LOCATIONS               32      // Maximum number of shader locations supported
 
-#define RL_CULL_DISTANCE_NEAR         0.01      // Default projection matrix near cull distance
-#define RL_CULL_DISTANCE_FAR        1000.0      // Default projection matrix far cull distance
+#define RL_CULL_DISTANCE_NEAR               0.01      // Default projection matrix near cull distance
+#define RL_CULL_DISTANCE_FAR              1000.0      // Default projection matrix far cull distance
 
 // Default shader vertex attribute names to set location points
-#define DEFAULT_SHADER_ATTRIB_NAME_POSITION    "vertexPosition"    // Binded by default to shader location: 0
-#define DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD    "vertexTexCoord"    // Binded by default to shader location: 1
-#define DEFAULT_SHADER_ATTRIB_NAME_NORMAL      "vertexNormal"      // Binded by default to shader location: 2
-#define DEFAULT_SHADER_ATTRIB_NAME_COLOR       "vertexColor"       // Binded by default to shader location: 3
-#define DEFAULT_SHADER_ATTRIB_NAME_TANGENT     "vertexTangent"     // Binded by default to shader location: 4
-#define DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD2   "vertexTexCoord2"   // Binded by default to shader location: 5
+// NOTE: When a new shader is loaded, the following locations are tried to be set for convenience
+#define RL_DEFAULT_SHADER_ATTRIB_NAME_POSITION     "vertexPosition"    // Binded by default to shader location: 0
+#define RL_DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD     "vertexTexCoord"    // Binded by default to shader location: 1
+#define RL_DEFAULT_SHADER_ATTRIB_NAME_NORMAL       "vertexNormal"      // Binded by default to shader location: 2
+#define RL_DEFAULT_SHADER_ATTRIB_NAME_COLOR        "vertexColor"       // Binded by default to shader location: 3
+#define RL_DEFAULT_SHADER_ATTRIB_NAME_TANGENT      "vertexTangent"     // Binded by default to shader location: 4
+#define RL_DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD2    "vertexTexCoord2"   // Binded by default to shader location: 5
+
+#define RL_DEFAULT_SHADER_UNIFORM_NAME_MVP         "mvp"               // model-view-projection matrix
+#define RL_DEFAULT_SHADER_UNIFORM_NAME_VIEW        "matView"           // view matrix
+#define RL_DEFAULT_SHADER_UNIFORM_NAME_PROJECTION  "matProjection"     // projection matrix
+#define RL_DEFAULT_SHADER_UNIFORM_NAME_MODEL       "matModel"          // model matrix
+#define RL_DEFAULT_SHADER_UNIFORM_NAME_NORMAL      "matNormal"         // normal matrix (transpose(inverse(matModelView))
+#define RL_DEFAULT_SHADER_UNIFORM_NAME_COLOR       "colDiffuse"        // color diffuse (base tint color, multiplied by texture color)
+#define RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE0  "texture0"          // texture0 (texture slot active 0)
+#define RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE1  "texture1"          // texture1 (texture slot active 1)
+#define RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE2  "texture2"          // texture2 (texture slot active 2)
 
 
 //------------------------------------------------------------------------------------
@@ -159,7 +175,6 @@
 //------------------------------------------------------------------------------------
 #define MAX_TEXT_BUFFER_LENGTH      1024        // Size of internal static buffers used on some functions:
                                                 // TextFormat(), TextSubtext(), TextToUpper(), TextToLower(), TextToPascal(), TextSplit()
-#define MAX_TEXT_UNICODE_CHARS       512        // Maximum number of unicode codepoints: GetCodepoints()
 #define MAX_TEXTSPLIT_COUNT          128        // Maximum number of substrings to split: TextSplit()
 
 
@@ -171,10 +186,15 @@
 #define SUPPORT_FILEFORMAT_MTL      1
 #define SUPPORT_FILEFORMAT_IQM      1
 #define SUPPORT_FILEFORMAT_GLTF     1
+#define SUPPORT_FILEFORMAT_VOX      1
 // Support procedural mesh generation functions, uses external par_shapes.h library
 // NOTE: Some generated meshes DO NOT include generated texture coordinates
 #define SUPPORT_MESH_GENERATION     1
 
+// models: Configuration values
+//------------------------------------------------------------------------------------
+#define MAX_MATERIAL_MAPS               12      // Maximum number of shader maps supported
+#define MAX_MESH_VERTEX_BUFFERS          7      // Maximum vertex buffers (VBO) per mesh
 
 //------------------------------------------------------------------------------------
 // Module: audio - Configuration Flags
@@ -208,4 +228,3 @@
 // utils: Configuration values
 //------------------------------------------------------------------------------------
 #define MAX_TRACELOG_MSG_LENGTH          128    // Max length of one trace-log message
-#define MAX_UWP_MESSAGES                 512    // Max UWP messages to process
