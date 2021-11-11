@@ -15,4 +15,4 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Build
-      run: go build ./...
+      run: make
