@@ -1,3 +1,4 @@
+//go:build !rpi && !drm && !android
 // +build !rpi,!drm,!android
 
 package rl

@@ -2,6 +2,7 @@ package raygui
 
 import (
 	"fmt"
+
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -38,7 +39,7 @@ func ComboBox(bounds rl.Rectangle, comboText []string, active int) int {
 	textWidth := rl.MeasureText(activeText, textHeight)
 
 	// Ensure box is large enough.
-	ConstrainRectangle(&bounds, textWidth, textWidth + GetStyle32(ToggleTextPadding), textHeight, textHeight + GetStyle32(ToggleTextPadding))
+	ConstrainRectangle(&bounds, textWidth, textWidth+GetStyle32(ToggleTextPadding), textHeight, textHeight+GetStyle32(ToggleTextPadding))
 	b := bounds.ToInt32()
 
 	// Generate the worst-case sizing of the counter so we can avoid resizing it as the numbers go up/down.

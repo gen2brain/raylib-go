@@ -1,3 +1,4 @@
+//go:build !android && !windows
 // +build !android,!windows
 
 package rl
