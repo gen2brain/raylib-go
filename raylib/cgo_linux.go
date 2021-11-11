@@ -46,6 +46,7 @@ package rl
 
 #cgo linux,opengl11 CFLAGS: -DGRAPHICS_API_OPENGL_11
 #cgo linux,opengl21 CFLAGS: -DGRAPHICS_API_OPENGL_21
-#cgo linux,!opengl11,!opengl21 CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo linux,opengl43 CFLAGS: -DGRAPHICS_API_OPENGL_43
+#cgo linux,!opengl11,!opengl21,!opengl43 CFLAGS: -DGRAPHICS_API_OPENGL_33
 */
 import "C"

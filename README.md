@@ -57,6 +57,7 @@ You can also build binary in [MSYS2](https://msys2.github.io/) shell.
 * `rpi` - build for Raspberry Pi platform (PLATFORM_RPI)
 * `wayland` - build against Wayland libraries
 * `noaudio` - disables audio functions
+* `opengl43` - uses OpenGL 4.3 backend
 * `opengl21` - uses OpenGL 2.1 backend (default is 3.3 on desktop)
 * `opengl11` - uses OpenGL 1.1 backend (pseudo OpenGL 1.1 style)
 

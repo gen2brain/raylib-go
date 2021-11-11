@@ -26,6 +26,7 @@ package rl
 
 #cgo windows,opengl11 CFLAGS: -DGRAPHICS_API_OPENGL_11
 #cgo windows,opengl21 CFLAGS: -DGRAPHICS_API_OPENGL_21
-#cgo windows,!opengl11,!opengl21 CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo windows,opengl43 CFLAGS: -DGRAPHICS_API_OPENGL_43
+#cgo windows,!opengl11,!opengl21,!opengl43 CFLAGS: -DGRAPHICS_API_OPENGL_33
 */
 import "C"

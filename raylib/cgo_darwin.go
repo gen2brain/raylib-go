@@ -26,6 +26,7 @@ package rl
 
 #cgo darwin,opengl11 CFLAGS: -DGRAPHICS_API_OPENGL_11
 #cgo darwin,opengl21 CFLAGS: -DGRAPHICS_API_OPENGL_21
-#cgo darwin,!opengl11,!opengl21 CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo darwin,opengl43 CFLAGS: -DGRAPHICS_API_OPENGL_43
+#cgo darwin,!opengl11,!opengl21,!opengl43 CFLAGS: -DGRAPHICS_API_OPENGL_33
 */
 import "C"
