@@ -4,7 +4,7 @@ import (
 	"image/png"
 	"os"
 
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func main() {
@@ -35,7 +35,7 @@ func main() {
 
 	for !rl.WindowShouldClose() {
 		if rl.IsKeyPressed(rl.KeyS) {
-			rimg := rl.GetTextureData(texture)
+			rimg := rl.LoadImageFromTexture(texture)
 
 			f, err := os.Create("image_saved.png")
 			if err != nil {

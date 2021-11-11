@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func main() {
@@ -14,8 +14,8 @@ func main() {
 	texture := rl.LoadTextureFromImage(image) // Image converted to texture, GPU memory (RAM -> VRAM)
 	rl.UnloadImage(image)                     // Unload image data from CPU memory (RAM)
 
-	image = rl.GetTextureData(texture) // Retrieve image data from GPU memory (VRAM -> RAM)
-	rl.UnloadTexture(texture)          // Unload texture from GPU memory (VRAM)
+	image = rl.LoadImageFromTexture(texture) // Retrieve image data from GPU memory (VRAM -> RAM)
+	rl.UnloadTexture(texture)                // Unload texture from GPU memory (VRAM)
 
 	texture = rl.LoadTextureFromImage(image) // Recreate texture from retrieved image data (RAM -> VRAM)
 	rl.UnloadImage(image)                    // Unload retrieved image data from CPU memory (RAM)

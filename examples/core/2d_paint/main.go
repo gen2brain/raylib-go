@@ -139,7 +139,7 @@ func main() {
 		}
 
 		if btnSaveMouseHover && rl.IsMouseButtonReleased(rl.MouseLeftButton) || rl.IsKeyPressed(rl.KeyS) {
-			image := rl.GetTextureData(target.Texture)
+			image := rl.LoadImageFromTexture(target.Texture)
 			rl.ImageFlipVertical(*&image)
 			rl.ExportImage(*image, "export.png")
 			rl.UnloadImage(image)
@@ -214,4 +214,3 @@ func main() {
 	os.Exit(0)
 
 }
-

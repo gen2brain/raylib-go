@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 const numTextures = 7
@@ -17,7 +17,6 @@ func main() {
 	radialGradient := rl.GenImageGradientRadial(screenWidth, screenHeight, 0, rl.White, rl.Black)
 	checked := rl.GenImageChecked(screenWidth, screenHeight, 32, 32, rl.Red, rl.Blue)
 	whiteNoise := rl.GenImageWhiteNoise(screenWidth, screenHeight, 0.5)
-	perlinNoise := rl.GenImagePerlinNoise(screenWidth, screenHeight, 50, 50, 4.0)
 	cellular := rl.GenImageCellular(screenWidth, screenHeight, 32)
 
 	textures := make([]rl.Texture2D, numTextures)
@@ -26,8 +25,7 @@ func main() {
 	textures[2] = rl.LoadTextureFromImage(radialGradient)
 	textures[3] = rl.LoadTextureFromImage(checked)
 	textures[4] = rl.LoadTextureFromImage(whiteNoise)
-	textures[5] = rl.LoadTextureFromImage(perlinNoise)
-	textures[6] = rl.LoadTextureFromImage(cellular)
+	textures[5] = rl.LoadTextureFromImage(cellular)
 
 	// Unload image data (CPU RAM)
 	rl.UnloadImage(verticalGradient)
@@ -35,7 +33,6 @@ func main() {
 	rl.UnloadImage(radialGradient)
 	rl.UnloadImage(checked)
 	rl.UnloadImage(whiteNoise)
-	rl.UnloadImage(perlinNoise)
 	rl.UnloadImage(cellular)
 
 	currentTexture := 0
@@ -74,9 +71,6 @@ func main() {
 			rl.DrawText("WHITE NOISE", 640, 10, 20, rl.Red)
 			break
 		case 5:
-			rl.DrawText("PERLIN NOISE", 630, 10, 20, rl.RayWhite)
-			break
-		case 6:
 			rl.DrawText("CELLULAR", 670, 10, 20, rl.RayWhite)
 			break
 		default:

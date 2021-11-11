@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func main() {
@@ -21,8 +21,7 @@ func main() {
 	cubeSize := rl.NewVector3(2.0, 2.0, 2.0)
 
 	var ray rl.Ray
-
-	collision := false
+	var collision rl.RayCollision
 
 	rl.SetCameraMode(camera, rl.CameraFree) // Set a free camera mode
 
@@ -32,12 +31,16 @@ func main() {
 		rl.UpdateCamera(&camera) // Update camera
 
 		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
-			ray = rl.GetMouseRay(rl.GetMousePosition(), camera)
+			if !collision.Hit {
+				ray = rl.GetMouseRay(rl.GetMousePosition(), camera)
 
-			// Check collision between ray and box
-			min := rl.NewVector3(cubePosition.X-cubeSize.X/2, cubePosition.Y-cubeSize.Y/2, cubePosition.Z-cubeSize.Z/2)
-			max := rl.NewVector3(cubePosition.X+cubeSize.X/2, cubePosition.Y+cubeSize.Y/2, cubePosition.Z+cubeSize.Z/2)
-			collision = rl.CheckCollisionRayBox(ray, rl.NewBoundingBox(min, max))
+				// Check collision between ray and box
+				min := rl.NewVector3(cubePosition.X-cubeSize.X/2, cubePosition.Y-cubeSize.Y/2, cubePosition.Z-cubeSize.Z/2)
+				max := rl.NewVector3(cubePosition.X+cubeSize.X/2, cubePosition.Y+cubeSize.Y/2, cubePosition.Z+cubeSize.Z/2)
+				collision = rl.GetRayCollisionBox(ray, rl.NewBoundingBox(min, max))
+			} else {
+				collision.Hit = false
+			}
 		}
 
 		rl.BeginDrawing()
@@ -46,7 +49,7 @@ func main() {
 
 		rl.BeginMode3D(camera)
 
-		if collision {
+		if collision.Hit {
 			rl.DrawCube(cubePosition, cubeSize.X, cubeSize.Y, cubeSize.Z, rl.Red)
 			rl.DrawCubeWires(cubePosition, cubeSize.X, cubeSize.Y, cubeSize.Z, rl.Maroon)
 
@@ -64,7 +67,7 @@ func main() {
 
 		rl.DrawText("Try selecting the box with mouse!", 240, 10, 20, rl.DarkGray)
 
-		if collision {
+		if collision.Hit {
 			rl.DrawText("BOX SELECTED", (screenWidth-rl.MeasureText("BOX SELECTED", 30))/2, int32(float32(screenHeight)*0.1), 30, rl.Green)
 		}
 

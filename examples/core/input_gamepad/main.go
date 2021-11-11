@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 const (
@@ -29,7 +29,7 @@ func main() {
 		if rl.IsGamepadAvailable(rl.GamepadPlayer1) {
 			rl.DrawText(fmt.Sprintf("GP1: %s", rl.GetGamepadName(rl.GamepadPlayer1)), 10, 10, 10, rl.Black)
 
-			if rl.IsGamepadName(rl.GamepadPlayer1, xbox360NameID) {
+			if rl.GetGamepadName(rl.GamepadPlayer1) == xbox360NameID {
 				rl.DrawTexture(texXboxPad, 0, 0, rl.DarkGray)
 
 				// Draw buttons: xbox home
@@ -99,7 +99,7 @@ func main() {
 				rl.DrawRectangle(170, 30, 15, int32(((1.0+rl.GetGamepadAxisMovement(rl.GamepadPlayer1, rl.GamepadXboxAxisLt))/2.0)*70), rl.Red)
 				rl.DrawRectangle(604, 30, 15, int32(((1.0+rl.GetGamepadAxisMovement(rl.GamepadPlayer1, rl.GamepadXboxAxisRt))/2.0)*70), rl.Red)
 
-			} else if rl.IsGamepadName(rl.GamepadPlayer1, ps3NameID) {
+			} else if rl.GetGamepadName(rl.GamepadPlayer1) == ps3NameID {
 				rl.DrawTexture(texPs3Pad, 0, 0, rl.DarkGray)
 
 				// Draw buttons: ps

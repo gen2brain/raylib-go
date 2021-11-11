@@ -3,7 +3,7 @@ package main
 import (
 	"math"
 
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 const (
@@ -17,7 +17,7 @@ func main() {
 	rl.InitAudioDevice()
 
 	// Init raw audio stream (sample rate: 22050, sample size: 32bit-float, channels: 1-mono)
-	stream := rl.InitAudioStream(22050, 32, 1)
+	stream := rl.LoadAudioStream(22050, 32, 1)
 
 	//// Fill audio stream with some samples (sine wave)
 	data := make([]float32, maxSamples)
@@ -73,7 +73,7 @@ func main() {
 		rl.EndDrawing()
 	}
 
-	rl.CloseAudioStream(stream) // Close raw audio stream and delete buffers from RAM
+	rl.UnloadAudioStream(stream) // Close raw audio stream and delete buffers from RAM
 
 	rl.CloseAudioDevice() // Close audio device (music streaming is automatically stopped)
 
