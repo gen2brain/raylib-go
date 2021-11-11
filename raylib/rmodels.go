@@ -194,6 +194,14 @@ func UnloadModel(model Model) {
 	C.UnloadModel(*cmodel)
 }
 
+// GetModelBoundingBox - Compute model bounding box limits (considers all meshes
+func GetModelBoundingBox(model Model) BoundingBox {
+	cmodel := model.cptr()
+	ret := C.GetModelBoundingBox(*cmodel)
+	v := newBoundingBoxFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // UnloadMesh - Unload mesh from memory (RAM and/or VRAM)
 func UnloadMesh(mesh *Mesh) {
 	cmesh := mesh.cptr()
@@ -206,6 +214,16 @@ func ExportMesh(mesh Mesh, fileName string) {
 	defer C.free(unsafe.Pointer(cfileName))
 	cmesh := mesh.cptr()
 	C.ExportMesh(*cmesh, cfileName)
+}
+
+// GenMeshPoly - Generate polygonal mesh
+func GenMeshPoly(sides int, radius float32) Mesh {
+	csides := (C.int)(sides)
+	cradius := (C.float)(radius)
+
+	ret := C.GenMeshPoly(csides, cradius)
+	v := newMeshFromPointer(unsafe.Pointer(&ret))
+	return v
 }
 
 // GenMeshPlane - Generate plane mesh (with subdivisions)
@@ -260,6 +278,17 @@ func GenMeshCylinder(radius, height float32, slices int) Mesh {
 	cslices := (C.int)(slices)
 
 	ret := C.GenMeshCylinder(cradius, cheight, cslices)
+	v := newMeshFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenMeshCone - Generate cone/pyramid mesh
+func GenMeshCone(radius, height float32, slices int) Mesh {
+	cradius := (C.float)(radius)
+	cheight := (C.float)(height)
+	cslices := (C.int)(slices)
+
+	ret := C.GenMeshCone(cradius, cheight, cslices)
 	v := newMeshFromPointer(unsafe.Pointer(&ret))
 	return v
 }

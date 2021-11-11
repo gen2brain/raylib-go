@@ -355,6 +355,17 @@ func ImageColorReplace(image *Image, color, replace Color) {
 	C.ImageColorReplace(cimage, *ccolor, *creplace)
 }
 
+// GetImageColor - Get image pixel color at (x, y) position
+func GetImageColor(image Image, x, y int32) Color {
+	cimage := image.cptr()
+	cx := (C.int)(x)
+	cy := (C.int)(y)
+
+	ret := C.GetImageColor(*cimage, cx, cy)
+	v := newColorFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // ImageClearBackground - Clear image background with given color
 func ImageClearBackground(dst *Image, color Color) {
 	cdst := dst.cptr()

@@ -133,12 +133,30 @@ func MeasureTextEx(font Font, text string, fontSize float32, spacing float32) Ve
 	return v
 }
 
-// GetGlyphIndex - Returns index position for a unicode character on spritefont
-func GetGlyphIndex(font Font, character int32) int32 {
+// GetGlyphIndex - Get glyph index position in font for a codepoint (unicode character), fallback to '?' if not found
+func GetGlyphIndex(font Font, codepoint int32) int32 {
 	cfont := font.cptr()
-	ccharacter := (C.int)(character)
-	ret := C.GetGlyphIndex(*cfont, ccharacter)
+	ccodepoint := (C.int)(codepoint)
+	ret := C.GetGlyphIndex(*cfont, ccodepoint)
 	v := (int32)(ret)
+	return v
+}
+
+// GetGlyphInfo - Get glyph font info data for a codepoint (unicode character), fallback to '?' if not found
+func GetGlyphInfo(font Font, codepoint int32) GlyphInfo {
+	cfont := font.cptr()
+	ccodepoint := (C.int)(codepoint)
+	ret := C.GetGlyphInfo(*cfont, ccodepoint)
+	v := newGlyphInfoFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetGlyphAtlasRec - Get glyph rectangle in font atlas for a codepoint (unicode character), fallback to '?' if not found
+func GetGlyphAtlasRec(font Font, codepoint int32) Rectangle {
+	cfont := font.cptr()
+	ccodepoint := (C.int)(codepoint)
+	ret := C.GetGlyphAtlasRec(*cfont, ccodepoint)
+	v := newRectangleFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
