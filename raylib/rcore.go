@@ -798,6 +798,13 @@ func GetMousePosition() Vector2 {
 	return v
 }
 
+// GetMouseDelta - Get mouse delta between frames
+func GetMouseDelta() Vector2 {
+	ret := C.GetMouseDelta()
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // SetMousePosition - Set mouse position XY
 func SetMousePosition(x, y int) {
 	cx := (C.int)(x)
@@ -845,5 +852,20 @@ func GetTouchPosition(index int32) Vector2 {
 	cindex := (C.int)(index)
 	ret := C.GetTouchPosition(cindex)
 	v := newVector2FromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetTouchPointId - Get touch point identifier for given index
+func GetTouchPointId(index int32) int32 {
+	cindex := (C.int)(index)
+	ret := C.GetTouchPointId(cindex)
+	v := (int32)(ret)
+	return v
+}
+
+// GetTouchPointCount - Get number of touch points
+func GetTouchPointCount() int32 {
+	ret := C.GetTouchPointCount()
+	v := (int32)(ret)
 	return v
 }

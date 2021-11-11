@@ -27,13 +27,6 @@ func GetGestureDetected() Gestures {
 	return v
 }
 
-// GetTouchPointCount - Get number of touch points
-func GetTouchPointCount() int32 {
-	ret := C.GetTouchPointCount()
-	v := (int32)(ret)
-	return v
-}
-
 // GetGestureHoldDuration - Get gesture hold time in milliseconds
 func GetGestureHoldDuration() float32 {
 	ret := C.GetGestureHoldDuration()
