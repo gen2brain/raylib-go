@@ -1,6 +1,6 @@
 package raygui
 
-import "github.com/gen2brain/raylib-go/raylib"
+import rl "github.com/gen2brain/raylib-go/raylib"
 
 // Slider - Slider element, returns selected value
 func Slider(bounds rl.Rectangle, value, minValue, maxValue float32) float32 {
@@ -55,18 +55,18 @@ func Slider(bounds rl.Rectangle, value, minValue, maxValue float32) float32 {
 	}
 
 	// Draw control
-	rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[SliderBorderColor])))
-	rl.DrawRectangle(b.X+int32(style[SliderBorderWidth]), b.Y+int32(style[SliderBorderWidth]), b.Width-(2*int32(style[SliderBorderWidth])), b.Height-(2*int32(style[SliderBorderWidth])), rl.GetColor(int32(style[SliderInsideColor])))
+	rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(uint(style[SliderBorderColor])))
+	rl.DrawRectangle(b.X+int32(style[SliderBorderWidth]), b.Y+int32(style[SliderBorderWidth]), b.Width-(2*int32(style[SliderBorderWidth])), b.Height-(2*int32(style[SliderBorderWidth])), rl.GetColor(uint(style[SliderInsideColor])))
 
 	switch state {
 	case Normal:
-		rl.DrawRectangle(sliderButton.X, sliderButton.Y, sliderButton.Width, sliderButton.Height, rl.GetColor(int32(style[SliderDefaultColor])))
+		rl.DrawRectangle(sliderButton.X, sliderButton.Y, sliderButton.Width, sliderButton.Height, rl.GetColor(uint(style[SliderDefaultColor])))
 		break
 	case Focused:
-		rl.DrawRectangle(sliderButton.X, sliderButton.Y, sliderButton.Width, sliderButton.Height, rl.GetColor(int32(style[SliderHoverColor])))
+		rl.DrawRectangle(sliderButton.X, sliderButton.Y, sliderButton.Width, sliderButton.Height, rl.GetColor(uint(style[SliderHoverColor])))
 		break
 	case Pressed:
-		rl.DrawRectangle(sliderButton.X, sliderButton.Y, sliderButton.Width, sliderButton.Height, rl.GetColor(int32(style[SliderActiveColor])))
+		rl.DrawRectangle(sliderButton.X, sliderButton.Y, sliderButton.Width, sliderButton.Height, rl.GetColor(uint(style[SliderActiveColor])))
 		break
 	default:
 		break

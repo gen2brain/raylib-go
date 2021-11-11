@@ -2,8 +2,9 @@ package raygui
 
 import (
 	"fmt"
-	"github.com/gen2brain/raylib-go/raylib"
 	"time"
+
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 var backspaceHeld = false
@@ -11,6 +12,7 @@ var nextBackspace = time.Now()
 
 // BackspaceRepeatDelay controls the time backspace must be held down before it will repeat.
 var BackspaceRepeatDelay = 300 * time.Millisecond
+
 // BackspaceRepeatInterval controls how frequently backspace registers after the initial delay.
 var BackspaceRepeatInterval = 60 * time.Millisecond
 
@@ -54,7 +56,7 @@ func TextBox(bounds rl.Rectangle, text string) string {
 	if state == Focused || state == Pressed {
 		// Draw a cursor, when focused.
 		if (framesCounter2/20)%2 == 0 {
-			rl.DrawRectangle(b.X+4+rl.MeasureText(text, int32(style[GlobalTextFontsize])), b.Y+2, 1, b.Height-4, rl.GetColor(int32(style[TextboxLineColor])))
+			rl.DrawRectangle(b.X+4+rl.MeasureText(text, int32(style[GlobalTextFontsize])), b.Y+2, 1, b.Height-4, rl.GetColor(uint(style[TextboxLineColor])))
 		}
 	}
 

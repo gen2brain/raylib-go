@@ -178,11 +178,11 @@ func DrawRectangleRec(rec Rectangle, color Color) {
 }
 
 // DrawRectanglePro - Draw a color-filled rectangle with pro parameters
-func DrawRectanglePro(rec Rectangle, origin Vector2, rotation float32, colors []Color) {
+func DrawRectanglePro(rec Rectangle, origin Vector2, rotation float32, color Color) {
 	crec := rec.cptr()
 	corigin := origin.cptr()
 	crotation := (C.float)(rotation)
-	ccolor := (*C.Color)(unsafe.Pointer(&colors[0]))
+	ccolor := color.cptr()
 	C.DrawRectanglePro(*crec, *corigin, crotation, *ccolor)
 }
 
@@ -385,6 +385,17 @@ func CheckCollisionLines(startPos1, endPos1, startPos2, endPos2 Vector2, point *
 	cendPos2 := endPos2.cptr()
 	cpoint := point.cptr()
 	ret := C.CheckCollisionLines(*cstartPos1, *cendPos1, *cstartPos2, *cendPos2, cpoint)
+	v := bool(ret)
+	return v
+}
+
+// CheckCollisionPointLine - Check if point belongs to line created between two points [p1] and [p2] with defined margin in pixels [threshold]
+func CheckCollisionPointLine(point, p1, p2 Vector2, threshold int32) bool {
+	cpoint := point.cptr()
+	cp1 := p1.cptr()
+	cp2 := p2.cptr()
+	cthreshold := (C.int)(threshold)
+	ret := C.CheckCollisionPointLine(*cpoint, *cp1, *cp2, cthreshold)
 	v := bool(ret)
 	return v
 }

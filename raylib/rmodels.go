@@ -35,6 +35,13 @@ func DrawLine3D(startPos Vector3, endPos Vector3, color Color) {
 	C.DrawLine3D(*cstartPos, *cendPos, *ccolor)
 }
 
+// DrawPoint3D - Draw a point in 3D space, actually a small line
+func DrawPoint3D(position Vector3, color Color) {
+	cposition := position.cptr()
+	ccolor := color.cptr()
+	C.DrawPoint3D(*cposition, *ccolor)
+}
+
 // DrawCircle3D - Draw a circle in 3D world space
 func DrawCircle3D(center Vector3, radius float32, rotationAxis Vector3, rotationAngle float32, color Color) {
 	ccenter := center.cptr()
@@ -71,6 +78,14 @@ func DrawCubeWires(position Vector3, width float32, height float32, length float
 	clength := (C.float)(length)
 	ccolor := color.cptr()
 	C.DrawCubeWires(*cposition, cwidth, cheight, clength, *ccolor)
+}
+
+// DrawCubeWiresV - Draw cube wires (Vector version)
+func DrawCubeWiresV(position Vector3, size Vector3, color Color) {
+	cposition := position.cptr()
+	csize := size.cptr()
+	ccolor := color.cptr()
+	C.DrawCubeWiresV(*cposition, *csize, *ccolor)
 }
 
 // DrawCubeTexture - Draw cube textured
@@ -448,32 +463,63 @@ func CheckCollisionBoxSphere(box BoundingBox, centerSphere Vector3, radiusSphere
 	return v
 }
 
-// CheckCollisionRaySphere - Detect collision between ray and sphere
-func CheckCollisionRaySphere(ray Ray, spherePosition Vector3, sphereRadius float32) bool {
+// GetRayCollisionSphere - Get collision info between ray and sphere
+func GetRayCollisionSphere(ray Ray, center Vector3, radius float32) RayCollision {
 	cray := ray.cptr()
-	cspherePosition := spherePosition.cptr()
-	csphereRadius := (C.float)(sphereRadius)
-	ret := C.CheckCollisionRaySphere(*cray, *cspherePosition, csphereRadius)
-	v := bool(ret)
+	ccenter := center.cptr()
+	cradius := (C.float)(radius)
+	ret := C.GetRayCollisionSphere(*cray, *ccenter, cradius)
+	v := newRayCollisionFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
-// CheckCollisionRaySphereEx - Detect collision between ray and sphere with extended parameters and collision point detection
-func CheckCollisionRaySphereEx(ray Ray, spherePosition Vector3, sphereRadius float32, collisionPoint Vector3) bool {
-	cray := ray.cptr()
-	cspherePosition := spherePosition.cptr()
-	csphereRadius := (C.float)(sphereRadius)
-	ccollisionPoint := collisionPoint.cptr()
-	ret := C.CheckCollisionRaySphereEx(*cray, *cspherePosition, csphereRadius, ccollisionPoint)
-	v := bool(ret)
-	return v
-}
-
-// CheckCollisionRayBox - Detect collision between ray and box
-func CheckCollisionRayBox(ray Ray, box BoundingBox) bool {
+// GetRayCollisionBox - Get collision info between ray and box
+func GetRayCollisionBox(ray Ray, box BoundingBox) RayCollision {
 	cray := ray.cptr()
 	cbox := box.cptr()
-	ret := C.CheckCollisionRayBox(*cray, *cbox)
-	v := bool(ret)
+	ret := C.GetRayCollisionBox(*cray, *cbox)
+	v := newRayCollisionFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetRayCollisionModel - Get collision info between ray and model
+func GetRayCollisionModel(ray Ray, model Model) RayCollision {
+	cray := ray.cptr()
+	cmodel := model.cptr()
+	ret := C.GetRayCollisionModel(*cray, *cmodel)
+	v := newRayCollisionFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetRayCollisionMesh - Get collision info between ray and mesh
+func GetRayCollisionMesh(ray Ray, mesh Mesh, transform Matrix) RayCollision {
+	cray := ray.cptr()
+	cmesh := mesh.cptr()
+	ctransform := transform.cptr()
+	ret := C.GetRayCollisionMesh(*cray, *cmesh, *ctransform)
+	v := newRayCollisionFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetRayCollisionTriangle - Get collision info between ray and triangle
+func GetRayCollisionTriangle(ray Ray, p1, p2, p3 Vector3) RayCollision {
+	cray := ray.cptr()
+	cp1 := p1.cptr()
+	cp2 := p2.cptr()
+	cp3 := p3.cptr()
+	ret := C.GetRayCollisionTriangle(*cray, *cp1, *cp2, *cp3)
+	v := newRayCollisionFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetRayCollisionQuad - Get collision info between ray and quad
+func GetRayCollisionQuad(ray Ray, p1, p2, p3, p4 Vector3) RayCollision {
+	cray := ray.cptr()
+	cp1 := p1.cptr()
+	cp2 := p2.cptr()
+	cp3 := p3.cptr()
+	cp4 := p4.cptr()
+	ret := C.GetRayCollisionQuad(*cray, *cp1, *cp2, *cp3, *cp4)
+	v := newRayCollisionFromPointer(unsafe.Pointer(&ret))
 	return v
 }

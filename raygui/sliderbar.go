@@ -1,6 +1,6 @@
 package raygui
 
-import "github.com/gen2brain/raylib-go/raylib"
+import rl "github.com/gen2brain/raylib-go/raylib"
 
 // SliderBar - Slider Bar element, returns selected value
 func SliderBar(bounds rl.Rectangle, value, minValue, maxValue float32) float32 {
@@ -51,25 +51,25 @@ func SliderBar(bounds rl.Rectangle, value, minValue, maxValue float32) float32 {
 	fixedValue = (float32(sliderBar.Width) * (maxValue - fixedMinValue)) / (float32(b.Width) - 2*float32(style[SliderBorderWidth]))
 
 	// Draw control
-	rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(int32(style[SliderbarBorderColor])))
-	rl.DrawRectangle(b.X+int32(style[SliderBorderWidth]), b.Y+int32(style[SliderBorderWidth]), b.Width-(2*int32(style[SliderBorderWidth])), b.Height-(2*int32(style[SliderBorderWidth])), rl.GetColor(int32(style[SliderbarInsideColor])))
+	rl.DrawRectangle(b.X, b.Y, b.Width, b.Height, rl.GetColor(uint(style[SliderbarBorderColor])))
+	rl.DrawRectangle(b.X+int32(style[SliderBorderWidth]), b.Y+int32(style[SliderBorderWidth]), b.Width-(2*int32(style[SliderBorderWidth])), b.Height-(2*int32(style[SliderBorderWidth])), rl.GetColor(uint(style[SliderbarInsideColor])))
 
 	switch state {
 	case Normal:
-		rl.DrawRectangle(sliderBar.X, sliderBar.Y, sliderBar.Width, sliderBar.Height, rl.GetColor(int32(style[SliderbarDefaultColor])))
+		rl.DrawRectangle(sliderBar.X, sliderBar.Y, sliderBar.Width, sliderBar.Height, rl.GetColor(uint(style[SliderbarDefaultColor])))
 		break
 	case Focused:
-		rl.DrawRectangle(sliderBar.X, sliderBar.Y, sliderBar.Width, sliderBar.Height, rl.GetColor(int32(style[SliderbarHoverColor])))
+		rl.DrawRectangle(sliderBar.X, sliderBar.Y, sliderBar.Width, sliderBar.Height, rl.GetColor(uint(style[SliderbarHoverColor])))
 		break
 	case Pressed:
-		rl.DrawRectangle(sliderBar.X, sliderBar.Y, sliderBar.Width, sliderBar.Height, rl.GetColor(int32(style[SliderbarActiveColor])))
+		rl.DrawRectangle(sliderBar.X, sliderBar.Y, sliderBar.Width, sliderBar.Height, rl.GetColor(uint(style[SliderbarActiveColor])))
 		break
 	default:
 		break
 	}
 
 	if minValue < 0 && maxValue > 0 {
-		rl.DrawRectangle((b.X+int32(style[SliderBorderWidth]))-int32(minValue*(float32(b.Width-(int32(style[SliderBorderWidth])*2))/maxValue)), sliderBar.Y, 1, sliderBar.Height, rl.GetColor(int32(style[SliderbarZeroLineColor])))
+		rl.DrawRectangle((b.X+int32(style[SliderBorderWidth]))-int32(minValue*(float32(b.Width-(int32(style[SliderBorderWidth])*2))/maxValue)), sliderBar.Y, 1, sliderBar.Height, rl.GetColor(uint(style[SliderbarZeroLineColor])))
 	}
 
 	return fixedValue + minValue

@@ -27,9 +27,9 @@ func GetGestureDetected() Gestures {
 	return v
 }
 
-// GetTouchPointsCount - Get touch points count
-func GetTouchPointsCount() int32 {
-	ret := C.GetTouchPointsCount()
+// GetTouchPointCount - Get number of touch points
+func GetTouchPointCount() int32 {
+	ret := C.GetTouchPointCount()
 	v := (int32)(ret)
 	return v
 }

@@ -22,7 +22,7 @@ func (i *Image) ToImage() image.Image {
 
 	// Get pixel data from image (RGBA 32bit)
 	cimg := i.cptr()
-	ret := C.GetImageData(*cimg)
+	ret := C.LoadImageColors(*cimg)
 	pixels := (*[1 << 24]uint8)(unsafe.Pointer(ret))[0 : i.Width*i.Height*4]
 
 	img.Pix = pixels
@@ -127,17 +127,17 @@ func UnloadRenderTexture(target RenderTexture2D) {
 	C.UnloadRenderTexture(*ctarget)
 }
 
-// GetImageData - Get pixel data from image as a Color slice
-func GetImageData(img *Image) []Color {
+// LoadImageColors - Get pixel data from image as a Color slice
+func LoadImageColors(img *Image) []Color {
 	cimg := img.cptr()
-	ret := C.GetImageData(*cimg)
+	ret := C.LoadImageColors(*cimg)
 	return (*[1 << 24]Color)(unsafe.Pointer(ret))[0 : img.Width*img.Height]
 }
 
-// GetTextureData - Get pixel data from GPU texture and return an Image
-func GetTextureData(texture Texture2D) *Image {
+// LoadImageFromTexture - Get pixel data from GPU texture and return an Image
+func LoadImageFromTexture(texture Texture2D) *Image {
 	ctexture := texture.cptr()
-	ret := C.GetTextureData(*ctexture)
+	ret := C.LoadImageFromTexture(*ctexture)
 	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
@@ -539,19 +539,6 @@ func GenImageWhiteNoise(width, height int, factor float32) *Image {
 	cfactor := (C.float)(factor)
 
 	ret := C.GenImageWhiteNoise(cwidth, cheight, cfactor)
-	v := newImageFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// GenImagePerlinNoise - Generate image: perlin noise
-func GenImagePerlinNoise(width, height, offsetX, offsetY int, scale float32) *Image {
-	cwidth := (C.int)(width)
-	cheight := (C.int)(height)
-	coffsetX := (C.int)(offsetX)
-	coffsetY := (C.int)(offsetY)
-	cscale := (C.float)(scale)
-
-	ret := C.GenImagePerlinNoise(cwidth, cheight, coffsetX, coffsetY, cscale)
 	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }

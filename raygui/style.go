@@ -5,10 +5,11 @@ package raygui
 import (
 	"bufio"
 	"fmt"
-	rl "github.com/gen2brain/raylib-go/raylib"
 	"io/ioutil"
 	"strconv"
 	"strings"
+
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 // Property - GUI property
@@ -394,17 +395,17 @@ func GetStyleProperty(guiProperty Property) int64 {
 
 // BackgroundColor will return the current background color
 func BackgroundColor() rl.Color {
-	return rl.GetColor(int32(style[GlobalBackgroundColor]))
+	return rl.GetColor(uint(style[GlobalBackgroundColor]))
 }
 
 // LinesColor will return the current color for lines
 func LinesColor() rl.Color {
-	return rl.GetColor(int32(style[GlobalLinesColor]))
+	return rl.GetColor(uint(style[GlobalLinesColor]))
 }
 
 // TextColor will return the current color for normal state
 func TextColor() rl.Color {
-	return rl.GetColor(int32(style[GlobalTextColor]))
+	return rl.GetColor(uint(style[GlobalTextColor]))
 }
 
 // GetStyle32 will return the int32 for a given property of the current style
@@ -414,5 +415,5 @@ func GetStyle32(property Property) int32 {
 
 // GetPropColor will return the Color value for a given property of the current style
 func GetStyleColor(property Property) rl.Color {
-	return rl.GetColor(int32(style[property]))
+	return rl.GetColor(uint(style[property]))
 }

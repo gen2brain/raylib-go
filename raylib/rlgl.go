@@ -6,8 +6,10 @@ package rl
 #include <stdlib.h>
 */
 import "C"
-import "unsafe"
-import "reflect"
+import (
+	"reflect"
+	"unsafe"
+)
 
 // cptr returns C pointer
 func (s *Shader) cptr() *C.Shader {
@@ -52,20 +54,6 @@ func LoadShaderFromMemory(vsCode string, fsCode string) Shader {
 func UnloadShader(shader Shader) {
 	cshader := shader.cptr()
 	C.UnloadShader(*cshader)
-}
-
-// GetShaderDefault - Get default shader
-func GetShaderDefault() Shader {
-	ret := C.rlGetShaderDefault()
-	v := newShaderFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// GetTextureDefault - Get default texture
-func GetTextureDefault() *Texture2D {
-	ret := C.rlGetTextureDefault()
-	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
-	return &v
 }
 
 // GetShaderLocation - Get shader uniform location

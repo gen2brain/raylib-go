@@ -894,6 +894,24 @@ func newRayFromPointer(ptr unsafe.Pointer) Ray {
 	return *(*Ray)(ptr)
 }
 
+// RayCollision type - ray hit information
+type RayCollision struct {
+	Hit      bool
+	Distance float32
+	Point    Vector3
+	Normal   Vector3
+}
+
+// NewRayCollision - Returns new RayCollision
+func NewRayCollision(hit bool, distance float32, point, normal Vector3) RayCollision {
+	return RayCollision{hit, distance, point, normal}
+}
+
+// newRayCollisionFromPointer - Returns new RayCollision from pointer
+func newRayCollisionFromPointer(ptr unsafe.Pointer) RayCollision {
+	return *(*RayCollision)(ptr)
+}
+
 // BlendMode type
 type BlendMode int32
 
@@ -935,8 +953,8 @@ func (sh Shader) UpdateLocation(index int32, loc int32) {
 	*(*int32)(unsafe.Pointer(uintptr(unsafe.Pointer(sh.Locs)) + uintptr(index*4))) = loc
 }
 
-// CharInfo - Font character info
-type CharInfo struct {
+// GlyphInfo - Font character info
+type GlyphInfo struct {
 	// Character value (Unicode)
 	Value int32
 	// Character offset X when drawing
@@ -949,14 +967,14 @@ type CharInfo struct {
 	Image Image
 }
 
-// NewCharInfo - Returns new CharInfo
-func NewCharInfo(value int32, offsetX, offsetY, advanceX int32, image Image) CharInfo {
-	return CharInfo{value, offsetX, offsetY, advanceX, image}
+// NewGlyphInfo - Returns new CharInfo
+func NewGlyphInfo(value int32, offsetX, offsetY, advanceX int32, image Image) GlyphInfo {
+	return GlyphInfo{value, offsetX, offsetY, advanceX, image}
 }
 
-// newCharInfoFromPointer - Returns new CharInfo from pointer
-func newCharInfoFromPointer(ptr unsafe.Pointer) CharInfo {
-	return *(*CharInfo)(ptr)
+// newGlyphInfoFromPointer - Returns new GlyphInfo from pointer
+func newGlyphInfoFromPointer(ptr unsafe.Pointer) GlyphInfo {
+	return *(*GlyphInfo)(ptr)
 }
 
 // Font type, includes texture and charSet array data
@@ -972,7 +990,7 @@ type Font struct {
 	// Characters rectangles in texture
 	Recs *Rectangle
 	// Characters info data
-	Chars *CharInfo
+	Chars *GlyphInfo
 }
 
 // newFontFromPointer - Returns new Font from pointer

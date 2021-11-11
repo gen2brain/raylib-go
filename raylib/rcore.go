@@ -520,8 +520,8 @@ func ColorAlphaBlend(src, dst, tint Color) Color {
 }
 
 // GetColor - Returns a Color struct from hexadecimal value
-func GetColor(hexValue int32) Color {
-	chexValue := (C.int)(hexValue)
+func GetColor(hexValue uint) Color {
+	chexValue := (C.uint)(hexValue)
 	ret := C.GetColor(chexValue)
 	v := newColorFromPointer(unsafe.Pointer(&ret))
 	return v
@@ -664,16 +664,6 @@ func SetExitKey(key int32) {
 func IsGamepadAvailable(gamepad int32) bool {
 	cgamepad := (C.int)(gamepad)
 	ret := C.IsGamepadAvailable(cgamepad)
-	v := bool(ret)
-	return v
-}
-
-// IsGamepadName - Check gamepad name (if available)
-func IsGamepadName(gamepad int32, name string) bool {
-	cgamepad := (C.int)(gamepad)
-	cname := C.CString(name)
-	defer C.free(unsafe.Pointer(cname))
-	ret := C.IsGamepadName(cgamepad, cname)
 	v := bool(ret)
 	return v
 }

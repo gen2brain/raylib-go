@@ -1,3 +1,4 @@
+//go:build !noaudio
 // +build !noaudio
 
 package rl
@@ -9,8 +10,10 @@ package rl
 #include <stdlib.h>
 */
 import "C"
-import "unsafe"
-import "reflect"
+import (
+	"reflect"
+	"unsafe"
+)
 
 // cptr returns C pointer
 func (w *Wave) cptr() *C.Wave {
@@ -120,6 +123,12 @@ func PlaySound(sound Sound) {
 	C.PlaySound(*csound)
 }
 
+// StopSound - Stop playing a sound
+func StopSound(sound Sound) {
+	csound := sound.cptr()
+	C.StopSound(*csound)
+}
+
 // PauseSound - Pause a sound
 func PauseSound(sound Sound) {
 	csound := sound.cptr()
@@ -132,10 +141,22 @@ func ResumeSound(sound Sound) {
 	C.ResumeSound(*csound)
 }
 
-// StopSound - Stop playing a sound
-func StopSound(sound Sound) {
+// PlaySoundMulti - Play a sound (using multichannel buffer pool)
+func PlaySoundMulti(sound Sound) {
 	csound := sound.cptr()
-	C.StopSound(*csound)
+	C.PlaySoundMulti(*csound)
+}
+
+// StopSoundMulti - Stop any sound playing (using multichannel buffer pool)
+func StopSoundMulti() {
+	C.StopSoundMulti()
+}
+
+// GetSoundsPlaying - Get number of sounds playing in the multichannel
+func GetSoundsPlaying() int {
+	ret := C.GetSoundsPlaying()
+	v := int(ret)
+	return v
 }
 
 // IsSoundPlaying - Check if a sound is currently playing
@@ -199,6 +220,11 @@ func LoadWaveSamples(wave Wave) []float32 {
 	return data
 }
 
+// UnloadWaveSamples - Unload samples data loaded with LoadWaveSamples()
+func UnloadWaveSamples(samples []float32) {
+	C.UnloadWaveSamples((*C.float)(unsafe.Pointer(&samples[0])))
+}
+
 // LoadMusicStream - Load music stream from file
 func LoadMusicStream(fileName string) Music {
 	cfileName := C.CString(fileName)
@@ -231,6 +257,14 @@ func PlayMusicStream(music Music) {
 	C.PlayMusicStream(cmusic)
 }
 
+// IsMusicStreamPlaying - Check if music is playing
+func IsMusicStreamPlaying(music Music) bool {
+	cmusic := *(*C.Music)(unsafe.Pointer(&music))
+	ret := C.IsMusicStreamPlaying(cmusic)
+	v := bool(ret)
+	return v
+}
+
 // UpdateMusicStream - Updates buffers for music streaming
 func UpdateMusicStream(music Music) {
 	cmusic := *(*C.Music)(unsafe.Pointer(&music))
@@ -255,12 +289,11 @@ func ResumeMusicStream(music Music) {
 	C.ResumeMusicStream(cmusic)
 }
 
-// IsMusicStreamPlaying - Check if music is playing
-func IsMusicStreamPlaying(music Music) bool {
+// SeekMusicStream - Seek music to a position (in seconds)
+func SeekMusicStream(music Music, position float32) {
 	cmusic := *(*C.Music)(unsafe.Pointer(&music))
-	ret := C.IsMusicStreamPlaying(cmusic)
-	v := bool(ret)
-	return v
+	cposition := (C.float)(position)
+	C.SeekMusicStream(cmusic, cposition)
 }
 
 // SetMusicVolume - Set volume for music (1.0 is max level)
@@ -293,14 +326,20 @@ func GetMusicTimePlayed(music Music) float32 {
 	return v
 }
 
-// InitAudioStream - Init audio stream (to stream raw audio pcm data)
-func InitAudioStream(sampleRate uint32, sampleSize uint32, channels uint32) AudioStream {
+// LoadAudioStream - Load audio stream (to stream raw audio pcm data)
+func LoadAudioStream(sampleRate uint32, sampleSize uint32, channels uint32) AudioStream {
 	csampleRate := (C.uint)(sampleRate)
 	csampleSize := (C.uint)(sampleSize)
 	cchannels := (C.uint)(channels)
-	ret := C.InitAudioStream(csampleRate, csampleSize, cchannels)
+	ret := C.LoadAudioStream(csampleRate, csampleSize, cchannels)
 	v := newAudioStreamFromPointer(unsafe.Pointer(&ret))
 	return v
+}
+
+//UnloadAudioStream - Unload audio stream and free memory
+func UnloadAudioStream(stream AudioStream) {
+	cstream := stream.cptr()
+	C.UnloadAudioStream(*cstream)
 }
 
 // UpdateAudioStream - Update audio stream buffers with data
@@ -309,12 +348,6 @@ func UpdateAudioStream(stream AudioStream, data []float32, samplesCount int32) {
 	cdata := unsafe.Pointer(&data[0])
 	csamplesCount := (C.int)(samplesCount)
 	C.UpdateAudioStream(*cstream, cdata, csamplesCount)
-}
-
-// CloseAudioStream - Close audio stream and free memory
-func CloseAudioStream(stream AudioStream) {
-	cstream := stream.cptr()
-	C.CloseAudioStream(*cstream)
 }
 
 // IsAudioStreamProcessed - Check if any audio stream buffers requires refill
@@ -343,26 +376,36 @@ func ResumeAudioStream(stream AudioStream) {
 	C.ResumeAudioStream(*cstream)
 }
 
+// IsAudioStreamPlaying - Check if audio stream is playing
+func IsAudioStreamPlaying(stream AudioStream) bool {
+	cstream := stream.cptr()
+	ret := C.IsAudioStreamPlaying(*cstream)
+	v := bool(ret)
+	return v
+}
+
 // StopAudioStream - Stop audio stream
 func StopAudioStream(stream AudioStream) {
 	cstream := stream.cptr()
 	C.StopAudioStream(*cstream)
 }
 
-// PlaySoundMulti - Play a sound (using multichannel buffer pool)
-func PlaySoundMulti(sound Sound) {
-	csound := sound.cptr()
-	C.PlaySoundMulti(*csound)
+// SetAudioStreamVolume - Set volume for audio stream (1.0 is max level)
+func SetAudioStreamVolume(stream AudioStream, volume float32) {
+	cstream := stream.cptr()
+	cvolume := (C.float)(volume)
+	C.SetAudioStreamVolume(*cstream, cvolume)
 }
 
-// GetSoundsPlaying - Get number of sounds playing in the multichannel
-func GetSoundsPlaying() int {
-	ret := C.GetSoundsPlaying()
-	v := int(ret)
-	return v
+// SetAudioStreamPitch - Set pitch for audio stream (1.0 is base level)
+func SetAudioStreamPitch(stream AudioStream, pitch float32) {
+	cstream := stream.cptr()
+	cpitch := (C.float)(pitch)
+	C.SetAudioStreamPitch(*cstream, cpitch)
 }
 
-// StopSoundMulti - Stop any sound playing (using multichannel buffer pool)
-func StopSoundMulti() {
-	C.StopSoundMulti()
+// SetAudioStreamBufferSizeDefault - Default size for new audio streams
+func SetAudioStreamBufferSizeDefault(size int32) {
+	csize := (C.int)(size)
+	C.SetAudioStreamBufferSizeDefault(csize)
 }

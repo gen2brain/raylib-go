@@ -8,8 +8,8 @@ import "C"
 import "unsafe"
 
 // cptr returns C pointer
-func (c *CharInfo) cptr() *C.CharInfo {
-	return (*C.CharInfo)(unsafe.Pointer(c))
+func (c *GlyphInfo) cptr() *C.GlyphInfo {
+	return (*C.GlyphInfo)(unsafe.Pointer(c))
 }
 
 // cptr returns C pointer
@@ -70,7 +70,7 @@ func LoadFontFromMemory(fileType string, fileData []byte, dataSize int32, fontSi
 }
 
 // LoadFontData - Load font data for further use
-func LoadFontData(fileData []byte, dataSize int32, fontSize int32, fontChars *int32, charsCount, typ int32) *CharInfo {
+func LoadFontData(fileData []byte, dataSize int32, fontSize int32, fontChars *int32, charsCount, typ int32) *GlyphInfo {
 	cfileData := (*C.uchar)(unsafe.Pointer(&fileData[0]))
 	cdataSize := (C.int)(dataSize)
 	cfontSize := (C.int)(fontSize)
@@ -78,7 +78,7 @@ func LoadFontData(fileData []byte, dataSize int32, fontSize int32, fontChars *in
 	ccharsCount := (C.int)(charsCount)
 	ctype := (C.int)(typ)
 	ret := C.LoadFontData(cfileData, cdataSize, cfontSize, cfontChars, ccharsCount, ctype)
-	v := newCharInfoFromPointer(unsafe.Pointer(&ret))
+	v := newGlyphInfoFromPointer(unsafe.Pointer(&ret))
 	return &v
 }
 
@@ -109,36 +109,6 @@ func DrawTextEx(font Font, text string, position Vector2, fontSize float32, spac
 	cspacing := (C.float)(spacing)
 	ctint := tint.cptr()
 	C.DrawTextEx(*cfont, ctext, *cposition, cfontSize, cspacing, *ctint)
-}
-
-// DrawTextRec - Draw text using font inside rectangle limits
-func DrawTextRec(font Font, text string, rec Rectangle, fontSize, spacing float32, wordWrap bool, tint Color) {
-	cfont := font.cptr()
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
-	crec := rec.cptr()
-	cfontSize := (C.float)(fontSize)
-	cspacing := (C.float)(spacing)
-	cwordWrap := (C.bool)(wordWrap)
-	ctint := tint.cptr()
-	C.DrawTextRec(*cfont, ctext, *crec, cfontSize, cspacing, cwordWrap, *ctint)
-}
-
-// DrawTextRecEx - Draw text using font inside rectangle limits with support for text selection
-func DrawTextRecEx(font Font, text string, rec Rectangle, fontSize, spacing float32, wordWrap bool, tint Color, selectStart, selectLength int32, selectText, selectBack Color) {
-	cfont := font.cptr()
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
-	crec := rec.cptr()
-	cfontSize := (C.float)(fontSize)
-	cspacing := (C.float)(spacing)
-	cwordWrap := (C.bool)(wordWrap)
-	ctint := tint.cptr()
-	cselectStart := (C.int)(selectStart)
-	cselectLength := (C.int)(selectLength)
-	cselectText := selectText.cptr()
-	cselectBack := selectBack.cptr()
-	C.DrawTextRecEx(*cfont, ctext, *crec, cfontSize, cspacing, cwordWrap, *ctint, cselectStart, cselectLength, *cselectText, *cselectBack)
 }
 
 // MeasureText - Measure string width for default font
