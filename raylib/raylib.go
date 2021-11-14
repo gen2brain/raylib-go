@@ -42,6 +42,7 @@ package rl
 import "C"
 import (
 	"image"
+	"image/color"
 	"io"
 	"runtime"
 	"unsafe"
@@ -558,21 +559,17 @@ func NewQuaternion(x, y, z, w float32) Quaternion {
 }
 
 // Color type, RGBA (32bit)
-type Color struct {
-	R uint8
-	G uint8
-	B uint8
-	A uint8
-}
+// TODO remove later, keep type for now to not break code
+type Color = color.RGBA
 
 // NewColor - Returns new Color
-func NewColor(r, g, b, a uint8) Color {
-	return Color{r, g, b, a}
+func NewColor(r, g, b, a uint8) color.RGBA {
+	return color.RGBA{r, g, b, a}
 }
 
 // newColorFromPointer - Returns new Color from pointer
-func newColorFromPointer(ptr unsafe.Pointer) Color {
-	return *(*Color)(ptr)
+func newColorFromPointer(ptr unsafe.Pointer) color.RGBA {
+	return *(*color.RGBA)(ptr)
 }
 
 // Rectangle type
@@ -840,7 +837,7 @@ type MaterialMap struct {
 	// Texture
 	Texture Texture2D
 	// Color
-	Color Color
+	Color color.RGBA
 	// Value
 	Value float32
 }
@@ -1112,7 +1109,7 @@ func NewImageFromImage(img image.Image) *Image {
 
 	cx := (C.int)(size.X)
 	cy := (C.int)(size.Y)
-	ccolor := White.cptr()
+	ccolor := colorCptr(White)
 	ret := C.GenImageColor(cx, cy, *ccolor)
 
 	for y := 0; y < size.Y; y++ {
@@ -1120,7 +1117,7 @@ func NewImageFromImage(img image.Image) *Image {
 			color := img.At(x, y)
 			r, g, b, a := color.RGBA()
 			rcolor := NewColor(uint8(r), uint8(g), uint8(b), uint8(a))
-			ccolor = rcolor.cptr()
+			ccolor = colorCptr(rcolor)
 
 			cx = (C.int)(x)
 			cy = (C.int)(y)

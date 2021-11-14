@@ -5,7 +5,11 @@ package rl
 #include <stdlib.h>
 */
 import "C"
-import "unsafe"
+
+import (
+	"image/color"
+	"unsafe"
+)
 
 // cptr returns C pointer
 func (m *Mesh) cptr() *C.Mesh {
@@ -28,139 +32,139 @@ func (r *Ray) cptr() *C.Ray {
 }
 
 // DrawLine3D - Draw a line in 3D world space
-func DrawLine3D(startPos Vector3, endPos Vector3, color Color) {
+func DrawLine3D(startPos Vector3, endPos Vector3, col color.RGBA) {
 	cstartPos := startPos.cptr()
 	cendPos := endPos.cptr()
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawLine3D(*cstartPos, *cendPos, *ccolor)
 }
 
 // DrawPoint3D - Draw a point in 3D space, actually a small line
-func DrawPoint3D(position Vector3, color Color) {
+func DrawPoint3D(position Vector3, col color.RGBA) {
 	cposition := position.cptr()
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawPoint3D(*cposition, *ccolor)
 }
 
 // DrawCircle3D - Draw a circle in 3D world space
-func DrawCircle3D(center Vector3, radius float32, rotationAxis Vector3, rotationAngle float32, color Color) {
+func DrawCircle3D(center Vector3, radius float32, rotationAxis Vector3, rotationAngle float32, col color.RGBA) {
 	ccenter := center.cptr()
 	cradius := (C.float)(radius)
 	crotationAxis := rotationAxis.cptr()
 	crotationAngle := (C.float)(rotationAngle)
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawCircle3D(*ccenter, cradius, *crotationAxis, crotationAngle, *ccolor)
 }
 
 // DrawCube - Draw cube
-func DrawCube(position Vector3, width float32, height float32, length float32, color Color) {
+func DrawCube(position Vector3, width float32, height float32, length float32, col color.RGBA) {
 	cposition := position.cptr()
 	cwidth := (C.float)(width)
 	cheight := (C.float)(height)
 	clength := (C.float)(length)
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawCube(*cposition, cwidth, cheight, clength, *ccolor)
 }
 
 // DrawCubeV - Draw cube (Vector version)
-func DrawCubeV(position Vector3, size Vector3, color Color) {
+func DrawCubeV(position Vector3, size Vector3, col color.RGBA) {
 	cposition := position.cptr()
 	csize := size.cptr()
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawCubeV(*cposition, *csize, *ccolor)
 }
 
 // DrawCubeWires - Draw cube wires
-func DrawCubeWires(position Vector3, width float32, height float32, length float32, color Color) {
+func DrawCubeWires(position Vector3, width float32, height float32, length float32, col color.RGBA) {
 	cposition := position.cptr()
 	cwidth := (C.float)(width)
 	cheight := (C.float)(height)
 	clength := (C.float)(length)
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawCubeWires(*cposition, cwidth, cheight, clength, *ccolor)
 }
 
 // DrawCubeWiresV - Draw cube wires (Vector version)
-func DrawCubeWiresV(position Vector3, size Vector3, color Color) {
+func DrawCubeWiresV(position Vector3, size Vector3, col color.RGBA) {
 	cposition := position.cptr()
 	csize := size.cptr()
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawCubeWiresV(*cposition, *csize, *ccolor)
 }
 
 // DrawCubeTexture - Draw cube textured
-func DrawCubeTexture(texture Texture2D, position Vector3, width float32, height float32, length float32, color Color) {
+func DrawCubeTexture(texture Texture2D, position Vector3, width float32, height float32, length float32, col color.RGBA) {
 	ctexture := texture.cptr()
 	cposition := position.cptr()
 	cwidth := (C.float)(width)
 	cheight := (C.float)(height)
 	clength := (C.float)(length)
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawCubeTexture(*ctexture, *cposition, cwidth, cheight, clength, *ccolor)
 }
 
 // DrawSphere - Draw sphere
-func DrawSphere(centerPos Vector3, radius float32, color Color) {
+func DrawSphere(centerPos Vector3, radius float32, col color.RGBA) {
 	ccenterPos := centerPos.cptr()
 	cradius := (C.float)(radius)
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawSphere(*ccenterPos, cradius, *ccolor)
 }
 
 // DrawSphereEx - Draw sphere with extended parameters
-func DrawSphereEx(centerPos Vector3, radius float32, rings int32, slices int32, color Color) {
+func DrawSphereEx(centerPos Vector3, radius float32, rings int32, slices int32, col color.RGBA) {
 	ccenterPos := centerPos.cptr()
 	cradius := (C.float)(radius)
 	crings := (C.int)(rings)
 	cslices := (C.int)(slices)
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawSphereEx(*ccenterPos, cradius, crings, cslices, *ccolor)
 }
 
 // DrawSphereWires - Draw sphere wires
-func DrawSphereWires(centerPos Vector3, radius float32, rings int32, slices int32, color Color) {
+func DrawSphereWires(centerPos Vector3, radius float32, rings int32, slices int32, col color.RGBA) {
 	ccenterPos := centerPos.cptr()
 	cradius := (C.float)(radius)
 	crings := (C.int)(rings)
 	cslices := (C.int)(slices)
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawSphereWires(*ccenterPos, cradius, crings, cslices, *ccolor)
 }
 
 // DrawCylinder - Draw a cylinder/cone
-func DrawCylinder(position Vector3, radiusTop float32, radiusBottom float32, height float32, slices int32, color Color) {
+func DrawCylinder(position Vector3, radiusTop float32, radiusBottom float32, height float32, slices int32, col color.RGBA) {
 	cposition := position.cptr()
 	cradiusTop := (C.float)(radiusTop)
 	cradiusBottom := (C.float)(radiusBottom)
 	cheight := (C.float)(height)
 	cslices := (C.int)(slices)
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawCylinder(*cposition, cradiusTop, cradiusBottom, cheight, cslices, *ccolor)
 }
 
 // DrawCylinderWires - Draw a cylinder/cone wires
-func DrawCylinderWires(position Vector3, radiusTop float32, radiusBottom float32, height float32, slices int32, color Color) {
+func DrawCylinderWires(position Vector3, radiusTop float32, radiusBottom float32, height float32, slices int32, col color.RGBA) {
 	cposition := position.cptr()
 	cradiusTop := (C.float)(radiusTop)
 	cradiusBottom := (C.float)(radiusBottom)
 	cheight := (C.float)(height)
 	cslices := (C.int)(slices)
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawCylinderWires(*cposition, cradiusTop, cradiusBottom, cheight, cslices, *ccolor)
 }
 
 // DrawPlane - Draw a plane XZ
-func DrawPlane(centerPos Vector3, size Vector2, color Color) {
+func DrawPlane(centerPos Vector3, size Vector2, col color.RGBA) {
 	ccenterPos := centerPos.cptr()
 	csize := size.cptr()
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawPlane(*ccenterPos, *csize, *ccolor)
 }
 
 // DrawRay - Draw a ray line
-func DrawRay(ray Ray, color Color) {
+func DrawRay(ray Ray, col color.RGBA) {
 	cray := ray.cptr()
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawRay(*cray, *ccolor)
 }
 
@@ -377,70 +381,70 @@ func SetModelMeshMaterial(model *Model, meshId int32, materialId int32) {
 }
 
 // DrawModel - Draw a model (with texture if set)
-func DrawModel(model Model, position Vector3, scale float32, tint Color) {
+func DrawModel(model Model, position Vector3, scale float32, tint color.RGBA) {
 	cmodel := model.cptr()
 	cposition := position.cptr()
 	cscale := (C.float)(scale)
-	ctint := tint.cptr()
+	ctint := colorCptr(tint)
 	C.DrawModel(*cmodel, *cposition, cscale, *ctint)
 }
 
 // DrawModelEx - Draw a model with extended parameters
-func DrawModelEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint Color) {
+func DrawModelEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint color.RGBA) {
 	cmodel := model.cptr()
 	cposition := position.cptr()
 	crotationAxis := rotationAxis.cptr()
 	crotationAngle := (C.float)(rotationAngle)
 	cscale := scale.cptr()
-	ctint := tint.cptr()
+	ctint := colorCptr(tint)
 	C.DrawModelEx(*cmodel, *cposition, *crotationAxis, crotationAngle, *cscale, *ctint)
 }
 
 // DrawModelWires - Draw a model wires (with texture if set)
-func DrawModelWires(model Model, position Vector3, scale float32, tint Color) {
+func DrawModelWires(model Model, position Vector3, scale float32, tint color.RGBA) {
 	cmodel := model.cptr()
 	cposition := position.cptr()
 	cscale := (C.float)(scale)
-	ctint := tint.cptr()
+	ctint := colorCptr(tint)
 	C.DrawModelWires(*cmodel, *cposition, cscale, *ctint)
 }
 
 // DrawModelWiresEx - Draw a model wires (with texture if set) with extended parameters
-func DrawModelWiresEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint Color) {
+func DrawModelWiresEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint color.RGBA) {
 	cmodel := model.cptr()
 	cposition := position.cptr()
 	crotationAxis := rotationAxis.cptr()
 	crotationAngle := (C.float)(rotationAngle)
 	cscale := scale.cptr()
-	ctint := tint.cptr()
+	ctint := colorCptr(tint)
 	C.DrawModelWiresEx(*cmodel, *cposition, *crotationAxis, crotationAngle, *cscale, *ctint)
 }
 
 // DrawBoundingBox - Draw bounding box (wires)
-func DrawBoundingBox(box BoundingBox, color Color) {
+func DrawBoundingBox(box BoundingBox, col color.RGBA) {
 	cbox := box.cptr()
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawBoundingBox(*cbox, *ccolor)
 }
 
 // DrawBillboard - Draw a billboard texture
-func DrawBillboard(camera Camera, texture Texture2D, center Vector3, size float32, tint Color) {
+func DrawBillboard(camera Camera, texture Texture2D, center Vector3, size float32, tint color.RGBA) {
 	ccamera := camera.cptr()
 	ctexture := texture.cptr()
 	ccenter := center.cptr()
 	csize := (C.float)(size)
-	ctint := tint.cptr()
+	ctint := colorCptr(tint)
 	C.DrawBillboard(*ccamera, *ctexture, *ccenter, csize, *ctint)
 }
 
 // DrawBillboardRec - Draw a billboard texture defined by sourceRec
-func DrawBillboardRec(camera Camera, texture Texture2D, sourceRec Rectangle, center Vector3, size Vector2, tint Color) {
+func DrawBillboardRec(camera Camera, texture Texture2D, sourceRec Rectangle, center Vector3, size Vector2, tint color.RGBA) {
 	ccamera := camera.cptr()
 	ctexture := texture.cptr()
 	csourceRec := sourceRec.cptr()
 	ccenter := center.cptr()
 	csize := size.cptr()
-	ctint := tint.cptr()
+	ctint := colorCptr(tint)
 	C.DrawBillboardRec(*ccamera, *ctexture, *csourceRec, *ccenter, *csize, *ctint)
 }
 

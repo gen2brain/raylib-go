@@ -5,7 +5,10 @@ package rl
 #include <stdlib.h>
 */
 import "C"
-import "unsafe"
+import (
+	"image/color"
+	"unsafe"
+)
 
 // cptr returns C pointer
 func (c *GlyphInfo) cptr() *C.GlyphInfo {
@@ -46,9 +49,9 @@ func LoadFontEx(fileName string, fontSize int32, fontChars *int32, charsCount in
 }
 
 // LoadFontFromImage - Loads an Image font file (XNA style)
-func LoadFontFromImage(image Image, key Color, firstChar int32) Font {
+func LoadFontFromImage(image Image, key color.RGBA, firstChar int32) Font {
 	cimage := image.cptr()
-	ckey := key.cptr()
+	ckey := colorCptr(key)
 	cfirstChar := (C.int)(firstChar)
 	ret := C.LoadFontFromImage(*cimage, *ckey, cfirstChar)
 	v := newFontFromPointer(unsafe.Pointer(&ret))
@@ -89,25 +92,25 @@ func UnloadFont(font Font) {
 }
 
 // DrawText - Draw text (using default font)
-func DrawText(text string, posX int32, posY int32, fontSize int32, color Color) {
+func DrawText(text string, posX int32, posY int32, fontSize int32, col color.RGBA) {
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
 	cposX := (C.int)(posX)
 	cposY := (C.int)(posY)
 	cfontSize := (C.int)(fontSize)
-	ccolor := color.cptr()
+	ccolor := colorCptr(col)
 	C.DrawText(ctext, cposX, cposY, cfontSize, *ccolor)
 }
 
 // DrawTextEx - Draw text using Font and additional parameters
-func DrawTextEx(font Font, text string, position Vector2, fontSize float32, spacing float32, tint Color) {
+func DrawTextEx(font Font, text string, position Vector2, fontSize float32, spacing float32, tint color.RGBA) {
 	cfont := font.cptr()
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
 	cposition := position.cptr()
 	cfontSize := (C.float)(fontSize)
 	cspacing := (C.float)(spacing)
-	ctint := tint.cptr()
+	ctint := colorCptr(tint)
 	C.DrawTextEx(*cfont, ctext, *cposition, cfontSize, cspacing, *ctint)
 }
 

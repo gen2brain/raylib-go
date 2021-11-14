@@ -7,6 +7,7 @@ package rl
 import "C"
 
 import (
+	"image/color"
 	"unsafe"
 )
 
@@ -30,9 +31,9 @@ func (m *Matrix) cptr() *C.Matrix {
 	return (*C.Matrix)(unsafe.Pointer(m))
 }
 
-// cptr returns C pointer
-func (color *Color) cptr() *C.Color {
-	return (*C.Color)(unsafe.Pointer(color))
+// colorCptr returns color C pointer
+func colorCptr(col color.RGBA) *C.Color {
+	return (*C.Color)(unsafe.Pointer(&col))
 }
 
 // cptr returns C pointer
@@ -309,8 +310,8 @@ func GetClipboardText() string {
 }
 
 // ClearBackground - Sets Background Color
-func ClearBackground(color Color) {
-	ccolor := color.cptr()
+func ClearBackground(col color.RGBA) {
+	ccolor := colorCptr(col)
 	C.ClearBackground(*ccolor)
 }
 
@@ -451,8 +452,8 @@ func GetTime() float32 {
 }
 
 // Fade - Returns color with alpha applied, alpha goes from 0.0f to 1.0f
-func Fade(color Color, alpha float32) Color {
-	ccolor := color.cptr()
+func Fade(col color.RGBA, alpha float32) color.RGBA {
+	ccolor := colorCptr(col)
 	calpha := (C.float)(alpha)
 	ret := C.Fade(*ccolor, calpha)
 	v := newColorFromPointer(unsafe.Pointer(&ret))
@@ -460,26 +461,27 @@ func Fade(color Color, alpha float32) Color {
 }
 
 // ColorToInt - Returns hexadecimal value for a Color
-func ColorToInt(color Color) int32 {
-	ccolor := color.cptr()
+func ColorToInt(col color.RGBA) int32 {
+	ccolor := colorCptr(col)
 	ret := C.ColorToInt(*ccolor)
 	v := (int32)(ret)
 	return v
 }
 
 // ColorNormalize - Returns color normalized as float [0..1]
-func ColorNormalize(color Color) Vector4 {
+func ColorNormalize(col color.RGBA) Vector4 {
 	result := Vector4{}
-	result.X = float32(color.R) / 255
-	result.Y = float32(color.G) / 255
-	result.Z = float32(color.B) / 255
-	result.W = float32(color.A) / 255
+	r, g, b, a := col.RGBA()
+	result.X = float32(r) / 255
+	result.Y = float32(g) / 255
+	result.Z = float32(b) / 255
+	result.W = float32(a) / 255
 
 	return result
 }
 
 // ColorFromNormalized - Returns Color from normalized values [0..1]
-func ColorFromNormalized(normalized Vector4) Color {
+func ColorFromNormalized(normalized Vector4) color.RGBA {
 	cnormalized := normalized.cptr()
 	ret := C.ColorFromNormalized(*cnormalized)
 	v := newColorFromPointer(unsafe.Pointer(&ret))
@@ -487,15 +489,15 @@ func ColorFromNormalized(normalized Vector4) Color {
 }
 
 // ColorToHSV - Returns HSV values for a Color, hue [0..360], saturation/value [0..1]
-func ColorToHSV(color Color) Vector3 {
-	ccolor := color.cptr()
+func ColorToHSV(col color.RGBA) Vector3 {
+	ccolor := colorCptr(col)
 	ret := C.ColorToHSV(*ccolor)
 	v := newVector3FromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
 // ColorFromHSV - Returns a Color from HSV values, hue [0..360], saturation/value [0..1]
-func ColorFromHSV(hue, saturation, value float32) Color {
+func ColorFromHSV(hue, saturation, value float32) color.RGBA {
 	chue := (C.float)(hue)
 	csaturation := (C.float)(saturation)
 	cvalue := (C.float)(value)
@@ -505,22 +507,22 @@ func ColorFromHSV(hue, saturation, value float32) Color {
 }
 
 // ColorAlpha - Returns color with alpha applied, alpha goes from 0.0f to 1.0f
-func ColorAlpha(color Color, alpha float32) Color {
-	return Fade(color, alpha)
+func ColorAlpha(col color.RGBA, alpha float32) color.RGBA {
+	return Fade(col, alpha)
 }
 
 // ColorAlphaBlend - Returns src alpha-blended into dst color with tint
-func ColorAlphaBlend(src, dst, tint Color) Color {
-	csrc := src.cptr()
-	cdst := dst.cptr()
-	ctint := tint.cptr()
+func ColorAlphaBlend(src, dst, tint color.RGBA) color.RGBA {
+	csrc := colorCptr(src)
+	cdst := colorCptr(dst)
+	ctint := colorCptr(tint)
 	ret := C.ColorAlphaBlend(*csrc, *cdst, *ctint)
 	v := newColorFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
 // GetColor - Returns a Color struct from hexadecimal value
-func GetColor(hexValue uint) Color {
+func GetColor(hexValue uint) color.RGBA {
 	chexValue := (C.uint)(hexValue)
 	ret := C.GetColor(chexValue)
 	v := newColorFromPointer(unsafe.Pointer(&ret))
