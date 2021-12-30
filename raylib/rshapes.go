@@ -61,6 +61,36 @@ func DrawLineBezier(startPos, endPos Vector2, thick float32, col color.RGBA) {
 	C.DrawLineBezier(*cstartPos, *cendPos, cthick, *ccolor)
 }
 
+// DrawLineBezierQuad - Draw line using quadratic bezier curves with a control point 
+func DrawLineBezierQuad(startPos Vector2, endPos Vector2, controlPos Vector2, thick float32, col color.RGBA) {
+	cstartPos := startPos.cptr()
+	cendPos := endPos.cptr()
+	ccontrolPos := controlPos.cptr()
+	cthick := (C.float)(thick)
+	ccolor := colorCptr(col)
+	C.DrawLineBezierQuad(*cstartPos, *cendPos, *ccontrolPos, cthick, *ccolor)
+}
+
+// DrawLineBezierCubic - Draw line using cubic bezier curves with 2 contrl points
+func DrawLineBezierCubic(startPos Vector2, endPos Vector2, startControlPos Vector2, endControlPos Vector2, thick float32, col color.RGBA) {
+	cstartPos := startPos.cptr()
+	cendPos := endPos.cptr()
+	cstartControlPos := startControlPos.cptr()
+	cendControlPos := endControlPos.cptr()
+	cthick := (C.float)(thick)
+	ccolor := colorCptr(col)
+	C.DrawLineBezierCubic(*cstartPos, *cendPos, *cstartControlPos, *cendControlPos, cthick, *ccolor)
+}
+
+// DrawLineStrip - Draw lines sequence
+func DrawLineStrip(points []Vector2, pointCount int32, col color.RGBA) {
+	cpoints := (*C.Vector2)(unsafe.Pointer(&points[0]))
+	cpointCount := (C.int)(pointCount)
+	ccolor := colorCptr(col)
+	C.DrawLineStrip(cpoints, cpointCount, *ccolor)
+}
+
+
 // DrawCircle - Draw a color-filled circle
 func DrawCircle(centerX, centerY int32, radius float32, col color.RGBA) {
 	ccenterX := (C.int)(centerX)
@@ -173,6 +203,14 @@ func DrawRectangle(posX, posY, width, height int32, col color.RGBA) {
 	C.DrawRectangle(cposX, cposY, cwidth, cheight, *ccolor)
 }
 
+// DrawRectangleV - Draw a color-filled rectangle (Vector version)
+func DrawRectangleV(position Vector2, size Vector2, col color.RGBA) {
+	cposition := position.cptr()
+	csize := size.cptr()
+	ccolor := colorCptr(col)
+	C.DrawRectangleV(*cposition, *csize, *ccolor)
+}
+
 // DrawRectangleRec - Draw a color-filled rectangle
 func DrawRectangleRec(rec Rectangle, col color.RGBA) {
 	crec := rec.cptr()
@@ -219,14 +257,6 @@ func DrawRectangleGradientEx(rec Rectangle, col1, col2, col3, col4 color.RGBA) {
 	ccolor3 := colorCptr(col3)
 	ccolor4 := colorCptr(col4)
 	C.DrawRectangleGradientEx(*crec, *ccolor1, *ccolor2, *ccolor3, *ccolor4)
-}
-
-// DrawRectangleV - Draw a color-filled rectangle (Vector version)
-func DrawRectangleV(position Vector2, size Vector2, col color.RGBA) {
-	cposition := position.cptr()
-	csize := size.cptr()
-	ccolor := colorCptr(col)
-	C.DrawRectangleV(*cposition, *csize, *ccolor)
 }
 
 // DrawRectangleLines - Draw rectangle outline
@@ -318,6 +348,17 @@ func DrawPolyLines(center Vector2, sides int32, radius, rotation float32, col co
 	crotation := (C.float)(rotation)
 	ccolor := colorCptr(col)
 	C.DrawPolyLines(*ccenter, csides, cradius, crotation, *ccolor)
+}
+
+// DrawPolyLinesEx - Draw a polygon outline of n sides with extended parameters
+func DrawPolyLinesEx(center Vector2, sides int32, radius float32, rotation float32, lineThick float32, col color.RGBA) {
+	ccenter := center.cptr()
+	csides := (C.int)(sides)
+	cradius := (C.float)(radius)
+	crotation := (C.float)(rotation)
+	clineThick := (C.float)(lineThick)
+	ccolor := colorCptr(col)
+	C.DrawPolyLinesEx(*ccenter, csides, cradius, crotation, clineThick, *ccolor)
 }
 
 // CheckCollisionRecs - Check collision between two rectangles
