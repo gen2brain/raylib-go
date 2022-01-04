@@ -118,7 +118,6 @@ const (
 	penetrationAllowance  = 0.05
 	penetrationCorrection = 0.4
 
-	fltMax  = 3.402823466 + 38
 	epsilon = 0.000001
 )
 
@@ -891,7 +890,7 @@ func (m *manifold) solveCircleToPolygon() {
 
 	// Find edge with minimum penetration
 	// It is the same concept as using support points in solvePolygonToPolygon
-	separation := float32(-fltMax)
+	separation := float32(-math.MaxFloat32)
 	faceNormal := 0
 	vertexData := m.BodyB.Shape.VertexData
 
@@ -1251,7 +1250,7 @@ func (m *manifold) correctPositions() {
 
 // getSupport - Returns the extreme point along a direction within a polygon
 func getSupport(shape Shape, dir rl.Vector2) rl.Vector2 {
-	bestProjection := float32(-fltMax)
+	bestProjection := float32(-math.MaxFloat32)
 	bestVertex := rl.Vector2{}
 
 	for i := 0; i < shape.VertexData.VertexCount; i++ {
@@ -1270,7 +1269,7 @@ func getSupport(shape Shape, dir rl.Vector2) rl.Vector2 {
 // findAxisLeastPenetration - Finds polygon shapes axis least penetration
 func findAxisLeastPenetration(shapeA, shapeB Shape) (int, float32) {
 	bestIndex := 0
-	bestDistance := float32(-fltMax)
+	bestDistance := float32(-math.MaxFloat32)
 
 	dataA := shapeA.VertexData
 	dataB := shapeB.VertexData
@@ -1320,7 +1319,7 @@ func findIncidentFace(v0, v1 *rl.Vector2, ref, inc Shape, index int) {
 
 	// Find most anti-normal face on polygon
 	incidentFace := 0
-	minDot := float32(fltMax)
+	minDot := float32(math.MaxFloat32)
 
 	for i := 0; i < incData.VertexCount; i++ {
 		dot := rl.Vector2DotProduct(referenceNormal, incData.Normals[i])
