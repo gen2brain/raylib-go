@@ -582,6 +582,11 @@ func GetRandomValue(min, max int32) int32 {
 	return v
 }
 
+func SetRandomSeed(seed uint32) {
+	cseed := (C.uint)(seed)
+	C.SetRandomSeed(cseed)
+}
+
 // SetConfigFlags - Setup some window configuration flags
 func SetConfigFlags(flags byte) {
 	cflags := (C.uint)(flags)
@@ -834,6 +839,12 @@ func GetMouseWheelMove() int32 {
 	v := (int32)(ret)
 	return v
 }
+
+func SetMouseCursor(cursor int32) {
+	ccursor := (C.int)(cursor)
+	C.SetMouseCursor(ccursor)
+}
+
 
 // GetTouchX - Returns touch position X for touch point 0 (relative to screen size)
 func GetTouchX() int32 {
