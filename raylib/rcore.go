@@ -582,6 +582,7 @@ func GetRandomValue(min, max int32) int32 {
 	return v
 }
 
+// Set the seed for the random number generator
 func SetRandomSeed(seed uint32) {
 	cseed := (C.uint)(seed)
 	C.SetRandomSeed(cseed)
@@ -840,6 +841,7 @@ func GetMouseWheelMove() int32 {
 	return v
 }
 
+// Set mouse cursor
 func SetMouseCursor(cursor int32) {
 	ccursor := (C.int)(cursor)
 	C.SetMouseCursor(ccursor)
