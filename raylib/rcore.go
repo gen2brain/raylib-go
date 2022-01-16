@@ -118,7 +118,7 @@ func IsWindowResized() bool {
 }
 
 // IsWindowState - Check if one specific window flag is enabled
-func IsWindowState(flag byte) bool {
+func IsWindowState(flag uint32) bool {
 	cflag := (C.uint)(flag)
 	ret := C.IsWindowState(cflag)
 	v := bool(ret)
@@ -126,13 +126,13 @@ func IsWindowState(flag byte) bool {
 }
 
 // SetWindowState - Set window configuration state using flags
-func SetWindowState(flags byte) {
+func SetWindowState(flags uint32) {
 	cflags := (C.uint)(flags)
 	C.SetWindowState(cflags)
 }
 
 // ClearWindowState - Clear window configuration state flags
-func ClearWindowState(flags byte) {
+func ClearWindowState(flags uint32) {
 	cflags := (C.uint)(flags)
 	C.ClearWindowState(cflags)
 }
