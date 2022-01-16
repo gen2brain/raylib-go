@@ -31,6 +31,11 @@ func (r *Ray) cptr() *C.Ray {
 	return (*C.Ray)(unsafe.Pointer(r))
 }
 
+// cptr returns C pointer
+func (r *ModelAnimation) cptr() *C.ModelAnimation {
+	return (*C.ModelAnimation)(unsafe.Pointer(r))
+}
+
 // DrawLine3D - Draw a line in 3D world space
 func DrawLine3D(startPos Vector3, endPos Vector3, col color.RGBA) {
 	cstartPos := startPos.cptr()
@@ -342,12 +347,12 @@ func GenMeshCubicmap(cubicmap Image, size Vector3) Mesh {
 }
 
 // LoadMaterials - Load material data (.MTL)
-func LoadMaterials(fileName string) Material {
+func LoadMaterials(fileName string) []Material {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	ccount := C.int(0)
 	ret := C.LoadMaterials(cfileName, &ccount)
-	v := newMaterialFromPointer(unsafe.Pointer(&ret))
+	v := (*[1 << 24]Material)(unsafe.Pointer(ret))[:int(ccount)]
 	return v
 }
 
@@ -378,6 +383,44 @@ func SetModelMeshMaterial(model *Model, meshId int32, materialId int32) {
 	cmeshId := (C.int)(meshId)
 	cmaterialId := (C.int)(materialId)
 	C.SetModelMeshMaterial(cmodel, cmeshId, cmaterialId)
+}
+
+// LoadModelAnimations - Load model animations from file
+func LoadModelAnimations(fileName string) []ModelAnimation {
+	cfileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(cfileName))
+	ccount := C.uint(0)
+	ret := C.LoadModelAnimations(cfileName, &ccount)
+	v := (*[1 << 24]ModelAnimation)(unsafe.Pointer(ret))[:int(ccount)]
+	return v
+}
+
+// UpdateModelAnimation - Update model animation pose
+func UpdateModelAnimation(model Model, anim ModelAnimation, frame int32) {
+	cmodel := model.cptr()
+	canim := anim.cptr()
+	cframe := (C.int)(frame)
+	C.UpdateModelAnimation(*cmodel, *canim, cframe)
+}
+
+// UnloadModelAnimation - Unload animation data
+func UnloadModelAnimation(anim ModelAnimation) {
+	canim := anim.cptr()
+	C.UnloadModelAnimation(*canim)
+}
+
+// UnloadModelAnimations - Unload animation array data
+func UnloadModelAnimations(animations []ModelAnimation) {
+	C.UnloadModelAnimations((*C.ModelAnimation)(unsafe.Pointer(&animations[0])), (C.uint)(len(animations)))
+}
+
+// IsModelAnimationValid - Check model animation skeleton match
+func IsModelAnimationValid(model Model, anim ModelAnimation) bool {
+	cmodel := model.cptr()
+	canim := anim.cptr()
+	ret := C.IsModelAnimationValid(*cmodel, *canim)
+	v := bool(ret)
+	return v
 }
 
 // DrawModel - Draw a model (with texture if set)

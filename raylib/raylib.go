@@ -842,6 +842,7 @@ type MaterialMap struct {
 	Value float32
 }
 
+// Model, meshes, materials and animation data
 type Model struct {
 	// Local transform matrix
 	Transform     Matrix
@@ -860,13 +861,13 @@ func newModelFromPointer(ptr unsafe.Pointer) Model {
 	return *(*Model)(ptr)
 }
 
-// BoneInfo type.
+// BoneInfo type
 type BoneInfo struct {
 	Name   [32]int8
 	Parent int32
 }
 
-// Transform type.
+// Transform type
 type Transform struct {
 	Translation Vector3
 	Rotation    Vector4
@@ -889,6 +890,19 @@ func NewRay(position, direction Vector3) Ray {
 // newRayFromPointer - Returns new Ray from pointer
 func newRayFromPointer(ptr unsafe.Pointer) Ray {
 	return *(*Ray)(ptr)
+}
+
+// ModelAnimation type
+type ModelAnimation struct {
+	BoneCount  int32
+	FrameCount int32
+	Bones      *BoneInfo
+	FramePoses **Transform
+}
+
+// newModelAnimationFromPointer - Returns new ModelAnimation from pointer
+func newModelAnimationFromPointer(ptr unsafe.Pointer) ModelAnimation {
+	return *(*ModelAnimation)(ptr)
 }
 
 // RayCollision type - ray hit information
