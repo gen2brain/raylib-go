@@ -583,7 +583,7 @@ func GetRandomValue(min, max int32) int32 {
 }
 
 // SetConfigFlags - Setup some window configuration flags
-func SetConfigFlags(flags byte) {
+func SetConfigFlags(flags uint32) {
 	cflags := (C.uint)(flags)
 	C.SetConfigFlags(cflags)
 }
