@@ -197,6 +197,12 @@ func SetWindowSize(w, h int) {
 	C.SetWindowSize(cw, ch)
 }
 
+// Get native window handle
+func GetWindowHandle() (unsafe.Pointer) {
+	v := unsafe.Pointer((C.GetWindowHandle()))
+	return v
+}
+
 // GetScreenWidth - Get current screen width
 func GetScreenWidth() int {
 	ret := C.GetScreenWidth()
@@ -406,6 +412,17 @@ func GetWorldToScreen(position Vector3, camera Camera) Vector2 {
 	return v
 }
 
+// Get size position for a 3d world space position
+func GetWorldToScreenEx(position Vector3, camera Camera, width int32, height int32) Vector2 {
+	cposition := position.cptr()
+	ccamera := camera.cptr()
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	ret := C.GetWorldToScreenEx(*cposition, *ccamera, cwidth, cheight)
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // GetWorldToScreen2D - Returns the screen space position for a 2d camera world space position
 func GetWorldToScreen2D(position Vector2, camera Camera2D) Vector2 {
 	cposition := position.cptr()
@@ -601,6 +618,149 @@ func TakeScreenshot(name string) {
 	C.TakeScreenshot(cname)
 }
 
+// Load file data as byte array (read)
+func LoadFileData(path string, dataSize int) []byte { // *[]byte for pointer
+	cpath := (C.CString)(path)
+	cdataSize := (C.uint)(dataSize)
+	ret := C.LoadFileData(cpath, &cdataSize)
+	//dataSize = unsafe.Sizeof(unsafe.Pointer(ret))
+	defer C.free(unsafe.Pointer(cpath))
+	defer C.free(unsafe.Pointer(ret))
+	v := C.GoBytes(unsafe.Pointer(ret), (C.int)(dataSize))
+	return v // &v for pointer
+}
+
+// Unload file data allocated by LoadFileData() -- Only useful if pointer
+//func UnloadFileData(data *[]byte) {
+//	x := data; *x = nil
+//}
+
+// Save data to file from byte array (write), returns true on success
+func SaveFileData(filename string, data []byte, dataSize int) bool { // data *[]byte | if pointer used
+	cfilename := (C.CString)(filename)
+	cdata := C.CBytes(data)
+	defer C.free(unsafe.Pointer(cfilename))
+	defer C.free(unsafe.Pointer(cdata))
+	cdataSize := (C.uint)(dataSize)
+	//dataSize = unsafe.Sizeof(unsafe.Pointer(cdata))
+	v := bool(C.SaveFileData(cfilename, cdata, cdataSize))
+	return v
+}
+
+// Load text data from file (read)
+func LoadFileText(path string) string {
+	cpath := (C.CString)(path)
+	ret := C.LoadFileText(cpath)
+	defer C.free(unsafe.Pointer(cpath))
+	defer C.free(unsafe.Pointer(ret))
+	v := (C.GoString)(ret)
+	return v
+}
+
+//Unload file text data allocated by LoadFileText() -- Only useful if pointer
+//func UnloadFileText(text *string) {
+//	*text = "" -- unfinished
+//}
+
+
+// Save text data to file (write), returns true on success
+func SaveFileText(filename string, text string) bool {
+	cfilename := (C.CString)(filename)
+	ctext := (C.CString)(text)
+	defer C.free(unsafe.Pointer(cfilename))
+	defer C.free(unsafe.Pointer(ctext))
+	v := bool(C.SaveFileText(cfilename, ctext))
+	return v
+}
+
+// Check if file exists
+func FileExists(filename string) bool {
+	cfilename := (C.CString)(filename)
+	defer C.free(unsafe.Pointer(cfilename))
+	v := bool(C.FileExists(cfilename))
+	return v	
+}
+
+// Check if a directory path exists
+func DirectoryExists(dirPath string) bool {
+	cdirPath := (C.CString)(dirPath)
+	defer C.free(unsafe.Pointer(cdirPath))
+	v := bool(C.DirectoryExists(cdirPath))
+	return v	
+}
+
+// Check file extension (including point: .png, .wav)
+func IsFileExtension(filename string, ext string) bool {
+	cfilename := (C.CString)(filename)
+	cext := (C.CString)(ext)
+	defer C.free(unsafe.Pointer(cfilename))
+	defer C.free(unsafe.Pointer(cext))
+	v := bool(C.IsFileExtension(cfilename, cext))
+	return v	
+}
+
+// Get string from extension for a filename string (includes dot: '.png')
+func GetFileExtension(filename string) string {
+	cfilename := (C.CString)(filename)
+	defer C.free(unsafe.Pointer(cfilename))
+	v := (C.GoString)(C.GetFileExtension(cfilename))
+	return v
+}
+
+// Get string of filename for a path string
+func GetFileName(filePath string) string {
+	cfilePath := (C.CString)(filePath)
+	defer C.free(unsafe.Pointer(cfilePath))
+	v := (C.GoString)(C.GetFileName(cfilePath))
+	return v
+}
+
+// Get filename string without extension
+func GetFileNameWithoutExt(filePath string) string {
+	cfilePath := (C.CString)(filePath)
+	defer C.free(unsafe.Pointer(cfilePath))
+	v := (C.GoString)(C.GetFileNameWithoutExt(cfilePath))
+	return v
+}
+
+// Get full path for a given fileName with path 
+func GetDirectoryPath(filePath string) string {
+	cfilePath := (C.CString)(filePath)
+	defer C.free(unsafe.Pointer(cfilePath))
+	v := (C.GoString)(C.GetDirectoryPath(cfilePath))
+	return v
+}
+
+// Get previous directory path for a given path
+func GetPrevDirectoryPath(dirPath string) string {
+	cdirPath := (C.CString)(dirPath)
+	defer C.free(unsafe.Pointer(cdirPath))
+	v := (C.GoString)(C.GetPrevDirectoryPath(cdirPath))
+	return v
+}
+
+// Get current working directory -- Equivlanet of `pwd`
+func GetWorkingDirectory() string {
+	v := (C.GoString)(C.GetWorkingDirectory())
+	return v
+}
+
+// Change working directory, return true on success
+func ChangeDirectory(dirPath string) bool {
+	cdirPath := (C.CString)(dirPath)
+	defer C.free(unsafe.Pointer(cdirPath))
+	v := bool(C.ChangeDirectory(cdirPath))
+	return v
+}
+
+ // Get file modification time (last write time)
+func GetFileModTime(filePath string) int32 {
+	cfilePath := (C.CString)(filePath)
+	defer C.free(unsafe.Pointer(cfilePath))
+	v := int32(C.GetFileModTime(cfilePath))
+	return v
+}
+
 // SaveStorageValue - Storage save integer value (to defined position)
 func SaveStorageValue(position, value int32) {
 	cposition := (C.uint)(position)
@@ -614,6 +774,12 @@ func LoadStorageValue(position int32) int32 {
 	ret := C.LoadStorageValue(cposition)
 	v := (int32)(ret)
 	return v
+}
+
+// Open URL with default system browser (if available)
+func OpenURL(url string) {
+	cUrl := (C.CString)(url)
+	C.OpenURL(cUrl)
 }
 
 // IsKeyPressed - Detect if a key has been pressed once
@@ -745,7 +911,7 @@ func GetGamepadAxisMovement(gamepad, axis int32) float32 {
 }
 
 // SetGamepadMappings - Set internal gamepad mappings (SDL_GameControllerDB)
-func SetGamepadMapping(mappings string) int32 {
+func SetGamepadMappings(mappings string) int32 {
 	cmappings := C.CString(mappings)
 	defer C.free(unsafe.Pointer(cmappings))
 	ret := C.SetGamepadMappings(cmappings)
@@ -841,7 +1007,6 @@ func GetMouseWheelMove() int32 {
 	return v
 }
 
-// Set mouse cursor
 func SetMouseCursor(cursor int32) {
 	ccursor := (C.int)(cursor)
 	C.SetMouseCursor(ccursor)
