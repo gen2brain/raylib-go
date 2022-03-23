@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gen2brain/raylib-go/physics"
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func main() {
@@ -52,9 +52,10 @@ func main() {
 		}
 
 		// Destroy falling physics bodies
-		for _, body := range physics.GetBodies() {
+		for i := 0; i < physics.GetBodiesCount(); i++ {
+			body := physics.GetBody(i)
 			if body.Position.Y > float32(screenHeight)*2 {
-				physics.DestroyBody(body)
+				body.Destroy()
 			}
 		}
 
@@ -65,7 +66,9 @@ func main() {
 		rl.DrawFPS(screenWidth-90, screenHeight-30)
 
 		// Draw created physics bodies
-		for i, body := range physics.GetBodies() {
+		for i := 0; i < physics.GetBodiesCount(); i++ {
+			body := physics.GetBody(i)
+
 			vertexCount := physics.GetShapeVerticesCount(i)
 			for j := 0; j < vertexCount; j++ {
 				// Get physics bodies shape vertices to draw lines

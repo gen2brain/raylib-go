@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gen2brain/raylib-go/physics"
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 const (
@@ -41,8 +41,14 @@ func main() {
 		}
 
 		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
-			for _, b := range physics.GetBodies() {
-				b.Shatter(rl.GetMousePosition(), 10/b.InverseMass)
+			//for _, b := range physics.GetBodies() {
+			for i := 0; i < physics.GetBodiesCount(); i++ {
+				body := physics.GetBody(i)
+				if body == nil {
+					continue
+				}
+
+				physics.Shatter(body, rl.GetMousePosition(), 10/body.InverseMass)
 			}
 		}
 
