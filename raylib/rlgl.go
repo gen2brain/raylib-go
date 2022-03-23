@@ -24,14 +24,16 @@ func LoadShader(vsFileName string, fsFileName string) Shader {
 	cfsFileName := C.CString(fsFileName)
 	defer C.free(unsafe.Pointer(cfsFileName))
 
-	var v Shader
 	if vsFileName == "" {
-		ret := C.LoadShader(nil, cfsFileName)
-		v = newShaderFromPointer(unsafe.Pointer(&ret))
-	} else {
-		ret := C.LoadShader(cvsFileName, cfsFileName)
-		v = newShaderFromPointer(unsafe.Pointer(&ret))
+		cvsFileName = nil
 	}
+
+	if fsFileName == "" {
+		cfsFileName = nil
+	}
+
+	ret := C.LoadShader(cvsFileName, cfsFileName)
+	v := newShaderFromPointer(unsafe.Pointer(&ret))
 
 	return v
 }
@@ -43,6 +45,14 @@ func LoadShaderFromMemory(vsCode string, fsCode string) Shader {
 
 	cfsCode := C.CString(fsCode)
 	defer C.free(unsafe.Pointer(cfsCode))
+
+	if vsCode == "" {
+		cvsCode = nil
+	}
+
+	if fsCode == "" {
+		cfsCode = nil
+	}
 
 	ret := C.LoadShaderFromMemory(cvsCode, cfsCode)
 	v := newShaderFromPointer(unsafe.Pointer(&ret))
