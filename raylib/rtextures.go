@@ -632,3 +632,15 @@ func DrawTexturePro(texture Texture2D, sourceRec, destRec Rectangle, origin Vect
 	ctint := colorCptr(tint)
 	C.DrawTexturePro(*ctexture, *csourceRec, *cdestRec, *corigin, crotation, *ctint)
 }
+
+// DrawTextureTiled - Draw part of a texture (defined by a rectangle) with rotation and scale tiled into dest
+func DrawTextureTiled(texture Texture2D, sourceRec, destRec Rectangle, origin Vector2, rotation float32, scale float32, tint color.RGBA) {
+	ctexture := texture.cptr()
+	csourceRec := sourceRec.cptr()
+	cdestRec := destRec.cptr()
+	corigin := origin.cptr()
+	crotation := (C.float)(rotation)
+	cscale := (C.float)(scale)
+	ctint := colorCptr(tint)
+	C.DrawTextureTiled(*ctexture, *csourceRec, *cdestRec, *corigin, crotation, cscale, *ctint)
+}
