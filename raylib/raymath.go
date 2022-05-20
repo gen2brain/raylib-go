@@ -41,13 +41,13 @@ func Vector2Distance(v1, v2 Vector2) float32 {
 
 // Vector2Angle - Calculate angle between two vectors in X-axis
 func Vector2Angle(v1, v2 Vector2) float32 {
-	angle := float32(math.Atan2(float64(v2.Y-v1.Y), float64(v2.X-v1.X)) * (180.0 / float64(Pi)))
+	angle := math.Atan2(float64(Vector2CrossProduct(v2, v1)), float64(Vector2DotProduct(v2, v1))) * 180 / Pi
 
 	if angle < 0 {
 		angle += 360.0
 	}
 
-	return angle
+	return float32(angle)
 }
 
 // Vector2Scale - Scale vector (multiply by value)
