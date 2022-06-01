@@ -793,22 +793,16 @@ func QuaternionLength(quat Quaternion) float32 {
 
 // QuaternionNormalize - Normalize provided quaternion
 func QuaternionNormalize(q Quaternion) Quaternion {
-	var result Quaternion
+	result := q
 
-	var length, ilength float32
+	length := QuaternionLength(q)
 
-	length = QuaternionLength(q)
-
-	if length == 0.0 {
-		length = 1.0
+	if length != 0.0 {
+		result.X /= length
+		result.Y /= length
+		result.Z /= length
+		result.W /= length
 	}
-
-	ilength = 1.0 / length
-
-	result.X *= ilength
-	result.Y *= ilength
-	result.Z *= ilength
-	result.W *= ilength
 
 	return result
 }
