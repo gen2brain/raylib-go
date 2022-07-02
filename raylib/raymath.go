@@ -653,6 +653,32 @@ func MatrixRotateZ(angle float32) Matrix {
 	return result
 }
 
+// MatrixRotateXYZ - Get xyz-rotation matrix (angles in radians)
+func MatrixRotateXYZ(ang Vector3) Matrix {
+	result := MatrixIdentity()
+
+	cosz := float32(math.Cos(float64(-ang.Z)))
+	sinz := float32(math.Sin(float64(-ang.Z)))
+	cosy := float32(math.Cos(float64(-ang.Y)))
+	siny := float32(math.Sin(float64(-ang.Y)))
+	cosx := float32(math.Cos(float64(-ang.X)))
+	sinx := float32(math.Sin(float64(-ang.X)))
+
+	result.M0 = cosz * cosy
+	result.M4 = (cosz * siny * sinx) - (sinz * cosx)
+	result.M8 = (cosz * siny * cosx) + (sinz * sinx)
+
+	result.M1 = sinz * cosy
+	result.M5 = (sinz * siny * sinx) + (cosz * cosx)
+	result.M9 = (sinz * siny * cosx) - (cosz * sinx)
+
+	result.M2 = -siny
+	result.M6 = cosy * sinx
+	result.M10 = cosy * cosx
+
+	return result
+}
+
 // MatrixScale - Returns scaling matrix
 func MatrixScale(x, y, z float32) Matrix {
 	result := NewMatrix(
