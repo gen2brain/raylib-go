@@ -38,7 +38,7 @@ package rl
 
 #cgo linux CFLAGS: -Iexternal/glfw/include -DPLATFORM_DESKTOP -Wno-stringop-overflow
 
-#cgo linux,!wayland LDFLAGS: -lGL -lm -pthread -ldl -lrt -losmesa
+#cgo linux,!wayland LDFLAGS: -lGL -lm -pthread -ldl -lrt -lOSMesa
 #cgo linux,wayland LDFLAGS: -lGL -lm -pthread -ldl -lrt -lwayland-client -lwayland-cursor -lwayland-egl -lxkbcommon
 
 #cgo linux,!wayland CFLAGS: -D_GLFW_OSMESA
