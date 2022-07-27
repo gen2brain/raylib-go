@@ -1,7 +1,5 @@
 package main
 
-import "github.com/gen2brain/raylib-go/raylib"
-
 func main() {
 	rl.InitWindow(800, 450, "raylib [rpi] example - basic window")
 

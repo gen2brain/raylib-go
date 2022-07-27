@@ -3,8 +3,6 @@ package main
 import (
 	"math/rand"
 	"time"
-
-	"github.com/gen2brain/raylib-go/raylib"
 )
 
 const (

@@ -1,9 +1,5 @@
 package main
 
-import (
-	"github.com/gen2brain/raylib-go/raylib"
-)
-
 var (
 	maxGestureStrings int = 20
 )
