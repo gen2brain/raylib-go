@@ -29,7 +29,7 @@ package rl
 #include "external/glfw/src/glx_context.c"
 #endif
 
-#include "external/glfw/src/linux_joystick.c"
+//#include "external/glfw/src/linux_joystick.c"
 #include "external/glfw/src/posix_thread.c"
 #include "external/glfw/src/posix_time.c"
 #include "external/glfw/src/xkb_unicode.c"
