@@ -32,10 +32,11 @@ package rl
 #include "external/glfw/src/null_init.c"
 #include "external/glfw/src/null_monitor.c"
 #include "external/glfw/src/null_window.c"
+#include "external/glfw/src/null_joystick.c"
 #include "external/glfw/src/osmesa_context.c"
 #endif
 
-#include "external/glfw/src/linux_joystick.c"
+//#include "external/glfw/src/linux_joystick.c"
 #include "external/glfw/src/posix_thread.c"
 #include "external/glfw/src/posix_time.c"
 #include "external/glfw/src/xkb_unicode.c"
