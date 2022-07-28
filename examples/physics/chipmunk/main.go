@@ -5,7 +5,6 @@ import (
 	"math"
 	"math/rand"
 
-	"github.com/gen2brain/raylib-go/raylib"
 	"github.com/jakecoffman/cp"
 )
 

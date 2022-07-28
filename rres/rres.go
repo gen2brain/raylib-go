@@ -21,8 +21,6 @@ import (
 	"github.com/ulikunitz/xz"
 	"golang.org/x/crypto/blowfish"
 	"golang.org/x/crypto/xtea"
-
-	"github.com/gen2brain/raylib-go/raylib"
 )
 
 type Data struct {

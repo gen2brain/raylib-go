@@ -16,7 +16,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Install package
       run: |
-        sudo apt-get update -y; sudo apt-get -y install libxi-dev libxinerama-dev libxcursor-dev libxrandr-dev libgl1-mesa-dev
+        sudo apt-get update -y; sudo apt-get -y install libxi-dev libxinerama-dev libxcursor-dev libxrandr-dev libgl1-mesa-dev libosmesa6-dev
       if: runner.os == 'Linux'
     - name: Build
       run: go build ./...

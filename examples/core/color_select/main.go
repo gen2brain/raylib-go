@@ -1,9 +1,5 @@
 package main
 
-import (
-	"github.com/gen2brain/raylib-go/raylib"
-)
-
 func main() {
 	rl.InitWindow(800, 450, "raylib [core] example - color selection (collision detection)")
 

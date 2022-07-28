@@ -3,8 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gen2brain/raylib-go/raygui"
-	"github.com/gen2brain/raylib-go/raylib"
+	"github.com/icodealot/raylib-go/raygui"
 )
 
 func main() {

@@ -1,6 +1,6 @@
 package raygui
 
-import "github.com/gen2brain/raylib-go/raylib"
+import rl "github.com/gen2brain/raylib-go/raylib"
 
 // buttonColoring describes the per-state properties for a Button control.
 type buttonColoring struct {

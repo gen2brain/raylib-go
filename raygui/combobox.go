@@ -2,8 +2,6 @@ package raygui
 
 import (
 	"fmt"
-
-	"github.com/gen2brain/raylib-go/raylib"
 )
 
 // comboboxColoring describes the per-state colors for a Combobox control.

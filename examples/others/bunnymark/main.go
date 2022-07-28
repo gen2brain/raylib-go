@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/gen2brain/raylib-go/raylib"
 )
 
 // Bunny type

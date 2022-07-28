@@ -1,10 +1,6 @@
 package main
 
-import (
-	//"fmt"
-
-	"github.com/gen2brain/raylib-go/raylib"
-)
+//"fmt"
 
 func main() {
 	screenWidth := int32(800)

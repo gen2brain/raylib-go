@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-
-	"github.com/gen2brain/raylib-go/raylib"
 )
 
 const (
