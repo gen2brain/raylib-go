@@ -28,13 +28,19 @@ package rl
 #include "external/glfw/src/x11_window.c"
 #include "external/glfw/src/glx_context.c"
 #endif
+#ifdef _GLFW_OSMESA
+#include "external/glfw/src/null_init.c"
+#include "external/glfw/src/null_monitor.c"
+#include "external/glfw/src/null_window.c"
+#include "external/glfw/src/osmesa_context.c"
+#endif
 
 //#include "external/glfw/src/linux_joystick.c"
 #include "external/glfw/src/posix_thread.c"
 #include "external/glfw/src/posix_time.c"
 #include "external/glfw/src/xkb_unicode.c"
 #include "external/glfw/src/egl_context.c"
-#include "external/glfw/src/osmesa_context.c"
+
 
 #cgo linux CFLAGS: -Iexternal/glfw/include -DPLATFORM_DESKTOP -Wno-stringop-overflow
 
