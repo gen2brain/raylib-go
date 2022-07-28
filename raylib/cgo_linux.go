@@ -40,7 +40,7 @@ package rl
 #include "external/glfw/src/posix_thread.c"
 #include "external/glfw/src/posix_time.c"
 #include "external/glfw/src/xkb_unicode.c"
-#include "external/glfw/src/egl_context.c"
+//#include "external/glfw/src/egl_context.c"
 
 
 #cgo linux CFLAGS: -Iexternal/glfw/include -DPLATFORM_DESKTOP -Wno-stringop-overflow
