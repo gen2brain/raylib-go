@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	rl "github.com/icodealot/raylib-go/raylib"
+	rl "github.com/icodealot/raylib-go-headless/raylib"
 )
 
 const (

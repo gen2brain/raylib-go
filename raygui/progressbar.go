@@ -1,6 +1,6 @@
 package raygui
 
-import rl "github.com/gen2brain/raylib-go/raylib"
+import rl "github.com/gen2brain/raylib-go-headless/raylib"
 
 // ProgressBar - Progress Bar element, shows current progress value
 func ProgressBar(bounds rl.Rectangle, value float32) {

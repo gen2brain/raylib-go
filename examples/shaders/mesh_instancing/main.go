@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	rl "github.com/icodealot/raylib-go/raylib"
+	rl "github.com/icodealot/raylib-go-headless/raylib"
 )
 
 const MAX_INSTANCES = 100000

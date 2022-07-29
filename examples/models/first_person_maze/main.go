@@ -3,7 +3,7 @@
 *   raylib [models] example - first person maze
 *
 *   This example has been created using raylib-go v0.0.0-20220104071325-2f072dc2d259 (https://github.com/icodealot/raylib-go)
-*   raylib-go is licensed under an unmodified zlib/libpng license (https://github.com/icodealot/raylib-go/blob/master/LICENSE)
+*   raylib-go is licensed under an unmodified zlib/libpng license (https://github.com/icodealot/raylib-go-headless/blob/master/LICENSE)
 *
 *   Original C version for Raylib 2.5 Copyright (c) 2019 Ramon Santamaria (@raysan5)
 *   Converted to Go by Michael Redman January 4, 2022
@@ -13,7 +13,7 @@
 package main
 
 import (
-	rl "github.com/icodealot/raylib-go/raylib"
+	rl "github.com/icodealot/raylib-go-headless/raylib"
 )
 
 func main() {

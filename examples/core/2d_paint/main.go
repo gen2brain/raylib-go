@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	rl "github.com/icodealot/raylib-go/raylib"
+	rl "github.com/icodealot/raylib-go-headless/raylib"
 )
 
 const colorCount = 23

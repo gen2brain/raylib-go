@@ -8,7 +8,7 @@ import (
 	"math/rand"
 	"time"
 
-	rl "github.com/icodealot/raylib-go/raylib"
+	rl "github.com/icodealot/raylib-go-headless/raylib"
 )
 
 // ShapeType type

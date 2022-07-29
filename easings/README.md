@@ -1,4 +1,4 @@
-## easings [![GoDoc](https://godoc.org/github.com/icodealot/raylib-go/easings?status.svg)](https://godoc.org/github.com/icodealot/raylib-go/easings)
+## easings [![GoDoc](https://godoc.org/github.com/icodealot/raylib-go-headless/easings?status.svg)](https://godoc.org/github.com/icodealot/raylib-go-headless/easings)
 
 Useful easing functions for values animation.
 

@@ -11,7 +11,7 @@ Example:
 
 	package main
 
-	import "github.com/icodealot/raylib-go/raylib"
+	import "github.com/icodealot/raylib-go-headless/raylib"
 
 	func main() {
 		rl.InitWindow(800, 450, "raylib [core] example - basic window")

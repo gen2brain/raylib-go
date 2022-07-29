@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/icodealot/raylib-go/physics"
-	rl "github.com/icodealot/raylib-go/raylib"
+	"github.com/icodealot/raylib-go-headless/physics"
+	rl "github.com/icodealot/raylib-go-headless/raylib"
 )
 
 const (

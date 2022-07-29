@@ -1,6 +1,6 @@
 package raygui
 
-import rl "github.com/icodealot/raylib-go/raylib"
+import rl "github.com/icodealot/raylib-go-headless/raylib"
 
 // SliderBar - Slider Bar element, returns selected value
 func SliderBar(bounds rl.Rectangle, value, minValue, maxValue float32) float32 {

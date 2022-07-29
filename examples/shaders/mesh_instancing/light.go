@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"unsafe"
 
-	rl "github.com/icodealot/raylib-go/raylib"
+	rl "github.com/icodealot/raylib-go-headless/raylib"
 )
 
 type LightType int32

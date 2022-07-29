@@ -1,6 +1,6 @@
 package raygui
 
-import rl "github.com/gen2brain/raylib-go/raylib"
+import rl "github.com/gen2brain/raylib-go-headless/raylib"
 
 // togglebuttonColoring describes the per-state colors for a ToggleBox control.
 type togglebuttonColoring struct {

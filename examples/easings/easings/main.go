@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/icodealot/raylib-go/easings"
-	"github.com/icodealot/raylib-go/raygui"
+	"github.com/icodealot/raylib-go-headless/easings"
+	"github.com/icodealot/raylib-go-headless/raygui"
 )
 
 func main() {

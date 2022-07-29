@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/icodealot/raylib-go/physics"
+	"github.com/icodealot/raylib-go-headless/physics"
 )
 
 const (

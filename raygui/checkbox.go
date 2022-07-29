@@ -1,6 +1,6 @@
 package raygui
 
-import rl "github.com/gen2brain/raylib-go/raylib"
+import rl "github.com/gen2brain/raylib-go-headless/raylib"
 
 // checkboxColoring describes the per-state properties for a CheckBox control.
 type checkboxColoring struct {

@@ -1,6 +1,6 @@
 package raygui
 
-import rl "github.com/icodealot/raylib-go/raylib"
+import rl "github.com/icodealot/raylib-go-headless/raylib"
 
 // Label - Label element, show text
 func Label(bounds rl.Rectangle, text string) {

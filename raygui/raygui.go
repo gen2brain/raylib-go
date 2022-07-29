@@ -3,7 +3,7 @@
 package raygui
 
 import (
-	rl "github.com/icodealot/raylib-go/raylib"
+	rl "github.com/icodealot/raylib-go-headless/raylib"
 )
 
 // GUI controls states

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	rl "github.com/icodealot/raylib-go/raylib"
+	rl "github.com/icodealot/raylib-go-headless/raylib"
 )
 
 var backspaceHeld = false

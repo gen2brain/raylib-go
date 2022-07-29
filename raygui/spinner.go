@@ -3,7 +3,7 @@ package raygui
 import (
 	"fmt"
 
-	rl "github.com/icodealot/raylib-go/raylib"
+	rl "github.com/icodealot/raylib-go-headless/raylib"
 )
 
 // For spinner

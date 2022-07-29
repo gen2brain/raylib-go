@@ -1,7 +1,7 @@
 package main
 
 import (
-	rl "github.com/icodealot/raylib-go/raylib"
+	rl "github.com/icodealot/raylib-go-headless/raylib"
 )
 
 const numTextures = 7

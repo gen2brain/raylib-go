@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/icodealot/raylib-go/raygui"
+	"github.com/icodealot/raylib-go-headless/raygui"
 )
 
 func main() {
