@@ -14,11 +14,11 @@ Example:
 	import "github.com/icodealot/raylib-go-headless/raylib"
 
 	func main() {
-		rl.InitWindow(800, 450, "raylib [core] example - basic window")
+		rl.InitRaylib(800, 450)
 
 		rl.SetTargetFPS(60)
 
-		for !rl.WindowShouldClose() {
+		for !rl.RaylibShouldClose() {
 			rl.BeginDrawing()
 
 			rl.ClearBackground(rl.RayWhite)
@@ -28,7 +28,7 @@ Example:
 			rl.EndDrawing()
 		}
 
-		rl.CloseWindow()
+		rl.CloseRaylib()
 	}
 
 

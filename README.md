@@ -1,65 +1,40 @@
-![logo](https://goo.gl/XlIcXz)
-## raylib-go
+## raylib-go-headless
 [![Build Status](https://github.com/icodealot/raylib-go-headless/actions/workflows/build.yml/badge.svg)](https://github.com/icodealot/raylib-go-headless/actions)
-[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/qv2iggrqtgl7xhr0?svg=true)](https://ci.appveyor.com/project/icodealot/raylib-go)
 [![GoDoc](https://godoc.org/github.com/icodealot/raylib-go-headless/raylib?status.svg)](https://godoc.org/github.com/icodealot/raylib-go-headless/raylib)
-[![Go Report Card](https://goreportcard.com/badge/github.com/icodealot/raylib-go)](https://goreportcard.com/report/github.com/icodealot/raylib-go)
+[![Go Report Card](https://goreportcard.com/badge/github.com/icodealot/raylib-go)](https://goreportcard.com/report/github.com/icodealot/raylib-go-headless)
 [![Examples](https://img.shields.io/badge/learn%20by-examples-0077b3.svg?style=flat-square)](https://github.com/icodealot/raylib-go-headless/tree/master/examples)
 
-Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use library to enjoy videogames programming.
+My goal with this library is to be able to do headless rendering in Docker containers using raylib bindings for Golang. The bindings themselves are heavily based on the excellent work of [raylib-go](https://github.com/gen2brain/raylib-go)
+
+There is nothing stopping you from trying to use this outside of a Docker container, with a Linux server or distro of your choice, but the examples and documentation here will be geared towards the former. 
 
 ### Requirements
 
-##### Ubuntu
+##### Docker with golang + osmesa
 
-###### X11
+###### Example Dockerfile: 
+    
+	FROM golang:1.18-alpine
+  
+    RUN apk update
 
-    apt-get install libgl1-mesa-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev 
+	RUN apk add \
+        build-base \
+        mesa-dev \
+        mesa-osmesa
 
-###### Wayland 
+    COPY your app code etc...
 
-    apt-get install libgl1-mesa-dev libwayland-dev libxkbcommon-dev 
+	RUN go mod tidy
 
-##### Fedora
+	RUN go build -o yourservice
 
-###### X11
+	ENTRYPOINT yourservice
 
-    dnf install mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel
-
-###### Wayland 
-
-    dnf install mesa-libGL-devel wayland-devel libxkbcommon-devel
-
-##### macOS
-
-On macOS you need Xcode or Command Line Tools for Xcode.
-
-##### Windows
-
-On Windows you need C compiler, like [Mingw-w64](https://mingw-w64.org) or [TDM-GCC](http://tdm-gcc.tdragon.net/).
-You can also build binary in [MSYS2](https://msys2.github.io/) shell.
-
-##### Android
-
-[Android example](https://github.com/icodealot/raylib-go-headless/tree/master/examples/others/android/example).
-
-##### Raspberry Pi
-
-[RPi example](https://github.com/icodealot/raylib-go-headless/tree/master/examples/others/rpi/basic_window).
 
 ### Installation
 
     go get -v -u github.com/icodealot/raylib-go-headless/raylib
-
-### Build tags
-
-* `drm` - build for Linux native mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM)
-* `rpi` - build for Raspberry Pi platform (PLATFORM_RPI)
-* `wayland` - build against Wayland libraries
-* `noaudio` - disables audio functions
-* `opengl43` - uses OpenGL 4.3 backend
-* `opengl21` - uses OpenGL 2.1 backend (default is 3.3 on desktop)
-* `opengl11` - uses OpenGL 1.1 backend (pseudo OpenGL 1.1 style)
 
 ### Documentation
 
@@ -91,9 +66,6 @@ func main() {
 }
 ```
 
-Check more [examples](https://github.com/icodealot/raylib-go-headless/tree/master/examples) organized by raylib modules.
-
-
 ### License
 
-raylib-go is licensed under an unmodified zlib/libpng license. View [LICENSE](https://github.com/icodealot/raylib-go-headless/blob/master/LICENSE).
+raylib-go-headless is licensed under an unmodified zlib/libpng license. View [LICENSE](https://github.com/icodealot/raylib-go-headless/blob/master/LICENSE).
