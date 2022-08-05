@@ -445,9 +445,9 @@ func GetFrameTime() float32 {
 }
 
 // GetTime - Return time in seconds
-func GetTime() float32 {
+func GetTime() float64 {
 	ret := C.GetTime()
-	v := (float32)(ret)
+	v := (float64)(ret)
 	return v
 }
 
