@@ -595,21 +595,6 @@ func TakeScreenshot(name string) {
 	C.TakeScreenshot(cname)
 }
 
-// SaveStorageValue - Storage save integer value (to defined position)
-func SaveStorageValue(position, value int32) {
-	cposition := (C.uint)(position)
-	cvalue := (C.int)(value)
-	C.SaveStorageValue(cposition, cvalue)
-}
-
-// LoadStorageValue - Storage load integer value (from defined position)
-func LoadStorageValue(position int32) int32 {
-	cposition := (C.uint)(position)
-	ret := C.LoadStorageValue(cposition)
-	v := (int32)(ret)
-	return v
-}
-
 // IsKeyPressed - Detect if a key has been pressed once
 func IsKeyPressed(key int32) bool {
 	ckey := (C.int)(key)

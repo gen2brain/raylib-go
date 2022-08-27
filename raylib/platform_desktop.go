@@ -71,13 +71,13 @@ func IsFileDropped() bool {
 	return v
 }
 
-// GetDroppedFiles - Retrieve dropped files into window
-func GetDroppedFiles(count *int32) []string {
-	ccount := (*C.int)(unsafe.Pointer(count))
-	ret := C.GetDroppedFiles(ccount)
+// LoadDroppedFiles - Load dropped filepaths
+func LoadDroppedFiles() []string {
+	ret := C.LoadDroppedFiles()
+	defer C.UnloadDroppedFiles(ret)
 
-	tmpslice := (*[1 << 24]*C.char)(unsafe.Pointer(ret))[:*count:*count]
-	gostrings := make([]string, *count)
+	tmpslice := (*[1 << 24]*C.char)(unsafe.Pointer(ret.paths))[:ret.count:ret.count]
+	gostrings := make([]string, ret.count)
 	for i, s := range tmpslice {
 		gostrings[i] = C.GoString(s)
 	}
@@ -85,9 +85,9 @@ func GetDroppedFiles(count *int32) []string {
 	return gostrings
 }
 
-// ClearDroppedFiles - Clear dropped files paths buffer
-func ClearDroppedFiles() {
-	C.ClearDroppedFiles()
+// UnloadDroppedFiles - Unload dropped filepaths
+func UnloadDroppedFiles() {
+	return
 }
 
 // OpenAsset - Open asset

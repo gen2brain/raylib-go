@@ -30,8 +30,6 @@ Example:
 
 		rl.CloseWindow()
 	}
-
-
 */
 package rl
 
@@ -56,7 +54,7 @@ func init() {
 // Wave type, defines audio wave data
 type Wave struct {
 	// Number of samples
-	SampleCount uint32
+	FrameCount uint32
 	// Frequency (samples per second)
 	SampleRate uint32
 	// Bit depth (bits per sample): 8, 16, 32 (24 not supported)
@@ -80,9 +78,9 @@ func newWaveFromPointer(ptr unsafe.Pointer) Wave {
 
 // Sound source type
 type Sound struct {
-	Stream      AudioStream
-	SampleCount uint32
-	_           [4]byte
+	Stream     AudioStream
+	FrameCount uint32
+	_          [4]byte
 }
 
 // newSoundFromPointer - Returns new Sound from pointer
@@ -93,11 +91,11 @@ func newSoundFromPointer(ptr unsafe.Pointer) Sound {
 // Music type (file streaming from memory)
 // NOTE: Anything longer than ~10 seconds should be streamed
 type Music struct {
-	Stream      AudioStream
-	SampleCount uint32
-	Looping     bool
-	CtxType     int32
-	CtxData     unsafe.Pointer
+	Stream     AudioStream
+	FrameCount uint32
+	Looping    bool
+	CtxType    int32
+	CtxData    unsafe.Pointer
 }
 
 // newMusicFromPointer - Returns new Music from pointer
@@ -110,6 +108,8 @@ func newMusicFromPointer(ptr unsafe.Pointer) Music {
 type AudioStream struct {
 	// Buffer
 	Buffer *C.rAudioBuffer
+	// Processor
+	Processor *C.rAudioProcessor
 	// Frequency (samples per second)
 	SampleRate uint32
 	// Bit depth (bits per sample): 8, 16, 32 (24 not supported)

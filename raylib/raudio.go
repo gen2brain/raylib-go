@@ -213,8 +213,8 @@ func LoadWaveSamples(wave Wave) []float32 {
 	ret := C.LoadWaveSamples(*cwave)
 
 	sliceHeader := (*reflect.SliceHeader)((unsafe.Pointer(&data)))
-	sliceHeader.Cap = int(wave.SampleCount)
-	sliceHeader.Len = int(wave.SampleCount)
+	sliceHeader.Cap = int(wave.FrameCount)
+	sliceHeader.Len = int(wave.FrameCount)
 	sliceHeader.Data = uintptr(unsafe.Pointer(ret))
 
 	return data

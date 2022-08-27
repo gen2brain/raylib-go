@@ -69,13 +69,13 @@ func IsFileDropped() bool {
 	return false
 }
 
-// GetDroppedFiles - Retrieve dropped files into window
-func GetDroppedFiles(count *int32) (files []string) {
+// LoadDroppedFiles - Load dropped filepaths
+func LoadDroppedFiles() (files []string) {
 	return
 }
 
-// ClearDroppedFiles - Clear dropped files paths buffer
-func ClearDroppedFiles() {
+// UnloadDroppedFiles - Unload dropped filepaths
+func UnloadDroppedFiles() {
 	return
 }
 

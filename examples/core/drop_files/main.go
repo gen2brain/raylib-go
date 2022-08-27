@@ -12,12 +12,13 @@ func main() {
 
 	rl.SetTargetFPS(60)
 
-	count := int32(0)
+	var count int
 	var droppedFiles []string
 
 	for !rl.WindowShouldClose() {
 		if rl.IsFileDropped() {
-			droppedFiles = rl.GetDroppedFiles(&count)
+			droppedFiles = rl.LoadDroppedFiles()
+			count = len(droppedFiles)
 		}
 
 		rl.BeginDrawing()
@@ -28,7 +29,7 @@ func main() {
 		} else {
 			rl.DrawText("Dropped files:", 100, 40, 20, rl.DarkGray)
 
-			for i := int32(0); i < count; i++ {
+			for i := 0; i < count; i++ {
 				if i%2 == 0 {
 					rl.DrawRectangle(0, int32(85+40*i), screenWidth, 40, rl.Fade(rl.LightGray, 0.5))
 				} else {
@@ -44,7 +45,7 @@ func main() {
 		rl.EndDrawing()
 	}
 
-	rl.ClearDroppedFiles()
+	rl.UnloadDroppedFiles()
 
 	rl.CloseWindow()
 }

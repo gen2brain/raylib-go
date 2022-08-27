@@ -558,15 +558,6 @@ func GetRayCollisionBox(ray Ray, box BoundingBox) RayCollision {
 	return v
 }
 
-// GetRayCollisionModel - Get collision info between ray and model
-func GetRayCollisionModel(ray Ray, model Model) RayCollision {
-	cray := ray.cptr()
-	cmodel := model.cptr()
-	ret := C.GetRayCollisionModel(*cray, *cmodel)
-	v := newRayCollisionFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // GetRayCollisionMesh - Get collision info between ray and mesh
 func GetRayCollisionMesh(ray Ray, mesh Mesh, transform Matrix) RayCollision {
 	cray := ray.cptr()
