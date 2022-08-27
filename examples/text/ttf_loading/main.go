@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 	// NOTE: Textures/Fonts MUST be loaded after Window initialization (OpenGL context is required)
 
 	// TTF Font loading with custom generation parameters
-	font := rl.LoadFontEx("fonts/KAISG.ttf", 96, nil, 0)
+	font := rl.LoadFontEx("fonts/KAISG.ttf", 96, nil)
 
 	// Generate mipmap levels to use trilinear filtering
 	// NOTE: On 2D drawing it won't be noticeable, it looks like FILTER_BILINEAR
@@ -30,7 +30,7 @@ func main() {
 	rl.SetTextureFilter(font.Texture, rl.FilterPoint)
 	currentFontFilter := 0 // FilterPoint
 
-	count := int32(0)
+	count := 0
 	droppedFiles := make([]string, 0)
 
 	rl.SetTargetFPS(60)
@@ -38,7 +38,7 @@ func main() {
 	for !rl.WindowShouldClose() {
 		// Update
 		//----------------------------------------------------------------------------------
-		fontSize += rl.GetMouseWheelMove() * 4.0
+		fontSize += int32(rl.GetMouseWheelMove() * 4.0)
 
 		// Choose font texture filter method
 		if rl.IsKeyPressed(rl.KeyOne) {
@@ -63,12 +63,13 @@ func main() {
 
 		// Load a dropped TTF file dynamically (at current fontSize)
 		if rl.IsFileDropped() {
-			droppedFiles = rl.GetDroppedFiles(&count)
+			droppedFiles = rl.LoadDroppedFiles()
+			count = len(droppedFiles)
 
 			if count == 1 { // Only support one ttf file dropped
 				rl.UnloadFont(font)
-				font = rl.LoadFontEx(droppedFiles[0], fontSize, nil, 0)
-				rl.ClearDroppedFiles()
+				font = rl.LoadFontEx(droppedFiles[0], fontSize, nil)
+				rl.UnloadDroppedFiles()
 			}
 		}
 
@@ -104,7 +105,7 @@ func main() {
 
 	rl.UnloadFont(font) // Font unloading
 
-	rl.ClearDroppedFiles() // Clear internal buffers
+	rl.UnloadDroppedFiles() // Clear internal buffers
 
 	rl.CloseWindow()
 }
