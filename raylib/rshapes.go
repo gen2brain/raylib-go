@@ -61,7 +61,7 @@ func DrawLineBezier(startPos, endPos Vector2, thick float32, col color.RGBA) {
 	C.DrawLineBezier(*cstartPos, *cendPos, cthick, *ccolor)
 }
 
-// DrawLineBezierQuad - Draw line using quadratic bezier curves with a control point 
+// DrawLineBezierQuad - Draw line using quadratic bezier curves with a control point
 func DrawLineBezierQuad(startPos Vector2, endPos Vector2, controlPos Vector2, thick float32, col color.RGBA) {
 	cstartPos := startPos.cptr()
 	cendPos := endPos.cptr()
@@ -89,7 +89,6 @@ func DrawLineStrip(points []Vector2, pointCount int32, col color.RGBA) {
 	ccolor := colorCptr(col)
 	C.DrawLineStrip(cpoints, cpointCount, *ccolor)
 }
-
 
 // DrawCircle - Draw a color-filled circle
 func DrawCircle(centerX, centerY int32, radius float32, col color.RGBA) {
