@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func main() {
@@ -18,7 +18,7 @@ func main() {
 	rl.SetTargetFPS(60)
 
 	for !rl.WindowShouldClose() {
-		boxPositionY -= rl.GetMouseWheelMove() * scrollSpeed
+		boxPositionY -= int32(rl.GetMouseWheelMove()) * scrollSpeed
 
 		rl.BeginDrawing()
 

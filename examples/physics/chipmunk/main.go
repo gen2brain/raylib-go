@@ -5,7 +5,7 @@ import (
 	"math"
 	"math/rand"
 
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/jakecoffman/cp"
 )
 
@@ -85,7 +85,7 @@ func main() {
 	for !rl.WindowShouldClose() {
 		// calculate dt
 		now := rl.GetTime()
-		dt = now - lastTime
+		dt = float32(now - lastTime)
 		lastTime = now
 
 		// update the mouse position
