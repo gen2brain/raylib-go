@@ -197,6 +197,18 @@ func SetWindowSize(w, h int) {
 	C.SetWindowSize(cw, ch)
 }
 
+// SetWindowOpacity - Set window opacity [0.0f..1.0f] (only PLATFORM_DESKTOP)
+func SetWindowOpacity(opacity float32) {
+	copacity := (C.float)(opacity)
+	C.SetWindowOpacity(copacity)
+}
+
+// GetWindowHandle - Get native window handle
+func GetWindowHandle() unsafe.Pointer {
+	v := unsafe.Pointer((C.GetWindowHandle()))
+	return v
+}
+
 // GetScreenWidth - Get current screen width
 func GetScreenWidth() int {
 	ret := C.GetScreenWidth()
@@ -207,6 +219,20 @@ func GetScreenWidth() int {
 // GetScreenHeight - Get current screen height
 func GetScreenHeight() int {
 	ret := C.GetScreenHeight()
+	v := (int)(ret)
+	return v
+}
+
+// GetRenderWidth - Get current render width (it considers HiDPI)
+func GetRenderWidth() int {
+	ret := C.GetRenderWidth()
+	v := (int)(ret)
+	return v
+}
+
+// GetRenderHeight - Get current render height (it considers HiDPI)
+func GetRenderHeight() int {
+	ret := C.GetRenderHeight()
 	v := (int)(ret)
 	return v
 }
@@ -309,6 +335,16 @@ func GetClipboardText() string {
 	return v
 }
 
+// EnableEventWaiting - Enable waiting for events on EndDrawing(), no automatic event polling
+func EnableEventWaiting() {
+	C.EnableEventWaiting()
+}
+
+// DisableEventWaiting - Disable waiting for events on EndDrawing(), automatic events polling
+func DisableEventWaiting() {
+	C.DisableEventWaiting()
+}
+
 // ClearBackground - Sets Background Color
 func ClearBackground(col color.RGBA) {
 	ccolor := colorCptr(col)
@@ -406,20 +442,31 @@ func GetWorldToScreen(position Vector3, camera Camera) Vector2 {
 	return v
 }
 
-// GetWorldToScreen2D - Returns the screen space position for a 2d camera world space position
-func GetWorldToScreen2D(position Vector2, camera Camera2D) Vector2 {
-	cposition := position.cptr()
-	ccamera := camera.cptr()
-	ret := C.GetWorldToScreen2D(*cposition, *ccamera)
-	v := newVector2FromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // GetScreenToWorld2D - Returns the world space position for a 2d camera screen space position
 func GetScreenToWorld2D(position Vector2, camera Camera2D) Vector2 {
 	cposition := position.cptr()
 	ccamera := camera.cptr()
 	ret := C.GetScreenToWorld2D(*cposition, *ccamera)
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetWorldToScreenEx - Get size position for a 3d world space position
+func GetWorldToScreenEx(position Vector3, camera Camera, width int32, height int32) Vector2 {
+	cposition := position.cptr()
+	ccamera := camera.cptr()
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	ret := C.GetWorldToScreenEx(*cposition, *ccamera, cwidth, cheight)
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetWorldToScreen2D - Returns the screen space position for a 2d camera world space position
+func GetWorldToScreen2D(position Vector2, camera Camera2D) Vector2 {
+	cposition := position.cptr()
+	ccamera := camera.cptr()
+	ret := C.GetWorldToScreen2D(*cposition, *ccamera)
 	v := newVector2FromPointer(unsafe.Pointer(&ret))
 	return v
 }
@@ -582,6 +629,13 @@ func GetRandomValue(min, max int32) int32 {
 	return v
 }
 
+// OpenURL - Open URL with default system browser (if available)
+func OpenURL(url string) {
+	curl := C.CString(url)
+	defer C.free(unsafe.Pointer(curl))
+	C.OpenURL(curl)
+}
+
 // SetConfigFlags - Setup some window configuration flags
 func SetConfigFlags(flags uint32) {
 	cflags := (C.uint)(flags)
@@ -724,7 +778,7 @@ func GetGamepadAxisMovement(gamepad, axis int32) float32 {
 }
 
 // SetGamepadMappings - Set internal gamepad mappings (SDL_GameControllerDB)
-func SetGamepadMapping(mappings string) int32 {
+func SetGamepadMappings(mappings string) int32 {
 	cmappings := C.CString(mappings)
 	defer C.free(unsafe.Pointer(cmappings))
 	ret := C.SetGamepadMappings(cmappings)
@@ -813,11 +867,24 @@ func SetMouseScale(scaleX, scaleY float32) {
 	C.SetMouseScale(cscaleX, cscaleY)
 }
 
-// GetMouseWheelMove - Returns mouse wheel movement Y
-func GetMouseWheelMove() int32 {
+// GetMouseWheelMove - Get mouse wheel movement for X or Y, whichever is larger
+func GetMouseWheelMove() float32 {
 	ret := C.GetMouseWheelMove()
-	v := (int32)(ret)
+	v := (float32)(ret)
 	return v
+}
+
+// GetMouseWheelMoveV - Get mouse wheel movement for both X and Y
+func GetMouseWheelMoveV() Vector2 {
+	ret := C.GetMouseWheelMoveV()
+	v := newVector2FromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// SetMouseCursor - Set mouse cursor
+func SetMouseCursor(cursor int32) {
+	ccursor := (C.int)(cursor)
+	C.SetMouseCursor(ccursor)
 }
 
 // GetTouchX - Returns touch position X for touch point 0 (relative to screen size)

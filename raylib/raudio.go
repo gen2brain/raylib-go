@@ -181,6 +181,13 @@ func SetSoundPitch(sound Sound, pitch float32) {
 	C.SetSoundPitch(*csound, cpitch)
 }
 
+// SetSoundPan - Set pan for a sound (0.5 is center)
+func SetSoundPan(sound Sound, pan float32) {
+	csound := sound.cptr()
+	cpan := (C.float)(pan)
+	C.SetSoundPan(*csound, cpan)
+}
+
 // WaveFormat - Convert wave data to desired format
 func WaveFormat(wave Wave, sampleRate int32, sampleSize int32, channels int32) {
 	cwave := wave.cptr()
@@ -310,6 +317,13 @@ func SetMusicPitch(music Music, pitch float32) {
 	C.SetMusicPitch(cmusic, cpitch)
 }
 
+// SetMusicPan - Set pan for a music (0.5 is center)
+func SetMusicPan(music Music, pan float32) {
+	cmusic := *(*C.Music)(unsafe.Pointer(&music))
+	cpan := (C.float)(pan)
+	C.SetMusicPan(cmusic, cpan)
+}
+
 // GetMusicTimeLength - Get music time length (in seconds)
 func GetMusicTimeLength(music Music) float32 {
 	cmusic := *(*C.Music)(unsafe.Pointer(&music))
@@ -336,7 +350,7 @@ func LoadAudioStream(sampleRate uint32, sampleSize uint32, channels uint32) Audi
 	return v
 }
 
-//UnloadAudioStream - Unload audio stream and free memory
+// UnloadAudioStream - Unload audio stream and free memory
 func UnloadAudioStream(stream AudioStream) {
 	cstream := stream.cptr()
 	C.UnloadAudioStream(*cstream)
@@ -402,6 +416,13 @@ func SetAudioStreamPitch(stream AudioStream, pitch float32) {
 	cstream := stream.cptr()
 	cpitch := (C.float)(pitch)
 	C.SetAudioStreamPitch(*cstream, cpitch)
+}
+
+// SetAudioStreamPan - Set pan for audio stream (0.5 is centered)
+func SetAudioStreamPan(stream AudioStream, pan float32) {
+	cstream := stream.cptr()
+	cpan := (C.float)(pan)
+	C.SetAudioStreamPan(*cstream, cpan)
 }
 
 // SetAudioStreamBufferSizeDefault - Default size for new audio streams

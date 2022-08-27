@@ -193,6 +193,8 @@ const (
 	FlagWindowTransparent = 0x00000010
 	// Set to support HighDPI
 	FlagWindowHighdpi = 0x00002000
+	// Set to support mouse passthrough, only supported when FLAG_WINDOW_UNDECORATED
+	FlagWindowMousePassthrough = 0x00004000
 	// Set to try enabling MSAA 4X
 	FlagMsaa4xHint = 0x00000020
 	// Set to try enabling interlaced video format (for V3D)

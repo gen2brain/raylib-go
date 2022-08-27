@@ -622,15 +622,14 @@ func DrawTextureRec(texture Texture2D, sourceRec Rectangle, position Vector2, ti
 	C.DrawTextureRec(*ctexture, *csourceRec, *cposition, *ctint)
 }
 
-// DrawTexturePro - Draw a part of a texture defined by a rectangle with 'pro' parameters
-func DrawTexturePro(texture Texture2D, sourceRec, destRec Rectangle, origin Vector2, rotation float32, tint color.RGBA) {
+// DrawTextureQuad - Draw texture quad with tiling and offset parameters
+func DrawTextureQuad(texture Texture2D, tiling, offset Vector2, rectangle Rectangle, tint color.RGBA) {
 	ctexture := texture.cptr()
-	csourceRec := sourceRec.cptr()
-	cdestRec := destRec.cptr()
-	corigin := origin.cptr()
-	crotation := (C.float)(rotation)
+	ctiling := tiling.cptr()
+	coffset := offset.cptr()
+	crectangle := rectangle.cptr()
 	ctint := colorCptr(tint)
-	C.DrawTexturePro(*ctexture, *csourceRec, *cdestRec, *corigin, crotation, *ctint)
+	C.DrawTextureQuad(*ctexture, *ctiling, *coffset, *crectangle, *ctint)
 }
 
 // DrawTextureTiled - Draw part of a texture (defined by a rectangle) with rotation and scale tiled into dest
@@ -643,4 +642,15 @@ func DrawTextureTiled(texture Texture2D, sourceRec, destRec Rectangle, origin Ve
 	cscale := (C.float)(scale)
 	ctint := colorCptr(tint)
 	C.DrawTextureTiled(*ctexture, *csourceRec, *cdestRec, *corigin, crotation, cscale, *ctint)
+}
+
+// DrawTexturePro - Draw a part of a texture defined by a rectangle with 'pro' parameters
+func DrawTexturePro(texture Texture2D, sourceRec, destRec Rectangle, origin Vector2, rotation float32, tint color.RGBA) {
+	ctexture := texture.cptr()
+	csourceRec := sourceRec.cptr()
+	cdestRec := destRec.cptr()
+	corigin := origin.cptr()
+	crotation := (C.float)(rotation)
+	ctint := colorCptr(tint)
+	C.DrawTexturePro(*ctexture, *csourceRec, *cdestRec, *corigin, crotation, *ctint)
 }
