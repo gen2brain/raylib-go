@@ -6,7 +6,7 @@
 *
 *   LICENSE: zlib/libpng
 *
-*   Copyright (c) 2018-2021 Ahmad Fatoum & Ramon Santamaria (@raysan5)
+*   Copyright (c) 2018-2022 Ahmad Fatoum & Ramon Santamaria (@raysan5)
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -26,7 +26,17 @@
 **********************************************************************************************/
 
 //------------------------------------------------------------------------------------
-// Module: core - Configuration Flags
+// Module selection - Some modules could be avoided
+// Mandatory modules: rcore, rlgl, utils
+//------------------------------------------------------------------------------------
+#define SUPPORT_MODULE_RSHAPES           1
+#define SUPPORT_MODULE_RTEXTURES         1
+#define SUPPORT_MODULE_RTEXT             1          // WARNING: It requires SUPPORT_MODULE_RTEXTURES to load sprite font textures
+#define SUPPORT_MODULE_RMODELS           1
+#define SUPPORT_MODULE_RAUDIO            1
+
+//------------------------------------------------------------------------------------
+// Module: rcore - Configuration Flags
 //------------------------------------------------------------------------------------
 // Camera module is included (rcamera.h) and multiple predefined cameras are available: free, 1st/3rd person, orbital
 #define SUPPORT_CAMERA_SYSTEM       1
@@ -36,8 +46,6 @@
 #define SUPPORT_MOUSE_GESTURES      1
 // Reconfigure standard input to receive key inputs, works with SSH connection.
 #define SUPPORT_SSH_KEYBOARD_RPI    1
-// Draw a mouse pointer on screen
-//#define SUPPORT_MOUSE_CURSOR_POINT   1
 // Setting a higher resolution can improve the accuracy of time-out intervals in wait functions.
 // However, it can also reduce overall system performance, because the thread scheduler switches tasks more often.
 #define SUPPORT_WINMM_HIGHRES_TIMER 1
@@ -53,8 +61,6 @@
 #define SUPPORT_GIF_RECORDING       1
 // Support CompressData() and DecompressData() functions
 #define SUPPORT_COMPRESSION_API     1
-// Support saving binary data automatically to a generated storage.data file. This file is managed internally.
-#define SUPPORT_DATA_STORAGE        1
 // Support automatic generated events, loading and recording of those events when required
 //#define SUPPORT_EVENTS_AUTOMATION     1
 // Support custom frame control, only for advance users
@@ -62,21 +68,19 @@
 // Enabling this flag allows manual control of the frame processes, use at your own risk
 //#define SUPPORT_CUSTOM_FRAME_CONTROL   1
 
-// core: Configuration values
+// rcore: Configuration values
 //------------------------------------------------------------------------------------
-#if defined(__linux__)
-    #define MAX_FILEPATH_LENGTH     4096        // Maximum length for filepaths (Linux PATH_MAX default value)
-#else
-    #define MAX_FILEPATH_LENGTH      512        // Maximum length supported for filepaths
-#endif
+#define MAX_FILEPATH_CAPACITY       8192        // Maximum file paths capacity
+#define MAX_FILEPATH_LENGTH         4096        // Maximum length for filepaths (Linux PATH_MAX default value)
 
-#define MAX_GAMEPADS                   4        // Max number of gamepads supported
-#define MAX_GAMEPAD_AXIS               8        // Max number of axis supported (per gamepad)
-#define MAX_GAMEPAD_BUTTONS           32        // Max bumber of buttons supported (per gamepad)
+#define MAX_KEYBOARD_KEYS            512        // Maximum number of keyboard keys supported
+#define MAX_MOUSE_BUTTONS              8        // Maximum number of mouse buttons supported
+#define MAX_GAMEPADS                   4        // Maximum number of gamepads supported
+#define MAX_GAMEPAD_AXIS               8        // Maximum number of axis supported (per gamepad)
+#define MAX_GAMEPAD_BUTTONS           32        // Maximum number of buttons supported (per gamepad)
 #define MAX_TOUCH_POINTS               8        // Maximum number of touch points supported
-#define MAX_KEY_PRESSED_QUEUE         16        // Max number of characters in the key input queue
-
-#define STORAGE_DATA_FILE  "storage.data"       // Automatic storage filename
+#define MAX_KEY_PRESSED_QUEUE         16        // Maximum number of keys in the key input queue
+#define MAX_CHAR_PRESSED_QUEUE        16        // Maximum number of characters in the char input queue
 
 #define MAX_DECOMPRESSION_SIZE        64        // Max size allocated for decompression in MB
 
@@ -124,7 +128,7 @@
 
 
 //------------------------------------------------------------------------------------
-// Module: shapes - Configuration Flags
+// Module: rshapes - Configuration Flags
 //------------------------------------------------------------------------------------
 // Use QUADS instead of TRIANGLES for drawing when possible
 // Some lines-based shapes could still use lines
@@ -132,7 +136,7 @@
 
 
 //------------------------------------------------------------------------------------
-// Module: textures - Configuration Flags
+// Module: rtextures - Configuration Flags
 //------------------------------------------------------------------------------------
 // Selecte desired fileformats to be supported for image data loading
 #define SUPPORT_FILEFORMAT_PNG      1
@@ -140,6 +144,7 @@
 //#define SUPPORT_FILEFORMAT_TGA      1
 #define SUPPORT_FILEFORMAT_JPG      1
 #define SUPPORT_FILEFORMAT_GIF      1
+#define SUPPORT_FILEFORMAT_QOI      1
 //#define SUPPORT_FILEFORMAT_PSD      1
 #define SUPPORT_FILEFORMAT_DDS      1
 #define SUPPORT_FILEFORMAT_HDR      1
@@ -148,7 +153,7 @@
 //#define SUPPORT_FILEFORMAT_PKM      1
 //#define SUPPORT_FILEFORMAT_PVR      1
 
-// Support image export functionality (.png, .bmp, .tga, .jpg)
+// Support image export functionality (.png, .bmp, .tga, .jpg, .qoi)
 #define SUPPORT_IMAGE_EXPORT        1
 // Support procedural image generation functionality (gradient, spot, perlin-noise, cellular)
 #define SUPPORT_IMAGE_GENERATION    1
@@ -158,7 +163,7 @@
 
 
 //------------------------------------------------------------------------------------
-// Module: text - Configuration Flags
+// Module: rtext - Configuration Flags
 //------------------------------------------------------------------------------------
 // Default font is loaded on window initialization to be available for the user to render simple text
 // NOTE: If enabled, uses external module functions to load default raylib font
@@ -171,7 +176,7 @@
 // If not defined, still some functions are supported: TextLength(), TextFormat()
 #define SUPPORT_TEXT_MANIPULATION   1
 
-// text: Configuration values
+// rtext: Configuration values
 //------------------------------------------------------------------------------------
 #define MAX_TEXT_BUFFER_LENGTH      1024        // Size of internal static buffers used on some functions:
                                                 // TextFormat(), TextSubtext(), TextToUpper(), TextToLower(), TextToPascal(), TextSplit()
@@ -179,7 +184,7 @@
 
 
 //------------------------------------------------------------------------------------
-// Module: models - Configuration Flags
+// Module: rmodels - Configuration Flags
 //------------------------------------------------------------------------------------
 // Selected desired model fileformats to be supported for loading
 #define SUPPORT_FILEFORMAT_OBJ      1
@@ -187,17 +192,18 @@
 #define SUPPORT_FILEFORMAT_IQM      1
 #define SUPPORT_FILEFORMAT_GLTF     1
 #define SUPPORT_FILEFORMAT_VOX      1
+#define SUPPORT_FILEFORMAT_M3D      1
 // Support procedural mesh generation functions, uses external par_shapes.h library
 // NOTE: Some generated meshes DO NOT include generated texture coordinates
 #define SUPPORT_MESH_GENERATION     1
 
-// models: Configuration values
+// rmodels: Configuration values
 //------------------------------------------------------------------------------------
 #define MAX_MATERIAL_MAPS               12      // Maximum number of shader maps supported
 #define MAX_MESH_VERTEX_BUFFERS          7      // Maximum vertex buffers (VBO) per mesh
 
 //------------------------------------------------------------------------------------
-// Module: audio - Configuration Flags
+// Module: raudio - Configuration Flags
 //------------------------------------------------------------------------------------
 // Desired audio fileformats to be supported for loading
 #define SUPPORT_FILEFORMAT_WAV      1
@@ -207,7 +213,7 @@
 #define SUPPORT_FILEFORMAT_MP3      1
 //#define SUPPORT_FILEFORMAT_FLAC     1
 
-// audio: Configuration values
+// raudio: Configuration values
 //------------------------------------------------------------------------------------
 #define AUDIO_DEVICE_FORMAT    ma_format_f32    // Device output format (miniaudio: float-32bit)
 #define AUDIO_DEVICE_CHANNELS              2    // Device output channels: stereo

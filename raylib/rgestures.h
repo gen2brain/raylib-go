@@ -24,7 +24,7 @@
 *
 *   LICENSE: zlib/libpng
 *
-*   Copyright (c) 2014-2021 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2014-2022 Ramon Santamaria (@raysan5)
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -62,10 +62,10 @@
 // NOTE: Below types are required for GESTURES_STANDALONE usage
 //----------------------------------------------------------------------------------
 // Boolean type
-#if defined(__STDC__) && __STDC_VERSION__ >= 199901L
+#if (defined(__STDC__) && __STDC_VERSION__ >= 199901L) || (defined(_MSC_VER) && _MSC_VER >= 1800)
     #include <stdbool.h>
 #elif !defined(__cplusplus) && !defined(bool) && !defined(RL_BOOL_TYPE)
-    typedef enum bool { false, true } bool;
+    typedef enum bool { false = 0, true = !false } bool;
 #endif
 
 #if !defined(RL_VECTOR2_TYPE)
@@ -118,7 +118,7 @@ typedef struct {
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 extern "C" {            // Prevents name mangling of functions
 #endif
 
@@ -137,7 +137,7 @@ Vector2 GetGesturePinchVector(void);                    // Get gesture pinch del
 float GetGesturePinchAngle(void);                       // Get gesture pinch angle
 #endif
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }
 #endif
 

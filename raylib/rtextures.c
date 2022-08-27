@@ -4,11 +4,15 @@
 *
 *   CONFIGURATION:
 *
+*   #define SUPPORT_MODULE_RTEXTURES
+*       rtextures module is included in the build
+*
 *   #define SUPPORT_FILEFORMAT_BMP
 *   #define SUPPORT_FILEFORMAT_PNG
 *   #define SUPPORT_FILEFORMAT_TGA
 *   #define SUPPORT_FILEFORMAT_JPG
 *   #define SUPPORT_FILEFORMAT_GIF
+*   #define SUPPORT_FILEFORMAT_QOI
 *   #define SUPPORT_FILEFORMAT_PSD
 *   #define SUPPORT_FILEFORMAT_PIC
 *   #define SUPPORT_FILEFORMAT_HDR
@@ -33,12 +37,12 @@
 *   DEPENDENCIES:
 *       stb_image        - Multiple image formats loading (JPEG, PNG, BMP, TGA, PSD, GIF, PIC)
 *                          NOTE: stb_image has been slightly modified to support Android platform.
-*       stb_image_resize - Multiple image resize algorythms
+*       stb_image_resize - Multiple image resize algorithms
 *
 *
 *   LICENSE: zlib/libpng
 *
-*   Copyright (c) 2013-2021 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2013-2022 Ramon Santamaria (@raysan5)
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -64,11 +68,13 @@
     #include "config.h"         // Defines module configuration flags
 #endif
 
+#if defined(SUPPORT_MODULE_RTEXTURES)
+
 #include "utils.h"              // Required for: TRACELOG() and fopen() Android mapping
 #include "rlgl.h"               // OpenGL abstraction layer to OpenGL 1.1, 3.3 or ES2
 
 #include <stdlib.h>             // Required for: malloc(), free()
-#include <string.h>             // Required for: strlen() [Used in ImageTextEx()]
+#include <string.h>             // Required for: strlen() [Used in ImageTextEx()], strcmp() [Used in LoadImageFromMemory()]
 #include <math.h>               // Required for: fabsf()
 #include <stdio.h>              // Required for: sprintf() [Used in ExportImageAsCode()]
 
@@ -122,6 +128,14 @@
     #define STB_IMAGE_IMPLEMENTATION
     #include "external/stb_image.h"         // Required for: stbi_load_from_file()
                                             // NOTE: Used to read image data (multiple formats support)
+#endif
+
+#if defined(SUPPORT_FILEFORMAT_QOI)
+    #define QOI_MALLOC RL_MALLOC
+    #define QOI_FREE RL_FREE
+
+    #define QOI_IMPLEMENTATION
+    #include "external/qoi.h"
 #endif
 
 #if defined(SUPPORT_IMAGE_EXPORT)
@@ -202,7 +216,8 @@ Image LoadImage(const char *fileName)
     defined(SUPPORT_FILEFORMAT_PIC) || \
     defined(SUPPORT_FILEFORMAT_HDR) || \
     defined(SUPPORT_FILEFORMAT_PSD)
-#define STBI_REQUIRED
+
+    #define STBI_REQUIRED
 #endif
 
     // Loading file to memory
@@ -286,36 +301,32 @@ Image LoadImageAnim(const char *fileName, int *frames)
 }
 
 // Load image from memory buffer, fileType refers to extension: i.e. ".png"
+// WARNING: File extension must be provided in lower-case
 Image LoadImageFromMemory(const char *fileType, const unsigned char *fileData, int dataSize)
 {
     Image image = { 0 };
 
-    char fileExtLower[16] = { 0 };
-    strcpy(fileExtLower, TextToLower(fileType));
-
-#if defined(SUPPORT_FILEFORMAT_PNG)
-    if ((TextIsEqual(fileExtLower, ".png"))
-#else
     if ((false)
+#if defined(SUPPORT_FILEFORMAT_PNG)
+        || (strcmp(fileType, ".png") == 0)
 #endif
 #if defined(SUPPORT_FILEFORMAT_BMP)
-        || (TextIsEqual(fileExtLower, ".bmp"))
+        || (strcmp(fileType, ".bmp") == 0)
 #endif
 #if defined(SUPPORT_FILEFORMAT_TGA)
-        || (TextIsEqual(fileExtLower, ".tga"))
+        || (strcmp(fileType, ".tga") == 0)
 #endif
 #if defined(SUPPORT_FILEFORMAT_JPG)
-        || (TextIsEqual(fileExtLower, ".jpg") ||
-            TextIsEqual(fileExtLower, ".jpeg"))
+        || ((strcmp(fileType, ".jpg") == 0) || (strcmp(fileType, ".jpeg") == 0))
 #endif
 #if defined(SUPPORT_FILEFORMAT_GIF)
-        || (TextIsEqual(fileExtLower, ".gif"))
+        || (strcmp(fileType, ".gif") == 0)
 #endif
 #if defined(SUPPORT_FILEFORMAT_PIC)
-        || (TextIsEqual(fileExtLower, ".pic"))
+        || (strcmp(fileType, ".pic") == 0)
 #endif
 #if defined(SUPPORT_FILEFORMAT_PSD)
-        || (TextIsEqual(fileExtLower, ".psd"))
+        || (strcmp(fileType, ".psd") == 0)
 #endif
        )
     {
@@ -340,7 +351,7 @@ Image LoadImageFromMemory(const char *fileType, const unsigned char *fileData, i
 #endif
     }
 #if defined(SUPPORT_FILEFORMAT_HDR)
-    else if (TextIsEqual(fileExtLower, ".hdr"))
+    else if (strcmp(fileType, ".hdr") == 0)
     {
 #if defined(STBI_REQUIRED)
         if (fileData != NULL)
@@ -362,20 +373,31 @@ Image LoadImageFromMemory(const char *fileType, const unsigned char *fileData, i
 #endif
     }
 #endif
+#if defined(SUPPORT_FILEFORMAT_QOI)
+    else if (strcmp(fileType, ".qoi") == 0)
+    {
+        qoi_desc desc = { 0 };
+        image.data = qoi_decode(fileData, dataSize, &desc, 4);
+        image.width = desc.width;
+        image.height = desc.height;
+        image.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+        image.mipmaps = 1;
+    }
+#endif
 #if defined(SUPPORT_FILEFORMAT_DDS)
-    else if (TextIsEqual(fileExtLower, ".dds")) image = LoadDDS(fileData, dataSize);
+    else if (strcmp(fileType, ".dds") == 0) image = LoadDDS(fileData, dataSize);
 #endif
 #if defined(SUPPORT_FILEFORMAT_PKM)
-    else if (TextIsEqual(fileExtLower, ".pkm")) image = LoadPKM(fileData, dataSize);
+    else if (strcmp(fileType, ".pkm") == 0) image = LoadPKM(fileData, dataSize);
 #endif
 #if defined(SUPPORT_FILEFORMAT_KTX)
-    else if (TextIsEqual(fileExtLower, ".ktx")) image = LoadKTX(fileData, dataSize);
+    else if (strcmp(fileType, ".ktx") == 0) image = LoadKTX(fileData, dataSize);
 #endif
 #if defined(SUPPORT_FILEFORMAT_PVR)
-    else if (TextIsEqual(fileExtLower, ".pvr")) image = LoadPVR(fileData, dataSize);
+    else if (strcmp(fileType, ".pvr") == 0) image = LoadPVR(fileData, dataSize);
 #endif
 #if defined(SUPPORT_FILEFORMAT_ASTC)
-    else if (TextIsEqual(fileExtLower, ".astc")) image = LoadASTC(fileData, dataSize);
+    else if (strcmp(fileType, ".astc") == 0) image = LoadASTC(fileData, dataSize);
 #endif
     else TRACELOG(LOG_WARNING, "IMAGE: Data format not supported");
 
@@ -477,7 +499,28 @@ bool ExportImage(Image image, const char *fileName)
     else if (IsFileExtension(fileName, ".tga")) success = stbi_write_tga(fileName, image.width, image.height, channels, imgData);
 #endif
 #if defined(SUPPORT_FILEFORMAT_JPG)
-    else if (IsFileExtension(fileName, ".jpg")) success = stbi_write_jpg(fileName, image.width, image.height, channels, imgData, 90);  // JPG quality: between 1 and 100
+    else if (IsFileExtension(fileName, ".jpg") ||
+             IsFileExtension(fileName, ".jpeg")) success = stbi_write_jpg(fileName, image.width, image.height, channels, imgData, 90);  // JPG quality: between 1 and 100
+#endif
+#if defined(SUPPORT_FILEFORMAT_QOI)
+    else if (IsFileExtension(fileName, ".qoi"))
+    {
+        channels = 0;
+        if (image.format == PIXELFORMAT_UNCOMPRESSED_R8G8B8) channels = 3;
+        else if (image.format == PIXELFORMAT_UNCOMPRESSED_R8G8B8A8) channels = 4;
+        else TRACELOG(LOG_WARNING, "IMAGE: Image pixel format must be R8G8B8 or R8G8B8A8");
+
+        if ((channels == 3) || (channels == 4))
+        {
+            qoi_desc desc = { 0 };
+            desc.width = image.width;
+            desc.height = image.height;
+            desc.channels = channels;
+            desc.colorspace = QOI_SRGB;
+
+            success = qoi_write(fileName, imgData, &desc);
+        }
+    }
 #endif
 #if defined(SUPPORT_FILEFORMAT_KTX)
     else if (IsFileExtension(fileName, ".ktx")) success = SaveKTX(image, fileName);
@@ -523,7 +566,7 @@ bool ExportImageAsCode(Image image, const char *fileName)
     byteCount += sprintf(txtData + byteCount, "// more info and bugs-report:  github.com/raysan5/raylib                              //\n");
     byteCount += sprintf(txtData + byteCount, "// feedback and support:       ray[at]raylib.com                                      //\n");
     byteCount += sprintf(txtData + byteCount, "//                                                                                    //\n");
-    byteCount += sprintf(txtData + byteCount, "// Copyright (c) 2018-2021 Ramon Santamaria (@raysan5)                                //\n");
+    byteCount += sprintf(txtData + byteCount, "// Copyright (c) 2018-2022 Ramon Santamaria (@raysan5)                                //\n");
     byteCount += sprintf(txtData + byteCount, "//                                                                                    //\n");
     byteCount += sprintf(txtData + byteCount, "////////////////////////////////////////////////////////////////////////////////////////\n\n");
 
@@ -549,8 +592,8 @@ bool ExportImageAsCode(Image image, const char *fileName)
 
 #endif      // SUPPORT_IMAGE_EXPORT
 
-    if (success != 0) TRACELOG(LOG_INFO, "FILEIO: [%s] Image exported successfully", fileName);
-    else TRACELOG(LOG_WARNING, "FILEIO: [%s] Failed to export image", fileName);
+    if (success != 0) TRACELOG(LOG_INFO, "FILEIO: [%s] Image as code exported successfully", fileName);
+    else TRACELOG(LOG_WARNING, "FILEIO: [%s] Failed to export image as code", fileName);
 
     return success;
 }
@@ -732,7 +775,7 @@ Image GenImageCellular(int width, int height, int tileSize)
     {
         int y = (i/seedsPerRow)*tileSize + GetRandomValue(0, tileSize - 1);
         int x = (i%seedsPerRow)*tileSize + GetRandomValue(0, tileSize - 1);
-        seeds[i] = (Vector2){ (float)x, (float)y};
+        seeds[i] = (Vector2){ (float)x, (float)y };
     }
 
     for (int y = 0; y < height; y++)
@@ -743,7 +786,7 @@ Image GenImageCellular(int width, int height, int tileSize)
         {
             int tileX = x/tileSize;
 
-            float minDistance = (float)strtod("Inf", NULL);
+            float minDistance = 65536.0f; //(float)strtod("Inf", NULL);
 
             // Check all adjacent tiles
             for (int i = -1; i < 2; i++)
@@ -832,11 +875,11 @@ Image ImageFromImage(Image image, Rectangle rec)
 
     result.width = (int)rec.width;
     result.height = (int)rec.height;
-    result.data = RL_CALLOC((int)(rec.width*rec.height)*bytesPerPixel, 1);
+    result.data = RL_CALLOC((int)rec.width*(int)rec.height*bytesPerPixel, 1);
     result.format = image.format;
     result.mipmaps = 1;
 
-    for (int y = 0; y < rec.height; y++)
+    for (int y = 0; y < (int)rec.height; y++)
     {
         memcpy(((unsigned char *)result.data) + y*(int)rec.width*bytesPerPixel, ((unsigned char *)image.data) + ((y + (int)rec.y)*image.width + (int)rec.x)*bytesPerPixel, (int)rec.width*bytesPerPixel);
     }
@@ -1092,35 +1135,41 @@ void ImageToPOT(Image *image, Color fill)
 // Create an image from text (default font)
 Image ImageText(const char *text, int fontSize, Color color)
 {
+    Image imText = { 0 };
+#if defined(SUPPORT_MODULE_RTEXT)
     int defaultFontSize = 10;   // Default Font chars height in pixel
     if (fontSize < defaultFontSize) fontSize = defaultFontSize;
     int spacing = fontSize/defaultFontSize;
-
-    Image imText = ImageTextEx(GetFontDefault(), text, (float)fontSize, (float)spacing, color);
-
+    imText = ImageTextEx(GetFontDefault(), text, (float)fontSize, (float)spacing, color);   // WARNING: Module required: rtext
+#else
+    imText = GenImageColor(200, 60, BLACK);     // Generating placeholder black image rectangle
+    TRACELOG(LOG_WARNING, "IMAGE: ImageTextEx() requires module: rtext");
+#endif
     return imText;
 }
 
 // Create an image from text (custom sprite font)
 Image ImageTextEx(Font font, const char *text, float fontSize, float spacing, Color tint)
 {
+    Image imText = { 0 };
+#if defined(SUPPORT_MODULE_RTEXT)
     int size = (int)strlen(text);   // Get size in bytes of text
 
     int textOffsetX = 0;            // Image drawing position X
     int textOffsetY = 0;            // Offset between lines (on line break '\n')
 
     // NOTE: Text image is generated at font base size, later scaled to desired font size
-    Vector2 imSize = MeasureTextEx(font, text, (float)font.baseSize, spacing);
+    Vector2 imSize = MeasureTextEx(font, text, (float)font.baseSize, spacing);  // WARNING: Module required: rtext
 
     // Create image to store text
-    Image imText = GenImageColor((int)imSize.x, (int)imSize.y, BLANK);
+    imText = GenImageColor((int)imSize.x, (int)imSize.y, BLANK);
 
     for (int i = 0; i < size; i++)
     {
         // Get next codepoint from byte string and glyph index in font
         int codepointByteCount = 0;
-        int codepoint = GetCodepoint(&text[i], &codepointByteCount);
-        int index = GetGlyphIndex(font, codepoint);
+        int codepoint = GetCodepoint(&text[i], &codepointByteCount);    // WARNING: Module required: rtext
+        int index = GetGlyphIndex(font, codepoint);                     // WARNING: Module required: rtext
 
         // NOTE: Normally we exit the decoding sequence as soon as a bad byte is found (and return 0x3f)
         // but we need to draw all of the bad bytes using the '?' symbol moving one byte
@@ -1155,10 +1204,14 @@ Image ImageTextEx(Font font, const char *text, float fontSize, float spacing, Co
         TRACELOG(LOG_INFO, "IMAGE: Text scaled by factor: %f", scaleFactor);
 
         // Using nearest-neighbor scaling algorithm for default font
+        // WARNING: Module required: rtext
         if (font.texture.id == GetFontDefault().texture.id) ImageResizeNN(&imText, (int)(imSize.x*scaleFactor), (int)(imSize.y*scaleFactor));
         else ImageResize(&imText, (int)(imSize.x*scaleFactor), (int)(imSize.y*scaleFactor));
     }
-
+#else
+    imText = GenImageColor(200, 60, BLACK);     // Generating placeholder black image rectangle
+    TRACELOG(LOG_WARNING, "IMAGE: ImageTextEx() requires module: rtext");
+#endif
     return imText;
 }
 
@@ -1361,10 +1414,12 @@ void ImageResize(Image *image, int newWidth, int newHeight)
     // Security check to avoid program crash
     if ((image->data == NULL) || (image->width == 0) || (image->height == 0)) return;
 
-    bool fastPath = true;
-    if ((image->format != PIXELFORMAT_UNCOMPRESSED_GRAYSCALE) && (image->format != PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA) && (image->format != PIXELFORMAT_UNCOMPRESSED_R8G8B8) && (image->format != PIXELFORMAT_UNCOMPRESSED_R8G8B8A8)) fastPath = true;
-
-    if (fastPath)
+    // Check if we can use a fast path on image scaling
+    // It can be for 8 bit per channel images with 1 to 4 channels per pixel
+    if ((image->format == PIXELFORMAT_UNCOMPRESSED_GRAYSCALE) ||
+        (image->format == PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA) ||
+        (image->format == PIXELFORMAT_UNCOMPRESSED_R8G8B8) ||
+        (image->format == PIXELFORMAT_UNCOMPRESSED_R8G8B8A8))
     {
         int bytesPerPixel = GetPixelDataSize(1, 1, image->format);
         unsigned char *output = (unsigned char *)RL_MALLOC(newWidth*newHeight*bytesPerPixel);
@@ -1836,10 +1891,10 @@ void ImageColorTint(Image *image, Color color)
             unsigned char b = (unsigned char)(((float)pixels[index].b/255*cB)*255.0f);
             unsigned char a = (unsigned char)(((float)pixels[index].a/255*cA)*255.0f);
 
-            pixels[y*image->width + x].r = r;
-            pixels[y*image->width + x].g = g;
-            pixels[y*image->width + x].b = b;
-            pixels[y*image->width + x].a = a;
+            pixels[index].r = r;
+            pixels[index].g = g;
+            pixels[index].b = b;
+            pixels[index].a = a;
         }
     }
 
@@ -1905,25 +1960,25 @@ void ImageColorContrast(Image *image, float contrast)
         for (int x = 0; x < image->width; x++)
         {
             float pR = (float)pixels[y*image->width + x].r/255.0f;
-            pR -= 0.5;
+            pR -= 0.5f;
             pR *= contrast;
-            pR += 0.5;
+            pR += 0.5f;
             pR *= 255;
             if (pR < 0) pR = 0;
             if (pR > 255) pR = 255;
 
             float pG = (float)pixels[y*image->width + x].g/255.0f;
-            pG -= 0.5;
+            pG -= 0.5f;
             pG *= contrast;
-            pG += 0.5;
+            pG += 0.5f;
             pG *= 255;
             if (pG < 0) pG = 0;
             if (pG > 255) pG = 255;
 
             float pB = (float)pixels[y*image->width + x].b/255.0f;
-            pB -= 0.5;
+            pB -= 0.5f;
             pB *= contrast;
-            pB += 0.5;
+            pB += 0.5f;
             pB *= 255;
             if (pB < 0) pB = 0;
             if (pB > 255) pB = 255;
@@ -2358,7 +2413,20 @@ Color GetImageColor(Image image, int x, int y)
 // Clear image background with given color
 void ImageClearBackground(Image *dst, Color color)
 {
-    for (int i = 0; i < dst->width*dst->height; ++i) ImageDrawPixel(dst, i%dst->width, i/dst->width, color);
+    // Security check to avoid program crash
+    if ((dst->data == NULL) || (dst->width == 0) || (dst->height == 0)) return;
+
+    // Fill in first pixel based on image format
+    ImageDrawPixel(dst, 0, 0, color);
+
+    unsigned char *pSrcPixel = (unsigned char *)dst->data;
+    int bytesPerPixel = GetPixelDataSize(1, 1, dst->format);
+
+    // Repeat the first pixel data throughout the image
+    for (int i = 1; i < dst->width * dst->height; i++)
+    {
+        memcpy(pSrcPixel + i * bytesPerPixel, pSrcPixel, bytesPerPixel);
+    }
 }
 
 // Draw pixel within an image
@@ -2632,13 +2700,21 @@ void ImageDrawRectangleRec(Image *dst, Rectangle rec, Color color)
     int ey = sy + (int)rec.height;
 
     int sx = (int)rec.x;
-    int ex = sx + (int)rec.width;
+
+    int bytesPerPixel = GetPixelDataSize(1, 1, dst->format);
 
     for (int y = sy; y < ey; y++)
     {
-        for (int x = sx; x < ex; x++)
+        // Fill in the first pixel of the row based on image format
+        ImageDrawPixel(dst, sx, y, color);
+
+        int bytesOffset = ((y * dst->width) + sx) * bytesPerPixel;
+        unsigned char *pSrcPixel = (unsigned char *)dst->data + bytesOffset;
+
+        // Repeat the first pixel data throughout the row
+        for (int x = 1; x < (int)rec.width; x++)
         {
-            ImageDrawPixel(dst, x, y, color);
+            memcpy(pSrcPixel + x * bytesPerPixel, pSrcPixel, bytesPerPixel);
         }
     }
 }
@@ -2716,6 +2792,9 @@ void ImageDraw(Image *dst, Image src, Rectangle srcRec, Rectangle dstRec, Color 
         //    [x] Consider fast path: no alpha blending required cases (src has no alpha)
         //    [x] Consider fast path: same src/dst format with no alpha -> direct line copy
         //    [-] GetPixelColor(): Get Vector4 instead of Color, easier for ColorAlphaBlend()
+        //    [ ] Support f32bit channels drawing
+
+        // TODO: Support PIXELFORMAT_UNCOMPRESSED_R32, PIXELFORMAT_UNCOMPRESSED_R32G32B32, PIXELFORMAT_UNCOMPRESSED_R32G32B32A32
 
         Color colSrc, colDst, blend;
         bool blendRequired = true;
@@ -2768,10 +2847,13 @@ void ImageDraw(Image *dst, Image src, Rectangle srcRec, Rectangle dstRec, Color 
 // Draw text (default font) within an image (destination)
 void ImageDrawText(Image *dst, const char *text, int posX, int posY, int fontSize, Color color)
 {
+#if defined(SUPPORT_MODULE_RTEXT)
     Vector2 position = { (float)posX, (float)posY };
-
-    // NOTE: For default font, sapcing is set to desired font size / default font size (10)
-    ImageDrawTextEx(dst, GetFontDefault(), text, position, (float)fontSize, (float)fontSize/10, color);
+    // NOTE: For default font, spacing is set to desired font size / default font size (10)
+    ImageDrawTextEx(dst, GetFontDefault(), text, position, (float)fontSize, (float)fontSize/10, color);   // WARNING: Module required: rtext
+#else
+    TRACELOG(LOG_WARNING, "IMAGE: ImageDrawText() requires module: rtext");
+#endif
 }
 
 // Draw text (custom sprite font) within an image (destination)
@@ -2812,7 +2894,7 @@ Texture2D LoadTextureFromImage(Image image)
 {
     Texture2D texture = { 0 };
 
-    if ((image.data != NULL) && (image.width != 0) && (image.height != 0))
+    if ((image.width != 0) && (image.height != 0))
     {
         texture.id = rlLoadTexture(image.data, image.width, image.height, image.format, image.mipmaps);
     }
@@ -2849,6 +2931,7 @@ TextureCubemap LoadTextureCubemap(Image image, int layout)
         cubemap.height = cubemap.width;
     }
 
+    // Layout provided or already auto-detected
     if (layout != CUBEMAP_LAYOUT_AUTO_DETECT)
     {
         int size = cubemap.width;
@@ -2859,8 +2942,7 @@ TextureCubemap LoadTextureCubemap(Image image, int layout)
 
         if (layout == CUBEMAP_LAYOUT_LINE_VERTICAL)
         {
-            faces = image;
-            for (int i = 0; i < 6; i++) faceRecs[i].y = (float)size*i;
+            faces = ImageCopy(image);       // Image data already follows expected convention
         }
         else if (layout == CUBEMAP_LAYOUT_PANORAMA)
         {
@@ -2894,10 +2976,12 @@ TextureCubemap LoadTextureCubemap(Image image, int layout)
             ImageFormat(&faces, image.format);
 
             // NOTE: Image formating does not work with compressed textures
+
+            for (int i = 0; i < 6; i++) ImageDraw(&faces, image, faceRecs[i], (Rectangle){ 0, (float)size*i, (float)size, (float)size }, WHITE);
         }
 
-        for (int i = 0; i < 6; i++) ImageDraw(&faces, image, faceRecs[i], (Rectangle){ 0, (float)size*i, (float)size, (float)size }, WHITE);
-
+        // NOTE: Cubemap data is expected to be provided as 6 images in a single data array,
+        // one after the other (that's a vertical image), following convention: +X, -X, +Y, -Y, +Z, -Z
         cubemap.id = rlLoadTextureCubemap(faces.data, size, faces.format);
         if (cubemap.id == 0) TRACELOG(LOG_WARNING, "IMAGE: Failed to load cubemap image");
 
@@ -3071,6 +3155,7 @@ void SetTextureWrap(Texture2D texture, int wrap)
     {
         case TEXTURE_WRAP_REPEAT:
         {
+            // NOTE: It only works if NPOT textures are supported, i.e. OpenGL ES 2.0 could not support it
             rlTextureParameters(texture.id, RL_TEXTURE_WRAP_S, RL_TEXTURE_WRAP_REPEAT);
             rlTextureParameters(texture.id, RL_TEXTURE_WRAP_T, RL_TEXTURE_WRAP_REPEAT);
         } break;
@@ -3132,6 +3217,8 @@ void DrawTextureRec(Texture2D texture, Rectangle source, Vector2 position, Color
 // i.e tiling = { 1.0f, 1.0f } refers to all texture, offset = { 0.5f, 0.5f } moves texture origin to center
 void DrawTextureQuad(Texture2D texture, Vector2 tiling, Vector2 offset, Rectangle quad, Color tint)
 {
+    // WARNING: This solution only works if TEXTURE_WRAP_REPEAT is supported,
+    // NPOT textures supported is required and OpenGL ES 2.0 could not support it
     Rectangle source = { offset.x*texture.width, offset.y*texture.height, tiling.x*texture.width, tiling.y*texture.height };
     Vector2 origin = { 0.0f, 0.0f };
 
@@ -3143,6 +3230,7 @@ void DrawTextureQuad(Texture2D texture, Vector2 tiling, Vector2 offset, Rectangl
 void DrawTextureTiled(Texture2D texture, Rectangle source, Rectangle dest, Vector2 origin, float rotation, float scale, Color tint)
 {
     if ((texture.id <= 0) || (scale <= 0.0f)) return;  // Wanna see a infinite loop?!...just delete this line!
+    if ((source.width == 0) || (source.height == 0)) return;
 
     int tileWidth = (int)(source.width*scale), tileHeight = (int)(source.height*scale);
     if ((dest.width < tileWidth) && (dest.height < tileHeight))
@@ -3406,6 +3494,8 @@ void DrawTextureNPatch(Texture2D texture, NPatchInfo nPatchInfo, Rectangle dest,
         coordD.x = (nPatchInfo.source.x + nPatchInfo.source.width)/width;
         coordD.y = (nPatchInfo.source.y + nPatchInfo.source.height)/height;
 
+        rlCheckRenderBatchLimit(9 * 3 * 2);         // Maxium number of verts that could happen
+
         rlSetTexture(texture.id);
 
         rlPushMatrix();
@@ -3553,7 +3643,7 @@ void DrawTexturePoly(Texture2D texture, Vector2 center, Vector2 *points, Vector2
 
     rlSetTexture(texture.id);
 
-    // Texturing is only supported on QUADs
+    // Texturing is only supported on RL_QUADS
     rlBegin(RL_QUADS);
 
         rlColor4ub(tint.r, tint.g, tint.b, tint.a);
@@ -3721,10 +3811,10 @@ Color ColorAlphaBlend(Color dst, Color src, Color tint)
     Color out = WHITE;
 
     // Apply color tint to source color
-    src.r = (unsigned char)(((unsigned int)src.r*(unsigned int)tint.r) >> 8);
-    src.g = (unsigned char)(((unsigned int)src.g*(unsigned int)tint.g) >> 8);
-    src.b = (unsigned char)(((unsigned int)src.b*(unsigned int)tint.b) >> 8);
-    src.a = (unsigned char)(((unsigned int)src.a*(unsigned int)tint.a) >> 8);
+    src.r = (unsigned char)(((unsigned int)src.r*((unsigned int)tint.r+1)) >> 8);
+    src.g = (unsigned char)(((unsigned int)src.g*((unsigned int)tint.g+1)) >> 8);
+    src.b = (unsigned char)(((unsigned int)src.b*((unsigned int)tint.b+1)) >> 8);
+    src.a = (unsigned char)(((unsigned int)src.a*((unsigned int)tint.a+1)) >> 8);
 
 //#define COLORALPHABLEND_FLOAT
 #define COLORALPHABLEND_INTEGERS
@@ -4259,6 +4349,7 @@ static Image LoadPKM(const unsigned char *fileData, unsigned int fileSize)
 
 #if defined(SUPPORT_FILEFORMAT_KTX)
 // Load KTX compressed image data (ETC1/ETC2 compression)
+// TODO: Review KTX loading, many things changed!
 static Image LoadKTX(const unsigned char *fileData, unsigned int fileSize)
 {
     unsigned char *fileDataPtr = (unsigned char *)fileData;
@@ -4333,6 +4424,8 @@ static Image LoadKTX(const unsigned char *fileData, unsigned int fileSize)
             if (ktxHeader->glInternalFormat == 0x8D64) image.format = PIXELFORMAT_COMPRESSED_ETC1_RGB;
             else if (ktxHeader->glInternalFormat == 0x9274) image.format = PIXELFORMAT_COMPRESSED_ETC2_RGB;
             else if (ktxHeader->glInternalFormat == 0x9278) image.format = PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA;
+
+            // TODO: Support uncompressed data formats? Right now it returns format = 0!
         }
     }
 
@@ -4341,11 +4434,12 @@ static Image LoadKTX(const unsigned char *fileData, unsigned int fileSize)
 
 // Save image data as KTX file
 // NOTE: By default KTX 1.1 spec is used, 2.0 is still on draft (01Oct2018)
+// TODO: Review KTX saving, many things changed!
 static int SaveKTX(Image image, const char *fileName)
 {
     // KTX file Header (64 bytes)
     // v1.1 - https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/
-    // v2.0 - http://github.khronos.org/KTX-Specification/ - still on draft, not ready for implementation
+    // v2.0 - http://github.khronos.org/KTX-Specification/ - Final specs by 2021-04-18
     typedef struct {
         char id[12];                        // Identifier: "«KTX 11»\r\n\x1A\n"             // KTX 2.0: "«KTX 22»\r\n\x1A\n"
         unsigned int endianness;            // Little endian: 0x01 0x02 0x03 0x04
@@ -4480,7 +4574,7 @@ static Image LoadPVR(const unsigned char *fileData, unsigned int fileSize)
         unsigned int flags;
         unsigned char channels[4];      // pixelFormat high part
         unsigned char channelDepth[4];  // pixelFormat low part
-        unsigned int colourSpace;
+        unsigned int colorSpace;
         unsigned int channelType;
         unsigned int height;
         unsigned int width;
@@ -4759,3 +4853,5 @@ static Vector4 *LoadImageDataNormalized(Image image)
 
     return pixels;
 }
+
+#endif      // SUPPORT_MODULE_RTEXTURES
