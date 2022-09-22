@@ -22,7 +22,7 @@ import (
 )
 
 // SetTraceLog - Enable trace log message types (bit flags based)
-func SetTraceLog(typeFlags int) {
+func SetTraceLog(typeFlags byte) {
 	logTypeFlags = typeFlags
 
 	ctypeFlags := (C.int)(typeFlags)
@@ -33,25 +33,25 @@ func SetTraceLog(typeFlags int) {
 func TraceLog(msgType int, text string, v ...interface{}) {
 	switch msgType {
 	case LogInfo:
-		if logTypeFlags&LogInfo == 0 {
+		if logTypeFlags&LogInfo != 0 {
 			msg := C.CString(fmt.Sprintf("INFO: "+text, v...))
 			defer C.free(unsafe.Pointer(msg))
 			C.log_info(msg)
 		}
 	case LogWarning:
-		if logTypeFlags&LogWarning == 0 {
+		if logTypeFlags&LogWarning != 0 {
 			msg := C.CString(fmt.Sprintf("WARNING: "+text, v...))
 			defer C.free(unsafe.Pointer(msg))
 			C.log_warn(msg)
 		}
 	case LogError:
-		if logTypeFlags&LogError == 0 {
+		if logTypeFlags&LogError != 0 {
 			msg := C.CString(fmt.Sprintf("ERROR: "+text, v...))
 			defer C.free(unsafe.Pointer(msg))
 			C.log_error(msg)
 		}
 	case LogDebug:
-		if logTypeFlags&LogDebug == 0 {
+		if logTypeFlags&LogDebug != 0 {
 			msg := C.CString(fmt.Sprintf("DEBUG: "+text, v...))
 			defer C.free(unsafe.Pointer(msg))
 			C.log_debug(msg)
