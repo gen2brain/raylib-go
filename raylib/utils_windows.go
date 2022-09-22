@@ -14,7 +14,7 @@ import (
 )
 
 // SetTraceLog - Enable trace log message types (bit flags based)
-func SetTraceLog(typeFlags int) {
+func SetTraceLog(typeFlags byte) {
 	logTypeFlags = typeFlags
 
 	ctypeFlags := (C.int)(typeFlags)
@@ -25,19 +25,19 @@ func SetTraceLog(typeFlags int) {
 func TraceLog(msgType int, text string, v ...interface{}) {
 	switch msgType {
 	case LogInfo:
-		if logTypeFlags&LogInfo == 0 {
+		if logTypeFlags&LogInfo != 0 {
 			fmt.Printf("INFO: "+text+"\n", v...)
 		}
 	case LogWarning:
-		if logTypeFlags&LogWarning == 0 {
+		if logTypeFlags&LogWarning != 0 {
 			fmt.Printf("WARNING: "+text+"\n", v...)
 		}
 	case LogError:
-		if logTypeFlags&LogError == 0 {
+		if logTypeFlags&LogError != 0 {
 			fmt.Printf("ERROR: "+text+"\n", v...)
 		}
 	case LogDebug:
-		if logTypeFlags&LogDebug == 0 {
+		if logTypeFlags&LogDebug != 0 {
 			fmt.Printf("DEBUG: "+text+"\n", v...)
 		}
 	}
