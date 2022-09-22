@@ -518,7 +518,7 @@ func ColorToInt(col color.RGBA) int32 {
 // ColorNormalize - Returns color normalized as float [0..1]
 func ColorNormalize(col color.RGBA) Vector4 {
 	result := Vector4{}
-	r, g, b, a := col.RGBA()
+	r, g, b, a := col.R, col.G, col.B, col.A
 	result.X = float32(r) / 255
 	result.Y = float32(g) / 255
 	result.Z = float32(b) / 255
