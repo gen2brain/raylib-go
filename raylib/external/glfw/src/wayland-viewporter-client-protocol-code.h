@@ -27,10 +27,20 @@
 #include <stdint.h>
 #include "wayland-util.h"
 
+#ifndef __has_attribute
+# define __has_attribute(x) 0  /* Compatibility with non-clang compilers. */
+#endif
+
+#if (__has_attribute(visibility) || defined(__GNUC__) && __GNUC__ >= 4)
+#define WL_PRIVATE __attribute__ ((visibility("hidden")))
+#else
+#define WL_PRIVATE
+#endif
+
 extern const struct wl_interface wl_surface_interface;
 extern const struct wl_interface wp_viewport_interface;
 
-static const struct wl_interface *viewporter_wl_v_types[] = {
+static const struct wl_interface *viewporter_types[] = {
 	NULL,
 	NULL,
 	NULL,
@@ -40,23 +50,23 @@ static const struct wl_interface *viewporter_wl_v_types[] = {
 };
 
 static const struct wl_message wp_viewporter_requests[] = {
-	{ "destroy", "", viewporter_wl_v_types + 0 },
-	{ "get_viewport", "no", viewporter_wl_v_types + 4 },
+	{ "destroy", "", viewporter_types + 0 },
+	{ "get_viewport", "no", viewporter_types + 4 },
 };
 
-WL_EXPORT const struct wl_interface wp_viewporter_interface = {
+WL_PRIVATE const struct wl_interface wp_viewporter_interface = {
 	"wp_viewporter", 1,
 	2, wp_viewporter_requests,
 	0, NULL,
 };
 
 static const struct wl_message wp_viewport_requests[] = {
-	{ "destroy", "", viewporter_wl_v_types + 0 },
-	{ "set_source", "ffff", viewporter_wl_v_types + 0 },
-	{ "set_destination", "ii", viewporter_wl_v_types + 0 },
+	{ "destroy", "", viewporter_types + 0 },
+	{ "set_source", "ffff", viewporter_types + 0 },
+	{ "set_destination", "ii", viewporter_types + 0 },
 };
 
-WL_EXPORT const struct wl_interface wp_viewport_interface = {
+WL_PRIVATE const struct wl_interface wp_viewport_interface = {
 	"wp_viewport", 1,
 	3, wp_viewport_requests,
 	0, NULL,

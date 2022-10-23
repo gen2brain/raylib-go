@@ -950,6 +950,7 @@ enum xdg_surface_error {
 	XDG_SURFACE_ERROR_NOT_CONSTRUCTED = 1,
 	XDG_SURFACE_ERROR_ALREADY_CONSTRUCTED = 2,
 	XDG_SURFACE_ERROR_UNCONFIGURED_BUFFER = 3,
+	XDG_SURFACE_ERROR_INVALID_SERIAL = 4,
 };
 #endif /* XDG_SURFACE_ERROR_ENUM */
 
@@ -1168,6 +1169,17 @@ xdg_surface_set_window_geometry(struct xdg_surface *xdg_surface, int32_t x, int3
  * A client may send multiple ack_configure requests before committing, but
  * only the last request sent before a commit indicates which configure
  * event the client really is responding to.
+ *
+ * Sending an ack_configure request consumes the serial number sent with
+ * the request, as well as serial numbers sent by all configure events
+ * sent on this xdg_surface prior to the configure event referenced by
+ * the committed serial.
+ *
+ * It is an error to issue multiple ack_configure requests referencing a
+ * serial from the same configure event, or to issue an ack_configure
+ * request referencing a serial from a configure event issued before the
+ * event identified by the last ack_configure request for the same
+ * xdg_surface. Doing so will raise an invalid_serial error.
  */
 static inline void
 xdg_surface_ack_configure(struct xdg_surface *xdg_surface, uint32_t serial)
@@ -1183,6 +1195,10 @@ enum xdg_toplevel_error {
 	 * provided value is         not a valid variant of the resize_edge enum
 	 */
 	XDG_TOPLEVEL_ERROR_INVALID_RESIZE_EDGE = 0,
+	/**
+	 * invalid parent toplevel
+	 */
+	XDG_TOPLEVEL_ERROR_INVALID_PARENT = 1,
 };
 #endif /* XDG_TOPLEVEL_ERROR_ENUM */
 
@@ -1595,6 +1611,10 @@ xdg_toplevel_destroy(struct xdg_toplevel *xdg_toplevel)
  * the now-unmapped surface. If the now-unmapped surface has no parent,
  * its children's parent is unset. If the now-unmapped surface becomes
  * mapped again, its parent-child relationship is not restored.
+ *
+ * The parent toplevel must not be one of the child toplevel's
+ * descendants, and the parent must be different from the child toplevel,
+ * otherwise the invalid_parent protocol error is raised.
  */
 static inline void
 xdg_toplevel_set_parent(struct xdg_toplevel *xdg_toplevel, struct xdg_toplevel *parent)

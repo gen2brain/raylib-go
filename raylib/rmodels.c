@@ -163,11 +163,6 @@ static ModelAnimation *LoadModelAnimationsM3D(const char *fileName, unsigned int
 // Draw a line in 3D world space
 void DrawLine3D(Vector3 startPos, Vector3 endPos, Color color)
 {
-    // WARNING: Be careful with internal buffer vertex alignment
-    // when using RL_LINES or RL_TRIANGLES, data is aligned to fit
-    // lines-triangles-quads in the same indexed buffers!!!
-    rlCheckRenderBatchLimit(8);
-
     rlBegin(RL_LINES);
         rlColor4ub(color.r, color.g, color.b, color.a);
         rlVertex3f(startPos.x, startPos.y, startPos.z);
@@ -178,8 +173,6 @@ void DrawLine3D(Vector3 startPos, Vector3 endPos, Color color)
 // Draw a point in 3D space, actually a small line
 void DrawPoint3D(Vector3 position, Color color)
 {
-    rlCheckRenderBatchLimit(8);
-
     rlPushMatrix();
         rlTranslatef(position.x, position.y, position.z);
         rlBegin(RL_LINES);
@@ -193,8 +186,6 @@ void DrawPoint3D(Vector3 position, Color color)
 // Draw a circle in 3D world space
 void DrawCircle3D(Vector3 center, float radius, Vector3 rotationAxis, float rotationAngle, Color color)
 {
-    rlCheckRenderBatchLimit(2*36);
-
     rlPushMatrix();
         rlTranslatef(center.x, center.y, center.z);
         rlRotatef(rotationAngle, rotationAxis.x, rotationAxis.y, rotationAxis.z);
@@ -214,8 +205,6 @@ void DrawCircle3D(Vector3 center, float radius, Vector3 rotationAxis, float rota
 // Draw a color-filled triangle (vertex in counter-clockwise order!)
 void DrawTriangle3D(Vector3 v1, Vector3 v2, Vector3 v3, Color color)
 {
-    rlCheckRenderBatchLimit(8);
-
     rlBegin(RL_TRIANGLES);
         rlColor4ub(color.r, color.g, color.b, color.a);
         rlVertex3f(v1.x, v1.y, v1.z);
@@ -227,30 +216,27 @@ void DrawTriangle3D(Vector3 v1, Vector3 v2, Vector3 v3, Color color)
 // Draw a triangle strip defined by points
 void DrawTriangleStrip3D(Vector3 *points, int pointCount, Color color)
 {
-    if (pointCount >= 3)
-    {
-        rlCheckRenderBatchLimit(3*(pointCount - 2));
+    if (pointCount < 3) return;
 
-        rlBegin(RL_TRIANGLES);
-            rlColor4ub(color.r, color.g, color.b, color.a);
+    rlBegin(RL_TRIANGLES);
+        rlColor4ub(color.r, color.g, color.b, color.a);
 
-            for (int i = 2; i < pointCount; i++)
+        for (int i = 2; i < pointCount; i++)
+        {
+            if ((i%2) == 0)
             {
-                if ((i%2) == 0)
-                {
-                    rlVertex3f(points[i].x, points[i].y, points[i].z);
-                    rlVertex3f(points[i - 2].x, points[i - 2].y, points[i - 2].z);
-                    rlVertex3f(points[i - 1].x, points[i - 1].y, points[i - 1].z);
-                }
-                else
-                {
-                    rlVertex3f(points[i].x, points[i].y, points[i].z);
-                    rlVertex3f(points[i - 1].x, points[i - 1].y, points[i - 1].z);
-                    rlVertex3f(points[i - 2].x, points[i - 2].y, points[i - 2].z);
-                }
+                rlVertex3f(points[i].x, points[i].y, points[i].z);
+                rlVertex3f(points[i - 2].x, points[i - 2].y, points[i - 2].z);
+                rlVertex3f(points[i - 1].x, points[i - 1].y, points[i - 1].z);
             }
-        rlEnd();
-    }
+            else
+            {
+                rlVertex3f(points[i].x, points[i].y, points[i].z);
+                rlVertex3f(points[i - 1].x, points[i - 1].y, points[i - 1].z);
+                rlVertex3f(points[i - 2].x, points[i - 2].y, points[i - 2].z);
+            }
+        }
+    rlEnd();
 }
 
 // Draw cube
@@ -260,8 +246,6 @@ void DrawCube(Vector3 position, float width, float height, float length, Color c
     float x = 0.0f;
     float y = 0.0f;
     float z = 0.0f;
-
-    rlCheckRenderBatchLimit(36);
 
     rlPushMatrix();
         // NOTE: Transformation is applied in inverse order (scale -> rotate -> translate)
@@ -342,65 +326,67 @@ void DrawCubeWires(Vector3 position, float width, float height, float length, Co
     float y = 0.0f;
     float z = 0.0f;
 
-    rlCheckRenderBatchLimit(36);
-
     rlPushMatrix();
         rlTranslatef(position.x, position.y, position.z);
 
         rlBegin(RL_LINES);
             rlColor4ub(color.r, color.g, color.b, color.a);
 
-            // Front face -----------------------------------------------------
+            // Front face
+            //------------------------------------------------------------------
             // Bottom line
-            rlVertex3f(x-width/2, y-height/2, z+length/2);  // Bottom left
-            rlVertex3f(x+width/2, y-height/2, z+length/2);  // Bottom right
+            rlVertex3f(x - width/2, y - height/2, z + length/2);  // Bottom left
+            rlVertex3f(x + width/2, y - height/2, z + length/2);  // Bottom right
 
             // Left line
-            rlVertex3f(x+width/2, y-height/2, z+length/2);  // Bottom right
-            rlVertex3f(x+width/2, y+height/2, z+length/2);  // Top right
+            rlVertex3f(x + width/2, y - height/2, z + length/2);  // Bottom right
+            rlVertex3f(x + width/2, y + height/2, z + length/2);  // Top right
 
             // Top line
-            rlVertex3f(x+width/2, y+height/2, z+length/2);  // Top right
-            rlVertex3f(x-width/2, y+height/2, z+length/2);  // Top left
+            rlVertex3f(x + width/2, y + height/2, z + length/2);  // Top right
+            rlVertex3f(x - width/2, y + height/2, z + length/2);  // Top left
 
             // Right line
-            rlVertex3f(x-width/2, y+height/2, z+length/2);  // Top left
-            rlVertex3f(x-width/2, y-height/2, z+length/2);  // Bottom left
+            rlVertex3f(x - width/2, y + height/2, z + length/2);  // Top left
+            rlVertex3f(x - width/2, y - height/2, z + length/2);  // Bottom left
 
-            // Back face ------------------------------------------------------
+            // Back face
+            //------------------------------------------------------------------
             // Bottom line
-            rlVertex3f(x-width/2, y-height/2, z-length/2);  // Bottom left
-            rlVertex3f(x+width/2, y-height/2, z-length/2);  // Bottom right
+            rlVertex3f(x - width/2, y - height/2, z - length/2);  // Bottom left
+            rlVertex3f(x + width/2, y - height/2, z - length/2);  // Bottom right
 
             // Left line
-            rlVertex3f(x+width/2, y-height/2, z-length/2);  // Bottom right
-            rlVertex3f(x+width/2, y+height/2, z-length/2);  // Top right
+            rlVertex3f(x + width/2, y - height/2, z - length/2);  // Bottom right
+            rlVertex3f(x + width/2, y + height/2, z - length/2);  // Top right
 
             // Top line
-            rlVertex3f(x+width/2, y+height/2, z-length/2);  // Top right
-            rlVertex3f(x-width/2, y+height/2, z-length/2);  // Top left
+            rlVertex3f(x + width/2, y + height/2, z - length/2);  // Top right
+            rlVertex3f(x - width/2, y + height/2, z - length/2);  // Top left
 
             // Right line
-            rlVertex3f(x-width/2, y+height/2, z-length/2);  // Top left
-            rlVertex3f(x-width/2, y-height/2, z-length/2);  // Bottom left
+            rlVertex3f(x - width/2, y + height/2, z - length/2);  // Top left
+            rlVertex3f(x - width/2, y - height/2, z - length/2);  // Bottom left
 
-            // Top face -------------------------------------------------------
+            // Top face
+            //------------------------------------------------------------------
             // Left line
-            rlVertex3f(x-width/2, y+height/2, z+length/2);  // Top left front
-            rlVertex3f(x-width/2, y+height/2, z-length/2);  // Top left back
+            rlVertex3f(x - width/2, y + height/2, z + length/2);  // Top left front
+            rlVertex3f(x - width/2, y + height/2, z - length/2);  // Top left back
 
             // Right line
-            rlVertex3f(x+width/2, y+height/2, z+length/2);  // Top right front
-            rlVertex3f(x+width/2, y+height/2, z-length/2);  // Top right back
+            rlVertex3f(x + width/2, y + height/2, z + length/2);  // Top right front
+            rlVertex3f(x + width/2, y + height/2, z - length/2);  // Top right back
 
-            // Bottom face  ---------------------------------------------------
+            // Bottom face
+            //------------------------------------------------------------------
             // Left line
-            rlVertex3f(x-width/2, y-height/2, z+length/2);  // Top left front
-            rlVertex3f(x-width/2, y-height/2, z-length/2);  // Top left back
+            rlVertex3f(x - width/2, y - height/2, z + length/2);  // Top left front
+            rlVertex3f(x - width/2, y - height/2, z - length/2);  // Top left back
 
             // Right line
-            rlVertex3f(x+width/2, y-height/2, z+length/2);  // Top right front
-            rlVertex3f(x+width/2, y-height/2, z-length/2);  // Top right back
+            rlVertex3f(x + width/2, y - height/2, z + length/2);  // Top right front
+            rlVertex3f(x + width/2, y - height/2, z - length/2);  // Top right back
         rlEnd();
     rlPopMatrix();
 }
@@ -419,8 +405,6 @@ void DrawCubeTexture(Texture2D texture, Vector3 position, float width, float hei
     float y = position.y;
     float z = position.z;
 
-    rlCheckRenderBatchLimit(36);
-
     rlSetTexture(texture.id);
 
     //rlPushMatrix();
@@ -432,37 +416,37 @@ void DrawCubeTexture(Texture2D texture, Vector3 position, float width, float hei
         rlBegin(RL_QUADS);
             rlColor4ub(color.r, color.g, color.b, color.a);
             // Front Face
-            rlNormal3f(0.0f, 0.0f, 1.0f);                  // Normal Pointing Towards Viewer
+            rlNormal3f(0.0f, 0.0f, 1.0f);       // Normal Pointing Towards Viewer
             rlTexCoord2f(0.0f, 0.0f); rlVertex3f(x - width/2, y - height/2, z + length/2);  // Bottom Left Of The Texture and Quad
             rlTexCoord2f(1.0f, 0.0f); rlVertex3f(x + width/2, y - height/2, z + length/2);  // Bottom Right Of The Texture and Quad
             rlTexCoord2f(1.0f, 1.0f); rlVertex3f(x + width/2, y + height/2, z + length/2);  // Top Right Of The Texture and Quad
             rlTexCoord2f(0.0f, 1.0f); rlVertex3f(x - width/2, y + height/2, z + length/2);  // Top Left Of The Texture and Quad
             // Back Face
-            rlNormal3f(0.0f, 0.0f, - 1.0f);                  // Normal Pointing Away From Viewer
+            rlNormal3f(0.0f, 0.0f, - 1.0f);     // Normal Pointing Away From Viewer
             rlTexCoord2f(1.0f, 0.0f); rlVertex3f(x - width/2, y - height/2, z - length/2);  // Bottom Right Of The Texture and Quad
             rlTexCoord2f(1.0f, 1.0f); rlVertex3f(x - width/2, y + height/2, z - length/2);  // Top Right Of The Texture and Quad
             rlTexCoord2f(0.0f, 1.0f); rlVertex3f(x + width/2, y + height/2, z - length/2);  // Top Left Of The Texture and Quad
             rlTexCoord2f(0.0f, 0.0f); rlVertex3f(x + width/2, y - height/2, z - length/2);  // Bottom Left Of The Texture and Quad
             // Top Face
-            rlNormal3f(0.0f, 1.0f, 0.0f);                  // Normal Pointing Up
+            rlNormal3f(0.0f, 1.0f, 0.0f);       // Normal Pointing Up
             rlTexCoord2f(0.0f, 1.0f); rlVertex3f(x - width/2, y + height/2, z - length/2);  // Top Left Of The Texture and Quad
             rlTexCoord2f(0.0f, 0.0f); rlVertex3f(x - width/2, y + height/2, z + length/2);  // Bottom Left Of The Texture and Quad
             rlTexCoord2f(1.0f, 0.0f); rlVertex3f(x + width/2, y + height/2, z + length/2);  // Bottom Right Of The Texture and Quad
             rlTexCoord2f(1.0f, 1.0f); rlVertex3f(x + width/2, y + height/2, z - length/2);  // Top Right Of The Texture and Quad
             // Bottom Face
-            rlNormal3f(0.0f, - 1.0f, 0.0f);                  // Normal Pointing Down
+            rlNormal3f(0.0f, - 1.0f, 0.0f);     // Normal Pointing Down
             rlTexCoord2f(1.0f, 1.0f); rlVertex3f(x - width/2, y - height/2, z - length/2);  // Top Right Of The Texture and Quad
             rlTexCoord2f(0.0f, 1.0f); rlVertex3f(x + width/2, y - height/2, z - length/2);  // Top Left Of The Texture and Quad
             rlTexCoord2f(0.0f, 0.0f); rlVertex3f(x + width/2, y - height/2, z + length/2);  // Bottom Left Of The Texture and Quad
             rlTexCoord2f(1.0f, 0.0f); rlVertex3f(x - width/2, y - height/2, z + length/2);  // Bottom Right Of The Texture and Quad
             // Right face
-            rlNormal3f(1.0f, 0.0f, 0.0f);                  // Normal Pointing Right
+            rlNormal3f(1.0f, 0.0f, 0.0f);       // Normal Pointing Right
             rlTexCoord2f(1.0f, 0.0f); rlVertex3f(x + width/2, y - height/2, z - length/2);  // Bottom Right Of The Texture and Quad
             rlTexCoord2f(1.0f, 1.0f); rlVertex3f(x + width/2, y + height/2, z - length/2);  // Top Right Of The Texture and Quad
             rlTexCoord2f(0.0f, 1.0f); rlVertex3f(x + width/2, y + height/2, z + length/2);  // Top Left Of The Texture and Quad
             rlTexCoord2f(0.0f, 0.0f); rlVertex3f(x + width/2, y - height/2, z + length/2);  // Bottom Left Of The Texture and Quad
             // Left Face
-            rlNormal3f( - 1.0f, 0.0f, 0.0f);                  // Normal Pointing Left
+            rlNormal3f( - 1.0f, 0.0f, 0.0f);    // Normal Pointing Left
             rlTexCoord2f(0.0f, 0.0f); rlVertex3f(x - width/2, y - height/2, z - length/2);  // Bottom Left Of The Texture and Quad
             rlTexCoord2f(1.0f, 0.0f); rlVertex3f(x - width/2, y - height/2, z + length/2);  // Bottom Right Of The Texture and Quad
             rlTexCoord2f(1.0f, 1.0f); rlVertex3f(x - width/2, y + height/2, z + length/2);  // Top Right Of The Texture and Quad
@@ -481,8 +465,6 @@ void DrawCubeTextureRec(Texture2D texture, Rectangle source, Vector3 position, f
     float z = position.z;
     float texWidth = (float)texture.width;
     float texHeight = (float)texture.height;
-
-    rlCheckRenderBatchLimit(36);
 
     rlSetTexture(texture.id);
 
@@ -569,9 +551,6 @@ void DrawSphere(Vector3 centerPos, float radius, Color color)
 // Draw sphere with extended parameters
 void DrawSphereEx(Vector3 centerPos, float radius, int rings, int slices, Color color)
 {
-    int numVertex = (rings + 2)*slices*6;
-    rlCheckRenderBatchLimit(numVertex);
-
     rlPushMatrix();
         // NOTE: Transformation is applied in inverse order (scale -> translate)
         rlTranslatef(centerPos.x, centerPos.y, centerPos.z);
@@ -612,9 +591,6 @@ void DrawSphereEx(Vector3 centerPos, float radius, int rings, int slices, Color 
 // Draw sphere wires
 void DrawSphereWires(Vector3 centerPos, float radius, int rings, int slices, Color color)
 {
-    int numVertex = (rings + 2)*slices*6;
-    rlCheckRenderBatchLimit(numVertex);
-
     rlPushMatrix();
         // NOTE: Transformation is applied in inverse order (scale -> translate)
         rlTranslatef(centerPos.x, centerPos.y, centerPos.z);
@@ -658,9 +634,6 @@ void DrawSphereWires(Vector3 centerPos, float radius, int rings, int slices, Col
 void DrawCylinder(Vector3 position, float radiusTop, float radiusBottom, float height, int sides, Color color)
 {
     if (sides < 3) sides = 3;
-
-    int numVertex = sides*6;
-    rlCheckRenderBatchLimit(numVertex);
 
     rlPushMatrix();
         rlTranslatef(position.x, position.y, position.z);
@@ -718,9 +691,6 @@ void DrawCylinderEx(Vector3 startPos, Vector3 endPos, float startRadius, float e
 {
     if (sides < 3) sides = 3;
 
-    int numVertex = sides*6;
-    rlCheckRenderBatchLimit(numVertex);
-
     Vector3 direction = { endPos.x - startPos.x, endPos.y - startPos.y, endPos.z - startPos.z };
     if ((direction.x == 0) && (direction.y == 0) && (direction.z == 0)) return;
 
@@ -777,9 +747,6 @@ void DrawCylinderWires(Vector3 position, float radiusTop, float radiusBottom, fl
 {
     if (sides < 3) sides = 3;
 
-    int numVertex = sides*8;
-    rlCheckRenderBatchLimit(numVertex);
-
     rlPushMatrix();
         rlTranslatef(position.x, position.y, position.z);
 
@@ -810,9 +777,6 @@ void DrawCylinderWires(Vector3 position, float radiusTop, float radiusBottom, fl
 void DrawCylinderWiresEx(Vector3 startPos, Vector3 endPos, float startRadius, float endRadius, int sides, Color color)
 {
     if (sides < 3) sides = 3;
-
-    int numVertex = sides*6;
-    rlCheckRenderBatchLimit(numVertex);
 
     Vector3 direction = { endPos.x - startPos.x, endPos.y - startPos.y, endPos.z - startPos.z };
     if ((direction.x == 0) && (direction.y == 0) && (direction.z == 0))return;
@@ -853,12 +817,287 @@ void DrawCylinderWiresEx(Vector3 startPos, Vector3 endPos, float startRadius, fl
     rlEnd();
 }
 
+// Draw a capsule with the center of its sphere caps at startPos and endPos
+void DrawCapsule(Vector3 startPos, Vector3 endPos, float radius, int slices, int rings, Color color)
+{
+    if (slices < 3) slices = 3;
+
+    Vector3 direction = { endPos.x - startPos.x, endPos.y - startPos.y, endPos.z - startPos.z };
+    
+    // draw a sphere if start and end points are the same
+    bool sphereCase = (direction.x == 0) && (direction.y == 0) && (direction.z == 0);
+    if (sphereCase) direction = (Vector3){0.0f, 1.0f, 0.0f};
+
+    // Construct a basis of the base and the caps:
+    Vector3 b0 = Vector3Normalize(direction);
+    Vector3 b1 = Vector3Normalize(Vector3Perpendicular(direction));
+    Vector3 b2 = Vector3Normalize(Vector3CrossProduct(b1, direction));
+    Vector3 capCenter = endPos;
+
+    float baseSliceAngle = (2.0f*PI)/slices;
+    float baseRingAngle  = PI * 0.5 / rings; 
+
+    rlBegin(RL_TRIANGLES);
+        rlColor4ub(color.r, color.g, color.b, color.a);
+
+        // render both caps
+        for (int c = 0; c < 2; c++)
+        {
+            for (int i = 0; i < rings; i++)
+            {
+                for (int j = 0; j < slices; j++) 
+                {
+
+                    // we build up the rings from capCenter in the direction of the 'direction' vector we computed earlier
+
+                    // as we iterate through the rings they must be placed higher above the center, the height we need is sin(angle(i))
+                    // as we iterate through the rings they must get smaller by the cos(angle(i))
+
+                    // compute the four vertices
+                    float ringSin1 = sinf(baseSliceAngle*(j + 0))*cosf(baseRingAngle * ( i + 0 ));
+                    float ringCos1 = cosf(baseSliceAngle*(j + 0))*cosf(baseRingAngle * ( i + 0 ));
+                    Vector3 w1 = (Vector3){ 
+                        capCenter.x + (sinf(baseRingAngle * ( i + 0 ))*b0.x + ringSin1*b1.x + ringCos1*b2.x) * radius,
+                        capCenter.y + (sinf(baseRingAngle * ( i + 0 ))*b0.y + ringSin1*b1.y + ringCos1*b2.y) * radius, 
+                        capCenter.z + (sinf(baseRingAngle * ( i + 0 ))*b0.z + ringSin1*b1.z + ringCos1*b2.z) * radius
+                    };
+                    float ringSin2 = sinf(baseSliceAngle*(j + 1))*cosf(baseRingAngle * ( i + 0 ));
+                    float ringCos2 = cosf(baseSliceAngle*(j + 1))*cosf(baseRingAngle * ( i + 0 ));
+                    Vector3 w2 = (Vector3){ 
+                        capCenter.x + (sinf(baseRingAngle * ( i + 0 ))*b0.x + ringSin2*b1.x + ringCos2*b2.x) * radius, 
+                        capCenter.y + (sinf(baseRingAngle * ( i + 0 ))*b0.y + ringSin2*b1.y + ringCos2*b2.y) * radius, 
+                        capCenter.z + (sinf(baseRingAngle * ( i + 0 ))*b0.z + ringSin2*b1.z + ringCos2*b2.z) * radius 
+                    };
+
+                    float ringSin3 = sinf(baseSliceAngle*(j + 0))*cosf(baseRingAngle * ( i + 1 ));
+                    float ringCos3 = cosf(baseSliceAngle*(j + 0))*cosf(baseRingAngle * ( i + 1 ));
+                    Vector3 w3 = (Vector3){ 
+                        capCenter.x + (sinf(baseRingAngle * ( i + 1 ))*b0.x + ringSin3*b1.x + ringCos3*b2.x) * radius, 
+                        capCenter.y + (sinf(baseRingAngle * ( i + 1 ))*b0.y + ringSin3*b1.y + ringCos3*b2.y) * radius, 
+                        capCenter.z + (sinf(baseRingAngle * ( i + 1 ))*b0.z + ringSin3*b1.z + ringCos3*b2.z) * radius 
+                    };
+                    float ringSin4 = sinf(baseSliceAngle*(j + 1))*cosf(baseRingAngle * ( i + 1 ));
+                    float ringCos4 = cosf(baseSliceAngle*(j + 1))*cosf(baseRingAngle * ( i + 1 ));
+                    Vector3 w4 = (Vector3){ 
+                        capCenter.x + (sinf(baseRingAngle * ( i + 1 ))*b0.x + ringSin4*b1.x + ringCos4*b2.x) * radius, 
+                        capCenter.y + (sinf(baseRingAngle * ( i + 1 ))*b0.y + ringSin4*b1.y + ringCos4*b2.y) * radius, 
+                        capCenter.z + (sinf(baseRingAngle * ( i + 1 ))*b0.z + ringSin4*b1.z + ringCos4*b2.z) * radius 
+                    };
+
+                    // make sure cap triangle normals are facing outwards
+                    if(c == 0)
+                    {
+                        rlVertex3f(w1.x, w1.y, w1.z);
+                        rlVertex3f(w2.x, w2.y, w2.z);
+                        rlVertex3f(w3.x, w3.y, w3.z);
+                        
+                        rlVertex3f(w2.x, w2.y, w2.z);   
+                        rlVertex3f(w4.x, w4.y, w4.z);  
+                        rlVertex3f(w3.x, w3.y, w3.z); 
+                    }
+                    else
+                    {
+                        rlVertex3f(w1.x, w1.y, w1.z);
+                        rlVertex3f(w3.x, w3.y, w3.z);
+                        rlVertex3f(w2.x, w2.y, w2.z);
+
+                        rlVertex3f(w2.x, w2.y, w2.z);  
+                        rlVertex3f(w3.x, w3.y, w3.z);  
+                        rlVertex3f(w4.x, w4.y, w4.z);     
+                    }
+                }
+            }
+            capCenter = startPos;
+            b0 = Vector3Scale(b0, -1.0f);
+        }
+        // render middle
+        if (!sphereCase)
+        {
+            for (int j = 0; j < slices; j++) 
+            {
+                // compute the four vertices
+                float ringSin1 = sinf(baseSliceAngle*(j + 0))*radius;
+                float ringCos1 = cosf(baseSliceAngle*(j + 0))*radius;
+                Vector3 w1 = { 
+                    startPos.x + ringSin1*b1.x + ringCos1*b2.x,
+                    startPos.y + ringSin1*b1.y + ringCos1*b2.y, 
+                    startPos.z + ringSin1*b1.z + ringCos1*b2.z 
+                };
+                float ringSin2 = sinf(baseSliceAngle*(j + 1))*radius;
+                float ringCos2 = cosf(baseSliceAngle*(j + 1))*radius;
+                Vector3 w2 = { 
+                    startPos.x + ringSin2*b1.x + ringCos2*b2.x, 
+                    startPos.y + ringSin2*b1.y + ringCos2*b2.y, 
+                    startPos.z + ringSin2*b1.z + ringCos2*b2.z 
+                };
+
+                float ringSin3 = sinf(baseSliceAngle*(j + 0))*radius;
+                float ringCos3 = cosf(baseSliceAngle*(j + 0))*radius;
+                Vector3 w3 = { 
+                    endPos.x + ringSin3*b1.x + ringCos3*b2.x, 
+                    endPos.y + ringSin3*b1.y + ringCos3*b2.y, 
+                    endPos.z + ringSin3*b1.z + ringCos3*b2.z 
+                };
+                float ringSin4 = sinf(baseSliceAngle*(j + 1))*radius;
+                float ringCos4 = cosf(baseSliceAngle*(j + 1))*radius;
+                Vector3 w4 = { 
+                    endPos.x + ringSin4*b1.x + ringCos4*b2.x, 
+                    endPos.y + ringSin4*b1.y + ringCos4*b2.y, 
+                    endPos.z + ringSin4*b1.z + ringCos4*b2.z 
+                };
+                                                                        //          w2 x.-----------x startPos
+                rlVertex3f(w1.x, w1.y, w1.z);                         // |           |\'.  T0    /
+                rlVertex3f(w2.x, w2.y, w2.z);                         // T1          | \ '.     /
+                rlVertex3f(w3.x, w3.y, w3.z);                         // |           |T \  '.  /
+                                                                        //             | 2 \ T 'x w1
+                rlVertex3f(w2.x, w2.y, w2.z);                         // |        w4 x.---\-1-|---x endPos
+                rlVertex3f(w4.x, w4.y, w4.z);                         // T2            '.  \  |T3/
+                rlVertex3f(w3.x, w3.y, w3.z);                         // |               '. \ | /
+                                                                        //                   '.\|/
+                                                                        //                   'x w3
+            }
+        }
+    rlEnd();
+}
+
+// Draw capsule wires with the center of its sphere caps at startPos and endPos
+void DrawCapsuleWires(Vector3 startPos, Vector3 endPos, float radius, int slices, int rings, Color color)
+{
+    if (slices < 3) slices = 3;
+
+    Vector3 direction = { endPos.x - startPos.x, endPos.y - startPos.y, endPos.z - startPos.z };
+
+    // draw a sphere if start and end points are the same
+    bool sphereCase = (direction.x == 0) && (direction.y == 0) && (direction.z == 0);
+    if (sphereCase) direction = (Vector3){0.0f, 1.0f, 0.0f};
+
+    // Construct a basis of the base and the caps:
+    Vector3 b0 = Vector3Normalize(direction);
+    Vector3 b1 = Vector3Normalize(Vector3Perpendicular(direction));
+    Vector3 b2 = Vector3Normalize(Vector3CrossProduct(b1, direction));
+    Vector3 capCenter = endPos;
+
+    float baseSliceAngle = (2.0f*PI)/slices;
+    float baseRingAngle  = PI * 0.5 / rings; 
+
+    rlBegin(RL_LINES);
+        rlColor4ub(color.r, color.g, color.b, color.a);
+
+        // render both caps
+        for (int c = 0; c < 2; c++)
+        {
+            for (int i = 0; i < rings; i++)
+            {
+                for (int j = 0; j < slices; j++) 
+                {
+
+                    // we build up the rings from capCenter in the direction of the 'direction' vector we computed earlier
+
+                    // as we iterate through the rings they must be placed higher above the center, the height we need is sin(angle(i))
+                    // as we iterate through the rings they must get smaller by the cos(angle(i))
+
+                    // compute the four vertices
+                    float ringSin1 = sinf(baseSliceAngle*(j + 0))*cosf(baseRingAngle * ( i + 0 ));
+                    float ringCos1 = cosf(baseSliceAngle*(j + 0))*cosf(baseRingAngle * ( i + 0 ));
+                    Vector3 w1 = (Vector3){ 
+                        capCenter.x + (sinf(baseRingAngle * ( i + 0 ))*b0.x + ringSin1*b1.x + ringCos1*b2.x) * radius,
+                        capCenter.y + (sinf(baseRingAngle * ( i + 0 ))*b0.y + ringSin1*b1.y + ringCos1*b2.y) * radius, 
+                        capCenter.z + (sinf(baseRingAngle * ( i + 0 ))*b0.z + ringSin1*b1.z + ringCos1*b2.z) * radius
+                    };
+                    float ringSin2 = sinf(baseSliceAngle*(j + 1))*cosf(baseRingAngle * ( i + 0 ));
+                    float ringCos2 = cosf(baseSliceAngle*(j + 1))*cosf(baseRingAngle * ( i + 0 ));
+                    Vector3 w2 = (Vector3){ 
+                        capCenter.x + (sinf(baseRingAngle * ( i + 0 ))*b0.x + ringSin2*b1.x + ringCos2*b2.x) * radius, 
+                        capCenter.y + (sinf(baseRingAngle * ( i + 0 ))*b0.y + ringSin2*b1.y + ringCos2*b2.y) * radius, 
+                        capCenter.z + (sinf(baseRingAngle * ( i + 0 ))*b0.z + ringSin2*b1.z + ringCos2*b2.z) * radius 
+                    };
+
+                    float ringSin3 = sinf(baseSliceAngle*(j + 0))*cosf(baseRingAngle * ( i + 1 ));
+                    float ringCos3 = cosf(baseSliceAngle*(j + 0))*cosf(baseRingAngle * ( i + 1 ));
+                    Vector3 w3 = (Vector3){ 
+                        capCenter.x + (sinf(baseRingAngle * ( i + 1 ))*b0.x + ringSin3*b1.x + ringCos3*b2.x) * radius, 
+                        capCenter.y + (sinf(baseRingAngle * ( i + 1 ))*b0.y + ringSin3*b1.y + ringCos3*b2.y) * radius, 
+                        capCenter.z + (sinf(baseRingAngle * ( i + 1 ))*b0.z + ringSin3*b1.z + ringCos3*b2.z) * radius 
+                    };
+                    float ringSin4 = sinf(baseSliceAngle*(j + 1))*cosf(baseRingAngle * ( i + 1 ));
+                    float ringCos4 = cosf(baseSliceAngle*(j + 1))*cosf(baseRingAngle * ( i + 1 ));
+                    Vector3 w4 = (Vector3){ 
+                        capCenter.x + (sinf(baseRingAngle * ( i + 1 ))*b0.x + ringSin4*b1.x + ringCos4*b2.x) * radius, 
+                        capCenter.y + (sinf(baseRingAngle * ( i + 1 ))*b0.y + ringSin4*b1.y + ringCos4*b2.y) * radius, 
+                        capCenter.z + (sinf(baseRingAngle * ( i + 1 ))*b0.z + ringSin4*b1.z + ringCos4*b2.z) * radius 
+                    };
+
+                    rlVertex3f(w1.x, w1.y, w1.z);
+                    rlVertex3f(w2.x, w2.y, w2.z);
+
+                    rlVertex3f(w2.x, w2.y, w2.z);
+                    rlVertex3f(w3.x, w3.y, w3.z);
+
+                    rlVertex3f(w1.x, w1.y, w1.z);
+                    rlVertex3f(w3.x, w3.y, w3.z);
+                    
+                    rlVertex3f(w2.x, w2.y, w2.z);   
+                    rlVertex3f(w4.x, w4.y, w4.z); 
+
+                    rlVertex3f(w3.x, w3.y, w3.z);
+                    rlVertex3f(w4.x, w4.y, w4.z); 
+                }
+            }
+            capCenter = startPos;
+            b0 = Vector3Scale(b0, -1.0f);
+        }
+        // render middle
+        if (!sphereCase)
+        {
+            for (int j = 0; j < slices; j++) 
+            {
+                // compute the four vertices
+                float ringSin1 = sinf(baseSliceAngle*(j + 0))*radius;
+                float ringCos1 = cosf(baseSliceAngle*(j + 0))*radius;
+                Vector3 w1 = { 
+                    startPos.x + ringSin1*b1.x + ringCos1*b2.x,
+                    startPos.y + ringSin1*b1.y + ringCos1*b2.y, 
+                    startPos.z + ringSin1*b1.z + ringCos1*b2.z 
+                };
+                float ringSin2 = sinf(baseSliceAngle*(j + 1))*radius;
+                float ringCos2 = cosf(baseSliceAngle*(j + 1))*radius;
+                Vector3 w2 = { 
+                    startPos.x + ringSin2*b1.x + ringCos2*b2.x, 
+                    startPos.y + ringSin2*b1.y + ringCos2*b2.y, 
+                    startPos.z + ringSin2*b1.z + ringCos2*b2.z 
+                };
+
+                float ringSin3 = sinf(baseSliceAngle*(j + 0))*radius;
+                float ringCos3 = cosf(baseSliceAngle*(j + 0))*radius;
+                Vector3 w3 = { 
+                    endPos.x + ringSin3*b1.x + ringCos3*b2.x, 
+                    endPos.y + ringSin3*b1.y + ringCos3*b2.y, 
+                    endPos.z + ringSin3*b1.z + ringCos3*b2.z 
+                };
+                float ringSin4 = sinf(baseSliceAngle*(j + 1))*radius;
+                float ringCos4 = cosf(baseSliceAngle*(j + 1))*radius;
+                Vector3 w4 = { 
+                    endPos.x + ringSin4*b1.x + ringCos4*b2.x, 
+                    endPos.y + ringSin4*b1.y + ringCos4*b2.y, 
+                    endPos.z + ringSin4*b1.z + ringCos4*b2.z 
+                };
+
+                rlVertex3f(w1.x, w1.y, w1.z); 
+                rlVertex3f(w3.x, w3.y, w3.z);
+
+                rlVertex3f(w2.x, w2.y, w2.z); 
+                rlVertex3f(w4.x, w4.y, w4.z); 
+
+                rlVertex3f(w2.x, w2.y, w2.z); 
+                rlVertex3f(w3.x, w3.y, w3.z);
+            }
+        }
+    rlEnd();
+}
 
 // Draw a plane
 void DrawPlane(Vector3 centerPos, Vector2 size, Color color)
 {
-    rlCheckRenderBatchLimit(4);
-
     // NOTE: Plane is always created on XZ ground
     rlPushMatrix();
         rlTranslatef(centerPos.x, centerPos.y, centerPos.z);
@@ -894,8 +1133,6 @@ void DrawRay(Ray ray, Color color)
 void DrawGrid(int slices, float spacing)
 {
     int halfSlices = slices/2;
-
-    rlCheckRenderBatchLimit((slices + 2)*4);
 
     rlBegin(RL_LINES);
         for (int i = -halfSlices; i <= halfSlices; i++)
@@ -2671,7 +2908,7 @@ Mesh GenMeshKnot(float radius, float size, int radSeg, int sides)
 // NOTE: Vertex data is uploaded to GPU
 Mesh GenMeshHeightmap(Image heightmap, Vector3 size)
 {
-    #define GRAY_VALUE(c) ((c.r+c.g+c.b)/3.0f)
+    #define GRAY_VALUE(c) ((float)(c.r + c.g + c.b)/3.0f)
 
     Mesh mesh = { 0 };
 
@@ -2681,7 +2918,7 @@ Mesh GenMeshHeightmap(Image heightmap, Vector3 size)
     Color *pixels = LoadImageColors(heightmap);
 
     // NOTE: One vertex per pixel
-    mesh.triangleCount = (mapX-1)*(mapZ-1)*2;    // One quad every four pixels
+    mesh.triangleCount = (mapX - 1)*(mapZ - 1)*2;    // One quad every four pixels
 
     mesh.vertexCount = mesh.triangleCount*3;
 
@@ -2694,7 +2931,7 @@ Mesh GenMeshHeightmap(Image heightmap, Vector3 size)
     int tcCounter = 0;      // Used to count texcoords float by float
     int nCounter = 0;       // Used to count normals float by float
 
-    Vector3 scaleFactor = { size.x/mapX, size.y/255.0f, size.z/mapZ };
+    Vector3 scaleFactor = { size.x/(mapX - 1), size.y/255.0f, size.z/(mapZ - 1) };
 
     Vector3 vA = { 0 };
     Vector3 vB = { 0 };
@@ -2721,7 +2958,7 @@ Mesh GenMeshHeightmap(Image heightmap, Vector3 size)
             mesh.vertices[vCounter + 7] = GRAY_VALUE(pixels[(x + 1) + z*mapX])*scaleFactor.y;
             mesh.vertices[vCounter + 8] = (float)z*scaleFactor.z;
 
-            // another triangle - 3 vertex
+            // Another triangle - 3 vertex
             mesh.vertices[vCounter + 9] = mesh.vertices[vCounter + 6];
             mesh.vertices[vCounter + 10] = mesh.vertices[vCounter + 7];
             mesh.vertices[vCounter + 11] = mesh.vertices[vCounter + 8];
@@ -3420,8 +3657,6 @@ void DrawBillboardPro(Camera camera, Texture2D texture, Rectangle source, Vector
     topRight = Vector3Add(topRight, position);
     bottomRight = Vector3Add(bottomRight, position);
     bottomLeft = Vector3Add(bottomLeft, position);
-
-    rlCheckRenderBatchLimit(8);
 
     rlSetTexture(texture.id);
 
@@ -4302,6 +4537,7 @@ static Model LoadIQM(const char *fileName)
     RL_FREE(blendi);
     RL_FREE(blendw);
     RL_FREE(ijoint);
+    RL_FREE(color);
 
     return model;
 }
@@ -5263,17 +5499,27 @@ static Model LoadM3D(const char *fileName)
             }
 
             // Add skin (vertex / bone weight pairs)
-            if (m3d->numbone && m3d->numskin) {
-                for (n = 0; n < 3; n++) {
+            if (m3d->numbone && m3d->numskin)
+            {
+                for (n = 0; n < 3; n++)
+                {
                     int skinid = m3d->vertex[m3d->face[i].vertex[n]].skinid;
-                    // check if there's a skin for this mesh, should be, just failsafe
+
+                    // Check if there is a skin for this mesh, should be, just failsafe
                     if (skinid != M3D_UNDEF && skinid < m3d->numskin)
                     {
                         for (j = 0; j < 4; j++)
                         {
-                            model.meshes[k].boneIds[l * 12 + n * 4 + j] = m3d->skin[skinid].boneid[j];
-                            model.meshes[k].boneWeights[l * 12 + n * 4 + j] = m3d->skin[skinid].weight[j];
+                            model.meshes[k].boneIds[l*12 + n*4 + j] = m3d->skin[skinid].boneid[j];
+                            model.meshes[k].boneWeights[l*12 + n*4 + j] = m3d->skin[skinid].weight[j];
                         }
+                    }
+                    else
+                    {
+                        // raylib does not handle boneless meshes with skeletal animations, so
+                        // we put all vertices without a bone into a special "no bone" bone
+                        model.meshes[k].boneIds[l * 12 + n * 4] = m3d->numbone;
+                        model.meshes[k].boneWeights[l * 12 + n * 4] = 1.0f;
                     }
                 }
             }
@@ -5351,18 +5597,19 @@ static Model LoadM3D(const char *fileName)
         }
 
         // Load bones
-        if(m3d->numbone)
+        if (m3d->numbone)
         {
-            model.boneCount = m3d->numbone;
-            model.bones = RL_MALLOC(m3d->numbone*sizeof(BoneInfo));
-            model.bindPose = RL_MALLOC(m3d->numbone*sizeof(Transform));
+            model.boneCount = m3d->numbone + 1;
+            model.bones = RL_CALLOC(model.boneCount, sizeof(BoneInfo));
+            model.bindPose = RL_CALLOC(model.boneCount, sizeof(Transform));
+
             for (i = 0; i < m3d->numbone; i++)
             {
                 model.bones[i].parent = m3d->bone[i].parent;
                 strncpy(model.bones[i].name, m3d->bone[i].name, sizeof(model.bones[i].name));
-                model.bindPose[i].translation.x = m3d->vertex[m3d->bone[i].pos].x;
-                model.bindPose[i].translation.y = m3d->vertex[m3d->bone[i].pos].y;
-                model.bindPose[i].translation.z = m3d->vertex[m3d->bone[i].pos].z;
+                model.bindPose[i].translation.x = m3d->vertex[m3d->bone[i].pos].x*m3d->scale;
+                model.bindPose[i].translation.y = m3d->vertex[m3d->bone[i].pos].y*m3d->scale;
+                model.bindPose[i].translation.z = m3d->vertex[m3d->bone[i].pos].z*m3d->scale;
                 model.bindPose[i].rotation.x = m3d->vertex[m3d->bone[i].ori].x;
                 model.bindPose[i].rotation.y = m3d->vertex[m3d->bone[i].ori].y;
                 model.bindPose[i].rotation.z = m3d->vertex[m3d->bone[i].ori].z;
@@ -5370,7 +5617,28 @@ static Model LoadM3D(const char *fileName)
                 // TODO: if the orientation quaternion not normalized, then that's encoding scaling
                 model.bindPose[i].rotation = QuaternionNormalize(model.bindPose[i].rotation);
                 model.bindPose[i].scale.x = model.bindPose[i].scale.y = model.bindPose[i].scale.z = 1.0f;
+
+                // Child bones are stored in parent bone relative space, convert that into model space
+                if (model.bones[i].parent >= 0)
+                {
+                    model.bindPose[i].rotation = QuaternionMultiply(model.bindPose[model.bones[i].parent].rotation, model.bindPose[i].rotation);
+                    model.bindPose[i].translation = Vector3RotateByQuaternion(model.bindPose[i].translation, model.bindPose[model.bones[i].parent].rotation);
+                    model.bindPose[i].translation = Vector3Add(model.bindPose[i].translation, model.bindPose[model.bones[i].parent].translation);
+                    model.bindPose[i].scale = Vector3Multiply(model.bindPose[i].scale, model.bindPose[model.bones[i].parent].scale);
+                }
             }
+
+            // Add a special "no bone" bone
+            model.bones[i].parent = -1;
+            strcpy(model.bones[i].name, "NO BONE");
+            model.bindPose[i].translation.x = 0.0f;
+            model.bindPose[i].translation.y = 0.0f;
+            model.bindPose[i].translation.z = 0.0f;
+            model.bindPose[i].rotation.x = 0.0f;
+            model.bindPose[i].rotation.y = 0.0f;
+            model.bindPose[i].rotation.z = 0.0f;
+            model.bindPose[i].rotation.w = 1.0f;
+            model.bindPose[i].scale.x = model.bindPose[i].scale.y = model.bindPose[i].scale.z = 1.0f;
         }
 
         // Load bone-pose default mesh into animation vertices. These will be updated when UpdateModelAnimation gets
@@ -5430,8 +5698,8 @@ static ModelAnimation *LoadModelAnimationsM3D(const char *fileName, unsigned int
         for (unsigned int a = 0; a < m3d->numaction; a++)
         {
             animations[a].frameCount = m3d->action[a].durationmsec / M3D_ANIMDELAY;
-            animations[a].boneCount = m3d->numbone;
-            animations[a].bones = RL_MALLOC(m3d->numbone*sizeof(BoneInfo));
+            animations[a].boneCount = m3d->numbone + 1;
+            animations[a].bones = RL_MALLOC((m3d->numbone + 1)*sizeof(BoneInfo));
             animations[a].framePoses = RL_MALLOC(animations[a].frameCount*sizeof(Transform *));
             // strncpy(animations[a].name, m3d->action[a].name, sizeof(animations[a].name));
             TRACELOG(LOG_INFO, "MODEL: [%s] animation #%i: %i msec, %i frames", fileName, a, m3d->action[a].durationmsec, animations[a].frameCount);
@@ -5442,27 +5710,50 @@ static ModelAnimation *LoadModelAnimationsM3D(const char *fileName, unsigned int
                 strncpy(animations[a].bones[i].name, m3d->bone[i].name, sizeof(animations[a].bones[i].name));
             }
 
+            // A special, never transformed "no bone" bone, used for boneless vertices
+            animations[a].bones[i].parent = -1;
+            strcpy(animations[a].bones[i].name, "NO BONE");
+
             // M3D stores frames at arbitrary intervals with sparse skeletons. We need full skeletons at
             // regular intervals, so let the M3D SDK do the heavy lifting and calculate interpolated bones
             for (i = 0; i < animations[a].frameCount; i++)
             {
-                animations[a].framePoses[i] = RL_MALLOC(m3d->numbone*sizeof(Transform));
+                animations[a].framePoses[i] = RL_MALLOC((m3d->numbone + 1)*sizeof(Transform));
 
                 m3db_t *pose = m3d_pose(m3d, a, i * M3D_ANIMDELAY);
                 if (pose != NULL)
                 {
                     for (j = 0; j < m3d->numbone; j++)
                     {
-                        animations[a].framePoses[i][j].translation.x = m3d->vertex[pose[j].pos].x;
-                        animations[a].framePoses[i][j].translation.y = m3d->vertex[pose[j].pos].y;
-                        animations[a].framePoses[i][j].translation.z = m3d->vertex[pose[j].pos].z;
+                        animations[a].framePoses[i][j].translation.x = m3d->vertex[pose[j].pos].x*m3d->scale;
+                        animations[a].framePoses[i][j].translation.y = m3d->vertex[pose[j].pos].y*m3d->scale;
+                        animations[a].framePoses[i][j].translation.z = m3d->vertex[pose[j].pos].z*m3d->scale;
                         animations[a].framePoses[i][j].rotation.x = m3d->vertex[pose[j].ori].x;
                         animations[a].framePoses[i][j].rotation.y = m3d->vertex[pose[j].ori].y;
                         animations[a].framePoses[i][j].rotation.z = m3d->vertex[pose[j].ori].z;
                         animations[a].framePoses[i][j].rotation.w = m3d->vertex[pose[j].ori].w;
                         animations[a].framePoses[i][j].rotation = QuaternionNormalize(animations[a].framePoses[i][j].rotation);
                         animations[a].framePoses[i][j].scale.x = animations[a].framePoses[i][j].scale.y = animations[a].framePoses[i][j].scale.z = 1.0f;
+
+                        // Child bones are stored in parent bone relative space, convert that into model space
+                        if (animations[a].bones[j].parent >= 0)
+                        {
+                            animations[a].framePoses[i][j].rotation = QuaternionMultiply(animations[a].framePoses[i][animations[a].bones[j].parent].rotation, animations[a].framePoses[i][j].rotation);
+                            animations[a].framePoses[i][j].translation = Vector3RotateByQuaternion(animations[a].framePoses[i][j].translation, animations[a].framePoses[i][animations[a].bones[j].parent].rotation);
+                            animations[a].framePoses[i][j].translation = Vector3Add(animations[a].framePoses[i][j].translation, animations[a].framePoses[i][animations[a].bones[j].parent].translation);
+                            animations[a].framePoses[i][j].scale = Vector3Multiply(animations[a].framePoses[i][j].scale, animations[a].framePoses[i][animations[a].bones[j].parent].scale);
+                        }
                     }
+
+                    // Default transform for the "no bone" bone
+                    animations[a].framePoses[i][j].translation.x = 0.0f;
+                    animations[a].framePoses[i][j].translation.y = 0.0f;
+                    animations[a].framePoses[i][j].translation.z = 0.0f;
+                    animations[a].framePoses[i][j].rotation.x = 0.0f;
+                    animations[a].framePoses[i][j].rotation.y = 0.0f;
+                    animations[a].framePoses[i][j].rotation.z = 0.0f;
+                    animations[a].framePoses[i][j].rotation.w = 1.0f;
+                    animations[a].framePoses[i][j].scale.x = animations[a].framePoses[i][j].scale.y = animations[a].framePoses[i][j].scale.z = 1.0f;
                     RL_FREE(pose);
                 }
             }
