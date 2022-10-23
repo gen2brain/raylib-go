@@ -8,11 +8,13 @@ package rl
 #include "external/glfw/src/init.c"
 #include "external/glfw/src/input.c"
 #include "external/glfw/src/monitor.c"
+#include "external/glfw/src/platform.c"
 #include "external/glfw/src/vulkan.c"
 #include "external/glfw/src/window.c"
 
 #include "external/glfw/src/win32_init.c"
 #include "external/glfw/src/win32_joystick.c"
+#include "external/glfw/src/win32_module.c"
 #include "external/glfw/src/win32_monitor.c"
 #include "external/glfw/src/win32_thread.c"
 #include "external/glfw/src/win32_time.c"

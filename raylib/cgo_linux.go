@@ -8,6 +8,7 @@ package rl
 #include "external/glfw/src/init.c"
 #include "external/glfw/src/input.c"
 #include "external/glfw/src/monitor.c"
+#include "external/glfw/src/platform.c"
 #include "external/glfw/src/vulkan.c"
 #include "external/glfw/src/window.c"
 
@@ -15,12 +16,6 @@ package rl
 #include "external/glfw/src/wl_init.c"
 #include "external/glfw/src/wl_monitor.c"
 #include "external/glfw/src/wl_window.c"
-#include "external/glfw/src/wayland-pointer-constraints-unstable-v1-client-protocol.c"
-#include "external/glfw/src/wayland-relative-pointer-unstable-v1-client-protocol.c"
-#include "external/glfw/src/wayland-idle-inhibit-unstable-v1-client-protocol.c"
-#include "external/glfw/src/wayland-xdg-shell-client-protocol.c"
-#include "external/glfw/src/wayland-xdg-decoration-client-protocol.c"
-#include "external/glfw/src/wayland-viewporter-client-protocol.c"
 #endif
 #ifdef _GLFW_X11
 #include "external/glfw/src/x11_init.c"
@@ -30,6 +25,8 @@ package rl
 #endif
 
 #include "external/glfw/src/linux_joystick.c"
+#include "external/glfw/src/posix_module.c"
+#include "external/glfw/src/posix_poll.c"
 #include "external/glfw/src/posix_thread.c"
 #include "external/glfw/src/posix_time.c"
 #include "external/glfw/src/xkb_unicode.c"
