@@ -158,6 +158,28 @@ func DrawCylinderWires(position Vector3, radiusTop float32, radiusBottom float32
 	C.DrawCylinderWires(*cposition, cradiusTop, cradiusBottom, cheight, cslices, *ccolor)
 }
 
+// DrawCapsule - Draw a capsule with the center of its sphere caps at startPos and endPos
+func DrawCapsule(startPos, endPos Vector3, radius float32, slices, rings int32, col color.RGBA) {
+	cstartPos := startPos.cptr()
+	cendPos := startPos.cptr()
+	cradius := (C.float)(radius)
+	cslices := (C.int)(slices)
+	crings := (C.int)(slices)
+	ccolor := colorCptr(col)
+	C.DrawCapsule(*cstartPos, *cendPos, cradius, cslices, crings, *ccolor)
+}
+
+// DrawCapsuleWires - Draw capsule wireframe with the center of its sphere caps at startPos and endPos
+func DrawCapsuleWires(startPos, endPos Vector3, radius float32, slices, rings int32, col color.RGBA) {
+	cstartPos := startPos.cptr()
+	cendPos := startPos.cptr()
+	cradius := (C.float)(radius)
+	cslices := (C.int)(slices)
+	crings := (C.int)(slices)
+	ccolor := colorCptr(col)
+	C.DrawCapsuleWires(*cstartPos, *cendPos, cradius, cslices, crings, *ccolor)
+}
+
 // DrawPlane - Draw a plane XZ
 func DrawPlane(centerPos Vector3, size Vector2, col color.RGBA) {
 	ccenterPos := centerPos.cptr()

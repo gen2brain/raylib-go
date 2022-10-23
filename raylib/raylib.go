@@ -318,9 +318,13 @@ const (
 	KeyVolumeDown = 25
 
 	// Mouse Buttons
-	MouseLeftButton   = 0
-	MouseRightButton  = 1
-	MouseMiddleButton = 2
+	MouseLeftButton    = 0
+	MouseRightButton   = 1
+	MouseMiddleButton  = 2
+	MouseSideButton    = 3
+	MouseExtraButton   = 4
+	MouseForwardButton = 5
+	MouseBackButton    = 6
 
 	// Touch points registered
 	MaxTouchPoints = 2
@@ -930,12 +934,14 @@ type BlendMode int32
 
 // Color blending modes (pre-defined)
 const (
-	BlendAlpha          BlendMode = iota // Blend textures considering alpha (default)
-	BlendAdditive                        // Blend textures adding colors
-	BlendMultiplied                      // Blend textures multiplying colors
-	BlendAddColors                       // Blend textures adding colors (alternative)
-	BlendSubtractColors                  // Blend textures subtracting colors (alternative)
-	BlendCustom                          // Blend textures using custom src/dst factors (use SetBlendModeCustom())
+	BlendAlpha            BlendMode = iota // Blend textures considering alpha (default)
+	BlendAdditive                          // Blend textures adding colors
+	BlendMultiplied                        // Blend textures multiplying colors
+	BlendAddColors                         // Blend textures adding colors (alternative)
+	BlendSubtractColors                    // Blend textures subtracting colors (alternative)
+	BlendAlphaPremultiply                  // Blend premultiplied textures considering alpha
+	BlendCustom                            // Blend textures using custom src/dst factors
+	BlendCustomSeparate                    // Blend textures using custom rgb/alpha separate src/dst factors
 )
 
 // Shader type (generic shader)

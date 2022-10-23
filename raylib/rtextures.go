@@ -384,7 +384,7 @@ func ImageDraw(dst, src *Image, srcRec, dstRec Rectangle, tint color.RGBA) {
 	C.ImageDraw(cdst, *csrc, *csrcRec, *cdstRec, *ctint)
 }
 
-// ImageDrawCircle - Draw circle within an image
+// ImageDrawCircle - Draw a filled circle within an image
 func ImageDrawCircle(dst *Image, centerX, centerY, radius int32, col color.RGBA) {
 	cdst := dst.cptr()
 	ccenterX := (C.int)(centerX)
@@ -394,13 +394,32 @@ func ImageDrawCircle(dst *Image, centerX, centerY, radius int32, col color.RGBA)
 	C.ImageDrawCircle(cdst, ccenterX, ccenterY, cradius, *ccolor)
 }
 
-// ImageDrawCircleV - Draw circle within an image
+// ImageDrawCircleV - Draw a filled circle within an image (Vector version)
 func ImageDrawCircleV(dst *Image, center Vector2, radius int32, col color.RGBA) {
 	cdst := dst.cptr()
 	ccenter := center.cptr()
 	cradius := (C.int)(radius)
 	ccolor := colorCptr(col)
 	C.ImageDrawCircleV(cdst, *ccenter, cradius, *ccolor)
+}
+
+// ImageDrawCircleLines - Draw circle outline within an image
+func ImageDrawCircleLines(dst *Image, centerX, centerY, radius int32, col color.RGBA) {
+	cdst := dst.cptr()
+	ccenterX := (C.int)(centerX)
+	ccenterY := (C.int)(centerY)
+	cradius := (C.int)(radius)
+	ccolor := colorCptr(col)
+	C.ImageDrawCircleLines(cdst, ccenterX, ccenterY, cradius, *ccolor)
+}
+
+// ImageDrawCircleLinesV - Draw circle outline within an image (Vector version)
+func ImageDrawCircleLinesV(dst *Image, center Vector2, radius int32, col color.RGBA) {
+	cdst := dst.cptr()
+	ccenter := center.cptr()
+	cradius := (C.int)(radius)
+	ccolor := colorCptr(col)
+	C.ImageDrawCircleLinesV(cdst, *ccenter, cradius, *ccolor)
 }
 
 // ImageDrawPixel - Draw pixel within an image
@@ -555,6 +574,19 @@ func GenImageWhiteNoise(width, height int, factor float32) *Image {
 	return v
 }
 
+// GenImagePerlinNoise - Generate image: perlin noise
+func GenImagePerlinNoise(width, height, offsetX, offsetY int, scale float32) *Image {
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	coffsetX := (C.int)(offsetX)
+	coffsetY := (C.int)(offsetY)
+	cscale := (C.float)(scale)
+
+	ret := C.GenImagePerlinNoise(cwidth, cheight, coffsetX, coffsetY, cscale)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // GenImageCellular - Generate image: cellular algorithm. Bigger tileSize means bigger cells
 func GenImageCellular(width, height, tileSize int) *Image {
 	cwidth := (C.int)(width)
@@ -562,6 +594,18 @@ func GenImageCellular(width, height, tileSize int) *Image {
 	ctileSize := (C.int)(tileSize)
 
 	ret := C.GenImageCellular(cwidth, cheight, ctileSize)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenImageText - Generate image: grayscale image from text data
+func GenImageText(width, height int, text string) *Image {
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+
+	ret := C.GenImageText(cwidth, cheight, ctext)
 	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
