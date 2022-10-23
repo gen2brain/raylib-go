@@ -1197,7 +1197,7 @@ func newRenderTexture2DFromPointer(ptr unsafe.Pointer) RenderTexture2D {
 
 // Log message types
 const (
-	LogAll = 1 << iota
+	LogAll = iota
 	LogTrace
 	LogDebug
 	LogInfo
