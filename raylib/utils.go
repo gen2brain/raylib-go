@@ -37,5 +37,3 @@ func HomeDir() string {
     }
     return ""
 }
-
-
