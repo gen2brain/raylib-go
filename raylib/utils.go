@@ -5,35 +5,35 @@ package rl
 #include "raylib.h"
 void TraceLogWrapper(int logLevel, const char *text)
 {
-    TraceLog(logLevel, text);
+	TraceLog(logLevel, text);
 }
 */
 import "C"
 
 import (
-    "fmt"
-    "os"
-    "unsafe"
+	"fmt"
+	"os"
+	"unsafe"
 )
 
 // Set the current threshold (minimum) log level
 func SetTraceLog(logLevel TraceLogLevel) {
-    clogLevel := (C.int)(logLevel)
-    C.SetTraceLogLevel(clogLevel)
+	clogLevel := (C.int)(logLevel)
+	C.SetTraceLogLevel(clogLevel)
 }
 
 // Show trace log messages (LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERROR...)
 func TraceLog(logLevel TraceLogLevel, text string, v ...interface{}) {
-    ctext := C.CString(fmt.Sprintf(text, v...))
-    defer C.free(unsafe.Pointer(ctext))
-    clogLevel := (C.int)(logLevel)
-    C.TraceLogWrapper(clogLevel, ctext)
+	ctext := C.CString(fmt.Sprintf(text, v...))
+	defer C.free(unsafe.Pointer(ctext))
+	clogLevel := (C.int)(logLevel)
+	C.TraceLogWrapper(clogLevel, ctext)
 }
 
 // HomeDir - Returns user home directory
 func HomeDir() string {
-    if homeDir, err := os.UserHomeDir(); err != nil {
-        return homeDir
-    }
-    return ""
+	if homeDir, err := os.UserHomeDir(); err != nil {
+		return homeDir
+	}
+	return ""
 }
