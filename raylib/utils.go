@@ -13,6 +13,7 @@ import "C"
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"unsafe"
 )
 
@@ -31,7 +32,12 @@ func TraceLog(logLevel TraceLogLevel, text string, v ...interface{}) {
 }
 
 // HomeDir - Returns user home directory
+// NOTE: On Android this returns internal data path and must be called after InitWindow
 func HomeDir() string {
+	if runtime.GOOS == "android" {
+		return getInternalStoragePath()
+	}
+	
 	if homeDir, err := os.UserHomeDir(); err != nil {
 		return homeDir
 	}
