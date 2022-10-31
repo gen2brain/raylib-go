@@ -384,6 +384,28 @@ func ImageDraw(dst, src *Image, srcRec, dstRec Rectangle, tint color.RGBA) {
 	C.ImageDraw(cdst, *csrc, *csrcRec, *cdstRec, *ctint)
 }
 
+// ImageDrawLine - Draw line within an image
+func ImageDrawLine(dst *Image, startPosX, startPosY, endPosX, endPosY int32, col color.RGBA) {
+	cdst := dst.cptr()
+	cstartPosX := (C.int)(startPosX)
+	cstartPosY := (C.int)(startPosY)
+	cendPosX := (C.int)(endPosX)
+	cendPosY := (C.int)(endPosY)
+	ccolor := colorCptr(col)
+	C.ImageDrawLine(cdst, cstartPosX, cstartPosY, cendPosX, cendPosY, ccolor)
+}
+
+// ImageDrawLineV - Draw line within an image, vector version
+func ImageDrawLineV(dst *Image, startPosX, startPosY, endPosX, endPosY int32, col color.RGBA) {
+	cdst := dst.cptr()
+	cstartPosX := (C.int)(startPosX)
+	cstartPosY := (C.int)(startPosY)
+	cendPosX := (C.int)(endPosX)
+	cendPosY := (C.int)(endPosY)
+	ccolor := colorCptr(col)
+	C.ImageDrawLineV(cdst, cstartPosX, cstartPosY, cendPosX, cendPosY, ccolor)
+}
+
 // ImageDrawCircle - Draw a filled circle within an image
 func ImageDrawCircle(dst *Image, centerX, centerY, radius int32, col color.RGBA) {
 	cdst := dst.cptr()
