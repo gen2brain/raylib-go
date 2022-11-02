@@ -2,10 +2,12 @@
 extern "C" {            // Prevents name mangling of functions
 #endif
 
-typedef const char cchar_t;
+typedef unsigned char * cchar_t;
 
 
-const char * rayLoadFileDataCallback(const char *, unsigned int *);                 // enable the call-back
+// unsigned char * rayLoadFileDataCallback(const char *, unsigned int *);                 // enable the call-back
+
+void setLoadFileDataCallbackWrapper(void);
 
 #if defined(__cplusplus)
 }

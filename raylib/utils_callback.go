@@ -5,7 +5,10 @@ package rl
 */
 import "C"
 
-import "unsafe"
+import (
+	"fmt"
+	"unsafe"
+)
 
 var (
 	internalLoadFileDataCallback func(name string) ([]byte, error)
@@ -17,7 +20,7 @@ func SetLoadFileDataCallback(fn func(name string) ([]byte, error)) {
 }
 
 //export loadFileDataCallbackGo
-func loadFileDataCallbackGo(cstr unsafe.Pointer, slen C.int, bytesRead *C.int) *C.cchar_t {
+func loadFileDataCallbackGo(cstr unsafe.Pointer, slen C.int, bytesRead *C.int, ref **C.uchar) {
 	str := string(C.GoBytes(cstr, slen))
 	data, err := internalLoadFileDataCallback(str)
 	if err != nil {
@@ -25,5 +28,7 @@ func loadFileDataCallbackGo(cstr unsafe.Pointer, slen C.int, bytesRead *C.int) *
 		return
 	}
 	*bytesRead = C.int(len(data))
-	return unsafe.Pointer(&data)
+	fmt.Println(len(data))
+	fmt.Println(ref)
+	*ref = (*C.uchar)(unsafe.Pointer(&data[0]))
 }
