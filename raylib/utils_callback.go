@@ -6,7 +6,6 @@ package rl
 import "C"
 
 import (
-	"fmt"
 	"unsafe"
 )
 
@@ -28,7 +27,5 @@ func loadFileDataCallbackGo(cstr unsafe.Pointer, slen C.int, bytesRead *C.int, r
 		return
 	}
 	*bytesRead = C.int(len(data))
-	fmt.Println(len(data))
-	fmt.Println(ref)
 	*ref = (*C.uchar)(unsafe.Pointer(&data[0]))
 }
