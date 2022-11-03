@@ -16,6 +16,10 @@ var (
 
 func SetLoadFileDataCallback(fn func(name string) ([]byte, error)) {
 	internalLoadFileDataCallback = fn
+	if fn == nil {
+		C.unsetLoadFileDataCallbackWrapper()
+		return
+	}
 	C.setLoadFileDataCallbackWrapper()
 }
 
@@ -25,6 +29,7 @@ func loadFileDataCallbackGo(cstr unsafe.Pointer, slen C.int, bytesRead *C.int, r
 	data, err := internalLoadFileDataCallback(str)
 	if err != nil {
 		//TODO: handle error
+		*bytesRead = C.int(-1)
 		return
 	}
 	*bytesRead = C.int(len(data))
@@ -33,6 +38,10 @@ func loadFileDataCallbackGo(cstr unsafe.Pointer, slen C.int, bytesRead *C.int, r
 
 func SetLoadFileTextCallback(fn func(name string) (string, error)) {
 	internalLoadFileTextCallback = fn
+	if fn == nil {
+		C.unsetLoadFileTextCallbackWrapper()
+		return
+	}
 	C.setLoadFileTextCallbackWrapper()
 }
 
@@ -42,6 +51,7 @@ func loadFileTextCallbackGo(cstr unsafe.Pointer, slen C.int, outstrlen *C.int, r
 	data, err := internalLoadFileTextCallback(str)
 	if err != nil {
 		//TODO: handle error
+		*outstrlen = C.int(-1)
 		return
 	}
 	*outstrlen = C.int(len(data))
