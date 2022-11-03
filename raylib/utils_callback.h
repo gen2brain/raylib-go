@@ -5,9 +5,8 @@ extern "C" {            // Prevents name mangling of functions
 typedef unsigned char * cchar_t;
 
 
-// unsigned char * rayLoadFileDataCallback(const char *, unsigned int *);                 // enable the call-back
-
 void setLoadFileDataCallbackWrapper(void);
+void setLoadFileTextCallbackWrapper(void);
 
 #if defined(__cplusplus)
 }
