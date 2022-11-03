@@ -28,7 +28,6 @@ func loadFileDataCallbackGo(cstr unsafe.Pointer, slen C.int, bytesRead *C.int, r
 	str := string(C.GoBytes(cstr, slen))
 	data, err := internalLoadFileDataCallback(str)
 	if err != nil {
-		//TODO: handle error
 		*bytesRead = C.int(-1)
 		return
 	}
@@ -50,7 +49,6 @@ func loadFileTextCallbackGo(cstr unsafe.Pointer, slen C.int, outstrlen *C.int, r
 	str := string(C.GoBytes(cstr, slen))
 	data, err := internalLoadFileTextCallback(str)
 	if err != nil {
-		//TODO: handle error
 		*outstrlen = C.int(-1)
 		return
 	}
