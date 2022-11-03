@@ -478,9 +478,9 @@ func SetTargetFPS(fps int32) {
 }
 
 // GetFPS - Returns current FPS
-func GetFPS() float32 {
+func GetFPS() int32 {
 	ret := C.GetFPS()
-	v := (float32)(ret)
+	v := (int32)(ret)
 	return v
 }
 
