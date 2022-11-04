@@ -147,6 +147,7 @@ func DrawCylinder(position Vector3, radiusTop float32, radiusBottom float32, hei
 	C.DrawCylinder(*cposition, cradiusTop, cradiusBottom, cheight, cslices, *ccolor)
 }
 
+// DrawCylinderEx - Draw a cylinder with base at startPos and top at endPos
 func DrawCylinderEx(startPos Vector3, endPos Vector3, startRadius float32, endRadius float32, sides int32, col color.RGBA) {
 	cstartPos := startPos.cptr()
 	cendPos := endPos.cptr()
@@ -168,6 +169,7 @@ func DrawCylinderWires(position Vector3, radiusTop float32, radiusBottom float32
 	C.DrawCylinderWires(*cposition, cradiusTop, cradiusBottom, cheight, cslices, *ccolor)
 }
 
+// DrawCylinderWiresEx - Draw a cylinder wires with base at startPos and top at endPos
 func DrawCylinderWiresEx(startPos Vector3, endPos Vector3, startRadius float32, endRadius float32, sides int32, col color.RGBA) {
 	cstartPos := startPos.cptr()
 	cendPos := endPos.cptr()
