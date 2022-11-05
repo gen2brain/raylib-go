@@ -147,6 +147,17 @@ func DrawCylinder(position Vector3, radiusTop float32, radiusBottom float32, hei
 	C.DrawCylinder(*cposition, cradiusTop, cradiusBottom, cheight, cslices, *ccolor)
 }
 
+// DrawCylinderEx - Draw a cylinder with base at startPos and top at endPos
+func DrawCylinderEx(startPos Vector3, endPos Vector3, startRadius float32, endRadius float32, sides int32, col color.RGBA) {
+	cstartPos := startPos.cptr()
+	cendPos := endPos.cptr()
+	cstartRadius := (C.float)(startRadius)
+	cendRadius := (C.float)(endRadius)
+	csides := (C.int)(sides)
+	ccolor := colorCptr(col)
+	C.DrawCylinderEx(*cstartPos, *cendPos, cstartRadius, cendRadius, csides, *ccolor)
+}
+
 // DrawCylinderWires - Draw a cylinder/cone wires
 func DrawCylinderWires(position Vector3, radiusTop float32, radiusBottom float32, height float32, slices int32, col color.RGBA) {
 	cposition := position.cptr()
@@ -156,6 +167,17 @@ func DrawCylinderWires(position Vector3, radiusTop float32, radiusBottom float32
 	cslices := (C.int)(slices)
 	ccolor := colorCptr(col)
 	C.DrawCylinderWires(*cposition, cradiusTop, cradiusBottom, cheight, cslices, *ccolor)
+}
+
+// DrawCylinderWiresEx - Draw a cylinder wires with base at startPos and top at endPos
+func DrawCylinderWiresEx(startPos Vector3, endPos Vector3, startRadius float32, endRadius float32, sides int32, col color.RGBA) {
+	cstartPos := startPos.cptr()
+	cendPos := endPos.cptr()
+	cstartRadius := (C.float)(startRadius)
+	cendRadius := (C.float)(endRadius)
+	csides := (C.int)(sides)
+	ccolor := colorCptr(col)
+	C.DrawCylinderWiresEx(*cstartPos, *cendPos, cstartRadius, cendRadius, csides, *ccolor)
 }
 
 // DrawCapsule - Draw a capsule with the center of its sphere caps at startPos and endPos
