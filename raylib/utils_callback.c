@@ -33,11 +33,8 @@ char * rayLoadFileTextCallback(const char *fileName) {
 		return NULL;
 	}
 	char * refref = *ref;
-	// unsigned char * p = (unsigned char *)malloc(*bytesRead);
-	// memcpy(p, *ref, *bytesRead);
 	free(ref);
 	return refref;
-	// return p;
 }
 
 void setLoadFileTextCallbackWrapper(void) {
