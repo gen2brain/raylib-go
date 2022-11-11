@@ -36,7 +36,7 @@ package rl
 #cgo freebsd CFLAGS: -I/usr/local/include -Iexternal/glfw/include -DPLATFORM_DESKTOP
 #cgo freebsd LDFLAGS: -L/usr/local/lib
 
-#cgo freensd,!wayland LDFLAGS: -lGL -lm -pthread -ldl -lrt -lX11
+#cgo freebsd,!wayland LDFLAGS: -lGL -lm -pthread -ldl -lrt -lX11
 #cgo freebsd,wayland LDFLAGS: -lGL -lm -pthread -ldl -lrt -lwayland-client -lwayland-cursor -lwayland-egl -lxkbcommon
 
 #cgo freebsd,!wayland CFLAGS: -D_GLFW_X11
