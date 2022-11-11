@@ -131,3 +131,7 @@ func (a *asset) Close() error {
 	C.AAsset_close(a.ptr)
 	return nil
 }
+
+func getInternalStoragePath() string {
+	return C.GoString(C.internal_storage_path)
+}

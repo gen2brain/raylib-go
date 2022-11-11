@@ -1,49 +1,43 @@
-//go:build !android && !windows
-// +build !android,!windows
+//go:build !android
+// +build !android
 
 package rl
 
 /*
+#include "stdlib.h"
 #include "raylib.h"
+void TraceLogWrapper(int logLevel, const char *text)
+{
+	TraceLog(logLevel, text);
+}
 */
 import "C"
 
 import (
 	"fmt"
 	"os"
+	"unsafe"
 )
 
-// SetTraceLog - Enable trace log message types
-func SetTraceLog(typeFlags byte) {
-	logTypeFlags = typeFlags
-
-	ctypeFlags := (C.int)(typeFlags)
-	C.SetTraceLogLevel(ctypeFlags)
+// Set the current threshold (minimum) log level
+func SetTraceLog(logLevel TraceLogLevel) {
+	clogLevel := (C.int)(logLevel)
+	C.SetTraceLogLevel(clogLevel)
 }
 
-// TraceLog - Show trace log messages (INFO, WARNING, ERROR, DEBUG)
-func TraceLog(msgType int, text string, v ...interface{}) {
-	switch msgType {
-	case LogInfo:
-		if logTypeFlags&LogInfo != 0 {
-			fmt.Printf("INFO: "+text+"\n", v...)
-		}
-	case LogWarning:
-		if logTypeFlags&LogWarning != 0 {
-			fmt.Printf("WARNING: "+text+"\n", v...)
-		}
-	case LogError:
-		if logTypeFlags&LogError != 0 {
-			fmt.Printf("ERROR: "+text+"\n", v...)
-		}
-	case LogDebug:
-		if logTypeFlags&LogDebug != 0 {
-			fmt.Printf("DEBUG: "+text+"\n", v...)
-		}
-	}
+// Show trace log messages (LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERROR...)
+func TraceLog(logLevel TraceLogLevel, text string, v ...interface{}) {
+	ctext := C.CString(fmt.Sprintf(text, v...))
+	defer C.free(unsafe.Pointer(ctext))
+	clogLevel := (C.int)(logLevel)
+	C.TraceLogWrapper(clogLevel, ctext)
 }
 
 // HomeDir - Returns user home directory
-func HomeDir() string {
-	return os.Getenv("HOME")
+// NOTE: On Android this returns internal data path and must be called after InitWindow
+func HomeDir() string {	
+	if homeDir, err := os.UserHomeDir(); err != nil {
+		return homeDir
+	}
+	return ""
 }

@@ -1195,16 +1195,25 @@ func newRenderTexture2DFromPointer(ptr unsafe.Pointer) RenderTexture2D {
 	return *(*RenderTexture2D)(ptr)
 }
 
-// Log message types
+type TraceLogLevel int
+
+// Trace log level
+// NOTE: Organized by priority level
 const (
-	LogAll = iota
+	// Display all logs
+	LogAll TraceLogLevel = iota
+	// Trace logging, intended for internal use only
 	LogTrace
+	// Debug logging, used for internal debugging, it should be disabled on release builds
 	LogDebug
+	// Info logging, used for program execution info
 	LogInfo
+	// Warning logging, used on recoverable failures
 	LogWarning
+	// Error logging, used on unrecoverable failures
 	LogError
+	// Fatal logging, used to abort program: exit(EXIT_FAILURE)
 	LogFatal
+	// Disable logging
 	LogNone
 )
-
-var logTypeFlags byte = LogInfo | LogWarning | LogError

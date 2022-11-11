@@ -4,15 +4,12 @@
 package rl
 
 /*
+#include "stdlib.h"
 #include "raylib.h"
-#include <stdlib.h>
-
-void log_info(const char *msg);
-void log_warn(const char *msg);
-void log_error(const char *msg);
-void log_debug(const char *msg);
-
-extern char* get_internal_storage_path();
+void TraceLogWrapper(int logLevel, const char *text)
+{
+	TraceLog(logLevel, text);
+}
 */
 import "C"
 
@@ -21,46 +18,22 @@ import (
 	"unsafe"
 )
 
-// SetTraceLog - Enable trace log message types (bit flags based)
-func SetTraceLog(typeFlags byte) {
-	logTypeFlags = typeFlags
-
-	ctypeFlags := (C.int)(typeFlags)
-	C.SetTraceLogLevel(ctypeFlags)
+// Set the current threshold (minimum) log level
+func SetTraceLog(logLevel TraceLogLevel) {
+	clogLevel := (C.int)(logLevel)
+	C.SetTraceLogLevel(clogLevel)
 }
 
-// TraceLog - Trace log messages showing (INFO, WARNING, ERROR, DEBUG)
-func TraceLog(msgType int, text string, v ...interface{}) {
-	switch msgType {
-	case LogInfo:
-		if logTypeFlags&LogInfo != 0 {
-			msg := C.CString(fmt.Sprintf("INFO: "+text, v...))
-			defer C.free(unsafe.Pointer(msg))
-			C.log_info(msg)
-		}
-	case LogWarning:
-		if logTypeFlags&LogWarning != 0 {
-			msg := C.CString(fmt.Sprintf("WARNING: "+text, v...))
-			defer C.free(unsafe.Pointer(msg))
-			C.log_warn(msg)
-		}
-	case LogError:
-		if logTypeFlags&LogError != 0 {
-			msg := C.CString(fmt.Sprintf("ERROR: "+text, v...))
-			defer C.free(unsafe.Pointer(msg))
-			C.log_error(msg)
-		}
-	case LogDebug:
-		if logTypeFlags&LogDebug != 0 {
-			msg := C.CString(fmt.Sprintf("DEBUG: "+text, v...))
-			defer C.free(unsafe.Pointer(msg))
-			C.log_debug(msg)
-		}
-	}
+// Show trace log messages (LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERROR...)
+func TraceLog(logLevel TraceLogLevel, text string, v ...interface{}) {
+	ctext := C.CString(fmt.Sprintf(text, v...))
+	defer C.free(unsafe.Pointer(ctext))
+	clogLevel := (C.int)(logLevel)
+	C.TraceLogWrapper(clogLevel, ctext)
 }
 
 // HomeDir - Returns user home directory
 // NOTE: On Android this returns internal data path and must be called after InitWindow
 func HomeDir() string {
-	return C.GoString(C.get_internal_storage_path())
+	return getInternalStoragePath()
 }
