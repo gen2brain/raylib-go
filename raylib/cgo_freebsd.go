@@ -33,7 +33,7 @@ package rl
 #include "external/glfw/src/egl_context.c"
 #include "external/glfw/src/osmesa_context.c"
 
-#cgo freebsd CFLAGS: -I/usr/local/include -Iexternal/glfw/include -DPLATFORM_DESKTOP
+#cgo freebsd CFLAGS: -I. -I/usr/local/include -Iexternal/glfw/include -DPLATFORM_DESKTOP
 #cgo freebsd LDFLAGS: -L/usr/local/lib
 
 #cgo freebsd,!wayland LDFLAGS: -lGL -lm -pthread -ldl -lrt -lX11
