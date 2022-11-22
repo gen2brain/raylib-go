@@ -8,8 +8,7 @@ package rl
 import "C"
 
 import (
-"unsafe"
-"fmt"
+	"unsafe"
 )
 
 // int GuiToggleGroup(Rectangle bounds, const char *text, int active)
@@ -23,10 +22,8 @@ func ToggleGroup(bounds Rectangle, text string, active int) int {
 	defer C.free(unsafe.Pointer(ctext))
 	cactive := C.int(active)
 	res := C.GuiToggleGroup(cbounds, ctext, cactive)
-	fmt.Printf(">%v %v<", active, res)
 	return int(res)
 }
-
 
 // bool GuiButton(Rectangle bounds, const char *text)
 func Button(bounds Rectangle, text string) bool {
@@ -38,6 +35,5 @@ func Button(bounds Rectangle, text string) bool {
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
 	res := C.GuiButton(cbounds, ctext)
-	fmt.Printf(">%v<", res)
 	return bool(res)
 }
