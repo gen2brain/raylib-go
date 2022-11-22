@@ -2,14 +2,14 @@ module rrem
 
 go 1.16
 
-replace github.com/gen2brain/raylib-go/raylib => ../raylib
+replace github.com/Konstantin8105/raylib-go/raylib => ../raylib
 
 require (
 	github.com/blezek/tga v0.0.0-20150626111426-80720cbc1017
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/frankban/quicktest v1.13.0 // indirect
 	github.com/ftrvxmtrx/tga v0.0.0-20150524081124-bd8e8d5be13a // indirect
-	github.com/gen2brain/raylib-go v0.0.0-20210714145135-ccae99cbf6dd
+	github.com/Konstantin8105/raylib-go v0.0.0-20210714145135-ccae99cbf6dd
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/jbuchbinder/gopnm v0.0.0-20150223212718-5176c556b9ce
 	github.com/jfreymuth/oggvorbis v1.0.3
