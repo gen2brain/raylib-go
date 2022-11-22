@@ -1,2 +1,0 @@
-The Gopher sprites were created by Renee French and are distributed
-under the Creative Commons Attributions 3.0 license.
