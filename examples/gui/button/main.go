@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	rl  "github.com/Konstantin8105/raylib"
-	gui "github.com/Konstantin8105/raygui3.5"
+	rl  "github.com/Konstantin8105/raylib-go/raylib"
+	gui "github.com/Konstantin8105/raylib-go/raygui"
 )
 
 func main() {
