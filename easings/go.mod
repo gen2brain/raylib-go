@@ -1,3 +1,3 @@
-module github.com/gen2brain/raylib-go/easings
+module github.com/Konstantin8105/raylib-go/easings
 
 go 1.16

@@ -1,8 +1,8 @@
-module github.com/gen2brain/raylib-go/rres
+module github.com/Konstantin8105/raylib-go/rres
 
 go 1.16
 
-replace github.com/gen2brain/raylib-go/raylib => ../raylib
+replace github.com/Konstantin8105/raylib-go/raylib => ../raylib
 
 require (
 	github.com/dsnet/compress v0.0.1
