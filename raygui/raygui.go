@@ -1,18 +1,19 @@
-package rl
+package raygui
 
 /*
 #cgo CFLAGS: -DRAYGUI_IMPLEMENTATION
-#include "raygui.h"
+#include "../raylib/raygui.h"
 #include <stdlib.h>
 */
 import "C"
 
 import (
 	"unsafe"
+	rl  "github.com/Konstantin8105/raylib-go/raylib"
 )
 
 // int GuiToggleGroup(Rectangle bounds, const char *text, int active)
-func ToggleGroup(bounds Rectangle, text string, active int) int {
+func ToggleGroup(bounds rl.Rectangle, text string, active int) int {
 	var cbounds C.struct_Rectangle
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
@@ -26,7 +27,7 @@ func ToggleGroup(bounds Rectangle, text string, active int) int {
 }
 
 // bool GuiButton(Rectangle bounds, const char *text)
-func Button(bounds Rectangle, text string) bool {
+func Button(bounds rl.Rectangle, text string) bool {
 	var cbounds C.struct_Rectangle
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)

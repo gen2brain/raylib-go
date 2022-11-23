@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	rl  "github.com/Konstantin8105/raylib-go/raylib"
+	gui  "github.com/Konstantin8105/raylib-go/raygui"
 )
 
 func main() {
@@ -18,7 +19,7 @@ func main() {
 
 		rl.ClearBackground(rl.Black)
 
-		button = rl.Button(rl.NewRectangle(50, 150, 100, 40), "Click")
+		button = gui.Button(rl.NewRectangle(50, 150, 100, 40), "Click")
 		if button {
 			fmt.Println("Clicked on button")
 		}
