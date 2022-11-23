@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	rl.InitWindow(800, 450, "raylib [physics] example - box2d")
+	rl.InitWindow(800, 450, "raygui - button")
 
 	rl.SetTargetFPS(60)
 
