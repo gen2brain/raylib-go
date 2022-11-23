@@ -992,6 +992,69 @@ func ColorBarHue(bounds rl.Rectangle, text string, value float32) float32 {
 	return float32(C.GuiColorBarHue(cbounds, ctext, cvalue))
 }
 
+// Dropdown Box control
+// NOTE: Returns mouse click
+func DropdownBox(bounds rl.Rectangle, text string, active *int32, editMode bool) bool {
+	var cbounds C.struct_Rectangle
+	cbounds.x = C.float(bounds.X)
+	cbounds.y = C.float(bounds.Y)
+	cbounds.width = C.float(bounds.Width)
+	cbounds.height = C.float(bounds.Height)
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+
+	var cactive C.int
+	cactive = C.int(*active)
+	defer func() {
+		*active = int32(cactive)
+	}()
+
+	ceditMode := C.bool(editMode)
+
+	return bool(C.GuiDropdownBox(cbounds, ctext, &cactive, ceditMode))
+}
+
+// Value Box control, updates input text with numbers
+// NOTE: Requires static variables: frameCounter
+func ValueBox(bounds rl.Rectangle, text string, value *int32, minValue, maxValue int, editMode bool) bool {
+	var cbounds C.struct_Rectangle
+	cbounds.x = C.float(bounds.X)
+	cbounds.y = C.float(bounds.Y)
+	cbounds.width = C.float(bounds.Width)
+	cbounds.height = C.float(bounds.Height)
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+
+	var cvalue C.int
+	cvalue = C.int(*value)
+	defer func() {
+		*value = int32(cvalue)
+	}()
+
+	cminValue := C.int(minValue)
+	cmaxValue := C.int(maxValue)
+	ceditMode := C.bool(editMode)
+
+	return bool(C.GuiValueBox(cbounds, ctext, &cvalue, cminValue, cmaxValue, ceditMode))
+}
+
+// Text Box control, updates input text
+// NOTE 2: Returns if KEY_ENTER pressed (useful for data validation)
+func TextBox(bounds rl.Rectangle , text string, textSize int, editMode bool) bool {
+	var cbounds C.struct_Rectangle
+	cbounds.x = C.float(bounds.X)
+	cbounds.y = C.float(bounds.Y)
+	cbounds.width = C.float(bounds.Width)
+	cbounds.height = C.float(bounds.Height)
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+
+	ctextSize := C.int(textSize)
+	ceditMode := C.bool(editMode)
+
+	return bool(C.GuiTextBox(cbounds, ctext, ctextSize, ceditMode))
+}
+
 // GuiLoadStyle - transpiled function from  C4GO/tests/raylib/raygui.h:560
 // Styles loading functions
 // Load style file over global style variable (.rgs)
@@ -1008,16 +1071,15 @@ func LoadStyleDefault() {
 	C.GuiLoadStyleDefault()
 }
 
-// TODO
 // GuiIconText - transpiled function from  C4GO/tests/raylib/raygui.h:564
 // Icons functionality
 // Get text with icon id prepended (if supported)
-// func IconText(iconId int32, text string) []byte {
-// 	ciconId := C.int(iconId)
-// 	ctext := C.CString(text)
-// 	defer C.free(unsafe.Pointer(ctext))
-// 	return C.GuiIconText(ciconId, ctext)
-// }
+func IconText(iconId int32, text string) string {
+	ciconId := C.int(iconId)
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+	return C.GoString(C.GuiIconText(ciconId, ctext))
+}
 
 // TODO
 // GuiGetIcons - transpiled function from  C4GO/tests/raylib/raygui.h:567
@@ -1032,14 +1094,8 @@ func LoadStyleDefault() {
 // List View with extended parameters
 // Warning (*ast.FunctionDecl): {prefix: n:GuiListViewEx,t1:int (Rectangle, const char **, int, int *, int *, int),t2:}.  C4GO/tests/raylib/raygui.h:551 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiListViewEx`. cannot parse C type: `const char **`
 
-// Warning (*ast.FunctionDecl): {prefix: n:GuiValueBox,t1:_Bool (Rectangle, const char *, int *, int, int, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:539 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiValueBox`. cannot parse C type: `int *`
-
-// Warning (*ast.FunctionDecl): {prefix: n:GuiTextBox,t1:_Bool (Rectangle, char *, int, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:540 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTextBox`. cannot parse C type: `_Bool`
 
 // Warning (*ast.FunctionDecl): {prefix: n:GuiTextBoxMulti,t1:_Bool (Rectangle, char *, int, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:541 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTextBoxMulti`. cannot parse C type: `_Bool`
-
-// Dropdown Box control, returns selected item
-// Warning (*ast.FunctionDecl): {prefix: n:GuiDropdownBox,t1:_Bool (Rectangle, const char *, int *, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:537 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiDropdownBox`. cannot parse C type: `int *`
 
 // Check Box control, returns true when active
 // Warning (*ast.FunctionDecl): {prefix: n:GuiCheckBox,t1:_Bool (Rectangle, const char *, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:535 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiCheckBox`. cannot parse C type: `_Bool`
