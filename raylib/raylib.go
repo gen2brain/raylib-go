@@ -11,7 +11,7 @@ Example:
 
 	package main
 
-	import "github.com//raylib-go/raylib"
+	import "github.com/gen2brain/raylib-go/raylib"
 
 	func main() {
 		rl.InitWindow(800, 450, "raylib [core] example - basic window")
