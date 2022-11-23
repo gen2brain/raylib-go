@@ -234,9 +234,6 @@ const (
 // NOTE: Some types are required for RAYGUI_STANDALONE usage
 //----------------------------------------------------------------------------------
 // Style property
-// Warning (*ast.FunctionDecl): {prefix: n:SetAudioStreamCallback,t1:void (AudioStream, AudioCallback),t2:}.  C4GO/tests/raylib/raylib.h:1567 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `SetAudioStreamCallback`. field type is pointer: `rAudioBuffer *`
-// Warning (*ast.FunctionDecl): {prefix: n:AttachAudioStreamProcessor,t1:void (AudioStream, AudioCallback),t2:}.  C4GO/tests/raylib/raylib.h:1569 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `AttachAudioStreamProcessor`. field type is pointer: `rAudioBuffer *`
-// Warning (*ast.FunctionDecl): {prefix: n:DetachAudioStreamProcessor,t1:void (AudioStream, AudioCallback),t2:}.  C4GO/tests/raylib/raylib.h:1570 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `DetachAudioStreamProcessor`. field type is pointer: `rAudioBuffer *`
 type GuiStyleProp struct {
 	controlId     uint16
 	propertyId    uint16
@@ -543,13 +540,6 @@ func GetState() int32 {
 }
 
 // GuiSetStyle - transpiled function from  C4GO/tests/raylib/raygui.h:518
-// Font set/get functions
-// Set gui custom font (global state)
-// Get gui custom font (global state)
-// Style set/get functions
-// Set one style property
-// Warning (*ast.FunctionDecl): {prefix: n:GuiSetFont,t1:void (Font),t2:}.  C4GO/tests/raylib/raygui.h:514 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiSetFont`. field type is pointer: `Rectangle *`
-// Warning (*ast.FunctionDecl): {prefix: n:GuiGetFont,t1:Font (void),t2:}.  C4GO/tests/raylib/raygui.h:515 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiGetFont`. field type is pointer: `Rectangle *`
 func SetStyle(control int32, property int32, value int32) {
 	ccontrol := C.int(control)
 	cproperty := C.int(property)
@@ -617,11 +607,6 @@ func Panel(bounds rl.Rectangle, text string) {
 	defer C.free(unsafe.Pointer(ctext))
 	C.GuiPanel(cbounds, ctext)
 }
-
-// GuiLabel - transpiled function from  C4GO/tests/raylib/raygui.h:530
-// Tab Bar control, returns TAB to be closed or -1
-// Basic controls set
-// Warning (*ast.FunctionDecl): {prefix: n:GuiTabBar,t1:int (Rectangle, const char **, int, int *),t2:}.  C4GO/tests/raylib/raygui.h:526 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTabBar`. cannot parse C type: `const char **`
 
 // Scroll Panel control
 func ScrollPanel(bounds rl.Rectangle, text string, content rl.Rectangle, scroll *rl.Vector2) rl.Rectangle {
@@ -751,9 +736,7 @@ func CheckBox(bounds rl.Rectangle, text string, checked bool) bool {
 }
 
 // GuiComboBox - transpiled function from  C4GO/tests/raylib/raygui.h:536
-// Check Box control, returns true when active
 // Combo Box control, returns selected item index
-// Warning (*ast.FunctionDecl): {prefix: n:GuiCheckBox,t1:_Bool (Rectangle, const char *, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:535 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiCheckBox`. cannot parse C type: `_Bool`
 func ComboBox(bounds rl.Rectangle, text string, active int32) int32 {
 	var cbounds C.struct_Rectangle
 	cbounds.x = C.float(bounds.X)
@@ -767,14 +750,11 @@ func ComboBox(bounds rl.Rectangle, text string, active int32) int32 {
 }
 
 // GuiSlider - transpiled function from  C4GO/tests/raylib/raygui.h:542
-// Dropdown Box control, returns selected item
 // Spinner control, returns selected value
 // Value Box control, updates input text with numbers
 // Text Box control, updates input text
 // Text Box control with multiple lines
 // Slider control, returns selected value
-// Warning (*ast.FunctionDecl): {prefix: n:GuiDropdownBox,t1:_Bool (Rectangle, const char *, int *, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:537 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiDropdownBox`. cannot parse C type: `int *`
-
 // Spinner control, returns selected value
 func Spinner(bounds rl.Rectangle, text string, value *int32, minValue, maxValue int, editMode bool) bool {
 	var cbounds C.struct_Rectangle
@@ -798,9 +778,6 @@ func Spinner(bounds rl.Rectangle, text string, value *int32, minValue, maxValue 
 	return bool(C.GuiSpinner(cbounds, ctext, &cvalue, cminValue, cmaxValue, ceditMode))
 }
 
-// Warning (*ast.FunctionDecl): {prefix: n:GuiValueBox,t1:_Bool (Rectangle, const char *, int *, int, int, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:539 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiValueBox`. cannot parse C type: `int *`
-// Warning (*ast.FunctionDecl): {prefix: n:GuiTextBox,t1:_Bool (Rectangle, char *, int, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:540 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTextBox`. cannot parse C type: `_Bool`
-// Warning (*ast.FunctionDecl): {prefix: n:GuiTextBoxMulti,t1:_Bool (Rectangle, char *, int, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:541 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTextBoxMulti`. cannot parse C type: `_Bool`
 func Slider(bounds rl.Rectangle, textLeft string, textRight string, value float32, minValue float32, maxValue float32) float32 {
 	var cbounds C.struct_Rectangle
 	cbounds.x = C.float(bounds.X)
@@ -902,8 +879,6 @@ func Grid(bounds rl.Rectangle, text string, spacing float32, subdivs int32) rl.V
 // Advance controls set
 
 // List View control, returns selected list item index
-// Warning (*ast.FunctionDecl): {prefix: n:GuiListView,t1:int (Rectangle, const char *, int *, int),t2:}.  C4GO/tests/raylib/raygui.h:550 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiListView`. cannot parse C type: `int *`
-
 // List View control
 func ListView(bounds rl.Rectangle, text string, scrollIndex *int32, active int32) int32 {
 	var cbounds C.struct_Rectangle
@@ -925,9 +900,6 @@ func ListView(bounds rl.Rectangle, text string, scrollIndex *int32, active int32
 	return int32(C.GuiListView(cbounds, ctext, &cscrollIndex, cactive))
 }
 
-// List View with extended parameters
-// Warning (*ast.FunctionDecl): {prefix: n:GuiListViewEx,t1:int (Rectangle, const char **, int, int *, int *, int),t2:}.  C4GO/tests/raylib/raygui.h:551 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiListViewEx`. cannot parse C type: `const char **`
-
 // Message Box control, displays a message
 func MessageBox(bounds rl.Rectangle, title string, message string, buttons string) int32 {
 	var cbounds C.struct_Rectangle
@@ -945,9 +917,7 @@ func MessageBox(bounds rl.Rectangle, title string, message string, buttons strin
 }
 
 // GuiColorPicker - transpiled function from  C4GO/tests/raylib/raygui.h:554
-// Text Input Box control, ask for text, supports secret
 // rl.Color Picker control (multiple color controls)
-// Warning (*ast.FunctionDecl): {prefix: n:GuiTextInputBox,t1:int (Rectangle, const char *, const char *, const char *, char *, int, int *),t2:}.  C4GO/tests/raylib/raygui.h:553 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTextInputBox`. cannot parse C type: `int *`
 func ColorPicker(bounds rl.Rectangle, text string, color rl.Color) rl.Color {
 	var cbounds C.struct_Rectangle
 	cbounds.width = C.float(bounds.Width)
@@ -1031,12 +1001,14 @@ func LoadStyle(fileName string) {
 	C.GuiLoadStyle(cfileName)
 }
 
+// TODO
 // GuiLoadStyleDefault - transpiled function from  C4GO/tests/raylib/raygui.h:561
 // Load style default over global style
 func LoadStyleDefault() {
 	C.GuiLoadStyleDefault()
 }
 
+// TODO
 // GuiIconText - transpiled function from  C4GO/tests/raylib/raygui.h:564
 // Icons functionality
 // Get text with icon id prepended (if supported)
@@ -1047,8 +1019,40 @@ func LoadStyleDefault() {
 // 	return C.GuiIconText(ciconId, ctext)
 // }
 
+// TODO
 // GuiGetIcons - transpiled function from  C4GO/tests/raylib/raygui.h:567
 // Get raygui icons data pointer
 // func GetIcons() []uint32 {
 // 	return C.GuiGetIcons()
 // }
+
+// Text Input Box control, ask for text, supports secret
+// Warning (*ast.FunctionDecl): {prefix: n:GuiTextInputBox,t1:int (Rectangle, const char *, const char *, const char *, char *, int, int *),t2:}.  C4GO/tests/raylib/raygui.h:553 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTextInputBox`. cannot parse C type: `int *`
+
+// List View with extended parameters
+// Warning (*ast.FunctionDecl): {prefix: n:GuiListViewEx,t1:int (Rectangle, const char **, int, int *, int *, int),t2:}.  C4GO/tests/raylib/raygui.h:551 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiListViewEx`. cannot parse C type: `const char **`
+
+// Warning (*ast.FunctionDecl): {prefix: n:GuiValueBox,t1:_Bool (Rectangle, const char *, int *, int, int, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:539 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiValueBox`. cannot parse C type: `int *`
+
+// Warning (*ast.FunctionDecl): {prefix: n:GuiTextBox,t1:_Bool (Rectangle, char *, int, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:540 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTextBox`. cannot parse C type: `_Bool`
+
+// Warning (*ast.FunctionDecl): {prefix: n:GuiTextBoxMulti,t1:_Bool (Rectangle, char *, int, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:541 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTextBoxMulti`. cannot parse C type: `_Bool`
+
+// Dropdown Box control, returns selected item
+// Warning (*ast.FunctionDecl): {prefix: n:GuiDropdownBox,t1:_Bool (Rectangle, const char *, int *, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:537 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiDropdownBox`. cannot parse C type: `int *`
+
+// Check Box control, returns true when active
+// Warning (*ast.FunctionDecl): {prefix: n:GuiCheckBox,t1:_Bool (Rectangle, const char *, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:535 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiCheckBox`. cannot parse C type: `_Bool`
+
+// Tab Bar control, returns TAB to be closed or -1
+// Warning (*ast.FunctionDecl): {prefix: n:GuiTabBar,t1:int (Rectangle, const char **, int, int *),t2:}.  C4GO/tests/raylib/raygui.h:526 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTabBar`. cannot parse C type: `const char **`
+
+// Warning (*ast.FunctionDecl): {prefix: n:SetAudioStreamCallback,t1:void (AudioStream, AudioCallback),t2:}.  C4GO/tests/raylib/raylib.h:1567 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `SetAudioStreamCallback`. field type is pointer: `rAudioBuffer *`
+
+// Warning (*ast.FunctionDecl): {prefix: n:AttachAudioStreamProcessor,t1:void (AudioStream, AudioCallback),t2:}.  C4GO/tests/raylib/raylib.h:1569 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `AttachAudioStreamProcessor`. field type is pointer: `rAudioBuffer *`
+
+// Warning (*ast.FunctionDecl): {prefix: n:DetachAudioStreamProcessor,t1:void (AudioStream, AudioCallback),t2:}.  C4GO/tests/raylib/raylib.h:1570 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `DetachAudioStreamProcessor`. field type is pointer: `rAudioBuffer *`
+
+// Warning (*ast.FunctionDecl): {prefix: n:GuiSetFont,t1:void (Font),t2:}.  C4GO/tests/raylib/raygui.h:514 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiSetFont`. field type is pointer: `Rectangle *`
+
+// Warning (*ast.FunctionDecl): {prefix: n:GuiGetFont,t1:Font (void),t2:}.  C4GO/tests/raylib/raygui.h:515 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiGetFont`. field type is pointer: `Rectangle *`
