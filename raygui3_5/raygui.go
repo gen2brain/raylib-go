@@ -10,7 +10,7 @@ import "C"
 import (
 	"unsafe"
 
-	rl "github.com/Konstantin8105/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 const (

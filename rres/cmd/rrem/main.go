@@ -29,7 +29,7 @@ import (
 	"github.com/jteeuwen/go-bindata"
 	"github.com/moutend/go-wav"
 
-	"github.com/Konstantin8105/raylib-go/rres"
+	"github.com/gen2brain/raylib-go/rres"
 )
 
 func init() {

@@ -8,7 +8,7 @@ import (
 	"math/rand"
 	"time"
 
-	rl "github.com/Konstantin8105/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 // ShapeType type

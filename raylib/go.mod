@@ -1,3 +1,3 @@
-module github.com/Konstantin8105/raylib-go/raylib
+module github.com/gen2brain/raylib-go/raylib
 
 go 1.16
