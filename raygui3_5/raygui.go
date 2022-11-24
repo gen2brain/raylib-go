@@ -8,6 +8,7 @@ package raygui3_5
 import "C"
 
 import (
+	"strings"
 	"unsafe"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
@@ -1040,14 +1041,20 @@ func ValueBox(bounds rl.Rectangle, text string, value *int32, minValue, maxValue
 
 // Text Box control, updates input text
 // NOTE 2: Returns if KEY_ENTER pressed (useful for data validation)
-func TextBox(bounds rl.Rectangle , text string, textSize int, editMode bool) bool {
+func TextBox(bounds rl.Rectangle, text *string, textSize int, editMode bool) bool {
 	var cbounds C.struct_Rectangle
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+
+	bs := []byte(*text)
+	bs = append(bs, byte(0)) // for next input symbol
+	ctext := (*C.char)(unsafe.Pointer(&bs[0]))
+	defer func() {
+		*text = strings.TrimSpace(string(bs))
+		// no need : C.free(unsafe.Pointer(ctext))
+	}()
 
 	ctextSize := C.int(textSize)
 	ceditMode := C.bool(editMode)
@@ -1093,7 +1100,6 @@ func IconText(iconId int32, text string) string {
 
 // List View with extended parameters
 // Warning (*ast.FunctionDecl): {prefix: n:GuiListViewEx,t1:int (Rectangle, const char **, int, int *, int *, int),t2:}.  C4GO/tests/raylib/raygui.h:551 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiListViewEx`. cannot parse C type: `const char **`
-
 
 // Warning (*ast.FunctionDecl): {prefix: n:GuiTextBoxMulti,t1:_Bool (Rectangle, char *, int, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:541 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTextBoxMulti`. cannot parse C type: `_Bool`
 

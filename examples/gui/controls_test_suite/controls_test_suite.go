@@ -173,7 +173,7 @@ func main() {
 			valueBoxEditMode = !valueBoxEditMode
 		}
 		gui.SetStyle(gui.TEXTBOX, gui.TEXT_ALIGNMENT, gui.TEXT_ALIGN_LEFT)
-		if gui.TextBox(rl.Rectangle{25, 215, 125, 30}, textBoxText, 64, textBoxEditMode) {
+		if gui.TextBox(rl.Rectangle{25, 215, 125, 30}, &textBoxText, 64, textBoxEditMode) {
 			textBoxEditMode = !textBoxEditMode
 		}
 
