@@ -8,5 +8,4 @@ require (
 )
 
 replace github.com/gen2brain/raylib-go/raylib => ../../../raylib
-
-replace github.com/gen2brain/raylib-go/raygui => ../../../raygui3_5
+replace github.com/gen2brain/raylib-go/raygui => ../../../raygui

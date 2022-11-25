@@ -1,4 +1,4 @@
-package raygui3_5
+package raygui
 
 /*
 #include <stdlib.h>
