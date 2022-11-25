@@ -1208,8 +1208,31 @@ func ListViewEx(bounds rl.Rectangle, text []string, focus, scrollIndex *int32, a
 	return int32(C.GuiListViewEx(cbounds, &ctext[0], count, &cfocus, &cscrollIndex, cactive))
 }
 
-// Tab Bar control, returns TAB to be closed or -1
-// Warning (*ast.FunctionDecl): {prefix: n:GuiTabBar,t1:int (Rectangle, const char **, int, int *),t2:}.  C4GO/tests/raylib/raygui.h:526 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTabBar`. cannot parse C type: `const char **`
+// Tab Bar control
+// NOTE: Using GuiToggle() for the TABS
+func TabBar(bounds rl.Rectangle, text []string, active *int) int32 {
+	// int GuiTabBar(Rectangle bounds, const char **text, int count, int *active)
+
+	var cbounds C.struct_Rectangle
+	cbounds.x = C.float(bounds.X)
+	cbounds.y = C.float(bounds.Y)
+	cbounds.width = C.float(bounds.Width)
+	cbounds.height = C.float(bounds.Height)
+
+	ctext := make([]C.CString, len(text))
+	for i := range text {
+		ctext[i] = C.CString(text[i])
+		defer C.free(unsafe.Pointer(ctext[i]))
+	}
+
+	count := C.int(len(text))
+
+	cactive := C.int(*active)
+	defer func() {
+		*active = int32(cactive)
+	}()
+	return int32(C.TabBar(cbounds, &ctext[0], count, &cactive))
+}
 
 // Warning (*ast.FunctionDecl): {prefix: n:SetAudioStreamCallback,t1:void (AudioStream, AudioCallback),t2:}.  C4GO/tests/raylib/raylib.h:1567 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `SetAudioStreamCallback`. field type is pointer: `rAudioBuffer *`
 
