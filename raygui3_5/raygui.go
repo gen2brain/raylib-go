@@ -1175,8 +1175,38 @@ func CheckBox(bounds rl.Rectangle, text string, checked bool) bool {
 	return bool(C.GuiCheckBox(cbounds, ctext, cchecked))
 }
 
-// List View with extended parameters
-// Warning (*ast.FunctionDecl): {prefix: n:GuiListViewEx,t1:int (Rectangle, const char **, int, int *, int *, int),t2:}.  C4GO/tests/raylib/raygui.h:551 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiListViewEx`. cannot parse C type: `const char **`
+// List View control with extended parameters
+func ListViewEx(bounds rl.Rectangle, text []string, focus, scrollIndex *int32, active int32) int32 {
+	// int GuiListViewEx(Rectangle bounds, const char **text, int count, int *focus, int *scrollIndex, int active)
+
+	var cbounds C.struct_Rectangle
+	cbounds.x = C.float(bounds.X)
+	cbounds.y = C.float(bounds.Y)
+	cbounds.width = C.float(bounds.Width)
+	cbounds.height = C.float(bounds.Height)
+
+	ctext := make([]C.CString, len(text))
+	for i := range text {
+		ctext[i] = C.CString(text[i])
+		defer C.free(unsafe.Pointer(ctext[i]))
+	}
+
+	count := C.int(len(text))
+
+	cfocus := C.int(*focus)
+	defer func() {
+		*focus = int32(cfocus)
+	}()
+
+	cscrollIndex := C.int(*scrollIndex)
+	defer func() {
+		*scrollIndex = int32(cscrollIndex)
+	}()
+
+	cactive := C.int(active)
+
+	return int32(C.GuiListViewEx(cbounds, &ctext[0], count, &cfocus, &cscrollIndex, cactive))
+}
 
 // Tab Bar control, returns TAB to be closed or -1
 // Warning (*ast.FunctionDecl): {prefix: n:GuiTabBar,t1:int (Rectangle, const char **, int, int *),t2:}.  C4GO/tests/raylib/raygui.h:526 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTabBar`. cannot parse C type: `const char **`
