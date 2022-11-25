@@ -1099,7 +1099,6 @@ func IconText(iconId int32, text string) string {
 
 // Text Input Box control, ask for text
 func TextInputBox(bounds rl.Rectangle, title, message, buttons string, text *string, textMaxSize int32, secretViewActive *int32) int32 {
-
 	var cbounds C.struct_Rectangle
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
