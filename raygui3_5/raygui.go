@@ -1135,10 +1135,32 @@ func TextInputBox(bounds rl.Rectangle, title, message, buttons string, text *str
 	return int32(C.TextInputBox(cbounds, ctitle, cmessage, cbuttons, &ctext, textMaxSize, &csecretViewActive))
 }
 
+// Text Box control with multiple lines
+func TextBoxMulti(bounds rl.Rectangle, text *string, textSize int32, editMode bool) bool {
+	var cbounds C.struct_Rectangle
+	cbounds.x = C.float(bounds.X)
+	cbounds.y = C.float(bounds.Y)
+	cbounds.width = C.float(bounds.Width)
+	cbounds.height = C.float(bounds.Height)
+
+	bs := []byte(*text)
+	if 0 < len(bs) && bs[len(bs)-1] != byte(0) { // minimalize allocation
+		bs = append(bs, byte(0)) // for next input symbols
+	}
+	ctext := (*C.char)(unsafe.Pointer(&bs[0]))
+	defer func() {
+		*text = strings.TrimSpace(string(bs))
+		// no need : C.free(unsafe.Pointer(ctext))
+	}()
+
+	ctextSize := (C.int)(textSize)
+	ceditMode := (C.bool)(editMode)
+
+	return bool(C.GuiTextBoxMulti(cbounds, &ctext, ctextSize, ceditMode))
+}
+
 // List View with extended parameters
 // Warning (*ast.FunctionDecl): {prefix: n:GuiListViewEx,t1:int (Rectangle, const char **, int, int *, int *, int),t2:}.  C4GO/tests/raylib/raygui.h:551 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiListViewEx`. cannot parse C type: `const char **`
-
-// Warning (*ast.FunctionDecl): {prefix: n:GuiTextBoxMulti,t1:_Bool (Rectangle, char *, int, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:541 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTextBoxMulti`. cannot parse C type: `_Bool`
 
 // Check Box control, returns true when active
 // Warning (*ast.FunctionDecl): {prefix: n:GuiCheckBox,t1:_Bool (Rectangle, const char *, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:535 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiCheckBox`. cannot parse C type: `_Bool`
