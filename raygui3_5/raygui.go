@@ -1159,11 +1159,24 @@ func TextBoxMulti(bounds rl.Rectangle, text *string, textSize int32, editMode bo
 	return bool(C.GuiTextBoxMulti(cbounds, &ctext, ctextSize, ceditMode))
 }
 
+// Check Box control, returns true when active
+func CheckBox(bounds rl.Rectangle, text string, checked bool) bool {
+	var cbounds C.struct_Rectangle
+	cbounds.x = C.float(bounds.X)
+	cbounds.y = C.float(bounds.Y)
+	cbounds.width = C.float(bounds.Width)
+	cbounds.height = C.float(bounds.Height)
+
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+
+	cchecked := C.bool(checked)
+
+	return bool(C.GuiCheckBox(cbounds, ctext, cchecked))
+}
+
 // List View with extended parameters
 // Warning (*ast.FunctionDecl): {prefix: n:GuiListViewEx,t1:int (Rectangle, const char **, int, int *, int *, int),t2:}.  C4GO/tests/raylib/raygui.h:551 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiListViewEx`. cannot parse C type: `const char **`
-
-// Check Box control, returns true when active
-// Warning (*ast.FunctionDecl): {prefix: n:GuiCheckBox,t1:_Bool (Rectangle, const char *, _Bool),t2:}.  C4GO/tests/raylib/raygui.h:535 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiCheckBox`. cannot parse C type: `_Bool`
 
 // Tab Bar control, returns TAB to be closed or -1
 // Warning (*ast.FunctionDecl): {prefix: n:GuiTabBar,t1:int (Rectangle, const char **, int, int *),t2:}.  C4GO/tests/raylib/raygui.h:526 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTabBar`. cannot parse C type: `const char **`
