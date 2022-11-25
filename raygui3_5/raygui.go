@@ -1,8 +1,8 @@
 package raygui3_5
 
 /*
-#cgo CFLAGS: -DRAYGUI_IMPLEMENTATION
-#include "../raylib/raygui.h"
+#cgo CFLAGS: -DRAYGUI_IMPLEMENTATION -I../raylib/
+#include "raygui.h"
 #include <stdlib.h>
 */
 import "C"
