@@ -1049,7 +1049,9 @@ func TextBox(bounds rl.Rectangle, text *string, textSize int, editMode bool) boo
 	cbounds.height = C.float(bounds.Height)
 
 	bs := []byte(*text)
-	bs = append(bs, byte(0)) // for next input symbol
+	if 0 < len(bs) && bs[len(bs)-1] != byte(0) { // minimalize allocation
+		bs = append(bs, byte(0)) // for next input symbols
+	}
 	ctext := (*C.char)(unsafe.Pointer(&bs[0]))
 	defer func() {
 		*text = strings.TrimSpace(string(bs))
@@ -1095,8 +1097,44 @@ func IconText(iconId int32, text string) string {
 // 	return C.GuiGetIcons()
 // }
 
-// Text Input Box control, ask for text, supports secret
-// Warning (*ast.FunctionDecl): {prefix: n:GuiTextInputBox,t1:int (Rectangle, const char *, const char *, const char *, char *, int, int *),t2:}.  C4GO/tests/raylib/raygui.h:553 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiTextInputBox`. cannot parse C type: `int *`
+// Text Input Box control, ask for text
+func TextInputBox(bounds rl.Rectangle, title, message, buttons string, text *string, textMaxSize int32, secretViewActive *int32) int32 {
+
+	var cbounds C.struct_Rectangle
+	cbounds.x = C.float(bounds.X)
+	cbounds.y = C.float(bounds.Y)
+	cbounds.width = C.float(bounds.Width)
+	cbounds.height = C.float(bounds.Height)
+
+	ctitle := C.CString(title)
+	defer C.free(unsafe.Pointer(ctitle))
+
+	cmessage := C.CString(message)
+	defer C.free(unsafe.Pointer(cmessage))
+
+	cbuttons := C.CString(buttons)
+	defer C.free(unsafe.Pointer(cbuttons))
+
+	bs := []byte(*text)
+	if 0 < len(bs) && bs[len(bs)-1] != byte(0) { // minimalize allocation
+		bs = append(bs, byte(0)) // for next input symbols
+	}
+	ctext := (*C.char)(unsafe.Pointer(&bs[0]))
+	defer func() {
+		*text = strings.TrimSpace(string(bs))
+		// no need : C.free(unsafe.Pointer(ctext))
+	}()
+
+	ctextMaxSize := C.int(textMaxSize)
+
+	var csecretViewActive C.int
+	csecretViewActive = C.int(*secretViewActive)
+	defer func() {
+		*secretViewActive = int32(csecretViewActive)
+	}()
+
+	return int32(C.TextInputBox(cbounds, ctitle, cmessage, cbuttons, &ctext, textMaxSize, &csecretViewActive))
+}
 
 // List View with extended parameters
 // Warning (*ast.FunctionDecl): {prefix: n:GuiListViewEx,t1:int (Rectangle, const char **, int, int *, int *, int),t2:}.  C4GO/tests/raylib/raygui.h:551 :cannot transpileFunctionDecl. cannot bindingFunctionDecl func `GuiListViewEx`. cannot parse C type: `const char **`
