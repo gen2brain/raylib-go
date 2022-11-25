@@ -81,13 +81,13 @@ func main() {
 		listViewScrollIndex int32 = 0
 		listViewActive      int32 = -1
 
-		//TODO listViewExScrollIndex int32 = 0
-		//TODO listViewExActive      int32 = 2
-		//TODO listViewExFocus       int32 = -1
-		//TODO listViewExList            = [8]string{"This", "is", "a", "list view", "with", "disable", "elements", "amazing!"}
+		listViewExScrollIndex int32 = 0
+		listViewExActive      int32 = 2
+		listViewExFocus       int32 = -1
+		listViewExList              = []string{"This", "is", "a", "list view", "with", "disable", "elements", "amazing!"}
 
-	// TODO multiTextBoxText          = "Multi text box"
-	// TODO multiTextBoxEditMode bool = false
+		multiTextBoxText          = "Multi text box"
+		multiTextBoxEditMode bool = false
 		colorPickerValue          = rl.Red
 
 		sliderValue    float32 = 50
@@ -102,7 +102,7 @@ func main() {
 
 		toggleGroupActive int32 = 0
 
-		//TODO viewScroll = rl.Vector2{0, 0}
+		// TODO viewScroll = rl.Vector2{0, 0}
 
 		//----------------------------------------------------------------------------------
 
@@ -113,7 +113,7 @@ func main() {
 		exitWindow     bool = false
 		showMessageBox bool = false
 
-		// TODO textInput        string
+		textInput        string
 		showTextInputBox bool = false
 
 		// TODO textInputFileName string
@@ -136,13 +136,13 @@ func main() {
 			showTextInputBox = true
 		}
 
-		if rl.IsFileDropped() {
-			// TODO var droppedFiles gui.FilePathList = rl.LoadDroppedFiles()
-			// TODO if (droppedFiles.count > 0) && rl.IsFileExtension(droppedFiles.paths[0], ".rgs") {
-			// TODO 	gui.LoadStyle(droppedFiles.paths[0])
-			// TODO }
-			// TODO rl.UnloadDroppedFiles(droppedFiles) // Clear internal buffers
-		}
+		// TODO if rl.IsFileDropped() {
+		// TODO var droppedFiles gui.FilePathList = rl.LoadDroppedFiles()
+		// TODO if (droppedFiles.count > 0) && rl.IsFileExtension(droppedFiles.paths[0], ".rgs") {
+		// TODO 	gui.LoadStyle(droppedFiles.paths[0])
+		// TODO }
+		// TODO rl.UnloadDroppedFiles(droppedFiles) // Clear internal buffers
+		// TODO }
 		//----------------------------------------------------------------------------------
 
 		// Draw
@@ -179,9 +179,9 @@ func main() {
 
 		gui.SetStyle(gui.BUTTON, gui.TEXT_ALIGNMENT, gui.TEXT_ALIGN_CENTER)
 
-		// TODO if gui.Button(rl.Rectangle{25, 255, 125, 30}, gui.IconText(gui.ICON_FILE_SAVE, "Save File")) {
-		// TODO 	showTextInputBox = true
-		// TODO }
+		if gui.Button(rl.Rectangle{25, 255, 125, 30}, gui.IconText(gui.ICON_FILE_SAVE, "Save File")) {
+			showTextInputBox = true
+		}
 
 		gui.GroupBox(rl.Rectangle{25, 310, 125, 150}, "STATES")
 		//GuiLock();
@@ -215,14 +215,14 @@ func main() {
 
 		// Second GUI column
 		listViewActive = gui.ListView(rl.Rectangle{165, 25, 140, 140}, "Charmander;Bulbasaur;#18#Squirtel;Pikachu;Eevee;Pidgey", &listViewScrollIndex, listViewActive)
-		//TODO listViewExActive = gui.ListViewEx(rl.Rectangle{165, 180, 140, 200}, listViewExList, 8, &listViewExFocus, &listViewExScrollIndex, listViewExActive)
+		listViewExActive = gui.ListViewEx(rl.Rectangle{165, 180, 140, 200}, listViewExList, &listViewExFocus, &listViewExScrollIndex, listViewExActive)
 
 		toggleGroupActive = gui.ToggleGroup(rl.Rectangle{165, 400, 140, 25}, "#1#ONE\n#3#TWO\n#8#THREE\n#23#", toggleGroupActive)
 
 		// Third GUI column
-	// TODO if gui.TextBoxMulti(rl.Rectangle{320, 25, 225, 140}, multiTextBoxText, 256, multiTextBoxEditMode) {
-	// TODO 	multiTextBoxEditMode = !multiTextBoxEditMode
-	// TODO }
+		if gui.TextBoxMulti(rl.Rectangle{320, 25, 225, 140}, &multiTextBoxText, 256, multiTextBoxEditMode) {
+			multiTextBoxEditMode = !multiTextBoxEditMode
+		}
 		colorPickerValue = gui.ColorPicker(rl.Rectangle{320, 185, 196, 192}, "", colorPickerValue)
 
 		sliderValue = gui.Slider(rl.Rectangle{355, 400, 165, 20}, "TEST",
@@ -244,28 +244,34 @@ func main() {
 
 		if showMessageBox {
 			rl.DrawRectangle(0, 0, int32(rl.GetScreenWidth()), int32(rl.GetScreenHeight()), rl.Fade(rl.RayWhite, 0.8))
-		// TODO var result int32 = gui.MessageBox(rl.Rectangle{float32(rl.GetScreenWidth())/2 - 125, float32(rl.GetScreenHeight())/2 - 50, 250, 100}, gui.IconText(gui.ICON_EXIT, "Close Window"), "Do you really want to exit?", "Yes;No")
+			var result int32 = gui.MessageBox(rl.Rectangle{float32(rl.GetScreenWidth())/2 - 125, float32(rl.GetScreenHeight())/2 - 50, 250, 100}, gui.IconText(gui.ICON_EXIT, "Close Window"), "Do you really want to exit?", "Yes;No")
 
-		// TODO if (result == 0) || (result == 2) {
-		// TODO 	showMessageBox = false
-		// TODO } else if result == 1 {
-		// TODO 	exitWindow = true
-		// TODO }
+			if (result == 0) || (result == 2) {
+				showMessageBox = false
+			} else if result == 1 {
+				exitWindow = true
+			}
 		}
 
 		if showTextInputBox {
 			rl.DrawRectangle(0, 0, int32(rl.GetScreenWidth()), int32(rl.GetScreenHeight()), rl.Fade(rl.RayWhite, 0.8))
-			//TODO var result int = gui.TextInputBox(rl.Rectangle{float32(rl.GetScreenWidth())/2 - 120, float32(rl.GetScreenHeight())/2 - 60, 240, 140}, "Save", gui.IconText(gui.ICON_FILE_SAVE, "Save file as..."), "Ok;Cancel", textInput, 255, "")
-			// TODO if result == 1 {
-			// TODO 	// TODO: Validate textInput value and save
-			// TODO 	// strcpy(textInputFileName, textInput)
-			// TODO 	textInputFileName = textInput
-			// TODO }
-			// TODO if (result == 0) || (result == 1) || (result == 2) {
-			// TODO 	showTextInputBox = false
-			// TODO 	//strcpy(textInput, "\0");
-			// TODO 	textInput = ""
-			// TODO }
+			var result int32 = gui.TextInputBox(
+				rl.Rectangle{float32(rl.GetScreenWidth())/2 - 120, float32(rl.GetScreenHeight())/2 - 60, 240, 140},
+				"Save",
+				gui.IconText(gui.ICON_FILE_SAVE, "Save file as..."),
+				"Ok;Cancel",
+				&textInput, 255, nil)
+
+			if result == 1 {
+				// TODO: Validate textInput value and save
+				// strcpy(textInputFileName, textInput)
+				// TODO textInputFileName = textInput
+			}
+			if (result == 0) || (result == 1) || (result == 2) {
+				showTextInputBox = false
+				//strcpy(textInput, "\0");
+				textInput = ""
+			}
 		}
 		//----------------------------------------------------------------------------------
 
