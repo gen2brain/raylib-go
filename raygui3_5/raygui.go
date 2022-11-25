@@ -752,11 +752,6 @@ func ComboBox(bounds rl.Rectangle, text string, active int32) int32 {
 
 // GuiSlider - transpiled function from  C4GO/tests/raylib/raygui.h:542
 // Spinner control, returns selected value
-// Value Box control, updates input text with numbers
-// Text Box control, updates input text
-// Text Box control with multiple lines
-// Slider control, returns selected value
-// Spinner control, returns selected value
 func Spinner(bounds rl.Rectangle, text string, value *int32, minValue, maxValue int, editMode bool) bool {
 	var cbounds C.struct_Rectangle
 	cbounds.x = C.float(bounds.X)
@@ -1057,9 +1052,12 @@ func TextBox(bounds rl.Rectangle, text *string, textSize int, editMode bool) boo
 	cbounds.height = C.float(bounds.Height)
 
 	bs := []byte(*text)
-	if 0 < len(bs) && bs[len(bs)-1] != byte(0) { // minimalize allocation
-		bs = append(bs, byte(0)) // for next input symbols
+	if len(bs) == 0 {
+		bs = []byte{byte(0)}
 	}
+	//if 0 < len(bs) && bs[len(bs)-1] != byte(0) { // minimalize allocation
+		bs = append(bs, byte(0)) // for next input symbols
+	//}
 	ctext := (*C.char)(unsafe.Pointer(&bs[0]))
 	defer func() {
 		*text = strings.TrimSpace(string(bs))
