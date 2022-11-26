@@ -1,5 +1,5 @@
 /*
-Package rl - Go bindings for raylib, a simple and easy-to-use library to learn videogames programming.
+Package raylib - Go bindings for raylib, a simple and easy-to-use library to learn videogames programming.
 
 raylib is highly inspired by Borland BGI graphics lib and by XNA framework.
 
