@@ -60,7 +60,7 @@ func Vector2Negate(v Vector2) Vector2 {
 	return NewVector2(-v.X, -v.Y)
 }
 
-// Vector2Divide - Divide vector by vector
+// Vector2DivideV - Divide vector by vector
 func Vector2DivideV(v1, v2 Vector2) Vector2 {
 	return NewVector2(v1.X/v2.X, v1.Y/v2.Y)
 }
