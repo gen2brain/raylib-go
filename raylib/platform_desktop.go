@@ -27,7 +27,6 @@ func InitWindow(width int32, height int32, title string) {
 
 // SetCallbackFunc - Sets callback function
 func SetCallbackFunc(func()) {
-	return
 }
 
 // ShowCursor - Shows cursor
@@ -87,7 +86,6 @@ func LoadDroppedFiles() []string {
 
 // UnloadDroppedFiles - Unload dropped filepaths
 func UnloadDroppedFiles() {
-	return
 }
 
 // OpenAsset - Open asset

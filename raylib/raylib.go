@@ -848,7 +848,7 @@ type MaterialMap struct {
 	Value float32
 }
 
-// Model, meshes, materials and animation data
+// Model is struct of model, meshes, materials and animation data
 type Model struct {
 	// Local transform matrix
 	Transform     Matrix
@@ -1195,6 +1195,7 @@ func newRenderTexture2DFromPointer(ptr unsafe.Pointer) RenderTexture2D {
 	return *(*RenderTexture2D)(ptr)
 }
 
+// TraceLogLevel parameter of trace log message
 type TraceLogLevel int
 
 // Trace log level

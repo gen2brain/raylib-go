@@ -60,7 +60,7 @@ func Vector2Negate(v Vector2) Vector2 {
 	return NewVector2(-v.X, -v.Y)
 }
 
-// Vector2Divide - Divide vector by vector
+// Vector2DivideV - Divide vector by vector
 func Vector2DivideV(v1, v2 Vector2) Vector2 {
 	return NewVector2(v1.X/v2.X, v1.Y/v2.Y)
 }
@@ -174,8 +174,6 @@ func Vector3CrossProduct(v1, v2 Vector3) Vector3 {
 
 // Vector3Perpendicular - Calculate one vector perpendicular vector
 func Vector3Perpendicular(v Vector3) Vector3 {
-	result := Vector3{}
-
 	min := math.Abs(float64(v.X))
 	cardinalAxis := NewVector3(1.0, 0.0, 0.0)
 
@@ -188,7 +186,7 @@ func Vector3Perpendicular(v Vector3) Vector3 {
 		cardinalAxis = NewVector3(0.0, 0.0, 1.0)
 	}
 
-	result = Vector3CrossProduct(v, cardinalAxis)
+	result := Vector3CrossProduct(v, cardinalAxis)
 
 	return result
 }
