@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 
-	rl  "github.com/gen2brain/raylib-go/raylib"
-	gui  "github.com/gen2brain/raylib-go/raygui"
+	gui "github.com/gen2brain/raylib-go/raygui"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
+
+var exit_key = false
 
 func main() {
 	rl.InitWindow(800, 450, "raygui - button")
@@ -14,7 +16,7 @@ func main() {
 
 	var button bool
 
-	for !rl.WindowShouldClose() {
+	for !(rl.WindowShouldClose() || exit_key) {
 		rl.BeginDrawing()
 
 		rl.ClearBackground(rl.Black)

@@ -21,3 +21,9 @@ jobs:
     - name: Build
       run: go build ./...
       working-directory: raylib
+    - name: Install gocovmerge
+      run: go install github.com/wadey/gocovmerge@latest
+      working-directory: .
+    - name: Coverage without view the results
+      run: go run coverage.go
+      working-directory: .

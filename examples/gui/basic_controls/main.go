@@ -8,6 +8,8 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
+var exit_key = false
+
 func main() {
 	screenWidth := int32(800)
 	screenHeight := int32(450)
@@ -38,7 +40,7 @@ func main() {
 
 	rl.SetTargetFPS(60)
 
-	for !rl.WindowShouldClose() {
+	for !(rl.WindowShouldClose() || exit_key) {
 		if buttonClicked {
 			progressValue += 0.1
 			if progressValue >= 1.1 {

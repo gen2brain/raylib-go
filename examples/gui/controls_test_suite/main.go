@@ -7,6 +7,8 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
+var exit_key = false
+
 /*******************************************************************************************
 *
 *   raygui - controls test suite
@@ -123,7 +125,7 @@ func main() {
 	//--------------------------------------------------------------------------------------
 
 	// Main game loop
-	for !exitWindow { // Detect window close button or ESC key
+	for !(exitWindow || exit_key) { // Detect window close button or ESC key
 		// Update
 		//----------------------------------------------------------------------------------
 		exitWindow = rl.WindowShouldClose()
@@ -228,7 +230,7 @@ func main() {
 		sliderValue = gui.Slider(rl.Rectangle{355, 400, 165, 20}, "TEST",
 			fmt.Sprintf("%2.2f", sliderValue), sliderValue, -50, 100)
 		sliderBarValue = gui.SliderBar(rl.Rectangle{320, 430, 200, 20}, "",
-			fmt.Sprint("%d", sliderBarValue), sliderBarValue, 0, 100)
+			fmt.Sprintf("%2.2f", sliderBarValue), sliderBarValue, 0, 100)
 		progressValue = gui.ProgressBar(rl.Rectangle{320, 460, 200, 20}, "", "", progressValue, 0, 1)
 
 		// NOTE: View rectangle could be used to perform some scissor test

@@ -24,6 +24,8 @@ import (
 *
 **********************************************************************************************/
 
+var exit_key = false
+
 //------------------------------------------------------------------------------------
 // Program main entry point
 //------------------------------------------------------------------------------------
@@ -54,7 +56,7 @@ func main() {
 	//--------------------------------------------------------------------------------------
 
 	// Main game loop
-	for !exitWindow && !rl.WindowShouldClose() { // Detect window close button or ESC key
+	for !(exitWindow || rl.WindowShouldClose() || exit_key) { // Detect window close button or ESC key
 		// Update
 		//----------------------------------------------------------------------------------
 		mousePosition = rl.GetMousePosition()

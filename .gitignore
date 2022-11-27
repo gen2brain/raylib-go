@@ -5,3 +5,5 @@
 
 # Ignore go.sum when go.mod is added.
 go.sum
+**/coverage_test.go
+**/*.coverage
