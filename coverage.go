@@ -128,7 +128,7 @@ func main() {
 	var out []byte
 	out, err = cmd.Output()
 	if err != nil {
-		log.Fatalf("gocovmerge: %v", err)
+		log.Fatalf("gocovmerge: %v\nRun:\ngo install github.com/wadey/gocovmerge@latest", err)
 		return
 	}
 	if err = os.WriteFile("./raygui/"+combineName, []byte(out), 0644); err != nil {
@@ -148,6 +148,8 @@ func main() {
 			log.Fatalf("%v", err)
 			return
 		}
+	} else {
+		fmt.Fprintf(os.Stdout, "if you see the result, then run:\ngo run coverage.go -v\n")
 	}
 }
 
