@@ -463,10 +463,10 @@ type rlRenderBatch struct {
 // OpenGL version
 const (
 	RL_OPENGL_11    int32 = 1
-	RL_OPENGL_21          = 2
-	RL_OPENGL_33          = 3
-	RL_OPENGL_43          = 4
-	RL_OPENGL_ES_20       = 5
+	RL_OPENGL_21    int32 = 2
+	RL_OPENGL_33    int32 = 3
+	RL_OPENGL_43    int32 = 4
+	RL_OPENGL_ES_20 int32 = 5
 )
 
 // rlGlVersion - transpiled function from  GOPATH/src/github.com/Konstantin8105/raylib-go/raylib/rlgl.h:349
@@ -482,13 +482,13 @@ type rlGlVersion = int32
 // NOTE: Organized by priority level
 const (
 	RL_LOG_ALL     int32 = 0
-	RL_LOG_TRACE         = 1
-	RL_LOG_DEBUG         = 2
-	RL_LOG_INFO          = 3
-	RL_LOG_WARNING       = 4
-	RL_LOG_ERROR         = 5
-	RL_LOG_FATAL         = 6
-	RL_LOG_NONE          = 7
+	RL_LOG_TRACE   int32 = 1
+	RL_LOG_DEBUG   int32 = 2
+	RL_LOG_INFO    int32 = 3
+	RL_LOG_WARNING int32 = 4
+	RL_LOG_ERROR   int32 = 5
+	RL_LOG_FATAL   int32 = 6
+	RL_LOG_NONE    int32 = 7
 )
 
 // rlTraceLogLevel - transpiled function from  GOPATH/src/github.com/Konstantin8105/raylib-go/raylib/rlgl.h:359
@@ -507,26 +507,26 @@ type rlTraceLogLevel = int32
 // NOTE: Support depends on OpenGL version
 const (
 	RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE    int32 = 1
-	RL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA         = 2
-	RL_PIXELFORMAT_UNCOMPRESSED_R5G6B5             = 3
-	RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8             = 4
-	RL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1           = 5
-	RL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4           = 6
-	RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8           = 7
-	RL_PIXELFORMAT_UNCOMPRESSED_R32                = 8
-	RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32          = 9
-	RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32       = 10
-	RL_PIXELFORMAT_COMPRESSED_DXT1_RGB             = 11
-	RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA            = 12
-	RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA            = 13
-	RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA            = 14
-	RL_PIXELFORMAT_COMPRESSED_ETC1_RGB             = 15
-	RL_PIXELFORMAT_COMPRESSED_ETC2_RGB             = 16
-	RL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA        = 17
-	RL_PIXELFORMAT_COMPRESSED_PVRT_RGB             = 18
-	RL_PIXELFORMAT_COMPRESSED_PVRT_RGBA            = 19
-	RL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA        = 20
-	RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA        = 21
+	RL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA   int32 = 2
+	RL_PIXELFORMAT_UNCOMPRESSED_R5G6B5       int32 = 3
+	RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8       int32 = 4
+	RL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1     int32 = 5
+	RL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4     int32 = 6
+	RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8     int32 = 7
+	RL_PIXELFORMAT_UNCOMPRESSED_R32          int32 = 8
+	RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32    int32 = 9
+	RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32 int32 = 10
+	RL_PIXELFORMAT_COMPRESSED_DXT1_RGB       int32 = 11
+	RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA      int32 = 12
+	RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA      int32 = 13
+	RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA      int32 = 14
+	RL_PIXELFORMAT_COMPRESSED_ETC1_RGB       int32 = 15
+	RL_PIXELFORMAT_COMPRESSED_ETC2_RGB       int32 = 16
+	RL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA  int32 = 17
+	RL_PIXELFORMAT_COMPRESSED_PVRT_RGB       int32 = 18
+	RL_PIXELFORMAT_COMPRESSED_PVRT_RGBA      int32 = 19
+	RL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA  int32 = 20
+	RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA  int32 = 21
 )
 
 // rlPixelFormat - transpiled function from  GOPATH/src/github.com/Konstantin8105/raylib-go/raylib/rlgl.h:372
@@ -559,11 +559,11 @@ type rlPixelFormat = int32
 // NOTE 2: Filter is accordingly set for minification and magnification
 const (
 	RL_TEXTURE_FILTER_POINT           int32 = 0
-	RL_TEXTURE_FILTER_BILINEAR              = 1
-	RL_TEXTURE_FILTER_TRILINEAR             = 2
-	RL_TEXTURE_FILTER_ANISOTROPIC_4X        = 3
-	RL_TEXTURE_FILTER_ANISOTROPIC_8X        = 4
-	RL_TEXTURE_FILTER_ANISOTROPIC_16X       = 5
+	RL_TEXTURE_FILTER_BILINEAR        int32 = 1
+	RL_TEXTURE_FILTER_TRILINEAR       int32 = 2
+	RL_TEXTURE_FILTER_ANISOTROPIC_4X  int32 = 3
+	RL_TEXTURE_FILTER_ANISOTROPIC_8X  int32 = 4
+	RL_TEXTURE_FILTER_ANISOTROPIC_16X int32 = 5
 )
 
 // rlTextureFilter - transpiled function from  GOPATH/src/github.com/Konstantin8105/raylib-go/raylib/rlgl.h:399
@@ -579,13 +579,13 @@ type rlTextureFilter = int32
 // Color blending modes (pre-defined)
 const (
 	RL_BLEND_ALPHA             int32 = 0
-	RL_BLEND_ADDITIVE                = 1
-	RL_BLEND_MULTIPLIED              = 2
-	RL_BLEND_ADD_COLORS              = 3
-	RL_BLEND_SUBTRACT_COLORS         = 4
-	RL_BLEND_ALPHA_PREMULTIPLY       = 5
-	RL_BLEND_CUSTOM                  = 6
-	RL_BLEND_CUSTOM_SEPARATE         = 7
+	RL_BLEND_ADDITIVE          int32 = 1
+	RL_BLEND_MULTIPLIED        int32 = 2
+	RL_BLEND_ADD_COLORS        int32 = 3
+	RL_BLEND_SUBTRACT_COLORS   int32 = 4
+	RL_BLEND_ALPHA_PREMULTIPLY int32 = 5
+	RL_BLEND_CUSTOM            int32 = 6
+	RL_BLEND_CUSTOM_SEPARATE   int32 = 7
 )
 
 // rlBlendMode - transpiled function from  GOPATH/src/github.com/Konstantin8105/raylib-go/raylib/rlgl.h:409
@@ -603,31 +603,31 @@ type rlBlendMode = int32
 // Shader location point type
 const (
 	RL_SHADER_LOC_VERTEX_POSITION   int32 = 0
-	RL_SHADER_LOC_VERTEX_TEXCOORD01       = 1
-	RL_SHADER_LOC_VERTEX_TEXCOORD02       = 2
-	RL_SHADER_LOC_VERTEX_NORMAL           = 3
-	RL_SHADER_LOC_VERTEX_TANGENT          = 4
-	RL_SHADER_LOC_VERTEX_COLOR            = 5
-	RL_SHADER_LOC_MATRIX_MVP              = 6
-	RL_SHADER_LOC_MATRIX_VIEW             = 7
-	RL_SHADER_LOC_MATRIX_PROJECTION       = 8
-	RL_SHADER_LOC_MATRIX_MODEL            = 9
-	RL_SHADER_LOC_MATRIX_NORMAL           = 10
-	RL_SHADER_LOC_VECTOR_VIEW             = 11
-	RL_SHADER_LOC_COLOR_DIFFUSE           = 12
-	RL_SHADER_LOC_COLOR_SPECULAR          = 13
-	RL_SHADER_LOC_COLOR_AMBIENT           = 14
-	RL_SHADER_LOC_MAP_ALBEDO              = 15
-	RL_SHADER_LOC_MAP_METALNESS           = 16
-	RL_SHADER_LOC_MAP_NORMAL              = 17
-	RL_SHADER_LOC_MAP_ROUGHNESS           = 18
-	RL_SHADER_LOC_MAP_OCCLUSION           = 19
-	RL_SHADER_LOC_MAP_EMISSION            = 20
-	RL_SHADER_LOC_MAP_HEIGHT              = 21
-	RL_SHADER_LOC_MAP_CUBEMAP             = 22
-	RL_SHADER_LOC_MAP_IRRADIANCE          = 23
-	RL_SHADER_LOC_MAP_PREFILTER           = 24
-	RL_SHADER_LOC_MAP_BRDF                = 25
+	RL_SHADER_LOC_VERTEX_TEXCOORD01 int32 = 1
+	RL_SHADER_LOC_VERTEX_TEXCOORD02 int32 = 2
+	RL_SHADER_LOC_VERTEX_NORMAL     int32 = 3
+	RL_SHADER_LOC_VERTEX_TANGENT    int32 = 4
+	RL_SHADER_LOC_VERTEX_COLOR      int32 = 5
+	RL_SHADER_LOC_MATRIX_MVP        int32 = 6
+	RL_SHADER_LOC_MATRIX_VIEW       int32 = 7
+	RL_SHADER_LOC_MATRIX_PROJECTION int32 = 8
+	RL_SHADER_LOC_MATRIX_MODEL      int32 = 9
+	RL_SHADER_LOC_MATRIX_NORMAL     int32 = 10
+	RL_SHADER_LOC_VECTOR_VIEW       int32 = 11
+	RL_SHADER_LOC_COLOR_DIFFUSE     int32 = 12
+	RL_SHADER_LOC_COLOR_SPECULAR    int32 = 13
+	RL_SHADER_LOC_COLOR_AMBIENT     int32 = 14
+	RL_SHADER_LOC_MAP_ALBEDO        int32 = 15
+	RL_SHADER_LOC_MAP_METALNESS     int32 = 16
+	RL_SHADER_LOC_MAP_NORMAL        int32 = 17
+	RL_SHADER_LOC_MAP_ROUGHNESS     int32 = 18
+	RL_SHADER_LOC_MAP_OCCLUSION     int32 = 19
+	RL_SHADER_LOC_MAP_EMISSION      int32 = 20
+	RL_SHADER_LOC_MAP_HEIGHT        int32 = 21
+	RL_SHADER_LOC_MAP_CUBEMAP       int32 = 22
+	RL_SHADER_LOC_MAP_IRRADIANCE    int32 = 23
+	RL_SHADER_LOC_MAP_PREFILTER     int32 = 24
+	RL_SHADER_LOC_MAP_BRDF          int32 = 25
 )
 
 // rlShaderLocationIndex - transpiled function from  GOPATH/src/github.com/Konstantin8105/raylib-go/raylib/rlgl.h:421
@@ -663,14 +663,14 @@ type rlShaderLocationIndex = int32
 // Shader uniform data type
 const (
 	RL_SHADER_UNIFORM_FLOAT     int32 = 0
-	RL_SHADER_UNIFORM_VEC2            = 1
-	RL_SHADER_UNIFORM_VEC3            = 2
-	RL_SHADER_UNIFORM_VEC4            = 3
-	RL_SHADER_UNIFORM_INT             = 4
-	RL_SHADER_UNIFORM_IVEC2           = 5
-	RL_SHADER_UNIFORM_IVEC3           = 6
-	RL_SHADER_UNIFORM_IVEC4           = 7
-	RL_SHADER_UNIFORM_SAMPLER2D       = 8
+	RL_SHADER_UNIFORM_VEC2      int32 = 1
+	RL_SHADER_UNIFORM_VEC3      int32 = 2
+	RL_SHADER_UNIFORM_VEC4      int32 = 3
+	RL_SHADER_UNIFORM_INT       int32 = 4
+	RL_SHADER_UNIFORM_IVEC2     int32 = 5
+	RL_SHADER_UNIFORM_IVEC3     int32 = 6
+	RL_SHADER_UNIFORM_IVEC4     int32 = 7
+	RL_SHADER_UNIFORM_SAMPLER2D int32 = 8
 )
 
 // rlShaderUniformDataType - transpiled function from  GOPATH/src/github.com/Konstantin8105/raylib-go/raylib/rlgl.h:454
@@ -689,9 +689,9 @@ type rlShaderUniformDataType = int32
 // Shader attribute data types
 const (
 	RL_SHADER_ATTRIB_FLOAT int32 = 0
-	RL_SHADER_ATTRIB_VEC2        = 1
-	RL_SHADER_ATTRIB_VEC3        = 2
-	RL_SHADER_ATTRIB_VEC4        = 3
+	RL_SHADER_ATTRIB_VEC2  int32 = 1
+	RL_SHADER_ATTRIB_VEC3  int32 = 2
+	RL_SHADER_ATTRIB_VEC4  int32 = 3
 )
 
 // rlShaderAttributeDataType - transpiled function from  GOPATH/src/github.com/Konstantin8105/raylib-go/raylib/rlgl.h:467
@@ -706,15 +706,15 @@ type rlShaderAttributeDataType = int32
 // NOTE: By default up to 8 color channels defined but it can be more
 const (
 	RL_ATTACHMENT_COLOR_CHANNEL0 int32 = 0
-	RL_ATTACHMENT_COLOR_CHANNEL1       = 1
-	RL_ATTACHMENT_COLOR_CHANNEL2       = 2
-	RL_ATTACHMENT_COLOR_CHANNEL3       = 3
-	RL_ATTACHMENT_COLOR_CHANNEL4       = 4
-	RL_ATTACHMENT_COLOR_CHANNEL5       = 5
-	RL_ATTACHMENT_COLOR_CHANNEL6       = 6
-	RL_ATTACHMENT_COLOR_CHANNEL7       = 7
-	RL_ATTACHMENT_DEPTH                = 100
-	RL_ATTACHMENT_STENCIL              = 200
+	RL_ATTACHMENT_COLOR_CHANNEL1 int32 = 1
+	RL_ATTACHMENT_COLOR_CHANNEL2 int32 = 2
+	RL_ATTACHMENT_COLOR_CHANNEL3 int32 = 3
+	RL_ATTACHMENT_COLOR_CHANNEL4 int32 = 4
+	RL_ATTACHMENT_COLOR_CHANNEL5 int32 = 5
+	RL_ATTACHMENT_COLOR_CHANNEL6 int32 = 6
+	RL_ATTACHMENT_COLOR_CHANNEL7 int32 = 7
+	RL_ATTACHMENT_DEPTH          int32 = 100
+	RL_ATTACHMENT_STENCIL        int32 = 200
 )
 
 // rlFramebufferAttachType - transpiled function from  GOPATH/src/github.com/Konstantin8105/raylib-go/raylib/rlgl.h:476
@@ -734,13 +734,13 @@ type rlFramebufferAttachType = int32
 // Framebuffer texture attachment type
 const (
 	RL_ATTACHMENT_CUBEMAP_POSITIVE_X int32 = 0
-	RL_ATTACHMENT_CUBEMAP_NEGATIVE_X       = 1
-	RL_ATTACHMENT_CUBEMAP_POSITIVE_Y       = 2
-	RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y       = 3
-	RL_ATTACHMENT_CUBEMAP_POSITIVE_Z       = 4
-	RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z       = 5
-	RL_ATTACHMENT_TEXTURE2D                = 100
-	RL_ATTACHMENT_RENDERBUFFER             = 200
+	RL_ATTACHMENT_CUBEMAP_NEGATIVE_X int32 = 1
+	RL_ATTACHMENT_CUBEMAP_POSITIVE_Y int32 = 2
+	RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y int32 = 3
+	RL_ATTACHMENT_CUBEMAP_POSITIVE_Z int32 = 4
+	RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z int32 = 5
+	RL_ATTACHMENT_TEXTURE2D          int32 = 100
+	RL_ATTACHMENT_RENDERBUFFER       int32 = 200
 )
 
 // rlFramebufferAttachTextureType - transpiled function from  GOPATH/src/github.com/Konstantin8105/raylib-go/raylib/rlgl.h:490
