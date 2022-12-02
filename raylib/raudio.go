@@ -357,10 +357,10 @@ func UnloadAudioStream(stream AudioStream) {
 }
 
 // UpdateAudioStream - Update audio stream buffers with data
-func UpdateAudioStream(stream AudioStream, data []float32, samplesCount int32) {
+func UpdateAudioStream(stream AudioStream, data []float32) {
 	cstream := stream.cptr()
 	cdata := unsafe.Pointer(&data[0])
-	csamplesCount := (C.int)(samplesCount)
+	csamplesCount := (C.int)(len(data))
 	C.UpdateAudioStream(*cstream, cdata, csamplesCount)
 }
 
