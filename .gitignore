@@ -2,6 +2,3 @@
 .idea
 .vsc
 .vs
-
-# Ignore go.sum when go.mod is added.
-go.sum
