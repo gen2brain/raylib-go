@@ -1,9 +1,11 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/gen2brain/raylib-go/easings"
 	"github.com/gen2brain/raylib-go/raygui"
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func main() {
@@ -21,8 +23,8 @@ func main() {
 
 	ballPosition := rl.NewVector2(startPositionX, float32(screenHeight)/2)
 
-	comboActive := 0
-	comboLastActive := 0
+	comboActive := int32(0)
+	comboLastActive := int32(0)
 
 	easingTypes := []string{"SineIn", "SineOut", "SineInOut", "BounceIn", "BounceOut", "BounceInOut", "BackIn", "BackOut", "BackInOut"}
 	ease := easingTypes[comboActive]
@@ -75,7 +77,7 @@ func main() {
 		rl.ClearBackground(rl.RayWhite)
 
 		raygui.Label(rl.NewRectangle(20, 20, 200, 20), "Easing Type:")
-		comboActive = raygui.ComboBox(rl.NewRectangle(20, 40, 200, 20), easingTypes, comboActive)
+		comboActive = raygui.ComboBox(rl.NewRectangle(20, 40, 200, 20), strings.Join(easingTypes, ";"), comboActive)
 
 		raygui.Label(rl.NewRectangle(20, 80, 200, 20), "Press R to reset")
 

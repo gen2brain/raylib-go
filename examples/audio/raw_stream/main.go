@@ -47,7 +47,7 @@ func main() {
 				numSamples = samplesLeft
 			}
 
-			rl.UpdateAudioStream(stream, data[totalSamples-samplesLeft:], numSamples)
+			rl.UpdateAudioStream(stream, data[totalSamples-samplesLeft:])
 
 			samplesLeft -= numSamples
 

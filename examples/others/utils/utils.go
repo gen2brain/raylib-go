@@ -1,14 +1,15 @@
 package main
 
 import (
-	"github.com/gen2brain/raylib-go/raylib"
 	"log"
+
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func main() {
 	rl.SetTraceLogCallback(func(logType int, str string) {
 		level := ""
-		switch logType {
+		switch rl.TraceLogLevel(logType) {
 		case rl.LogDebug:
 			level = "Debug"
 		case rl.LogError:
@@ -22,7 +23,7 @@ func main() {
 		case rl.LogFatal:
 			level = "Fatal"
 		}
-		if logType != rl.LogFatal {
+		if rl.TraceLogLevel(logType) != rl.LogFatal {
 			log.Printf("%s - %s", level, str)
 		} else {
 			log.Fatalf("%s - %s", level, str)
