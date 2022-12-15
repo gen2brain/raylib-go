@@ -255,9 +255,10 @@ func GetModelBoundingBox(model Model) BoundingBox {
 	return v
 }
 
+// UploadMesh - Upload mesh vertex data in GPU and provide VAO/VBO ids
 func UploadMesh(mesh *Mesh, dynamic bool) {
 	cmesh := mesh.cptr()
-	cdynamic := C.cbool(dynamic)
+	cdynamic := C.bool(dynamic)
 	C.UploadMesh(cmesh, cdynamic)
 }
 
