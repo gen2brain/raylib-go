@@ -255,6 +255,12 @@ func GetModelBoundingBox(model Model) BoundingBox {
 	return v
 }
 
+func UploadMesh(mesh *Mesh, dynamic bool) {
+	cmesh := mesh.cptr()
+	cdynamic := C.cbool(dynamic)
+	C.UploadMesh(*cmesh, cdynamic)
+}
+
 // UnloadMesh - Unload mesh from memory (RAM and/or VRAM)
 func UnloadMesh(mesh *Mesh) {
 	cmesh := mesh.cptr()
