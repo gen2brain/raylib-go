@@ -3,6 +3,7 @@ package raygui
 import (
 	"fmt"
 	"time"
+	"unicode/utf8"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
@@ -29,11 +30,9 @@ func TextBox(bounds rl.Rectangle, text string) string {
 		borderColor = ToggleActiveBorderColor
 
 		framesCounter2++
-		letter = rl.GetKeyPressed()
-		if letter != -1 {
-			if letter >= 32 && letter < 127 {
-				text = fmt.Sprintf("%s%c", text, letter)
-			}
+		letter = rl.GetCharPressed()
+		if letter != -1 && letter >= 32 {
+			text = fmt.Sprintf("%s%c", text, letter)
 		}
 
 		backspacing := rl.IsKeyPressed(rl.KeyBackspace)
@@ -46,7 +45,8 @@ func TextBox(bounds rl.Rectangle, text string) string {
 			}
 		}
 		if backspacing && len(text) > 0 {
-			text = text[:len(text)-1]
+			_, size := utf8.DecodeLastRuneInString(text)
+			text = text[:len(text)-size]
 		}
 	}
 
