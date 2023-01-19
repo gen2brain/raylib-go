@@ -1218,3 +1218,20 @@ const (
 	// Disable logging
 	LogNone
 )
+
+// Mouse cursor
+type MouseCursor = int32
+
+const (
+	MouseCursorDefault      MouseCursor = iota // Default pointer shape
+	MouseCursorArrow                           // Arrow shape
+	MouseCursorIBeam                           // Text writing cursor shape
+	MouseCursorCrosshair                       // Cross shape
+	MouseCursorPointingHand                    // Pointing hand cursor
+	MouseCursorResizeEW                        // Horizontal resize/move arrow shape
+	MouseCursorResizeNS                        // Vertical resize/move arrow shape
+	MouseCursorResizeNWSE                      // Top-left to bottom-right diagonal resize/move arrow shape
+	MouseCursorResizeNESW                      // The top-right to bottom-left diagonal resize/move arrow shape
+	MouseCursorResizeAll                       // The omni-directional resize/move cursor shape
+	MouseCursorNotAllowed                      // The operation-not-allowed shape
+)
