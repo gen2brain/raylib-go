@@ -598,7 +598,7 @@ func Vector3ToFloat(vec Vector3) []float32 {
 
 // MatrixToFloat - Converts Matrix to float32 slice
 func MatrixToFloat(mat Matrix) []float32 {
-	data := make([]float32, 0)
+	data := make([]float32, 16)
 
 	data[0] = mat.M0
 	data[1] = mat.M4
