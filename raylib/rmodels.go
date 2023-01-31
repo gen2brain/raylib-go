@@ -635,7 +635,7 @@ func GetRayCollisionQuad(ray Ray, p1, p2, p3, p4 Vector3) RayCollision {
 	return v
 }
 
-// Upload vertex data into a VAO (if supported) and VBO
+// UploadMesh - Upload vertex data into a VAO (if supported) and VBO
 func UploadMesh(mesh *Mesh, dynamic bool) {
 	C.UploadMesh(mesh.cptr(), C.bool(dynamic))
 }
