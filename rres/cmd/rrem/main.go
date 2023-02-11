@@ -422,7 +422,7 @@ func genSource(w io.Writer, data []byte) error {
 	return nil
 }
 
-//genBin generates go-bindata file
+// genBin generates go-bindata file
 func genBin(base string) error {
 	cfg := bindata.NewConfig()
 	cfg.NoCompress = true

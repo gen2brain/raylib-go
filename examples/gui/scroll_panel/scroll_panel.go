@@ -30,9 +30,9 @@ import (
 *
 **********************************************************************************************/
 
-//------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
 // Program main entry point
-//------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
 func main() {
 
 	// Initialization
@@ -85,10 +85,10 @@ func main() {
 
 		if showContentArea {
 			rl.DrawRectangle(
-			int32(panelRec.X+panelScroll.X),
-			int32(panelRec.Y+panelScroll.Y),
-			int32(panelContentRec.Width),
-			int32(panelContentRec.Height),
+				int32(panelRec.X+panelScroll.X),
+				int32(panelRec.Y+panelScroll.Y),
+				int32(panelContentRec.Width),
+				int32(panelContentRec.Height),
 				rl.Fade(rl.Red, 0.1),
 			)
 		}
@@ -140,7 +140,7 @@ func DrawStyleEditControls() {
 	gui.Spinner(rl.Rectangle{670, 240, 90, 20}, "", &style, 0, 14, false)
 	gui.SetStyle(gui.SCROLLBAR, gui.SLIDER_PADDING, style)
 
-	style = boolToint32( gui.CheckBox(rl.Rectangle{565, 280, 20, 20}, "ARROWS_VISIBLE", int32Tobool(gui.GetStyle(gui.SCROLLBAR, gui.ARROWS_VISIBLE))))
+	style = boolToint32(gui.CheckBox(rl.Rectangle{565, 280, 20, 20}, "ARROWS_VISIBLE", int32Tobool(gui.GetStyle(gui.SCROLLBAR, gui.ARROWS_VISIBLE))))
 	gui.SetStyle(gui.SCROLLBAR, gui.ARROWS_VISIBLE, style)
 
 	style = gui.GetStyle(gui.SCROLLBAR, gui.SLIDER_PADDING)
@@ -159,7 +159,7 @@ func DrawStyleEditControls() {
 	} else {
 		text = "SCROLLBAR: RIGHT"
 	}
-	style = boolToint32( gui.Toggle(rl.Rectangle{560, 110, 200, 35}, text, int32Tobool(gui.GetStyle(gui.LISTVIEW, gui.SCROLLBAR_SIDE))))
+	style = boolToint32(gui.Toggle(rl.Rectangle{560, 110, 200, 35}, text, int32Tobool(gui.GetStyle(gui.LISTVIEW, gui.SCROLLBAR_SIDE))))
 	gui.SetStyle(gui.LISTVIEW, gui.SCROLLBAR_SIDE, style)
 	//----------------------------------------------------------
 
