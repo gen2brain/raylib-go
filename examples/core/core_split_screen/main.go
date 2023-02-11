@@ -31,7 +31,7 @@ func DrawScene() {
 	rl.DrawPlane(rl.Vector3{0, 0, 0}, rl.Vector2{50, 50}, rl.Beige) // Simple world plane
 
 	for x := -float32(count * spacing); x <= count*spacing; x += spacing {
-		for z :=-float32(count * spacing); z <= count*spacing; z += spacing {
+		for z := -float32(count * spacing); z <= count*spacing; z += spacing {
 			rl.DrawCube(rl.Vector3{x, 1.5, z}, 1, 1, 1, rl.Lime)
 			rl.DrawCube(rl.Vector3{x, 0.5, z}, 0.25, 1, 0.25, rl.Brown)
 		}
@@ -42,9 +42,9 @@ func DrawScene() {
 	rl.DrawCube(cameraPlayer2.Position, 1, 1, 1, rl.Blue)
 }
 
-//------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
 // Program main entry point
-//------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
 func main() {
 	// Initialization
 	//--------------------------------------------------------------------------------------
