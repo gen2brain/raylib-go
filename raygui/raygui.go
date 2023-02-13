@@ -1,7 +1,7 @@
 package raygui
 
 /*
-#cgo CFLAGS: -DRAYGUI_IMPLEMENTATION -I${SRCDIR}/../raylib -Wno-unused-result
+#cgo CFLAGS: -DRAYGUI_IMPLEMENTATION -Wno-unused-result
 #include "raygui.h"
 #include <stdlib.h>
 */
