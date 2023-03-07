@@ -10,6 +10,7 @@ require (
 	github.com/frankban/quicktest v1.13.0 // indirect
 	github.com/ftrvxmtrx/tga v0.0.0-20150524081124-bd8e8d5be13a // indirect
 	github.com/gen2brain/raylib-go v0.0.0-20210714145135-ccae99cbf6dd
+	github.com/gen2brain/raylib-go/rres v0.0.0-20230307110033-4c00ef823fa6
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/jbuchbinder/gopnm v0.0.0-20150223212718-5176c556b9ce
 	github.com/jfreymuth/oggvorbis v1.0.3
@@ -19,6 +20,5 @@ require (
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/rootlch/encrypt v0.0.0-20120717064446-58e7f47a860b // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
-	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
 )
