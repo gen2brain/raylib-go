@@ -41,7 +41,7 @@ jobs:
       working-directory: raylib
 
   test-examples:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
     - name: Install Go
       uses: actions/setup-go@v3
