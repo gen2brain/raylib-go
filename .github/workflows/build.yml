@@ -41,7 +41,7 @@ jobs:
       working-directory: raylib
 
   test-examples:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
     - name: Install Go
       uses: actions/setup-go@v3
@@ -49,6 +49,9 @@ jobs:
         go-version: ${{ matrix.go-version }}
     - name: Checkout code
       uses: actions/checkout@v3
+    - name: Install package
+      run: |
+        sudo apt-get update -y; sudo apt-get -y install libxi-dev libxinerama-dev libxcursor-dev libxrandr-dev libgl1-mesa-dev
     - name: Build
       run: go build ./...
       working-directory: examples
