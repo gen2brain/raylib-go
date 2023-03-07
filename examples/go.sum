@@ -1,9 +1,5 @@
-github.com/gen2brain/raylib-go/easings v0.0.0-20230307112435-42e75c98a85b h1:8/VPV5RCG7mRErq30R7nGJmtxR5rXGK4Ib8Xtf9LBGk=
-github.com/gen2brain/raylib-go/easings v0.0.0-20230307112435-42e75c98a85b/go.mod h1:UuXithI7f7GZ22PJtaZDXHzWzdXx0OCyuxaakj9gt9k=
 github.com/gen2brain/raylib-go/physics v0.0.0-20230307111832-5dcd22c1f844 h1:Ujsq26uwt3Ee1Liif/A+61hUPEOeeRc24zZORP52Fko=
 github.com/gen2brain/raylib-go/physics v0.0.0-20230307111832-5dcd22c1f844/go.mod h1:Vf/TIMnolPj/pEnPQObb/cL481gg/La8CgwibfA9gx4=
-github.com/gen2brain/raylib-go/raygui v0.0.0-20230307111832-5dcd22c1f844 h1:JqAaVMEbhuEWul4/GxWOtVSkB8zX2WDKT6Uk6A15JcE=
-github.com/gen2brain/raylib-go/raygui v0.0.0-20230307111832-5dcd22c1f844/go.mod h1:ouMaUe1dTbnFZ7DNPPLAZSjcaYksvZAhupECWqJ4yKM=
 github.com/gen2brain/raylib-go/raylib v0.0.0-20230307112435-42e75c98a85b h1:YK1HMLMb37bDpjetVdsQYJ+J+40gavgbt+XP5FK3MKw=
 github.com/gen2brain/raylib-go/raylib v0.0.0-20230307112435-42e75c98a85b/go.mod h1:+NbsqGlEQqGqrsgJFF5Yj2dkvn0ML2SQb8RqM2hJsPU=
 github.com/jakecoffman/cp v1.2.1 h1:zkhc2Gpo9l4NLUZfeG3j33+3bQD7MkqPa+n5PdX+5mI=
