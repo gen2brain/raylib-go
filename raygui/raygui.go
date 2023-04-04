@@ -1174,3 +1174,16 @@ func TabBar(bounds rl.Rectangle, text []string, active *int32) int32 {
 	}()
 	return int32(C.GuiTabBar(cbounds, (**C.char)(ctext.Pointer), count, &cactive))
 }
+
+// SetFont - set custom font (global state)
+func SetFont(font rl.Font) {
+	cfont := (*C.Font)(unsafe.Pointer(&font))
+	C.GuiSetFont(*cfont)
+}
+
+// GetFont - get custom font (global state)
+func GetFont() rl.Font {
+	ret := C.GuiGetFont()
+	ptr := unsafe.Pointer(&ret)
+	return *(*rl.Font)(ptr)
+}
