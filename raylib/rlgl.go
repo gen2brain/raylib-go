@@ -986,11 +986,11 @@ func GetShaderBufferSize(id uint32) uint32 {
 }
 
 // BindImageTexture - Bind image texture
-func BindImageTexture(id uint32, index uint32, format uint32, readonly int32) {
+func BindImageTexture(id uint32, index uint32, format int32, readonly bool) {
 	cid := C.uint(id)
 	cindex := C.uint(index)
-	cformat := C.uint(format)
-	creadonly := C.int(readonly)
+	cformat := C.int(format)
+	creadonly := C.bool(readonly)
 	C.rlBindImageTexture(cid, cindex, cformat, creadonly)
 }
 
