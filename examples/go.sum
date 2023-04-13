@@ -1,9 +1,5 @@
-github.com/gen2brain/raylib-go/physics v0.0.0-20230307111832-5dcd22c1f844 h1:Ujsq26uwt3Ee1Liif/A+61hUPEOeeRc24zZORP52Fko=
-github.com/gen2brain/raylib-go/physics v0.0.0-20230307111832-5dcd22c1f844/go.mod h1:Vf/TIMnolPj/pEnPQObb/cL481gg/La8CgwibfA9gx4=
 github.com/gen2brain/raylib-go/physics v0.0.0-20230413172235-a62b332ffc4a h1:YiVRz76RzAgEl4UDxXK51PZp4a46ocSF3MN5RPDiKs8=
 github.com/gen2brain/raylib-go/physics v0.0.0-20230413172235-a62b332ffc4a/go.mod h1:Vf/TIMnolPj/pEnPQObb/cL481gg/La8CgwibfA9gx4=
-github.com/gen2brain/raylib-go/raylib v0.0.0-20230307112435-42e75c98a85b h1:YK1HMLMb37bDpjetVdsQYJ+J+40gavgbt+XP5FK3MKw=
-github.com/gen2brain/raylib-go/raylib v0.0.0-20230307112435-42e75c98a85b/go.mod h1:+NbsqGlEQqGqrsgJFF5Yj2dkvn0ML2SQb8RqM2hJsPU=
 github.com/gen2brain/raylib-go/raylib v0.0.0-20230413172235-a62b332ffc4a h1:Ia3FYwv7nxvb55YZCKfiXfgLwrrQv3fbjvnSwnOAl14=
 github.com/gen2brain/raylib-go/raylib v0.0.0-20230413172235-a62b332ffc4a/go.mod h1:AwtGA3aTtYdezNxEVbfchaLw/z+CuRDh2Mlxy0FbBro=
 github.com/jakecoffman/cp v1.2.1 h1:zkhc2Gpo9l4NLUZfeG3j33+3bQD7MkqPa+n5PdX+5mI=
