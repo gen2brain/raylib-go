@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func main() {
@@ -29,12 +29,10 @@ func main() {
 
 	position := rl.NewVector3(0.0, 0.0, 0.0) // Set model position
 
-	rl.SetCameraMode(camera, rl.CameraFree) // Set free camera mode
-
 	rl.SetTargetFPS(60)
 
 	for !rl.WindowShouldClose() {
-		rl.UpdateCamera(&camera) // Update camera
+		rl.UpdateCamera(&camera, rl.CameraFree) // Update camera with free camera mode
 
 		rl.BeginDrawing()
 

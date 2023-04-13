@@ -46,8 +46,6 @@ func main() {
 
 	mapPosition := rl.NewVector3(-16.0, 0.0, -8.0) // Set model position
 
-	rl.SetCameraMode(camera, rl.CameraFirstPerson) // Set camera mode
-
 	rl.SetTargetFPS(60) // Set our game to run at 60 frames-per-second
 	//--------------------------------------------------------------------------------------
 
@@ -57,7 +55,7 @@ func main() {
 		//----------------------------------------------------------------------------------
 		oldCamPos := camera.Position // Store old camera position
 
-		rl.UpdateCamera(&camera) // Update camera
+		rl.UpdateCamera(&camera, rl.CameraFirstPerson) // Update camera with first person mode
 
 		// Check player collision (we simplify to 2D collision detection)
 		playerPos := rl.NewVector2(camera.Position.X, camera.Position.Z)

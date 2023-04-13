@@ -23,12 +23,10 @@ func main() {
 	var ray rl.Ray
 	var collision rl.RayCollision
 
-	rl.SetCameraMode(camera, rl.CameraFree) // Set a free camera mode
-
 	rl.SetTargetFPS(60)
 
 	for !rl.WindowShouldClose() {
-		rl.UpdateCamera(&camera) // Update camera
+		rl.UpdateCamera(&camera, rl.CameraFree) // Update camera with free camera mode
 
 		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
 			if !collision.Hit {
