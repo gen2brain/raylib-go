@@ -141,24 +141,6 @@ func ResumeSound(sound Sound) {
 	C.ResumeSound(*csound)
 }
 
-// PlaySoundMulti - Play a sound (using multichannel buffer pool)
-func PlaySoundMulti(sound Sound) {
-	csound := sound.cptr()
-	C.PlaySoundMulti(*csound)
-}
-
-// StopSoundMulti - Stop any sound playing (using multichannel buffer pool)
-func StopSoundMulti() {
-	C.StopSoundMulti()
-}
-
-// GetSoundsPlaying - Get number of sounds playing in the multichannel
-func GetSoundsPlaying() int {
-	ret := C.GetSoundsPlaying()
-	v := int(ret)
-	return v
-}
-
 // IsSoundPlaying - Check if a sound is currently playing
 func IsSoundPlaying(sound Sound) bool {
 	csound := sound.cptr()

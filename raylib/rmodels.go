@@ -97,17 +97,6 @@ func DrawCubeWiresV(position Vector3, size Vector3, col color.RGBA) {
 	C.DrawCubeWiresV(*cposition, *csize, *ccolor)
 }
 
-// DrawCubeTexture - Draw cube textured
-func DrawCubeTexture(texture Texture2D, position Vector3, width float32, height float32, length float32, col color.RGBA) {
-	ctexture := texture.cptr()
-	cposition := position.cptr()
-	cwidth := (C.float)(width)
-	cheight := (C.float)(height)
-	clength := (C.float)(length)
-	ccolor := colorCptr(col)
-	C.DrawCubeTexture(*ctexture, *cposition, cwidth, cheight, clength, *ccolor)
-}
-
 // DrawSphere - Draw sphere
 func DrawSphere(centerPos Vector3, radius float32, col color.RGBA) {
 	ccenterPos := centerPos.cptr()
