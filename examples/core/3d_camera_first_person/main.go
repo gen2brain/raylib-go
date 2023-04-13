@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 const (
@@ -29,12 +29,10 @@ func main() {
 		colors[i] = rl.NewColor(uint8(rl.GetRandomValue(20, 255)), uint8(rl.GetRandomValue(10, 55)), 30, 255)
 	}
 
-	rl.SetCameraMode(camera, rl.CameraFirstPerson) // Set a first person camera mode
-
 	rl.SetTargetFPS(60)
 
 	for !rl.WindowShouldClose() {
-		rl.UpdateCamera(&camera) // Update camera
+		rl.UpdateCamera(&camera, rl.CameraFirstPerson) // Update camera with first person mode
 
 		rl.BeginDrawing()
 

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func main() {
@@ -16,12 +16,10 @@ func main() {
 
 	cubePosition := rl.NewVector3(0.0, 0.0, 0.0)
 
-	rl.SetCameraMode(camera, rl.CameraFree) // Set a free camera mode
-
 	rl.SetTargetFPS(60)
 
 	for !rl.WindowShouldClose() {
-		rl.UpdateCamera(&camera) // Update camera
+		rl.UpdateCamera(&camera, rl.CameraFree) // Update camera with free camera mode
 
 		if rl.IsKeyDown(rl.KeyZ) {
 			camera.Target = rl.NewVector3(0.0, 0.0, 0.0)

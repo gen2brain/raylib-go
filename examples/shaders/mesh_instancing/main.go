@@ -75,8 +75,6 @@ func main() {
 	mmap := material.GetMap(rl.MapDiffuse)
 	mmap.Color = rl.Red
 
-	rl.SetCameraMode(camera, rl.CameraOrbital)
-
 	rl.SetTargetFPS(int32(fps))
 	for !rl.WindowShouldClose() {
 		// Update
@@ -187,7 +185,7 @@ func main() {
 			transforms[i] = rl.MatrixMultiply(transforms[i], rl.MatrixTranslate(0.0, y, 0.0))
 		}
 
-		rl.UpdateCamera(&camera) // Update camera
+		rl.UpdateCamera(&camera, rl.CameraOrbital) // Update camera with orbital camera mode
 		//----------------------------------------------------------------------------------
 
 		// Draw

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func main() {
@@ -30,14 +30,12 @@ func main() {
 
 	rl.UnloadImage(image) // Unload cubicmap image from RAM, already uploaded to VRAM
 
-	rl.SetCameraMode(camera, rl.CameraOrbital) // Set an orbital camera mode
-
 	rl.SetTargetFPS(60)
 
 	for !rl.WindowShouldClose() {
 		// Update
 
-		rl.UpdateCamera(&camera) // Update camera
+		rl.UpdateCamera(&camera, rl.CameraOrbital) // Update camera with orbital camera mode
 
 		// Draw
 

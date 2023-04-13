@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func main() {
@@ -20,12 +20,10 @@ func main() {
 	bill := rl.LoadTexture("billboard.png")      // Our texture billboard
 	billPosition := rl.NewVector3(0.0, 2.0, 0.0) // Position where draw billboard
 
-	rl.SetCameraMode(camera, rl.CameraOrbital) // Set an orbital camera mode
-
 	rl.SetTargetFPS(60)
 
 	for !rl.WindowShouldClose() {
-		rl.UpdateCamera(&camera) // Update camera
+		rl.UpdateCamera(&camera, rl.CameraOrbital) // Update camera with orbital camera mode
 
 		rl.BeginDrawing()
 

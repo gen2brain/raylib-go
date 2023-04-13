@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 const MaxPostproShaders = 12
@@ -77,12 +77,10 @@ func main() {
 	// Create a RenderTexture2D to be used for render to texture
 	target := rl.LoadRenderTexture(screenWidth, screenHeight)
 
-	rl.SetCameraMode(camera, rl.CameraOrbital) // Set free camera mode
-
 	rl.SetTargetFPS(60)
 
 	for !rl.WindowShouldClose() {
-		rl.UpdateCamera(&camera) // Update camera
+		rl.UpdateCamera(&camera, rl.CameraOrbital) // Update camera with orbital camera mode
 
 		if rl.IsKeyPressed(rl.KeyRight) {
 			currentShader++

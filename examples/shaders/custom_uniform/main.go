@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func main() {
@@ -39,9 +39,6 @@ func main() {
 	// Create a RenderTexture2D to be used for render to texture
 	target := rl.LoadRenderTexture(screenWidth, screenHeight)
 
-	// Setup orbital camera
-	rl.SetCameraMode(camera, rl.CameraOrbital) // Set an orbital camera mode
-
 	rl.SetTargetFPS(60)
 
 	for !rl.WindowShouldClose() {
@@ -55,7 +52,7 @@ func main() {
 		// Send new value to the shader to be used on drawing
 		rl.SetShaderValue(shader, swirlCenterLoc, swirlCenter, rl.ShaderUniformVec2)
 
-		rl.UpdateCamera(&camera) // Update camera
+		rl.UpdateCamera(&camera, rl.CameraOrbital) // Update camera with orbital camera mode
 
 		rl.BeginDrawing()
 
