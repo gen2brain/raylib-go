@@ -41,9 +41,10 @@ package rl
 #cgo linux,!wayland CFLAGS: -D_GLFW_X11
 #cgo linux,wayland CFLAGS: -D_GLFW_WAYLAND
 
-#cgo linux,opengl11 CFLAGS: -DGRAPHICS_API_OPENGL_11
-#cgo linux,opengl21 CFLAGS: -DGRAPHICS_API_OPENGL_21
-#cgo linux,opengl43 CFLAGS: -DGRAPHICS_API_OPENGL_43
-#cgo linux,!opengl11,!opengl21,!opengl43 CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo linux,opengl11,!angle CFLAGS: -DGRAPHICS_API_OPENGL_11
+#cgo linux,opengl21,!angle CFLAGS: -DGRAPHICS_API_OPENGL_21
+#cgo linux,opengl43,!angle CFLAGS: -DGRAPHICS_API_OPENGL_43
+#cgo linux,!opengl11,!opengl21,!opengl43,!angle CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo linux,angle CFLAGS: -DGRAPHICS_API_OPENGL_ES2
 */
 import "C"

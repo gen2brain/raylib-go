@@ -59,6 +59,7 @@ You can also build binary in [MSYS2](https://msys2.github.io/) shell.
 * `opengl43` - uses OpenGL 4.3 backend
 * `opengl21` - uses OpenGL 2.1 backend (default is 3.3 on desktop)
 * `opengl11` - uses OpenGL 1.1 backend (pseudo OpenGL 1.1 style)
+* `angle` - uses OpenGL ES 2.0 backend (can be used to link against [Google's ANGLE](https://github.com/google/angle))
 
 ### Documentation
 
@@ -69,10 +70,11 @@ Documentation on [GoDoc](https://godoc.org/github.com/gen2brain/raylib-go/raylib
 ```go
 package main
 
-import "github.com/gen2brain/raylib-go/raylib"
+import rl "github.com/gen2brain/raylib-go/raylib"
 
 func main() {
 	rl.InitWindow(800, 450, "raylib [core] example - basic window")
+	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
 	for !rl.WindowShouldClose() {
@@ -83,8 +85,6 @@ func main() {
 
 		rl.EndDrawing()
 	}
-
-	rl.CloseWindow()
 }
 ```
 

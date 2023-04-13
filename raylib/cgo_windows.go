@@ -26,9 +26,10 @@ package rl
 #cgo windows LDFLAGS: -lopengl32 -lgdi32 -lwinmm -lole32
 #cgo windows CFLAGS: -D_GLFW_WIN32 -Iexternal -Iexternal/glfw/include -Iexternal/glfw/deps/mingw -DPLATFORM_DESKTOP
 
-#cgo windows,opengl11 CFLAGS: -DGRAPHICS_API_OPENGL_11
-#cgo windows,opengl21 CFLAGS: -DGRAPHICS_API_OPENGL_21
-#cgo windows,opengl43 CFLAGS: -DGRAPHICS_API_OPENGL_43
-#cgo windows,!opengl11,!opengl21,!opengl43 CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo windows,opengl11,!angle CFLAGS: -DGRAPHICS_API_OPENGL_11
+#cgo windows,opengl21,!angle CFLAGS: -DGRAPHICS_API_OPENGL_21
+#cgo windows,opengl43,!angle CFLAGS: -DGRAPHICS_API_OPENGL_43
+#cgo windows,!opengl11,!opengl21,!opengl43,!angle CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo windows,angle CFLAGS: -DGRAPHICS_API_OPENGL_ES2
 */
 import "C"

@@ -26,9 +26,10 @@ package rl
 #cgo darwin LDFLAGS: -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo -framework CoreFoundation
 #cgo darwin CFLAGS: -x objective-c -Iexternal/glfw/include -D_GLFW_COCOA -D_GLFW_USE_CHDIR -D_GLFW_USE_MENUBAR -D_GLFW_USE_RETINA -Wno-deprecated-declarations -Wno-implicit-const-int-float-conversion -DPLATFORM_DESKTOP
 
-#cgo darwin,opengl11 CFLAGS: -DGRAPHICS_API_OPENGL_11
-#cgo darwin,opengl21 CFLAGS: -DGRAPHICS_API_OPENGL_21
-#cgo darwin,opengl43 CFLAGS: -DGRAPHICS_API_OPENGL_43
-#cgo darwin,!opengl11,!opengl21,!opengl43 CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo darwin,opengl11,!angle CFLAGS: -DGRAPHICS_API_OPENGL_11
+#cgo darwin,opengl21,!angle CFLAGS: -DGRAPHICS_API_OPENGL_21
+#cgo darwin,opengl43,!angle CFLAGS: -DGRAPHICS_API_OPENGL_43
+#cgo darwin,!opengl11,!opengl21,!opengl43,!angle CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo darwin,angle CFLAGS: -DGRAPHICS_API_OPENGL_ES2
 */
 import "C"

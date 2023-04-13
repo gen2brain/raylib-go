@@ -42,9 +42,10 @@ package rl
 #cgo openbsd,!wayland CFLAGS: -D_GLFW_X11
 #cgo openbsd,wayland CFLAGS: -D_GLFW_WAYLAND
 
-#cgo openbsd,opengl11 CFLAGS: -DGRAPHICS_API_OPENGL_11
-#cgo openbsd,opengl21 CFLAGS: -DGRAPHICS_API_OPENGL_21
-#cgo openbsd,opengl43 CFLAGS: -DGRAPHICS_API_OPENGL_43
-#cgo openbsd,!opengl11,!opengl21,!opengl43 CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo openbsd,opengl11,!angle CFLAGS: -DGRAPHICS_API_OPENGL_11
+#cgo openbsd,opengl21,!angle CFLAGS: -DGRAPHICS_API_OPENGL_21
+#cgo openbsd,opengl43,!angle CFLAGS: -DGRAPHICS_API_OPENGL_43
+#cgo openbsd,!opengl11,!opengl21,!opengl43,!angle CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo openbsd,angle CFLAGS: -DGRAPHICS_API_OPENGL_ES2
 */
 import "C"
