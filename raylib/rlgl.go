@@ -60,6 +60,14 @@ func LoadShaderFromMemory(vsCode string, fsCode string) Shader {
 	return v
 }
 
+// IsShaderReady - Check if a shader is ready
+func IsShaderReady(shader Shader) bool {
+	cshader := shader.cptr()
+	ret := C.IsShaderReady(*cshader)
+	v := bool(ret)
+	return v
+}
+
 // UnloadShader - Unload a custom shader from memory
 func UnloadShader(shader Shader) {
 	cshader := shader.cptr()

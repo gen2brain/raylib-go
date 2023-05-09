@@ -420,6 +420,18 @@ func CheckCollisionPointTriangle(point, p1, p2, p3 Vector2) bool {
 	return v
 }
 
+// CheckCollisionPointPoly - Check if point is within a polygon described by array of vertices
+//
+// NOTE: Based on http://jeffreythompson.org/collision-detection/poly-point.php
+func CheckCollisionPointPoly(point Vector2, points []Vector2, pointCount int32) bool {
+	cpoint := point.cptr()
+	cpoints := (&points[0]).cptr()
+	cpointCount := C.int(pointCount)
+	ret := C.CheckCollisionPointPoly(*cpoint, cpoints, cpointCount)
+	v := bool(ret)
+	return v
+}
+
 // CheckCollisionLines - Check the collision between two lines defined by two points each, returns collision point by reference
 func CheckCollisionLines(startPos1, endPos1, startPos2, endPos2 Vector2, point *Vector2) bool {
 	cstartPos1 := startPos1.cptr()

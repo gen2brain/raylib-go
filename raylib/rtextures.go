@@ -84,6 +84,21 @@ func LoadImageFromMemory(fileType string, fileData []byte, dataSize int32) *Imag
 	return v
 }
 
+// LoadImageFromScreen - Load image from screen buffer (screenshot)
+func LoadImageFromScreen() *Image {
+	ret := C.LoadImageFromScreen()
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// IsImageReady - Check if an image is ready
+func IsImageReady(image *Image) bool {
+	cimage := image.cptr()
+	ret := C.IsImageReady(*cimage)
+	v := bool(ret)
+	return v
+}
+
 // LoadTexture - Load an image as texture into GPU memory
 func LoadTexture(fileName string) Texture2D {
 	cfileName := C.CString(fileName)
@@ -116,10 +131,26 @@ func UnloadImage(image *Image) {
 	C.UnloadImage(*cimage)
 }
 
+// IsTextureReady - Check if a texture is ready
+func IsTextureReady(texture Texture2D) bool {
+	ctexture := texture.cptr()
+	ret := C.IsTextureReady(*ctexture)
+	v := bool(ret)
+	return v
+}
+
 // UnloadTexture - Unload texture from GPU memory
 func UnloadTexture(texture Texture2D) {
 	ctexture := texture.cptr()
 	C.UnloadTexture(*ctexture)
+}
+
+// IsRenderTextureReady - Check if a render texture is ready
+func IsRenderTextureReady(target RenderTexture2D) bool {
+	ctarget := target.cptr()
+	ret := C.IsRenderTextureReady(*ctarget)
+	v := bool(ret)
+	return v
 }
 
 // UnloadRenderTexture - Unload render texture from GPU memory
@@ -246,6 +277,13 @@ func ImageAlphaMask(image, alphaMask *Image) {
 func ImageAlphaPremultiply(image *Image) {
 	cimage := image.cptr()
 	C.ImageAlphaPremultiply(cimage)
+}
+
+// ImageBlurGaussian - Apply box blur
+func ImageBlurGaussian(image *Image, blurSize int32) {
+	cimage := image.cptr()
+	cblurSize := C.int(blurSize)
+	C.ImageBlurGaussian(cimage, cblurSize)
 }
 
 // ImageResize - Resize an image (bilinear filtering)

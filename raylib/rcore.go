@@ -157,10 +157,17 @@ func RestoreWindow() {
 	C.RestoreWindow()
 }
 
-// SetWindowIcon - Set icon for window (only PLATFORM_DESKTOP)
+// SetWindowIcon - Set icon for window (single image, RGBA 32bit, only PLATFORM_DESKTOP)
 func SetWindowIcon(image Image) {
 	cimage := image.cptr()
 	C.SetWindowIcon(*cimage)
+}
+
+// SetWindowIcons - Set icon for window (multiple images, RGBA 32bit, only PLATFORM_DESKTOP)
+func SetWindowIcons(images []Image, count int32) {
+	cimages := (&images[0]).cptr()
+	cimagesCount := C.int(count)
+	C.SetWindowIcons(cimages, cimagesCount)
 }
 
 // SetWindowTitle - Set title for window (only PLATFORM_DESKTOP)
