@@ -734,3 +734,19 @@ func DrawTexturePro(texture Texture2D, sourceRec, destRec Rectangle, origin Vect
 	ctint := colorCptr(tint)
 	C.DrawTexturePro(*ctexture, *csourceRec, *cdestRec, *corigin, crotation, *ctint)
 }
+
+// cptr returns C pointer
+func (n *NPatchInfo) cptr() *C.NPatchInfo {
+	return (*C.NPatchInfo)(unsafe.Pointer(n))
+}
+
+// DrawTextureNPatch - Draws a texture (or part of it) that stretches or shrinks nicely using n-patch info
+func DrawTextureNPatch(texture Texture2D, nPatchInfo NPatchInfo, dest Rectangle, origin Vector2, rotation float32, tint color.RGBA) {
+	ctexture := texture.cptr()
+	cnPatchInfo := nPatchInfo.cptr()
+	cdest := dest.cptr()
+	corigin := origin.cptr()
+	crotation := (C.float)(rotation)
+	ctint := colorCptr(tint)
+	C.DrawTextureNPatch(*ctexture, *cnPatchInfo, *cdest, *corigin, crotation, *ctint)
+}

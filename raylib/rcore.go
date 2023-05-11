@@ -560,6 +560,33 @@ func ColorFromHSV(hue, saturation, value float32) color.RGBA {
 	return v
 }
 
+// ColorTint - Get color multiplied with another color
+func ColorTint(col color.RGBA, tint color.RGBA) color.RGBA {
+	ccolor := colorCptr(col)
+	ctint := colorCptr(tint)
+	ret := C.ColorTint(*ccolor, *ctint)
+	v := newColorFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// ColorBrightness - Get color with brightness correction, brightness factor goes from -1.0f to 1.0f
+func ColorBrightness(col color.RGBA, factor float32) color.RGBA {
+	ccolor := colorCptr(col)
+	cfactor := C.float(factor)
+	ret := C.ColorBrightness(*ccolor, cfactor)
+	v := newColorFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// ColorContrast - Get color with contrast correction, contrast values between -1.0f and 1.0f
+func ColorContrast(col color.RGBA, contrast float32) color.RGBA {
+	ccolor := colorCptr(col)
+	ccontrast := C.float(contrast)
+	ret := C.ColorContrast(*ccolor, ccontrast)
+	v := newColorFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // ColorAlpha - Returns color with alpha applied, alpha goes from 0.0f to 1.0f
 func ColorAlpha(col color.RGBA, alpha float32) color.RGBA {
 	return Fade(col, alpha)

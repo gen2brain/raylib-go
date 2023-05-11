@@ -1235,3 +1235,22 @@ const (
 	MouseCursorResizeAll                       // The omni-directional resize/move cursor shape
 	MouseCursorNotAllowed                      // The operation-not-allowed shape
 )
+
+// N-patch layout
+type NPatchLayout int32
+
+const (
+	NPatchNinePatch            NPatchLayout = iota // Npatch layout: 3x3 tiles
+	NPatchThreePatchVertical                       // Npatch layout: 1x3 tiles
+	NPatchThreePatchHorizontal                     // Npatch layout: 3x1 tiles
+)
+
+// NPatchInfo type, n-patch layout info
+type NPatchInfo struct {
+	Source Rectangle    // Texture source rectangle
+	Left   int32        // Left border offset
+	Top    int32        // Top border offset
+	Right  int32        // Right border offset
+	Bottom int32        // Bottom border offset
+	Layout NPatchLayout // Layout of the n-patch: 3x3, 1x3 or 3x1
+}

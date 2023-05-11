@@ -72,6 +72,14 @@ func LoadWaveFromMemory(fileType string, fileData []byte, dataSize int32) Wave {
 	return v
 }
 
+// IsWaveReady - Checks if wave data is ready
+func IsWaveReady(wave Wave) bool {
+	cwave := wave.cptr()
+	ret := C.IsWaveReady(*cwave)
+	v := bool(ret)
+	return v
+}
+
 // LoadSound - Load sound to memory
 func LoadSound(fileName string) Sound {
 	cfileName := C.CString(fileName)
@@ -86,6 +94,14 @@ func LoadSoundFromWave(wave Wave) Sound {
 	cwave := wave.cptr()
 	ret := C.LoadSoundFromWave(*cwave)
 	v := newSoundFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// IsSoundReady - Checks if a sound is ready
+func IsSoundReady(sound Sound) bool {
+	csound := sound.cptr()
+	ret := C.IsSoundReady(*csound)
+	v := bool(ret)
 	return v
 }
 
@@ -234,6 +250,14 @@ func LoadMusicStreamFromMemory(fileType string, fileData []byte, dataSize int32)
 	return v
 }
 
+// IsMusicReady - Checks if a music stream is ready
+func IsMusicReady(music Music) bool {
+	cmusic := *(*C.Music)(unsafe.Pointer(&music))
+	ret := C.IsMusicReady(cmusic)
+	v := bool(ret)
+	return v
+}
+
 // UnloadMusicStream - Unload music stream
 func UnloadMusicStream(music Music) {
 	cmusic := *(*C.Music)(unsafe.Pointer(&music))
@@ -329,6 +353,14 @@ func LoadAudioStream(sampleRate uint32, sampleSize uint32, channels uint32) Audi
 	cchannels := (C.uint)(channels)
 	ret := C.LoadAudioStream(csampleRate, csampleSize, cchannels)
 	v := newAudioStreamFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// IsAudioStreamReady - Checks if an audio stream is ready
+func IsAudioStreamReady(stream AudioStream) bool {
+	cstream := stream.cptr()
+	ret := C.IsAudioStreamReady(*cstream)
+	v := bool(ret)
 	return v
 }
 

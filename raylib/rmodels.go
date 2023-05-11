@@ -230,6 +230,14 @@ func LoadModelFromMesh(data Mesh) Model {
 	return v
 }
 
+// IsModelReady - Check if a model is ready
+func IsModelReady(model Model) bool {
+	cmodel := model.cptr()
+	ret := C.IsModelReady(*cmodel)
+	v := bool(ret)
+	return v
+}
+
 // UnloadModel - Unload model from memory (RAM and/or VRAM)
 func UnloadModel(model Model) {
 	cmodel := model.cptr()
@@ -393,6 +401,14 @@ func LoadMaterials(fileName string) []Material {
 func LoadMaterialDefault() Material {
 	ret := C.LoadMaterialDefault()
 	v := newMaterialFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// IsMaterialReady - Check if a material is ready
+func IsMaterialReady(material Material) bool {
+	cmaterial := material.cptr()
+	ret := C.IsMaterialReady(*cmaterial)
+	v := bool(ret)
 	return v
 }
 
