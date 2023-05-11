@@ -77,6 +77,14 @@ func LoadFontFromMemory(fileType string, fileData []byte, dataSize int32, fontSi
 	return v
 }
 
+// IsFontReady - Check if a font is ready
+func IsFontReady(font Font) bool {
+	cfont := font.cptr()
+	ret := C.IsFontReady(*cfont)
+	v := bool(ret)
+	return v
+}
+
 // LoadFontData - Load font data for further use
 func LoadFontData(fileData []byte, dataSize int32, fontSize int32, fontChars *int32, charsCount, typ int32) *GlyphInfo {
 	cfileData := (*C.uchar)(unsafe.Pointer(&fileData[0]))
