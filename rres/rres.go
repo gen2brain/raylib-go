@@ -1,10 +1,18 @@
 package rres
 
-// #define RRES_IMPLEMENTATION
-// #include <rres.h>
-// #include <stdlib.h>
+/*
+#define RRES_IMPLEMENTATION
+#include <rres.h>
+#include <stdlib.h>
+#include <string.h>
+rresResourceChunkInfo GetResourceChunkInfoFromArray(rresResourceChunkInfo *infos, int index)
+{
+	return infos[index];
+}
+*/
 import "C"
 import (
+	"hash/crc32"
 	"unsafe"
 )
 
@@ -51,7 +59,12 @@ type ResourceChunk struct {
 // NOTE: It supports multiple resource chunks
 type ResourceMulti struct {
 	Count  uint32         // Resource chunks count
-	Chunks *ResourceChunk // Resource chunks
+	chunks *ResourceChunk // Resource chunks
+}
+
+// Chunks - Resource chunks
+func (r *ResourceMulti) Chunks() []ResourceChunk {
+	return unsafe.Slice(r.chunks, r.Count)
 }
 
 // DirEntry - CDIR: rres central directory entry
@@ -60,7 +73,15 @@ type DirEntry struct {
 	Offset       uint32                // Resource global offset in file
 	Reserved     uint32                // reserved
 	FileNameSize uint32                // Resource fileName size (NULL terminator and 4-byte alignment padding considered)
-	FileName     [MaxFilenameSize]int8 // Resource original fileName (NULL terminated and padded to 4-byte alignment)
+	fileName     [MaxFilenameSize]int8 // Resource original fileName (NULL terminated and padded to 4-byte alignment)
+}
+
+// FileName - Resource original fileName
+func (d *DirEntry) FileName() string {
+	cpointer := (*C.char)(unsafe.Pointer(&d.fileName[0]))
+	clength := C.int(d.FileNameSize)
+	fileName := C.GoStringN(cpointer, clength)
+	return fileName
 }
 
 // CentralDir - CDIR: rres central directory
@@ -68,7 +89,12 @@ type DirEntry struct {
 // NOTE: This data conforms the ResourceChunkData
 type CentralDir struct {
 	Count   uint32    // Central directory entries count
-	Entries *DirEntry // Central directory entries
+	entries *DirEntry // Central directory entries
+}
+
+// Entries - Central directory entries
+func (c *CentralDir) Entries() []DirEntry {
+	return unsafe.Slice(c.entries, c.Count)
 }
 
 // FontGlyphInfo - FNTG: rres font glyphs info (32 bytes)
@@ -326,8 +352,8 @@ func LoadResourceChunk(fileName string, rresId int32) ResourceChunk {
 }
 
 // UnloadResourceChunk - Unload resource chunk from memory
-func UnloadResourceChunk(chunk ResourceChunk) {
-	cchunk := *(*C.rresResourceChunk)(unsafe.Pointer(&chunk))
+func UnloadResourceChunk(chunk *ResourceChunk) {
+	cchunk := *(*C.rresResourceChunk)(unsafe.Pointer(chunk))
 	C.rresUnloadResourceChunk(cchunk)
 }
 
@@ -341,11 +367,48 @@ func LoadResourceMulti(fileName string, rresId int32) ResourceMulti {
 }
 
 // UnloadResourceMulti - Unload resource from memory (multiple resource chunks)
-func UnloadResourceMulti(multi ResourceMulti) {
-	cmulti := *(*C.rresResourceMulti)(unsafe.Pointer(&multi))
+func UnloadResourceMulti(multi *ResourceMulti) {
+	cmulti := *(*C.rresResourceMulti)(unsafe.Pointer(multi))
 	C.rresUnloadResourceMulti(cmulti)
 }
 
+// LoadResourceChunkInfo - Load resource chunk info for provided id
+func LoadResourceChunkInfo(fileName string, rresId int32) ResourceChunkInfo {
+	cfileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(cfileName))
+	ret := C.rresLoadResourceChunkInfo(cfileName, C.int(rresId))
+	v := *(*ResourceChunkInfo)(unsafe.Pointer(&ret))
+	return v
+}
+
+// LoadResourceChunkInfoAll - Load all resource chunks info
+func LoadResourceChunkInfoAll(fileName string) []ResourceChunkInfo {
+	// Convert the fileName into a CString and releases the memory afterwards
+	cfileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(cfileName))
+
+	// The length of the resulted array is saved in the chunkCount variable
+	var chunkCount C.uint
+	cinfos := C.rresLoadResourceChunkInfoAll(cfileName, &chunkCount)
+
+	// The C array can be released afterwards, because the values are stored in a golang slice
+	defer C.free(unsafe.Pointer(cinfos))
+
+	// Iterate over the C array and store the values in a golang slice
+	infos := make([]ResourceChunkInfo, chunkCount)
+	for i := 0; i < int(chunkCount); i++ {
+		// Get the C value from the C array
+		ret := C.GetResourceChunkInfoFromArray(cinfos, C.int(i))
+		// Convert the C value into a golang value
+		v := *(*ResourceChunkInfo)(unsafe.Pointer(&ret))
+		// Save the golang value in the golang slice
+		infos[i] = v
+	}
+
+	return infos
+}
+
+// LoadCentralDirectory - Load central directory resource chunk from file
 func LoadCentralDirectory(fileName string) CentralDir {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
@@ -354,6 +417,42 @@ func LoadCentralDirectory(fileName string) CentralDir {
 	return v
 }
 
+// UnloadCentralDirectory - Unload central directory resource chunk
+func UnloadCentralDirectory(dir *CentralDir) {
+	cdir := *(*C.rresCentralDir)(unsafe.Pointer(dir))
+	C.rresUnloadCentralDirectory(cdir)
+}
+
+// GetDataType - Get ResourceDataType from FourCC code
+func GetDataType(fourCC [4]byte) ResourceDataType {
+	value := string(fourCC[:])
+	switch value {
+	case "NULL":
+		return DataNull
+	case "RAWD":
+		return DataRaw
+	case "TEXT":
+		return DataText
+	case "IMGE":
+		return DataImage
+	case "WAVE":
+		return DataWave
+	case "VRTX":
+		return DataVertex
+	case "FNTG":
+		return DataFontGlyphs
+	case "LINK":
+		return DataLink
+	case "CDIR":
+		return DataDirectory
+	default:
+		return 0
+	}
+}
+
+// GetResourceId - Get resource id for a provided filename
+//
+// NOTE: It requires CDIR available in the file (it's optinal by design)
 func GetResourceId(dir CentralDir, fileName string) int32 {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
@@ -361,4 +460,38 @@ func GetResourceId(dir CentralDir, fileName string) int32 {
 	ret := C.rresGetResourceId(cdir, cfileName)
 	v := int32(ret)
 	return v
+}
+
+// ComputeCRC32 - Compute CRC32 hash
+//
+// NOTE: CRC32 is used as rres id, generated from original filename
+func ComputeCRC32(data []byte) uint32 {
+	return crc32.ChecksumIEEE(data)
+}
+
+// SetCipherPassword - Set password to be used on data decryption
+//
+// NOTE: The cipher password is kept as an internal pointer to provided string, it's up to the user to manage that sensible data properly
+//
+// Password should be to allocate and set before loading an encrypted resource and it should be cleaned/wiped after the encrypted resource has been loaded
+//
+// You can use the WipeCipherPassword function to clear the password
+func SetCipherPassword(pass string) {
+	cpass := C.CString(pass)
+	C.rresSetCipherPassword(cpass)
+}
+
+// GetCipherPassword - Get password to be used on data decryption
+func GetCipherPassword() string {
+	cpass := C.rresGetCipherPassword()
+	return C.GoString(cpass)
+}
+
+// WipeCipherPassword - Clears the password from the C memory using explicit_bzero
+//
+// This is an approach but no guarantee
+func WipeCipherPassword() {
+	cpass := C.rresGetCipherPassword()
+	C.explicit_bzero(unsafe.Pointer(cpass), C.strlen(cpass))
+	C.free(unsafe.Pointer(cpass))
 }
