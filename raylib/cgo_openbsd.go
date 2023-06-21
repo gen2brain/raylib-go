@@ -36,8 +36,10 @@ package rl
 #cgo openbsd CFLAGS: -I. -I/usr/X11R6/include -Iexternal/glfw/include -DPLATFORM_DESKTOP
 #cgo openbsd LDFLAGS: -L/usr/X11R6/lib
 
-#cgo openbsd,!wayland LDFLAGS: -lGL -lm -pthread -lX11
-#cgo openbsd,wayland LDFLAGS: -lGL -lm -pthread -lwayland-client -lwayland-cursor -lwayland-egl -lxkbcommon
+#cgo openbsd,!wayland LDFLAGS: -lm -pthread -lX11
+#cgo openbsd,wayland LDFLAGS: -lm -pthread -lwayland-client -lwayland-cursor -lwayland-egl -lxkbcommon
+
+#cgo openbsd,!angle LDFLAGS: -lGL
 
 #cgo openbsd,!wayland CFLAGS: -D_GLFW_X11
 #cgo openbsd,wayland CFLAGS: -D_GLFW_WAYLAND

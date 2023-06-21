@@ -23,8 +23,10 @@ package rl
 #include "external/glfw/src/egl_context.c"
 #include "external/glfw/src/osmesa_context.c"
 
-#cgo darwin LDFLAGS: -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo -framework CoreFoundation
+#cgo darwin LDFLAGS: -framework Cocoa -framework IOKit -framework CoreVideo -framework CoreFoundation
 #cgo darwin CFLAGS: -x objective-c -Iexternal/glfw/include -D_GLFW_COCOA -D_GLFW_USE_CHDIR -D_GLFW_USE_MENUBAR -D_GLFW_USE_RETINA -Wno-deprecated-declarations -Wno-implicit-const-int-float-conversion -DPLATFORM_DESKTOP
+
+#cgo darwin,!angle LDFLAGS: -framework OpenGL
 
 #cgo darwin,opengl11,!angle CFLAGS: -DGRAPHICS_API_OPENGL_11
 #cgo darwin,opengl21,!angle CFLAGS: -DGRAPHICS_API_OPENGL_21
