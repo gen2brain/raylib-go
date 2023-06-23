@@ -29,6 +29,16 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
     dnf install mesa-libGL-devel wayland-devel libxkbcommon-devel
 
+##### openSUSE (Tumbleweed)
+
+###### X11
+
+    zypper install Mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel
+
+###### Wayland 
+
+    zypper install Mesa-libGL-devel wayland-devel libxkbcommon-devel
+
 ##### macOS
 
 On macOS you need Xcode or Command Line Tools for Xcode.
