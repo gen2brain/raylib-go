@@ -11,8 +11,6 @@ uniform vec4 colDiffuse;
 // Output fragment color
 out vec4 finalColor;
 
-// NOTE: Add here your custom variables
-
 // NOTE: Render size values should be passed from code
 const float renderWidth = 800;
 const float renderHeight = 450;
@@ -20,6 +18,7 @@ const float renderHeight = 450;
 float radius = 250.0;
 float angle = 0.8;
 
+// NOTE: center is connected to the golang code
 uniform vec2 center = vec2(200.0, 200.0);
 
 void main()
@@ -41,7 +40,7 @@ void main()
     }
 
     tc += center;
-    vec4 color = texture2D(texture0, tc/texSize)*colDiffuse*fragColor;;
+    vec4 color = texture(texture0, tc/texSize)*colDiffuse*fragColor;;
 
     finalColor = vec4(color.rgb, 1.0);;
 }

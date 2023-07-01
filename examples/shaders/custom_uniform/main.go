@@ -31,6 +31,9 @@ func main() {
 	// Get variable (uniform) location on the shader to connect with the program
 	// NOTE: If uniform variable could not be found in the shader, function returns -1
 	swirlCenterLoc := rl.GetShaderLocation(shader, "center")
+	if swirlCenterLoc == -1 {
+		println("Warning: [SHDR] Swirl Center uniform not found on shader")
+	}
 
 	swirlCenter := make([]float32, 2)
 	swirlCenter[0] = float32(screenWidth) / 2
