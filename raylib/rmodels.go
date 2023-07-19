@@ -540,6 +540,20 @@ func DrawBillboardRec(camera Camera, texture Texture2D, sourceRec Rectangle, cen
 	C.DrawBillboardRec(*ccamera, *ctexture, *csourceRec, *ccenter, *csize, *ctint)
 }
 
+// DrawBillboardPro - Draw a billboard texture with pro parameters
+func DrawBillboardPro(camera Camera, texture Texture2D, sourceRec Rectangle, position Vector3, up Vector3, size Vector2, origin Vector2, rotation float32, tint Color) {
+	ccamera := camera.cptr()
+	ctexture := texture.cptr()
+	csourceRec := sourceRec.cptr()
+	cposition := position.cptr()
+	cup := up.cptr()
+	csize := size.cptr()
+	corigin := origin.cptr()
+	crotation := (C.float)(rotation)
+	ctint := colorCptr(tint)
+	C.DrawBillboardPro(*ccamera, *ctexture, *csourceRec, *cposition, *cup, *csize, *corigin, crotation, *ctint)
+}
+
 // DrawMesh - Draw a single mesh
 func DrawMesh(mesh Mesh, material Material, transform Matrix) {
 	C.DrawMesh(*mesh.cptr(), *material.cptr(), *transform.cptr())
