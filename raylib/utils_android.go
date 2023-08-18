@@ -19,7 +19,7 @@ import (
 )
 
 // Set the current threshold (minimum) log level
-func SetTraceLog(logLevel TraceLogLevel) {
+func SetTraceLogLevel(logLevel TraceLogLevel) {
 	clogLevel := (C.int)(logLevel)
 	C.SetTraceLogLevel(clogLevel)
 }
