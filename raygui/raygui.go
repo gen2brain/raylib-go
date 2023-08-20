@@ -263,7 +263,7 @@ func GetState() int32 {
 }
 
 // GuiSetStyle .
-func SetStyle(control int32, property int32, value int32) {
+func SetStyle(control int32, property int32, value int64) {
 	ccontrol := C.int(control)
 	cproperty := C.int(property)
 	cvalue := C.int(value)
@@ -271,10 +271,10 @@ func SetStyle(control int32, property int32, value int32) {
 }
 
 // GuiGetStyle - Get one style property
-func GetStyle(control int32, property int32) int32 {
+func GetStyle(control int32, property int32) int64 {
 	ccontrol := C.int(control)
 	cproperty := C.int(property)
-	return int32(C.GuiGetStyle(ccontrol, cproperty))
+	return int64(C.GuiGetStyle(ccontrol, cproperty))
 }
 
 // GuiWindowBox - Window Box control, shows a window that can be closed
