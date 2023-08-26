@@ -756,7 +756,7 @@ func TextBox(bounds rl.Rectangle, text *string, textSize int, editMode bool) boo
 	}
 	ctext := (*C.char)(unsafe.Pointer(&bs[0]))
 	defer func() {
-		*text = strings.TrimSpace( strings.Trim(string(bs), "\x00") )
+		*text = strings.TrimSpace(strings.Trim(string(bs), "\x00"))
 		// no need : C.free(unsafe.Pointer(ctext))
 	}()
 
@@ -1072,7 +1072,7 @@ func TextInputBox(bounds rl.Rectangle, title, message, buttons string, text *str
 	}
 	ctext := (*C.char)(unsafe.Pointer(&bs[0]))
 	defer func() {
-		*text = strings.TrimSpace( strings.Trim(string(bs), "\x00") )
+		*text = strings.TrimSpace(strings.Trim(string(bs), "\x00"))
 		// no need : C.free(unsafe.Pointer(ctext))
 	}()
 
@@ -1106,7 +1106,7 @@ func TextBoxMulti(bounds rl.Rectangle, text *string, textSize int32, editMode bo
 	}
 	ctext := (*C.char)(unsafe.Pointer(&bs[0]))
 	defer func() {
-		*text = strings.TrimSpace( strings.Trim(string(bs), "\x00") )
+		*text = strings.TrimSpace(strings.Trim(string(bs), "\x00"))
 		// no need : C.free(unsafe.Pointer(ctext))
 	}()
 
