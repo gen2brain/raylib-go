@@ -751,12 +751,12 @@ func TextBox(bounds rl.Rectangle, text *string, textSize int, editMode bool) boo
 	if len(bs) == 0 {
 		bs = []byte{byte(0)}
 	}
-	//if 0 < len(bs) && bs[len(bs)-1] != byte(0) { // minimalize allocation
-	bs = append(bs, byte(0)) // for next input symbols
-	//}
+	if 0 < len(bs) && bs[len(bs)-1] != byte(0) { // minimalize allocation
+		bs = append(bs, byte(0)) // for next input symbols
+	}
 	ctext := (*C.char)(unsafe.Pointer(&bs[0]))
 	defer func() {
-		*text = strings.TrimSpace(string(bs))
+		*text = strings.TrimSpace(strings.Trim(string(bs), "\x00"))
 		// no need : C.free(unsafe.Pointer(ctext))
 	}()
 
@@ -1072,7 +1072,7 @@ func TextInputBox(bounds rl.Rectangle, title, message, buttons string, text *str
 	}
 	ctext := (*C.char)(unsafe.Pointer(&bs[0]))
 	defer func() {
-		*text = string(bs)
+		*text = strings.TrimSpace(strings.Trim(string(bs), "\x00"))
 		// no need : C.free(unsafe.Pointer(ctext))
 	}()
 
@@ -1106,7 +1106,7 @@ func TextBoxMulti(bounds rl.Rectangle, text *string, textSize int32, editMode bo
 	}
 	ctext := (*C.char)(unsafe.Pointer(&bs[0]))
 	defer func() {
-		*text = string(bs)
+		*text = strings.TrimSpace(strings.Trim(string(bs), "\x00"))
 		// no need : C.free(unsafe.Pointer(ctext))
 	}()
 
