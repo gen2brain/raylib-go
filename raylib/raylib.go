@@ -200,6 +200,9 @@ const (
 	// Set to try enabling interlaced video format (for V3D)
 	FlagInterlacedHint = 0x00010000
 
+	// KeyNull is used for no key pressed
+	KeyNull = 0
+
 	// Keyboard Function Keys
 	KeySpace        = 32
 	KeyEscape       = 256
