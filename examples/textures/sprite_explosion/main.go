@@ -12,7 +12,7 @@ func main() {
 	screenWidth := int32(1280)
 	screenHeight := int32(720)
 
-	rl.InitWindow(screenWidth, screenHeight, "raylib [shapes] example - sprite explosion")
+	rl.InitWindow(screenWidth, screenHeight, "raylib [textures] example - sprite explosion")
 
 	rl.InitAudioDevice()
 	fxBoom := rl.LoadSound("boom.wav")
