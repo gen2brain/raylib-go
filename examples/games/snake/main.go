@@ -160,15 +160,15 @@ func (g *Game) Update() {
 			if !g.Fruit.Active {
 				g.Fruit.Active = true
 				g.Fruit.Position = rl.NewVector2(
-					float32(rl.GetRandomValue(0, (g.ScreenWidth/squareSize)-1)*squareSize+int32(g.Offset.X)/2),
-					float32(rl.GetRandomValue(0, (g.ScreenHeight/squareSize)-1)*squareSize+int32(g.Offset.Y)/2),
+					float32(rl.GetRandomValue(0, (g.ScreenWidth/squareSize)-1)*squareSize)+(g.Offset.X)/2,
+					float32(rl.GetRandomValue(0, (g.ScreenHeight/squareSize)-1)*squareSize)+(g.Offset.Y)/2,
 				)
 
 				for i := 0; i < g.CounterTail; i++ {
 					for (g.Fruit.Position.X == g.Snake[i].Position.X) && (g.Fruit.Position.Y == g.Snake[i].Position.Y) {
 						g.Fruit.Position = rl.NewVector2(
-							float32(rl.GetRandomValue(0, (g.ScreenWidth/squareSize)-1)*squareSize),
-							float32(rl.GetRandomValue(0, (g.ScreenHeight/squareSize)-1)*squareSize),
+							float32(rl.GetRandomValue(0, (g.ScreenWidth/squareSize)-1)*squareSize)+g.Offset.X/2,
+							float32(rl.GetRandomValue(0, (g.ScreenHeight/squareSize)-1)*squareSize)+g.Offset.Y/2,
 						)
 						i = 0
 					}
