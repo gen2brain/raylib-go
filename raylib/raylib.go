@@ -854,15 +854,51 @@ type MaterialMap struct {
 // Model is struct of model, meshes, materials and animation data
 type Model struct {
 	// Local transform matrix
-	Transform     Matrix
-	MeshCount     int32
+	Transform Matrix
+	// Number of meshes
+	MeshCount int32
+	// Number of materials
 	MaterialCount int32
-	Meshes        *Mesh
-	Materials     *Material
-	MeshMaterial  *int32
-	BoneCount     int32
-	Bones         *BoneInfo
-	BindPose      *Transform
+	// Meshes array (c array)
+	//
+	// Use Model.GetMeshes instead (go slice)
+	Meshes *Mesh
+	// Materials array (c array)
+	//
+	// Use Model.GetMaterials instead (go slice)
+	Materials *Material
+	// Mesh material number
+	MeshMaterial *int32
+	// Number of bones
+	BoneCount int32
+	// Bones information (skeleton) (c array)
+	//
+	// Use Model.GetBones instead (go slice)
+	Bones *BoneInfo
+	// Bones base transformation (pose) (c array)
+	//
+	// Use Model.GetBindPose instead (go slice)
+	BindPose *Transform
+}
+
+// GetMeshes returns the meshes of a model as go slice
+func (m Model) GetMeshes() []Mesh {
+	return unsafe.Slice(m.Meshes, m.MeshCount)
+}
+
+// GetMaterials returns the materials of a model as go slice
+func (m Model) GetMaterials() []Material {
+	return unsafe.Slice(m.Materials, m.MaterialCount)
+}
+
+// GetBones returns the bones information (skeleton) of a model as go slice
+func (m Model) GetBones() []BoneInfo {
+	return unsafe.Slice(m.Bones, m.BoneCount)
+}
+
+// GetBindPose returns the bones base transformation of a model as go slice
+func (m Model) GetBindPose() []Transform {
+	return unsafe.Slice(m.BindPose, m.BoneCount)
 }
 
 // newModelFromPointer - Returns new Model from pointer

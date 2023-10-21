@@ -166,6 +166,11 @@ func LoadImageColors(img *Image) []color.RGBA {
 	return (*[1 << 24]color.RGBA)(unsafe.Pointer(ret))[0 : img.Width*img.Height]
 }
 
+// UnloadImageColors - Unload color data loaded with LoadImageColors()
+func UnloadImageColors(cols []color.RGBA) {
+	C.UnloadImageColors((*C.Color)(unsafe.Pointer(&cols[0])))
+}
+
 // LoadImageFromTexture - Get pixel data from GPU texture and return an Image
 func LoadImageFromTexture(texture Texture2D) *Image {
 	ctexture := texture.cptr()
