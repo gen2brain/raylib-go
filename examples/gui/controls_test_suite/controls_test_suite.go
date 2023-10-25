@@ -172,7 +172,7 @@ func main() {
 		if gui.ValueBox(rl.Rectangle{25, 175, 125, 30}, "", &valueBox002Value, 0, 100, valueBoxEditMode) {
 			valueBoxEditMode = !valueBoxEditMode
 		}
-		gui.SetStyle(gui.TEXTBOX, gui.TEXT_ALIGNMENT, gui.TEXT_ALIGN_LEFT)
+		gui.SetStyle(gui.TEXTBOX, gui.TEXT_ALIGNMENT, int64(gui.TEXT_ALIGN_LEFT))
 		if gui.TextBox(rl.Rectangle{25, 215, 125, 30}, &textBoxText, 64, textBoxEditMode) {
 			textBoxEditMode = !textBoxEditMode
 		}
@@ -203,7 +203,7 @@ func main() {
 		comboBoxActive = gui.ComboBox(rl.Rectangle{25, 470, 125, 30}, "ONE;TWO;THREE;FOUR", comboBoxActive)
 
 		// NOTE: gui.DropdownBox must draw after any other control that can be covered on unfolding
-		gui.SetStyle(gui.DROPDOWNBOX, gui.TEXT_ALIGNMENT, gui.TEXT_ALIGN_LEFT)
+		gui.SetStyle(gui.DROPDOWNBOX, gui.TEXT_ALIGNMENT, int64(gui.TEXT_ALIGN_LEFT))
 		if gui.DropdownBox(rl.Rectangle{25, 65, 125, 30}, "#01#ONE;#02#TWO;#03#THREE;#04#FOUR", &dropdownBox001Active, dropDown001EditMode) {
 			dropDown001EditMode = !dropDown001EditMode
 		}

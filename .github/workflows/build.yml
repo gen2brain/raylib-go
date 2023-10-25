@@ -9,11 +9,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
         go-version: ${{ matrix.go-version }}
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Install package
       run: |
         sudo apt-get update -y; sudo apt-get -y install libxi-dev libxinerama-dev libxcursor-dev libxrandr-dev libgl1-mesa-dev
@@ -41,7 +41,11 @@ jobs:
       working-directory: raylib
 
   test-examples:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [1.19.x]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - name: Install Go
       uses: actions/setup-go@v3
