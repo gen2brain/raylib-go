@@ -5,7 +5,7 @@ package rl
 
 /*
 #cgo windows LDFLAGS: -lgdi32 -lwinmm -lole32 -lSDL2
-#cgo windows CFLAGS: -Iexternal -DPLATFORM_DESKTOP_SDL
+#cgo windows CFLAGS: -Iexternal -DPLATFORM_DESKTOP_SDL -Wno-stringop-overflow=
 
 #cgo windows,!angle LDFLAGS: -lopengl32
 
