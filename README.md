@@ -42,19 +42,15 @@ You can also build binary in [MSYS2](https://msys2.github.io/) shell.
 
 [Android example](https://github.com/gen2brain/raylib-go/tree/master/examples/others/android/example).
 
-##### Raspberry Pi
-
-[RPi example](https://github.com/gen2brain/raylib-go/tree/master/examples/others/rpi/basic_window).
-
 ### Installation
 
     go get -v -u github.com/gen2brain/raylib-go/raylib
 
 ### Build tags
 
-* `drm` - build for Linux native mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM)
-* `rpi` - build for Raspberry Pi platform (PLATFORM_RPI)
-* `wayland` - build against Wayland libraries
+* `drm` - build for Linux native DRM mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM)
+* `sdl` - build for SDL backend instead of internal GLFW (PLATFORM_DESKTOP_SDL)
+* `wayland` - build against Wayland libraries (internal GLFW)
 * `noaudio` - disables audio functions
 * `opengl43` - uses OpenGL 4.3 backend
 * `opengl21` - uses OpenGL 2.1 backend (default is 3.3 on desktop)
@@ -75,6 +71,7 @@ import rl "github.com/gen2brain/raylib-go/raylib"
 func main() {
 	rl.InitWindow(800, 450, "raylib [core] example - basic window")
 	defer rl.CloseWindow()
+
 	rl.SetTargetFPS(60)
 
 	for !rl.WindowShouldClose() {

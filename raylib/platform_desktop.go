@@ -1,5 +1,5 @@
-//go:build !rpi && !drm && !android
-// +build !rpi,!drm,!android
+//go:build !sdl && !drm && !android
+// +build !sdl,!drm,!android
 
 package rl
 
