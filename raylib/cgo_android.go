@@ -10,6 +10,5 @@ package rl
 #cgo android CFLAGS: -DPLATFORM_ANDROID -DGRAPHICS_API_OPENGL_ES2 -Iexternal/android/native_app_glue -Wno-implicit-const-int-float-conversion
 
 #cgo android,arm CFLAGS: -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16
-#cgo android,arm64 CFLAGS: -target aarch64 -mfix-cortex-a53-835769
 */
 import "C"
