@@ -43,3 +43,6 @@ Or with gradle:
     ./gradlew assembleDebug
 
 If everything is successfully built apk can be found in bin/ directory or in the android/build/outputs in case `gradle` is used.
+
+
+For aarch64/arm64 replace `arm-linux-androideabi` with `aarch64-linux-android`, set GOARCH to arm64 and use minimum `ANDROID_API=21`.
