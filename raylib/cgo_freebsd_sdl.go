@@ -7,7 +7,6 @@ package rl
 #cgo freebsd CFLAGS: -I. -I/usr/local/include -DPLATFORM_DESKTOP_SDL
 #cgo freebsd LDFLAGS: -L/usr/local/lib
 
-#cgo freebsd LDFLAGS: -lm -pthread -ldl -lrt -lX11
 #cgo freebsd pkg-config: sdl2
 
 #cgo freebsd,!angle LDFLAGS: -lGL

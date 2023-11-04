@@ -7,7 +7,6 @@ package rl
 #cgo openbsd CFLAGS: -I. -I/usr/X11R6/include -DPLATFORM_DESKTOP_SDL
 #cgo openbsd LDFLAGS: -L/usr/X11R6/lib
 
-#cgo openbsd LDFLAGS: -lm -pthread -lX11
 #cgo openbsd pkg-config: sdl2
 
 #cgo openbsd,!angle LDFLAGS: -lGL

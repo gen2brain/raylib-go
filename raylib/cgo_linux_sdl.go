@@ -5,7 +5,6 @@ package rl
 
 /*
 #cgo linux CFLAGS: -DPLATFORM_DESKTOP_SDL -Wno-stringop-overflow
-#cgo linux LDFLAGS: -lm -pthread -ldl -lrt -lX11
 #cgo linux pkg-config: sdl2
 
 #cgo linux,!angle LDFLAGS: -lGL
