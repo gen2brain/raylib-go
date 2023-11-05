@@ -438,7 +438,7 @@ func SetModelMeshMaterial(model *Model, meshId int32, materialId int32) {
 func LoadModelAnimations(fileName string) []ModelAnimation {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
-	ccount := C.uint(0)
+	ccount := C.int(0)
 	ret := C.LoadModelAnimations(cfileName, &ccount)
 	v := (*[1 << 24]ModelAnimation)(unsafe.Pointer(ret))[:int(ccount)]
 	return v
@@ -460,7 +460,7 @@ func UnloadModelAnimation(anim ModelAnimation) {
 
 // UnloadModelAnimations - Unload animation array data
 func UnloadModelAnimations(animations []ModelAnimation) {
-	C.UnloadModelAnimations((*C.ModelAnimation)(unsafe.Pointer(&animations[0])), (C.uint)(len(animations)))
+	C.UnloadModelAnimations((*C.ModelAnimation)(unsafe.Pointer(&animations[0])), (C.int)(len(animations)))
 }
 
 // IsModelAnimationValid - Check model animation skeleton match

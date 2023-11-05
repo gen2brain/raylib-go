@@ -575,30 +575,6 @@ func GenImageColor(width, height int, col color.RGBA) *Image {
 	return v
 }
 
-// GenImageGradientV - Generate image: vertical gradient
-func GenImageGradientV(width, height int, top, bottom color.RGBA) *Image {
-	cwidth := (C.int)(width)
-	cheight := (C.int)(height)
-	ctop := colorCptr(top)
-	cbottom := colorCptr(bottom)
-
-	ret := C.GenImageGradientV(cwidth, cheight, *ctop, *cbottom)
-	v := newImageFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
-// GenImageGradientH - Generate image: horizontal gradient
-func GenImageGradientH(width, height int, left, right color.RGBA) *Image {
-	cwidth := (C.int)(width)
-	cheight := (C.int)(height)
-	cleft := colorCptr(left)
-	cright := colorCptr(right)
-
-	ret := C.GenImageGradientH(cwidth, cheight, *cleft, *cright)
-	v := newImageFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // GenImageGradientRadial - Generate image: radial gradient
 func GenImageGradientRadial(width, height int, density float32, inner, outer color.RGBA) *Image {
 	cwidth := (C.int)(width)

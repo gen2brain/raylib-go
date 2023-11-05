@@ -1,5 +1,5 @@
-//go:build windows
-// +build windows
+//go:build windows && !sdl
+// +build windows,!sdl
 
 package rl
 
@@ -24,7 +24,7 @@ package rl
 #include "external/glfw/src/osmesa_context.c"
 
 #cgo windows LDFLAGS: -lgdi32 -lwinmm -lole32
-#cgo windows CFLAGS: -D_GLFW_WIN32 -Iexternal -Iexternal/glfw/include -Iexternal/glfw/deps/mingw -DPLATFORM_DESKTOP
+#cgo windows CFLAGS: -D_GLFW_WIN32 -Iexternal -Iexternal/glfw/include -Iexternal/glfw/deps/mingw -DPLATFORM_DESKTOP -Wno-stringop-overflow
 
 #cgo windows,!angle LDFLAGS: -lopengl32
 

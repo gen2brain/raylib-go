@@ -1,5 +1,5 @@
-//go:build darwin
-// +build darwin
+//go:build darwin && !sdl
+// +build darwin,!sdl
 
 package rl
 
