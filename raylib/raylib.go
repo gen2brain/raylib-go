@@ -943,6 +943,7 @@ type ModelAnimation struct {
 	FrameCount int32
 	Bones      *BoneInfo
 	FramePoses **Transform
+	Name       [32]int8
 }
 
 // newModelAnimationFromPointer - Returns new ModelAnimation from pointer
