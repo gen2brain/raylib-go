@@ -8,6 +8,7 @@ import "C"
 
 import (
 	"image/color"
+	"runtime"
 	"unsafe"
 )
 
@@ -254,7 +255,13 @@ func GetModelBoundingBox(model Model) BoundingBox {
 
 // UnloadMesh - Unload mesh from memory (RAM and/or VRAM)
 func UnloadMesh(mesh *Mesh) {
-	cmesh := mesh.cptr()
+	//C.UnloadMesh() only needs to read the VaoID & VboID
+	//passing a temporary struct with all other fields nil makes it safe for the C code to call free()
+	tempMesh := Mesh{
+		VaoID: mesh.VaoID,
+		VboID: mesh.VboID,
+	}
+	cmesh := tempMesh.cptr()
 	C.UnloadMesh(*cmesh)
 }
 
@@ -656,5 +663,49 @@ func GetRayCollisionQuad(ray Ray, p1, p2, p3, p4 Vector3) RayCollision {
 
 // UploadMesh - Upload vertex data into a VAO (if supported) and VBO
 func UploadMesh(mesh *Mesh, dynamic bool) {
-	C.UploadMesh(mesh.cptr(), C.bool(dynamic))
+	pinner := runtime.Pinner{}
+	//Mesh pointer fields must be pinned to allow a Mesh pointer to be passed to C.UploadMesh() below
+	//nil checks are required because Pin() will panic if passed nil
+	if mesh.Vertices != nil {
+		pinner.Pin(mesh.Vertices)
+	}
+	if mesh.Texcoords != nil {
+		pinner.Pin(mesh.Texcoords)
+	}
+	if mesh.Texcoords2 != nil {
+		pinner.Pin(mesh.Texcoords2)
+	}
+	if mesh.Normals != nil {
+		pinner.Pin(mesh.Normals)
+	}
+	if mesh.Tangents != nil {
+		pinner.Pin(mesh.Tangents)
+	}
+	if mesh.Colors != nil {
+		pinner.Pin(mesh.Colors)
+	}
+	if mesh.Indices != nil {
+		pinner.Pin(mesh.Indices)
+	}
+	if mesh.AnimVertices != nil {
+		pinner.Pin(mesh.AnimVertices)
+	}
+	if mesh.AnimNormals != nil {
+		pinner.Pin(mesh.AnimNormals)
+	}
+	if mesh.BoneIds != nil {
+		pinner.Pin(mesh.BoneIds)
+	}
+	if mesh.BoneWeights != nil {
+		pinner.Pin(mesh.BoneWeights)
+	}
+	//VboID of a new mesh should always be nil before uploading, but including this in case a mesh happens to have it set.
+	if mesh.VboID != nil {
+		pinner.Pin(mesh.VboID)
+	}
+
+	cMesh := mesh.cptr()
+	C.UploadMesh(cMesh, C.bool(dynamic))
+
+	pinner.Unpin()
 }
