@@ -55,7 +55,7 @@ You can also build binary in [MSYS2](https://msys2.github.io/) shell.
 * `opengl43` - uses OpenGL 4.3 backend
 * `opengl21` - uses OpenGL 2.1 backend (default is 3.3 on desktop)
 * `opengl11` - uses OpenGL 1.1 backend (pseudo OpenGL 1.1 style)
-* `angle` - uses OpenGL ES 2.0 backend (can be used to link against [Google's ANGLE](https://github.com/google/angle))
+* `es2` - uses OpenGL ES 2.0 backend (can be used to link against [Google's ANGLE](https://github.com/google/angle))
 
 ### Documentation
 

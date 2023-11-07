@@ -9,12 +9,12 @@ package rl
 
 #cgo openbsd pkg-config: sdl2
 
-#cgo openbsd,!angle LDFLAGS: -lGL
+#cgo openbsd,!es2 LDFLAGS: -lGL
 
-#cgo openbsd,opengl11,!angle CFLAGS: -DGRAPHICS_API_OPENGL_11
-#cgo openbsd,opengl21,!angle CFLAGS: -DGRAPHICS_API_OPENGL_21
-#cgo openbsd,opengl43,!angle CFLAGS: -DGRAPHICS_API_OPENGL_43
-#cgo openbsd,!opengl11,!opengl21,!opengl43,!angle CFLAGS: -DGRAPHICS_API_OPENGL_33
-#cgo openbsd,angle CFLAGS: -DGRAPHICS_API_OPENGL_ES2
+#cgo openbsd,opengl11,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_11
+#cgo openbsd,opengl21,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_21
+#cgo openbsd,opengl43,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_43
+#cgo openbsd,!opengl11,!opengl21,!opengl43,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo openbsd,es2 CFLAGS: -DGRAPHICS_API_OPENGL_ES2
 */
 import "C"

@@ -39,15 +39,15 @@ package rl
 #cgo freebsd,!wayland LDFLAGS: -lm -pthread -ldl -lrt -lX11
 #cgo freebsd,wayland LDFLAGS: -lm -pthread -ldl -lrt -lwayland-client -lwayland-cursor -lwayland-egl -lxkbcommon
 
-#cgo freebsd,!angle LDFLAGS: -lGL
+#cgo freebsd,!es2 LDFLAGS: -lGL
 
 #cgo freebsd,!wayland CFLAGS: -D_GLFW_X11
 #cgo freebsd,wayland CFLAGS: -D_GLFW_WAYLAND
 
-#cgo freebsd,opengl11,!angle CFLAGS: -DGRAPHICS_API_OPENGL_11
-#cgo freebsd,opengl21,!angle CFLAGS: -DGRAPHICS_API_OPENGL_21
-#cgo freebsd,opengl43,!angle CFLAGS: -DGRAPHICS_API_OPENGL_43
-#cgo freebsd,!opengl11,!opengl21,!opengl43,!angle CFLAGS: -DGRAPHICS_API_OPENGL_33
-#cgo freebsd,angle CFLAGS: -DGRAPHICS_API_OPENGL_ES2
+#cgo freebsd,opengl11,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_11
+#cgo freebsd,opengl21,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_21
+#cgo freebsd,opengl43,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_43
+#cgo freebsd,!opengl11,!opengl21,!opengl43,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo freebsd,es2 CFLAGS: -DGRAPHICS_API_OPENGL_ES2
 */
 import "C"
