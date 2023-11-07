@@ -39,15 +39,16 @@ package rl
 #cgo freebsd,!wayland LDFLAGS: -lm -pthread -ldl -lrt -lX11
 #cgo freebsd,wayland LDFLAGS: -lm -pthread -ldl -lrt -lwayland-client -lwayland-cursor -lwayland-egl -lxkbcommon
 
-#cgo freebsd,!es2 LDFLAGS: -lGL
+#cgo freebsd,!es2,!es3 LDFLAGS: -lGL
 
 #cgo freebsd,!wayland CFLAGS: -D_GLFW_X11
 #cgo freebsd,wayland CFLAGS: -D_GLFW_WAYLAND
 
-#cgo freebsd,opengl11,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_11
-#cgo freebsd,opengl21,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_21
-#cgo freebsd,opengl43,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_43
-#cgo freebsd,!opengl11,!opengl21,!opengl43,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_33
-#cgo freebsd,es2 CFLAGS: -DGRAPHICS_API_OPENGL_ES2
+#cgo freebsd,opengl11,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_11
+#cgo freebsd,opengl21,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_21
+#cgo freebsd,opengl43,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_43
+#cgo freebsd,!opengl11,!opengl21,!opengl43,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo freebsd,es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_ES2
+#cgo freebsd,es3,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_ES3
 */
 import "C"
