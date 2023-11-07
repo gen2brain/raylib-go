@@ -11,7 +11,6 @@ package rl
 */
 import "C"
 import (
-	"reflect"
 	"unsafe"
 )
 
@@ -228,16 +227,10 @@ func WaveCrop(wave Wave, initSample int32, finalSample int32) {
 
 // LoadWaveSamples - Get samples data from wave as a floats array
 func LoadWaveSamples(wave Wave) []float32 {
-	var data []float32
 	cwave := wave.cptr()
 	ret := C.LoadWaveSamples(*cwave)
-
-	sliceHeader := (*reflect.SliceHeader)((unsafe.Pointer(&data)))
-	sliceHeader.Cap = int(wave.FrameCount)
-	sliceHeader.Len = int(wave.FrameCount)
-	sliceHeader.Data = uintptr(unsafe.Pointer(ret))
-
-	return data
+	v := unsafe.Slice((*float32)(unsafe.Pointer(ret)), wave.FrameCount)
+	return v
 }
 
 // UnloadWaveSamples - Unload samples data loaded with LoadWaveSamples()

@@ -7,7 +7,6 @@ package rl
 */
 import "C"
 import (
-	"reflect"
 	"unsafe"
 )
 
@@ -100,19 +99,19 @@ func GetShaderLocationAttrib(shader Shader, attribName string) int32 {
 func SetShaderValue(shader Shader, locIndex int32, value []float32, uniformType ShaderUniformDataType) {
 	cshader := shader.cptr()
 	clocIndex := (C.int)(locIndex)
-	cvalue := unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&value)).Data)
+	cvalue := unsafe.SliceData(value)
 	cuniformType := (C.int)(uniformType)
-	C.SetShaderValue(*cshader, clocIndex, cvalue, cuniformType)
+	C.SetShaderValue(*cshader, clocIndex, unsafe.Pointer(cvalue), cuniformType)
 }
 
 // SetShaderValueV - Set shader uniform value (float)
 func SetShaderValueV(shader Shader, locIndex int32, value []float32, uniformType ShaderUniformDataType, count int32) {
 	cshader := shader.cptr()
 	clocIndex := (C.int)(locIndex)
-	cvalue := unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&value)).Data)
+	cvalue := unsafe.SliceData(value)
 	cuniformType := (C.int)(uniformType)
 	ccount := (C.int)(count)
-	C.SetShaderValueV(*cshader, clocIndex, cvalue, cuniformType, ccount)
+	C.SetShaderValueV(*cshader, clocIndex, unsafe.Pointer(cvalue), cuniformType, ccount)
 }
 
 // SetShaderValueMatrix - Set shader uniform value (matrix 4x4)
