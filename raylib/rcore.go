@@ -197,6 +197,13 @@ func SetWindowMinSize(w, h int) {
 	C.SetWindowMinSize(cw, ch)
 }
 
+// SetWindowMaxSize - Set window maximum dimensions (for FLAG_WINDOW_RESIZABLE)
+func SetWindowMaxSize(w, h int) {
+	cw := (C.int)(w)
+	ch := (C.int)(h)
+	C.SetWindowMaxSize(cw, ch)
+}
+
 // SetWindowSize - Set window dimensions
 func SetWindowSize(w, h int) {
 	cw := (C.int)(w)
@@ -687,6 +694,14 @@ func TakeScreenshot(name string) {
 func IsKeyPressed(key int32) bool {
 	ckey := (C.int)(key)
 	ret := C.IsKeyPressed(ckey)
+	v := bool(ret)
+	return v
+}
+
+// IsKeyPressedRepeat - Detect if a key has been pressed again (Only PLATFORM_DESKTOP)
+func IsKeyPressedRepeat(key int32) bool {
+	ckey := (C.int)(key)
+	ret := C.IsKeyPressedRepeat(ckey)
 	v := bool(ret)
 	return v
 }

@@ -52,6 +52,13 @@ func SetMasterVolume(volume float32) {
 	C.SetMasterVolume(cvolume)
 }
 
+// GetMasterVolume - Set master volume (listener)
+func GetMasterVolume() float32 {
+	ret := C.GetMasterVolume()
+	v := float32(ret)
+	return v
+}
+
 // LoadWave - Load wave data from file into RAM
 func LoadWave(fileName string) Wave {
 	cfileName := C.CString(fileName)
@@ -93,6 +100,14 @@ func LoadSound(fileName string) Sound {
 func LoadSoundFromWave(wave Wave) Sound {
 	cwave := wave.cptr()
 	ret := C.LoadSoundFromWave(*cwave)
+	v := newSoundFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// LoadSoundAlias - Create a new sound that shares the same sample data as the source sound, does not own the sound data
+func LoadSoundAlias(source Sound) Sound {
+	csound := source.cptr()
+	ret := C.LoadSoundAlias(*csound)
 	v := newSoundFromPointer(unsafe.Pointer(&ret))
 	return v
 }
