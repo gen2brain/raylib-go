@@ -24,7 +24,7 @@ And compile shared library:
 
     CC="armv7a-linux-androideabi${ANDROID_API}-clang" \
     CGO_CFLAGS="-I${ANDROID_SYSROOT}/usr/include -I${ANDROID_SYSROOT}/usr/include/arm-linux-androideabi --sysroot=${ANDROID_SYSROOT} -D__ANDROID_API__=${ANDROID_API}" \
-    CGO_LDFLAGS="-L${ANDROID_SYSROOT}/usr/lib/arm-linux-androideabi/${ANDROID_API} -L${ANDROID_TOOLCHAIN}/arm-linux-androideabi/lib -L${ANDROID_TOOLCHAIN}/lib/gcc/arm-linux-androideabi/4.9.x --sysroot=${ANDROID_SYSROOT}" \
+    CGO_LDFLAGS="-L${ANDROID_SYSROOT}/usr/lib/arm-linux-androideabi/${ANDROID_API} -L${ANDROID_TOOLCHAIN}/arm-linux-androideabi/lib --sysroot=${ANDROID_SYSROOT}" \
     CGO_ENABLED=1 GOOS=android GOARCH=arm \
     go build -buildmode=c-shared -ldflags="-s -w -extldflags=-Wl,-soname,libexample.so" \
     -o=android/libs/armeabi-v7a/libexample.so
