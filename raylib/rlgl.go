@@ -896,6 +896,14 @@ func SetVertexAttributeDivisor(index uint32, divisor int32) {
 	C.rlSetVertexAttributeDivisor(cindex, cdivisor)
 }
 
+// LoadTextureDepth - Load depth texture/renderbuffer (to be attached to fbo)
+func LoadTextureDepth(width, height int32, useRenderBuffer bool) {
+	cwidth := C.int(width)
+	cheight := C.int(height)
+	cuseRenderBuffer := C.bool(useRenderBuffer)
+	C.rlLoadTextureDepth(cwidth, cheight, cuseRenderBuffer)
+}
+
 // LoadFramebuffer - Load an empty framebuffer
 func LoadFramebuffer(width int32, height int32) uint32 {
 	cwidth := C.int(width)
