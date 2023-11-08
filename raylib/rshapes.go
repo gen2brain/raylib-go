@@ -10,6 +10,13 @@ import (
 	"unsafe"
 )
 
+// SetShapesTexture - Define default texture used to draw shapes
+func SetShapesTexture(texture Texture2D, source Rectangle) {
+	ctexture := texture.cptr()
+	csource := source.cptr()
+	C.SetShapesTexture(*ctexture, *csource)
+}
+
 // DrawPixel - Draw a pixel
 func DrawPixel(posX, posY int32, col color.RGBA) {
 	cposX := (C.int)(posX)
@@ -80,6 +87,24 @@ func DrawLineBezierCubic(startPos Vector2, endPos Vector2, startControlPos Vecto
 	cthick := (C.float)(thick)
 	ccolor := colorCptr(col)
 	C.DrawLineBezierCubic(*cstartPos, *cendPos, *cstartControlPos, *cendControlPos, cthick, *ccolor)
+}
+
+// DrawLineBSpline - Draw a B-Spline line, minimum 4 points
+func DrawLineBSpline(points []Vector2, pointCount int32, thick float32, col color.RGBA) {
+	cpoints := (*C.Vector2)(unsafe.Pointer(&points[0]))
+	cpointCount := (C.int)(pointCount)
+	cthick := (C.float)(thick)
+	ccolor := colorCptr(col)
+	C.DrawLineBSpline(cpoints, cpointCount, cthick, *ccolor)
+}
+
+// DrawLineCatmullRom - Draw a Catmull Rom spline line, minimum 4 points
+func DrawLineCatmullRom(points []Vector2, pointCount int32, thick float32, col color.RGBA) {
+	cpoints := (*C.Vector2)(unsafe.Pointer(&points[0]))
+	cpointCount := (C.int)(pointCount)
+	cthick := (C.float)(thick)
+	ccolor := colorCptr(col)
+	C.DrawLineCatmullRom(cpoints, cpointCount, cthick, *ccolor)
 }
 
 // DrawLineStrip - Draw lines sequence
@@ -168,7 +193,7 @@ func DrawEllipseLines(centerX, centerY int32, radiusH, radiusV float32, col colo
 	C.DrawEllipseLines(ccenterX, ccenterY, cradiusH, cradiusV, *ccolor)
 }
 
-// DrawRing -
+// DrawRing - Draw ring
 func DrawRing(center Vector2, innerRadius, outerRadius, startAngle, endAngle float32, segments int32, col color.RGBA) {
 	ccenter := center.cptr()
 	cinnerRadius := (C.float)(innerRadius)
@@ -180,7 +205,7 @@ func DrawRing(center Vector2, innerRadius, outerRadius, startAngle, endAngle flo
 	C.DrawRing(*ccenter, cinnerRadius, couterRadius, cstartAngle, cendAngle, csegments, *ccolor)
 }
 
-// DrawRingLines -
+// DrawRingLines - Draw ring outline
 func DrawRingLines(center Vector2, innerRadius, outerRadius, startAngle, endAngle float32, segments int32, col color.RGBA) {
 	ccenter := center.cptr()
 	cinnerRadius := (C.float)(innerRadius)
@@ -462,11 +487,4 @@ func GetCollisionRec(rec1, rec2 Rectangle) Rectangle {
 	ret := C.GetCollisionRec(*crec1, *crec2)
 	v := newRectangleFromPointer(unsafe.Pointer(&ret))
 	return v
-}
-
-// SetShapesTexture - Define default texture used to draw shapes
-func SetShapesTexture(texture Texture2D, source Rectangle) {
-	ctexture := texture.cptr()
-	csource := source.cptr()
-	C.SetShapesTexture(*ctexture, *csource)
 }
