@@ -7,6 +7,8 @@
 
 Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use library to enjoy videogames programming.
 
+raylib C source code is included and compiled together with bindings. Note that the first build can take a few minutes.
+
 ### Requirements
 
 ##### Ubuntu
