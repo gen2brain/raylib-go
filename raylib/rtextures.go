@@ -63,6 +63,17 @@ func LoadImageRaw(fileName string, width, height int32, format PixelFormat, head
 	return v
 }
 
+// LoadImageSvg - Load image from SVG file data or string with specified size
+func LoadImageSvg(fileNameOrString string, width, height int32) *Image {
+	cfileNameOrString := C.CString(fileNameOrString)
+	defer C.free(unsafe.Pointer(cfileNameOrString))
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	ret := C.LoadImageSvg(cfileNameOrString, cwidth, cheight)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // LoadImageAnim - Load image sequence from file (frames appended to image.data)
 func LoadImageAnim(fileName string, frames *int32) *Image {
 	cfileName := C.CString(fileName)
@@ -80,6 +91,14 @@ func LoadImageFromMemory(fileType string, fileData []byte, dataSize int32) *Imag
 	cfileData := (*C.uchar)(unsafe.Pointer(&fileData[0]))
 	cdataSize := (C.int)(dataSize)
 	ret := C.LoadImageFromMemory(cfileType, cfileData, cdataSize)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// LoadImageFromTexture - Get pixel data from GPU texture and return an Image
+func LoadImageFromTexture(texture Texture2D) *Image {
+	ctexture := texture.cptr()
+	ret := C.LoadImageFromTexture(*ctexture)
 	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
@@ -171,14 +190,6 @@ func UnloadImageColors(cols []color.RGBA) {
 	C.UnloadImageColors((*C.Color)(unsafe.Pointer(&cols[0])))
 }
 
-// LoadImageFromTexture - Get pixel data from GPU texture and return an Image
-func LoadImageFromTexture(texture Texture2D) *Image {
-	ctexture := texture.cptr()
-	ret := C.LoadImageFromTexture(*ctexture)
-	v := newImageFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // UpdateTexture - Update GPU texture with new data
 func UpdateTexture(texture Texture2D, pixels []color.RGBA) {
 	ctexture := texture.cptr()
@@ -195,12 +206,23 @@ func UpdateTextureRec(texture Texture2D, rec Rectangle, pixels []color.RGBA) {
 }
 
 // ExportImage - Export image as a PNG file
-func ExportImage(image Image, name string) {
-	cname := C.CString(name)
-	defer C.free(unsafe.Pointer(cname))
+func ExportImage(image Image, fileName string) {
+	cfileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(cfileName))
+	cimage := image.cptr()
+	C.ExportImage(*cimage, cfileName)
+}
+
+// ExportImageToMemory - Export image to memory buffer
+func ExportImageToMemory(image Image, fileType string) []byte {
+	cfileType := C.CString(fileType)
+	defer C.free(unsafe.Pointer(cfileType))
 	cimage := image.cptr()
 
-	C.ExportImage(*cimage, cname)
+	var size C.int
+	ret := C.ExportImageToMemory(*cimage, cfileType, &size)
+	v := unsafe.Slice((*byte)(unsafe.Pointer(ret)), size)
+	return v
 }
 
 // ImageCopy - Create an image duplicate (useful for transformations)
@@ -344,6 +366,13 @@ func ImageFlipVertical(image *Image) {
 func ImageFlipHorizontal(image *Image) {
 	cimage := image.cptr()
 	C.ImageFlipHorizontal(cimage)
+}
+
+// ImageRotate - Rotate image by input angle in degrees (-359 to 359)
+func ImageRotate(image *Image, degrees int32) {
+	cimage := image.cptr()
+	cdegrees := (C.int)(degrees)
+	C.ImageRotate(cimage, cdegrees)
 }
 
 // ImageRotateCW - Rotate image clockwise 90deg
@@ -575,6 +604,19 @@ func GenImageColor(width, height int, col color.RGBA) *Image {
 	return v
 }
 
+// GenImageGradientLinear - Generate image: linear gradient, direction in degrees [0..360], 0=Vertical gradient
+func GenImageGradientLinear(width, height, direction int, start, end color.RGBA) *Image {
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	cdensity := (C.int)(direction)
+	cstart := colorCptr(start)
+	cend := colorCptr(end)
+
+	ret := C.GenImageGradientLinear(cwidth, cheight, cdensity, *cstart, *cend)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // GenImageGradientRadial - Generate image: radial gradient
 func GenImageGradientRadial(width, height int, density float32, inner, outer color.RGBA) *Image {
 	cwidth := (C.int)(width)
@@ -584,6 +626,19 @@ func GenImageGradientRadial(width, height int, density float32, inner, outer col
 	couter := colorCptr(outer)
 
 	ret := C.GenImageGradientRadial(cwidth, cheight, cdensity, *cinner, *couter)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GenImageGradientSquare - Generate image: square gradient
+func GenImageGradientSquare(width, height int, density float32, inner, outer color.RGBA) *Image {
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	cdensity := (C.float)(density)
+	cinner := colorCptr(inner)
+	couter := colorCptr(outer)
+
+	ret := C.GenImageGradientSquare(cwidth, cheight, cdensity, *cinner, *couter)
 	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
