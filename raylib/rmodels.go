@@ -335,8 +335,18 @@ func DrawBillboardPro(camera Camera, texture Texture2D, sourceRec Rectangle, pos
 	C.DrawBillboardPro(*ccamera, *ctexture, *csourceRec, *cposition, *cup, *csize, *corigin, crotation, *ctint)
 }
 
+//List of VaoIDs of meshes created by calling UploadMesh()
+//Used by UnloadMesh() to determine if mesh is go-managed or C-allocated
+var goManagedMeshIDs []uint32 = make([]uint32, 0)
+
 // UploadMesh - Upload vertex data into a VAO (if supported) and VBO
 func UploadMesh(mesh *Mesh, dynamic bool) {
+	//check if mesh has already been uploaded to prevent duplication
+	if mesh.VaoID != 0 {
+		fmt.printf("VAO: [ID %i] Trying to re-load an already loaded mesh", mesh->vaoId)
+		return
+	}
+
 	pinner := runtime.Pinner{}
 	//Mesh pointer fields must be pinned to allow a Mesh pointer to be passed to C.UploadMesh() below
 	//nil checks are required because Pin() will panic if passed nil
@@ -381,6 +391,10 @@ func UploadMesh(mesh *Mesh, dynamic bool) {
 	cMesh := mesh.cptr()
 	C.UploadMesh(cMesh, C.bool(dynamic))
 
+	//Add new mesh VaoID to list
+	goManagedMeshIDs = append(goManagedMeshIDs, mesh.VaoID)
+	fmt.Println(goManagedMeshIDs)
+
 	pinner.Unpin()
 }
 
@@ -394,14 +408,26 @@ func UpdateMeshBuffer(mesh Mesh, index int, data []byte, offset int) {
 
 // UnloadMesh - Unload mesh from memory (RAM and/or VRAM)
 func UnloadMesh(mesh *Mesh) {
-	//C.UnloadMesh() only needs to read the VaoID & VboID
-	//passing a temporary struct with all other fields nil makes it safe for the C code to call free()
-	tempMesh := Mesh{
-		VaoID: mesh.VaoID,
-		VboID: mesh.VboID,
+	//Check list of go-managed mesh IDs	
+	if slices.Contains(goManagedMeshIDs, mesh.VaoID) {
+		//C.UnloadMesh() only needs to read the VaoID & VboID
+		//passing a temporary struct with all other fields nil makes it safe for the C code to call free()
+		tempMesh := Mesh{
+			VaoID: mesh.VaoID,
+			VboID: mesh.VboID,
+		}
+		cmesh := tempMesh.cptr()
+		C.UnloadMesh(*cmesh)
+
+		//remove mesh VaoID from list
+		goManagedMeshIDs = slices.DeleteFunc(goManagedMeshIDs, func(id uint32) bool { return id == mesh.VaoID })
+		fmt.Println("unloaded custom Mesh")
+		fmt.Println(goManagedMeshIDs)
+	} else {
+		cmesh := mesh.cptr()
+		C.UnloadMesh(*cmesh)
+		fmt.Println("unloaded C Mesh")
 	}
-	cmesh := tempMesh.cptr()
-	C.UnloadMesh(*cmesh)
 }
 
 // DrawMesh - Draw a single mesh
