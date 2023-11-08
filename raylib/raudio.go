@@ -4,15 +4,41 @@
 package rl
 
 /*
-//#include "external/stb_vorbis.c"
-
 #include "raylib.h"
 #include <stdlib.h>
+
+extern void internalAudioStreamCallbackGo(void *, int);
+
+static void audioStreamWrapperCallback(void *data, unsigned int frames) {
+	internalAudioStreamCallbackGo(data, frames);
+}
+
+static void setAudioStreamCallbackWrapper(AudioStream stream) {
+	SetAudioStreamCallback(stream, audioStreamWrapperCallback);
+}
 */
 import "C"
 import (
 	"unsafe"
 )
+
+// AudioCallback function.
+type AudioCallback func(data []float32, frames int)
+
+var internalAudioStreamCallback AudioCallback
+
+// SetAudioStreamCallback - Audio thread callback to request new data
+func SetAudioStreamCallback(stream AudioStream, callback AudioCallback) {
+	internalAudioStreamCallback = callback
+	C.setAudioStreamCallbackWrapper(*stream.cptr())
+}
+
+//export internalAudioStreamCallbackGo
+func internalAudioStreamCallbackGo(data unsafe.Pointer, frames C.int) {
+	if internalAudioStreamCallback != nil {
+		internalAudioStreamCallback(unsafe.Slice((*float32)(data), frames), int(frames))
+	}
+}
 
 // cptr returns C pointer
 func (w *Wave) cptr() *C.Wave {
