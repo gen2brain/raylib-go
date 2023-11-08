@@ -104,6 +104,13 @@ func UnloadFont(font Font) {
 	C.UnloadFont(*cfont)
 }
 
+// DrawFPS - Shows current FPS
+func DrawFPS(posX int32, posY int32) {
+	cposX := (C.int)(posX)
+	cposY := (C.int)(posY)
+	C.DrawFPS(cposX, cposY)
+}
+
 // DrawText - Draw text (using default font)
 func DrawText(text string, posX int32, posY int32, fontSize int32, col color.RGBA) {
 	ctext := C.CString(text)
@@ -125,6 +132,12 @@ func DrawTextEx(font Font, text string, position Vector2, fontSize float32, spac
 	cspacing := (C.float)(spacing)
 	ctint := colorCptr(tint)
 	C.DrawTextEx(*cfont, ctext, *cposition, cfontSize, cspacing, *ctint)
+}
+
+// SetTextLineSpacing - Set vertical line spacing when drawing with line-breaks
+func SetTextLineSpacing(spacing int) {
+	cspacing := (C.int)(spacing)
+	C.SetTextLineSpacing(cspacing)
 }
 
 // MeasureText - Measure string width for default font
@@ -174,11 +187,4 @@ func GetGlyphAtlasRec(font Font, codepoint int32) Rectangle {
 	ret := C.GetGlyphAtlasRec(*cfont, ccodepoint)
 	v := newRectangleFromPointer(unsafe.Pointer(&ret))
 	return v
-}
-
-// DrawFPS - Shows current FPS
-func DrawFPS(posX int32, posY int32) {
-	cposX := (C.int)(posX)
-	cposY := (C.int)(posY)
-	C.DrawFPS(cposX, cposY)
 }
