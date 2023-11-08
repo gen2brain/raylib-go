@@ -7,8 +7,10 @@ package rl
 import "C"
 
 import (
+	"fmt"
 	"image/color"
 	"runtime"
+	"slices"
 	"unsafe"
 )
 
@@ -335,15 +337,15 @@ func DrawBillboardPro(camera Camera, texture Texture2D, sourceRec Rectangle, pos
 	C.DrawBillboardPro(*ccamera, *ctexture, *csourceRec, *cposition, *cup, *csize, *corigin, crotation, *ctint)
 }
 
-//List of VaoIDs of meshes created by calling UploadMesh()
-//Used by UnloadMesh() to determine if mesh is go-managed or C-allocated
+// List of VaoIDs of meshes created by calling UploadMesh()
+// Used by UnloadMesh() to determine if mesh is go-managed or C-allocated
 var goManagedMeshIDs []uint32 = make([]uint32, 0)
 
 // UploadMesh - Upload vertex data into a VAO (if supported) and VBO
 func UploadMesh(mesh *Mesh, dynamic bool) {
 	//check if mesh has already been uploaded to prevent duplication
 	if mesh.VaoID != 0 {
-		fmt.printf("VAO: [ID %i] Trying to re-load an already loaded mesh", mesh->vaoId)
+		fmt.printf("VAO: [ID %i] Trying to re-load an already loaded mesh", mesh.VaoId)
 		return
 	}
 
@@ -408,7 +410,7 @@ func UpdateMeshBuffer(mesh Mesh, index int, data []byte, offset int) {
 
 // UnloadMesh - Unload mesh from memory (RAM and/or VRAM)
 func UnloadMesh(mesh *Mesh) {
-	//Check list of go-managed mesh IDs	
+	//Check list of go-managed mesh IDs
 	if slices.Contains(goManagedMeshIDs, mesh.VaoID) {
 		//C.UnloadMesh() only needs to read the VaoID & VboID
 		//passing a temporary struct with all other fields nil makes it safe for the C code to call free()
