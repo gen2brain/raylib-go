@@ -56,6 +56,11 @@ func (b *BoundingBox) cptr() *C.BoundingBox {
 	return (*C.BoundingBox)(unsafe.Pointer(b))
 }
 
+// cptr returns C pointer
+func (s *Shader) cptr() *C.Shader {
+	return (*C.Shader)(unsafe.Pointer(s))
+}
+
 // WindowShouldClose - Check if KEY_ESCAPE pressed or Close icon pressed
 func WindowShouldClose() bool {
 	ret := C.WindowShouldClose()
@@ -420,6 +425,99 @@ func BeginScissorMode(x, y, width, height int32) {
 // EndScissorMode - Ends scissor mode
 func EndScissorMode() {
 	C.EndScissorMode()
+}
+
+// LoadShader - Load a custom shader and bind default locations
+func LoadShader(vsFileName string, fsFileName string) Shader {
+	cvsFileName := C.CString(vsFileName)
+	defer C.free(unsafe.Pointer(cvsFileName))
+
+	cfsFileName := C.CString(fsFileName)
+	defer C.free(unsafe.Pointer(cfsFileName))
+
+	if vsFileName == "" {
+		cvsFileName = nil
+	}
+
+	if fsFileName == "" {
+		cfsFileName = nil
+	}
+
+	ret := C.LoadShader(cvsFileName, cfsFileName)
+	v := newShaderFromPointer(unsafe.Pointer(&ret))
+
+	return v
+}
+
+// LoadShaderFromMemory - Load shader from code strings and bind default locations
+func LoadShaderFromMemory(vsCode string, fsCode string) Shader {
+	cvsCode := C.CString(vsCode)
+	defer C.free(unsafe.Pointer(cvsCode))
+
+	cfsCode := C.CString(fsCode)
+	defer C.free(unsafe.Pointer(cfsCode))
+
+	if vsCode == "" {
+		cvsCode = nil
+	}
+
+	if fsCode == "" {
+		cfsCode = nil
+	}
+
+	ret := C.LoadShaderFromMemory(cvsCode, cfsCode)
+	v := newShaderFromPointer(unsafe.Pointer(&ret))
+
+	return v
+}
+
+// IsShaderReady - Check if a shader is ready
+func IsShaderReady(shader Shader) bool {
+	cshader := shader.cptr()
+	ret := C.IsShaderReady(*cshader)
+	v := bool(ret)
+	return v
+}
+
+// SetShaderValue - Set shader uniform value (float)
+func SetShaderValue(shader Shader, locIndex int32, value []float32, uniformType ShaderUniformDataType) {
+	cshader := shader.cptr()
+	clocIndex := (C.int)(locIndex)
+	cvalue := unsafe.SliceData(value)
+	cuniformType := (C.int)(uniformType)
+	C.SetShaderValue(*cshader, clocIndex, unsafe.Pointer(cvalue), cuniformType)
+}
+
+// SetShaderValueV - Set shader uniform value (float)
+func SetShaderValueV(shader Shader, locIndex int32, value []float32, uniformType ShaderUniformDataType, count int32) {
+	cshader := shader.cptr()
+	clocIndex := (C.int)(locIndex)
+	cvalue := unsafe.SliceData(value)
+	cuniformType := (C.int)(uniformType)
+	ccount := (C.int)(count)
+	C.SetShaderValueV(*cshader, clocIndex, unsafe.Pointer(cvalue), cuniformType, ccount)
+}
+
+// SetShaderValueMatrix - Set shader uniform value (matrix 4x4)
+func SetShaderValueMatrix(shader Shader, locIndex int32, mat Matrix) {
+	cshader := shader.cptr()
+	clocIndex := (C.int)(locIndex)
+	cmat := mat.cptr()
+	C.SetShaderValueMatrix(*cshader, clocIndex, *cmat)
+}
+
+// SetShaderValueTexture - Set shader uniform value for texture (sampler2d)
+func SetShaderValueTexture(shader Shader, locIndex int32, texture Texture2D) {
+	cshader := shader.cptr()
+	clocIndex := (C.int)(locIndex)
+	ctexture := texture.cptr()
+	C.SetShaderValueTexture(*cshader, clocIndex, *ctexture)
+}
+
+// UnloadShader - Unload a custom shader from memory
+func UnloadShader(shader Shader) {
+	cshader := shader.cptr()
+	C.UnloadShader(*cshader)
 }
 
 // GetMouseRay - Returns a ray trace from mouse position

@@ -10,126 +10,6 @@ import (
 	"unsafe"
 )
 
-// cptr returns C pointer
-func (s *Shader) cptr() *C.Shader {
-	return (*C.Shader)(unsafe.Pointer(s))
-}
-
-// LoadShader - Load a custom shader and bind default locations
-func LoadShader(vsFileName string, fsFileName string) Shader {
-	cvsFileName := C.CString(vsFileName)
-	defer C.free(unsafe.Pointer(cvsFileName))
-
-	cfsFileName := C.CString(fsFileName)
-	defer C.free(unsafe.Pointer(cfsFileName))
-
-	if vsFileName == "" {
-		cvsFileName = nil
-	}
-
-	if fsFileName == "" {
-		cfsFileName = nil
-	}
-
-	ret := C.LoadShader(cvsFileName, cfsFileName)
-	v := newShaderFromPointer(unsafe.Pointer(&ret))
-
-	return v
-}
-
-// LoadShaderFromMemory - Load shader from code strings and bind default locations
-func LoadShaderFromMemory(vsCode string, fsCode string) Shader {
-	cvsCode := C.CString(vsCode)
-	defer C.free(unsafe.Pointer(cvsCode))
-
-	cfsCode := C.CString(fsCode)
-	defer C.free(unsafe.Pointer(cfsCode))
-
-	if vsCode == "" {
-		cvsCode = nil
-	}
-
-	if fsCode == "" {
-		cfsCode = nil
-	}
-
-	ret := C.LoadShaderFromMemory(cvsCode, cfsCode)
-	v := newShaderFromPointer(unsafe.Pointer(&ret))
-
-	return v
-}
-
-// IsShaderReady - Check if a shader is ready
-func IsShaderReady(shader Shader) bool {
-	cshader := shader.cptr()
-	ret := C.IsShaderReady(*cshader)
-	v := bool(ret)
-	return v
-}
-
-// UnloadShader - Unload a custom shader from memory
-func UnloadShader(shader Shader) {
-	cshader := shader.cptr()
-	C.UnloadShader(*cshader)
-}
-
-// GetShaderLocation - Get shader uniform location
-func GetShaderLocation(shader Shader, uniformName string) int32 {
-	cshader := shader.cptr()
-	cuniformName := C.CString(uniformName)
-	defer C.free(unsafe.Pointer(cuniformName))
-
-	ret := C.GetShaderLocation(*cshader, cuniformName)
-	v := (int32)(ret)
-	return v
-}
-
-// GetShaderLocationAttrib - Get shader attribute location
-func GetShaderLocationAttrib(shader Shader, attribName string) int32 {
-	cshader := shader.cptr()
-	cuniformName := C.CString(attribName)
-	defer C.free(unsafe.Pointer(cuniformName))
-
-	ret := C.GetShaderLocationAttrib(*cshader, cuniformName)
-	v := (int32)(ret)
-	return v
-}
-
-// SetShaderValue - Set shader uniform value (float)
-func SetShaderValue(shader Shader, locIndex int32, value []float32, uniformType ShaderUniformDataType) {
-	cshader := shader.cptr()
-	clocIndex := (C.int)(locIndex)
-	cvalue := unsafe.SliceData(value)
-	cuniformType := (C.int)(uniformType)
-	C.SetShaderValue(*cshader, clocIndex, unsafe.Pointer(cvalue), cuniformType)
-}
-
-// SetShaderValueV - Set shader uniform value (float)
-func SetShaderValueV(shader Shader, locIndex int32, value []float32, uniformType ShaderUniformDataType, count int32) {
-	cshader := shader.cptr()
-	clocIndex := (C.int)(locIndex)
-	cvalue := unsafe.SliceData(value)
-	cuniformType := (C.int)(uniformType)
-	ccount := (C.int)(count)
-	C.SetShaderValueV(*cshader, clocIndex, unsafe.Pointer(cvalue), cuniformType, ccount)
-}
-
-// SetShaderValueMatrix - Set shader uniform value (matrix 4x4)
-func SetShaderValueMatrix(shader Shader, locIndex int32, mat Matrix) {
-	cshader := shader.cptr()
-	clocIndex := (C.int)(locIndex)
-	cmat := mat.cptr()
-	C.SetShaderValueMatrix(*cshader, clocIndex, *cmat)
-}
-
-// SetShaderValueTexture - Set shader uniform value for texture (sampler2d)
-func SetShaderValueTexture(shader Shader, locIndex int32, texture Texture2D) {
-	cshader := shader.cptr()
-	clocIndex := (C.int)(locIndex)
-	ctexture := texture.cptr()
-	C.SetShaderValueTexture(*cshader, clocIndex, *ctexture)
-}
-
 // SetMatrixProjection - Set a custom projection matrix (replaces internal projection matrix)
 func SetMatrixProjection(proj Matrix) {
 	cproj := proj.cptr()
@@ -464,7 +344,7 @@ func Scalef(x float32, y float32, z float32) {
 	C.rlScalef(cx, cy, cz)
 }
 
-// Ortho - transpiled function from  GOPATH/src/github.com/Konstantin8105/raylib-go/raylib/rlgl.h:518
+// Ortho .
 func Ortho(left float64, right float64, bottom float64, top float64, znear float64, zfar float64) {
 	cleft := C.double(left)
 	cright := C.double(right)
@@ -475,8 +355,7 @@ func Ortho(left float64, right float64, bottom float64, top float64, znear float
 	C.rlOrtho(cleft, cright, cbottom, ctop, cznear, czfar)
 }
 
-// Viewport - transpiled function from  GOPATH/src/github.com/Konstantin8105/raylib-go/raylib/rlgl.h:519
-// Set the viewport area
+// Viewport - Set the viewport area
 func Viewport(x int32, y int32, width int32, height int32) {
 	cx := C.int(x)
 	cy := C.int(y)
