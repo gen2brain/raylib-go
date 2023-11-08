@@ -86,16 +86,22 @@ func IsFontReady(font Font) bool {
 }
 
 // LoadFontData - Load font data for further use
-func LoadFontData(fileData []byte, dataSize int32, fontSize int32, fontChars *int32, charsCount, typ int32) *GlyphInfo {
+func LoadFontData(fileData []byte, fontSize int32, codePoints []int32, typ int32) []GlyphInfo {
 	cfileData := (*C.uchar)(unsafe.Pointer(&fileData[0]))
-	cdataSize := (C.int)(dataSize)
+	cdataSize := (C.int)(len(fileData))
 	cfontSize := (C.int)(fontSize)
-	cfontChars := (*C.int)(unsafe.Pointer(fontChars))
-	ccharsCount := (C.int)(charsCount)
+	ccodePoints := (*C.int)(unsafe.Pointer(&codePoints[0]))
+	ccodePointCount := (C.int)(len(codePoints))
 	ctype := (C.int)(typ)
-	ret := C.LoadFontData(cfileData, cdataSize, cfontSize, cfontChars, ccharsCount, ctype)
-	v := newGlyphInfoFromPointer(unsafe.Pointer(&ret))
-	return &v
+	ret := C.LoadFontData(cfileData, cdataSize, cfontSize, ccodePoints, ccodePointCount, ctype)
+	v := unsafe.Slice((*GlyphInfo)(unsafe.Pointer(ret)), ccodePointCount)
+	return v
+}
+
+// UnloadFontData - Unload font chars info data (RAM)
+func UnloadFontData(glyphs []GlyphInfo) {
+	cglyphs := (*C.GlyphInfo)(unsafe.Pointer(&glyphs[0]))
+	C.UnloadFontData(cglyphs, C.int(len(glyphs)))
 }
 
 // UnloadFont - Unload Font from GPU memory (VRAM)
