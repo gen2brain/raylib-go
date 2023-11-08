@@ -253,6 +253,145 @@ func GetModelBoundingBox(model Model) BoundingBox {
 	return v
 }
 
+// DrawModel - Draw a model (with texture if set)
+func DrawModel(model Model, position Vector3, scale float32, tint color.RGBA) {
+	cmodel := model.cptr()
+	cposition := position.cptr()
+	cscale := (C.float)(scale)
+	ctint := colorCptr(tint)
+	C.DrawModel(*cmodel, *cposition, cscale, *ctint)
+}
+
+// DrawModelEx - Draw a model with extended parameters
+func DrawModelEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint color.RGBA) {
+	cmodel := model.cptr()
+	cposition := position.cptr()
+	crotationAxis := rotationAxis.cptr()
+	crotationAngle := (C.float)(rotationAngle)
+	cscale := scale.cptr()
+	ctint := colorCptr(tint)
+	C.DrawModelEx(*cmodel, *cposition, *crotationAxis, crotationAngle, *cscale, *ctint)
+}
+
+// DrawModelWires - Draw a model wires (with texture if set)
+func DrawModelWires(model Model, position Vector3, scale float32, tint color.RGBA) {
+	cmodel := model.cptr()
+	cposition := position.cptr()
+	cscale := (C.float)(scale)
+	ctint := colorCptr(tint)
+	C.DrawModelWires(*cmodel, *cposition, cscale, *ctint)
+}
+
+// DrawModelWiresEx - Draw a model wires (with texture if set) with extended parameters
+func DrawModelWiresEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint color.RGBA) {
+	cmodel := model.cptr()
+	cposition := position.cptr()
+	crotationAxis := rotationAxis.cptr()
+	crotationAngle := (C.float)(rotationAngle)
+	cscale := scale.cptr()
+	ctint := colorCptr(tint)
+	C.DrawModelWiresEx(*cmodel, *cposition, *crotationAxis, crotationAngle, *cscale, *ctint)
+}
+
+// DrawBoundingBox - Draw bounding box (wires)
+func DrawBoundingBox(box BoundingBox, col color.RGBA) {
+	cbox := box.cptr()
+	ccolor := colorCptr(col)
+	C.DrawBoundingBox(*cbox, *ccolor)
+}
+
+// DrawBillboard - Draw a billboard texture
+func DrawBillboard(camera Camera, texture Texture2D, center Vector3, size float32, tint color.RGBA) {
+	ccamera := camera.cptr()
+	ctexture := texture.cptr()
+	ccenter := center.cptr()
+	csize := (C.float)(size)
+	ctint := colorCptr(tint)
+	C.DrawBillboard(*ccamera, *ctexture, *ccenter, csize, *ctint)
+}
+
+// DrawBillboardRec - Draw a billboard texture defined by sourceRec
+func DrawBillboardRec(camera Camera, texture Texture2D, sourceRec Rectangle, center Vector3, size Vector2, tint color.RGBA) {
+	ccamera := camera.cptr()
+	ctexture := texture.cptr()
+	csourceRec := sourceRec.cptr()
+	ccenter := center.cptr()
+	csize := size.cptr()
+	ctint := colorCptr(tint)
+	C.DrawBillboardRec(*ccamera, *ctexture, *csourceRec, *ccenter, *csize, *ctint)
+}
+
+// DrawBillboardPro - Draw a billboard texture with pro parameters
+func DrawBillboardPro(camera Camera, texture Texture2D, sourceRec Rectangle, position Vector3, up Vector3, size Vector2, origin Vector2, rotation float32, tint Color) {
+	ccamera := camera.cptr()
+	ctexture := texture.cptr()
+	csourceRec := sourceRec.cptr()
+	cposition := position.cptr()
+	cup := up.cptr()
+	csize := size.cptr()
+	corigin := origin.cptr()
+	crotation := (C.float)(rotation)
+	ctint := colorCptr(tint)
+	C.DrawBillboardPro(*ccamera, *ctexture, *csourceRec, *cposition, *cup, *csize, *corigin, crotation, *ctint)
+}
+
+// UploadMesh - Upload vertex data into a VAO (if supported) and VBO
+func UploadMesh(mesh *Mesh, dynamic bool) {
+	pinner := runtime.Pinner{}
+	//Mesh pointer fields must be pinned to allow a Mesh pointer to be passed to C.UploadMesh() below
+	//nil checks are required because Pin() will panic if passed nil
+	if mesh.Vertices != nil {
+		pinner.Pin(mesh.Vertices)
+	}
+	if mesh.Texcoords != nil {
+		pinner.Pin(mesh.Texcoords)
+	}
+	if mesh.Texcoords2 != nil {
+		pinner.Pin(mesh.Texcoords2)
+	}
+	if mesh.Normals != nil {
+		pinner.Pin(mesh.Normals)
+	}
+	if mesh.Tangents != nil {
+		pinner.Pin(mesh.Tangents)
+	}
+	if mesh.Colors != nil {
+		pinner.Pin(mesh.Colors)
+	}
+	if mesh.Indices != nil {
+		pinner.Pin(mesh.Indices)
+	}
+	if mesh.AnimVertices != nil {
+		pinner.Pin(mesh.AnimVertices)
+	}
+	if mesh.AnimNormals != nil {
+		pinner.Pin(mesh.AnimNormals)
+	}
+	if mesh.BoneIds != nil {
+		pinner.Pin(mesh.BoneIds)
+	}
+	if mesh.BoneWeights != nil {
+		pinner.Pin(mesh.BoneWeights)
+	}
+	//VboID of a new mesh should always be nil before uploading, but including this in case a mesh happens to have it set.
+	if mesh.VboID != nil {
+		pinner.Pin(mesh.VboID)
+	}
+
+	cMesh := mesh.cptr()
+	C.UploadMesh(cMesh, C.bool(dynamic))
+
+	pinner.Unpin()
+}
+
+// UpdateMeshBuffer - Update mesh vertex data in GPU for a specific buffer index
+func UpdateMeshBuffer(mesh Mesh, index int, data []byte, offset int) {
+	cindex := (C.int)(index)
+	coffset := (C.int)(offset)
+	cdataSize := (C.int)(len(data))
+	C.UpdateMeshBuffer(*mesh.cptr(), cindex, unsafe.Pointer(&data[0]), cdataSize, coffset)
+}
+
 // UnloadMesh - Unload mesh from memory (RAM and/or VRAM)
 func UnloadMesh(mesh *Mesh) {
 	//C.UnloadMesh() only needs to read the VaoID & VboID
@@ -265,12 +404,30 @@ func UnloadMesh(mesh *Mesh) {
 	C.UnloadMesh(*cmesh)
 }
 
+// DrawMesh - Draw a single mesh
+func DrawMesh(mesh Mesh, material Material, transform Matrix) {
+	C.DrawMesh(*mesh.cptr(), *material.cptr(), *transform.cptr())
+}
+
+// DrawMeshInstanced - Draw mesh with instanced rendering
+func DrawMeshInstanced(mesh Mesh, material Material, transforms []Matrix, instances int) {
+	C.DrawMeshInstanced(*mesh.cptr(), *material.cptr(), transforms[0].cptr(), C.int(instances))
+}
+
 // ExportMesh - Export mesh as an OBJ file
 func ExportMesh(mesh Mesh, fileName string) {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	cmesh := mesh.cptr()
 	C.ExportMesh(*cmesh, cfileName)
+}
+
+// GetMeshBoundingBox - Compute mesh bounding box limits
+func GetMeshBoundingBox(mesh Mesh) BoundingBox {
+	cmesh := mesh.cptr()
+	ret := C.GetMeshBoundingBox(*cmesh)
+	v := newBoundingBoxFromPointer(unsafe.Pointer(&ret))
+	return v
 }
 
 // GenMeshPoly - Generate polygonal mesh
@@ -479,106 +636,6 @@ func IsModelAnimationValid(model Model, anim ModelAnimation) bool {
 	return v
 }
 
-// DrawModel - Draw a model (with texture if set)
-func DrawModel(model Model, position Vector3, scale float32, tint color.RGBA) {
-	cmodel := model.cptr()
-	cposition := position.cptr()
-	cscale := (C.float)(scale)
-	ctint := colorCptr(tint)
-	C.DrawModel(*cmodel, *cposition, cscale, *ctint)
-}
-
-// DrawModelEx - Draw a model with extended parameters
-func DrawModelEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint color.RGBA) {
-	cmodel := model.cptr()
-	cposition := position.cptr()
-	crotationAxis := rotationAxis.cptr()
-	crotationAngle := (C.float)(rotationAngle)
-	cscale := scale.cptr()
-	ctint := colorCptr(tint)
-	C.DrawModelEx(*cmodel, *cposition, *crotationAxis, crotationAngle, *cscale, *ctint)
-}
-
-// DrawModelWires - Draw a model wires (with texture if set)
-func DrawModelWires(model Model, position Vector3, scale float32, tint color.RGBA) {
-	cmodel := model.cptr()
-	cposition := position.cptr()
-	cscale := (C.float)(scale)
-	ctint := colorCptr(tint)
-	C.DrawModelWires(*cmodel, *cposition, cscale, *ctint)
-}
-
-// DrawModelWiresEx - Draw a model wires (with texture if set) with extended parameters
-func DrawModelWiresEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint color.RGBA) {
-	cmodel := model.cptr()
-	cposition := position.cptr()
-	crotationAxis := rotationAxis.cptr()
-	crotationAngle := (C.float)(rotationAngle)
-	cscale := scale.cptr()
-	ctint := colorCptr(tint)
-	C.DrawModelWiresEx(*cmodel, *cposition, *crotationAxis, crotationAngle, *cscale, *ctint)
-}
-
-// DrawBoundingBox - Draw bounding box (wires)
-func DrawBoundingBox(box BoundingBox, col color.RGBA) {
-	cbox := box.cptr()
-	ccolor := colorCptr(col)
-	C.DrawBoundingBox(*cbox, *ccolor)
-}
-
-// DrawBillboard - Draw a billboard texture
-func DrawBillboard(camera Camera, texture Texture2D, center Vector3, size float32, tint color.RGBA) {
-	ccamera := camera.cptr()
-	ctexture := texture.cptr()
-	ccenter := center.cptr()
-	csize := (C.float)(size)
-	ctint := colorCptr(tint)
-	C.DrawBillboard(*ccamera, *ctexture, *ccenter, csize, *ctint)
-}
-
-// DrawBillboardRec - Draw a billboard texture defined by sourceRec
-func DrawBillboardRec(camera Camera, texture Texture2D, sourceRec Rectangle, center Vector3, size Vector2, tint color.RGBA) {
-	ccamera := camera.cptr()
-	ctexture := texture.cptr()
-	csourceRec := sourceRec.cptr()
-	ccenter := center.cptr()
-	csize := size.cptr()
-	ctint := colorCptr(tint)
-	C.DrawBillboardRec(*ccamera, *ctexture, *csourceRec, *ccenter, *csize, *ctint)
-}
-
-// DrawBillboardPro - Draw a billboard texture with pro parameters
-func DrawBillboardPro(camera Camera, texture Texture2D, sourceRec Rectangle, position Vector3, up Vector3, size Vector2, origin Vector2, rotation float32, tint Color) {
-	ccamera := camera.cptr()
-	ctexture := texture.cptr()
-	csourceRec := sourceRec.cptr()
-	cposition := position.cptr()
-	cup := up.cptr()
-	csize := size.cptr()
-	corigin := origin.cptr()
-	crotation := (C.float)(rotation)
-	ctint := colorCptr(tint)
-	C.DrawBillboardPro(*ccamera, *ctexture, *csourceRec, *cposition, *cup, *csize, *corigin, crotation, *ctint)
-}
-
-// DrawMesh - Draw a single mesh
-func DrawMesh(mesh Mesh, material Material, transform Matrix) {
-	C.DrawMesh(*mesh.cptr(), *material.cptr(), *transform.cptr())
-}
-
-// DrawMeshInstanced - Draw mesh with instanced rendering
-func DrawMeshInstanced(mesh Mesh, material Material, transforms []Matrix, instances int) {
-	C.DrawMeshInstanced(*mesh.cptr(), *material.cptr(), transforms[0].cptr(), C.int(instances))
-}
-
-// GetMeshBoundingBox - Compute mesh bounding box limits
-func GetMeshBoundingBox(mesh Mesh) BoundingBox {
-	cmesh := mesh.cptr()
-	ret := C.GetMeshBoundingBox(*cmesh)
-	v := newBoundingBoxFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // CheckCollisionSpheres - Detect collision between two spheres
 func CheckCollisionSpheres(centerA Vector3, radiusA float32, centerB Vector3, radiusB float32) bool {
 	ccenterA := centerA.cptr()
@@ -659,53 +716,4 @@ func GetRayCollisionQuad(ray Ray, p1, p2, p3, p4 Vector3) RayCollision {
 	ret := C.GetRayCollisionQuad(*cray, *cp1, *cp2, *cp3, *cp4)
 	v := newRayCollisionFromPointer(unsafe.Pointer(&ret))
 	return v
-}
-
-// UploadMesh - Upload vertex data into a VAO (if supported) and VBO
-func UploadMesh(mesh *Mesh, dynamic bool) {
-	pinner := runtime.Pinner{}
-	//Mesh pointer fields must be pinned to allow a Mesh pointer to be passed to C.UploadMesh() below
-	//nil checks are required because Pin() will panic if passed nil
-	if mesh.Vertices != nil {
-		pinner.Pin(mesh.Vertices)
-	}
-	if mesh.Texcoords != nil {
-		pinner.Pin(mesh.Texcoords)
-	}
-	if mesh.Texcoords2 != nil {
-		pinner.Pin(mesh.Texcoords2)
-	}
-	if mesh.Normals != nil {
-		pinner.Pin(mesh.Normals)
-	}
-	if mesh.Tangents != nil {
-		pinner.Pin(mesh.Tangents)
-	}
-	if mesh.Colors != nil {
-		pinner.Pin(mesh.Colors)
-	}
-	if mesh.Indices != nil {
-		pinner.Pin(mesh.Indices)
-	}
-	if mesh.AnimVertices != nil {
-		pinner.Pin(mesh.AnimVertices)
-	}
-	if mesh.AnimNormals != nil {
-		pinner.Pin(mesh.AnimNormals)
-	}
-	if mesh.BoneIds != nil {
-		pinner.Pin(mesh.BoneIds)
-	}
-	if mesh.BoneWeights != nil {
-		pinner.Pin(mesh.BoneWeights)
-	}
-	//VboID of a new mesh should always be nil before uploading, but including this in case a mesh happens to have it set.
-	if mesh.VboID != nil {
-		pinner.Pin(mesh.VboID)
-	}
-
-	cMesh := mesh.cptr()
-	C.UploadMesh(cMesh, C.bool(dynamic))
-
-	pinner.Unpin()
 }
