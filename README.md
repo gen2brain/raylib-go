@@ -92,6 +92,31 @@ func main() {
 
 Check more [examples](https://github.com/gen2brain/raylib-go/tree/master/examples) organized by raylib modules.
 
+### Cross-compile (Linux)
+
+To cross-compile for Windows install [MinGW](https://www.mingw-w64.org/) toolchain.
+
+```
+$ CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 go build -ldflags "-s -w"
+$ file basic_window.exe
+basic_window.exe: PE32+ executable (console) x86-64 (stripped to external PDB), for MS Windows, 11 sections
+
+$ CGO_ENABLED=1 CC=i686-w64-mingw32-gcc GOOS=windows GOARCH=386 go build -ldflags "-s -w"
+$ file basic_window.exe
+basic_window.exe: PE32 executable (console) Intel 80386 (stripped to external PDB), for MS Windows, 9 sections
+```
+
+To cross-compile for macOS install [OSXCross](https://github.com/tpoechtrager/osxcross) toolchain.
+
+```
+$ CGO_ENABLED=1 CC=x86_64-apple-darwin21.1-clang GOOS=darwin GOARCH=amd64 go build -ldflags "-linkmode external -s -w '-extldflags=-mmacosx-version-min=10.15'"
+$ file basic_window
+basic_window: Mach-O 64-bit x86_64 executable, flags:<NOUNDEFS|DYLDLINK|TWOLEVEL>
+
+$ CGO_ENABLED=1 CC=aarch64-apple-darwin21.1-clang GOOS=darwin GOARCH=arm64 go build -ldflags "-linkmode external -s -w '-extldflags=-mmacosx-version-min=12.0.0'"
+$ file basic_window
+basic_window: Mach-O 64-bit arm64 executable, flags:<NOUNDEFS|DYLDLINK|TWOLEVEL|PIE>
+```
 
 ### License
 
