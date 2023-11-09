@@ -40,6 +40,8 @@ On macOS you need Xcode or Command Line Tools for Xcode.
 On Windows you need C compiler, like [Mingw-w64](https://mingw-w64.org) or [TDM-GCC](http://tdm-gcc.tdragon.net/).
 You can also build binary in [MSYS2](https://msys2.github.io/) shell.
 
+To remove console window, build with `-ldflags "-H=windowsgui"`.
+
 ##### Android
 
 [Android example](https://github.com/gen2brain/raylib-go/tree/master/examples/others/android/example).
