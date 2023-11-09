@@ -59,6 +59,14 @@ func DrawLineEx(startPos, endPos Vector2, thick float32, col color.RGBA) {
 	C.DrawLineEx(*cstartPos, *cendPos, cthick, *ccolor)
 }
 
+// DrawLineStrip - Draw lines sequence
+func DrawLineStrip(points []Vector2, pointCount int32, col color.RGBA) {
+	cpoints := (*C.Vector2)(unsafe.Pointer(&points[0]))
+	cpointCount := (C.int)(pointCount)
+	ccolor := colorCptr(col)
+	C.DrawLineStrip(cpoints, cpointCount, *ccolor)
+}
+
 // DrawLineBezier - Draw a line using cubic-bezier curves in-out
 func DrawLineBezier(startPos, endPos Vector2, thick float32, col color.RGBA) {
 	cstartPos := startPos.cptr()
@@ -66,53 +74,6 @@ func DrawLineBezier(startPos, endPos Vector2, thick float32, col color.RGBA) {
 	cthick := (C.float)(thick)
 	ccolor := colorCptr(col)
 	C.DrawLineBezier(*cstartPos, *cendPos, cthick, *ccolor)
-}
-
-// DrawLineBezierQuad - Draw line using quadratic bezier curves with a control point
-func DrawLineBezierQuad(startPos Vector2, endPos Vector2, controlPos Vector2, thick float32, col color.RGBA) {
-	cstartPos := startPos.cptr()
-	cendPos := endPos.cptr()
-	ccontrolPos := controlPos.cptr()
-	cthick := (C.float)(thick)
-	ccolor := colorCptr(col)
-	C.DrawLineBezierQuad(*cstartPos, *cendPos, *ccontrolPos, cthick, *ccolor)
-}
-
-// DrawLineBezierCubic - Draw line using cubic bezier curves with 2 contrl points
-func DrawLineBezierCubic(startPos Vector2, endPos Vector2, startControlPos Vector2, endControlPos Vector2, thick float32, col color.RGBA) {
-	cstartPos := startPos.cptr()
-	cendPos := endPos.cptr()
-	cstartControlPos := startControlPos.cptr()
-	cendControlPos := endControlPos.cptr()
-	cthick := (C.float)(thick)
-	ccolor := colorCptr(col)
-	C.DrawLineBezierCubic(*cstartPos, *cendPos, *cstartControlPos, *cendControlPos, cthick, *ccolor)
-}
-
-// DrawLineBSpline - Draw a B-Spline line, minimum 4 points
-func DrawLineBSpline(points []Vector2, pointCount int32, thick float32, col color.RGBA) {
-	cpoints := (*C.Vector2)(unsafe.Pointer(&points[0]))
-	cpointCount := (C.int)(pointCount)
-	cthick := (C.float)(thick)
-	ccolor := colorCptr(col)
-	C.DrawLineBSpline(cpoints, cpointCount, cthick, *ccolor)
-}
-
-// DrawLineCatmullRom - Draw a Catmull Rom spline line, minimum 4 points
-func DrawLineCatmullRom(points []Vector2, pointCount int32, thick float32, col color.RGBA) {
-	cpoints := (*C.Vector2)(unsafe.Pointer(&points[0]))
-	cpointCount := (C.int)(pointCount)
-	cthick := (C.float)(thick)
-	ccolor := colorCptr(col)
-	C.DrawLineCatmullRom(cpoints, cpointCount, cthick, *ccolor)
-}
-
-// DrawLineStrip - Draw lines sequence
-func DrawLineStrip(points []Vector2, pointCount int32, col color.RGBA) {
-	cpoints := (*C.Vector2)(unsafe.Pointer(&points[0]))
-	cpointCount := (C.int)(pointCount)
-	ccolor := colorCptr(col)
-	C.DrawLineStrip(cpoints, cpointCount, *ccolor)
 }
 
 // DrawCircle - Draw a color-filled circle

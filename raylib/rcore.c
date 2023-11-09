@@ -189,7 +189,11 @@ __declspec(dllimport) int __stdcall WideCharToMultiByte(unsigned int cp, unsigne
     #define MAX_FILEPATH_CAPACITY       8192        // Maximum capacity for filepath
 #endif
 #ifndef MAX_FILEPATH_LENGTH
-    #define MAX_FILEPATH_LENGTH         4096        // Maximum length for filepaths (Linux PATH_MAX default value)
+    #if defined(_WIN32)
+        #define MAX_FILEPATH_LENGTH      256        // On Win32, MAX_PATH = 260 (limits.h) but Windows 10, Version 1607 enables long paths...
+    #else
+        #define MAX_FILEPATH_LENGTH     4096        // On Linux, PATH_MAX = 4096 by default (limits.h)
+    #endif
 #endif
 
 #ifndef MAX_KEYBOARD_KEYS
@@ -252,6 +256,7 @@ typedef struct CoreData {
         bool shouldClose;                   // Check if window set for closing
         bool resizedLastFrame;              // Check if window has been resized last frame
         bool eventWaiting;                  // Wait for events before ending frame
+        bool usingFbo;                      // Using FBO (RenderTexture) for rendering instead of default framebuffer
 
         Point position;                     // Window position (required on fullscreen toggle)
         Point previousPosition;             // Window previous position (required on borderless windowed toggle)
@@ -1035,6 +1040,7 @@ void BeginTextureMode(RenderTexture2D target)
     // calculation when using BeginMode3D()
     CORE.Window.currentFbo.width = target.texture.width;
     CORE.Window.currentFbo.height = target.texture.height;
+    CORE.Window.usingFbo = true;
 }
 
 // Ends drawing to render texture
@@ -1050,6 +1056,7 @@ void EndTextureMode(void)
     // Reset current fbo to screen size
     CORE.Window.currentFbo.width = CORE.Window.render.width;
     CORE.Window.currentFbo.height = CORE.Window.render.height;
+    CORE.Window.usingFbo = false;
 }
 
 // Begin custom shader mode
@@ -1086,19 +1093,22 @@ void BeginScissorMode(int x, int y, int width, int height)
     rlEnableScissorTest();
 
 #if defined(__APPLE__)
-    Vector2 scale = GetWindowScaleDPI();
-    rlScissor((int)(x*scale.x), (int)(GetScreenHeight()*scale.y - (((y + height)*scale.y))), (int)(width*scale.x), (int)(height*scale.y));
+    if (CORE.Window.usingFbo)
+    {
+        Vector2 scale = GetWindowScaleDPI();
+        rlScissor((int)(x*scale.x), (int)(GetScreenHeight()*scale.y - (((y + height)*scale.y))), (int)(width*scale.x), (int)(height*scale.y));
+    }
 #else
-    if ((CORE.Window.flags & FLAG_WINDOW_HIGHDPI) > 0)
+    if (CORE.Window.usingFbo && ((CORE.Window.flags & FLAG_WINDOW_HIGHDPI) > 0))
     {
         Vector2 scale = GetWindowScaleDPI();
         rlScissor((int)(x*scale.x), (int)(CORE.Window.currentFbo.height - (y + height)*scale.y), (int)(width*scale.x), (int)(height*scale.y));
     }
-    else
+#endif
+    else 
     {
         rlScissor(x, CORE.Window.currentFbo.height - (y + height), width, height);
     }
-#endif
 }
 
 // End scissor mode
@@ -2513,7 +2523,7 @@ bool ExportAutomationEventList(AutomationEventList list, const char *fileName)
 
     // Add events data
     byteCount += sprintf(txtData + byteCount, "c %i\n", list.count);
-    for (int i = 0; i < list.count; i++)
+    for (unsigned int i = 0; i < list.count; i++)
     {
         byteCount += snprintf(txtData + byteCount, 256, "e %i %i %i %i %i %i // Event: %s\n", list.events[i].frame, list.events[i].type,
             list.events[i].params[0], list.events[i].params[1], list.events[i].params[2], list.events[i].params[3], autoEventTypeName[list.events[i].type]);
@@ -3167,7 +3177,11 @@ static void ScanDirectoryFiles(const char *basePath, FilePathList *files, const 
             if ((strcmp(dp->d_name, ".") != 0) &&
                 (strcmp(dp->d_name, "..") != 0))
             {
+            #if defined(_WIN32)
+                sprintf(path, "%s\\%s", basePath, dp->d_name);
+            #else
                 sprintf(path, "%s/%s", basePath, dp->d_name);
+            #endif
 
                 if (filter != NULL)
                 {
@@ -3206,7 +3220,11 @@ static void ScanDirectoryFilesRecursively(const char *basePath, FilePathList *fi
             if ((strcmp(dp->d_name, ".") != 0) && (strcmp(dp->d_name, "..") != 0))
             {
                 // Construct new path from our base path
+            #if defined(_WIN32)
+                sprintf(path, "%s\\%s", basePath, dp->d_name);
+            #else
                 sprintf(path, "%s/%s", basePath, dp->d_name);
+            #endif
 
                 if (IsPathFile(path))
                 {
