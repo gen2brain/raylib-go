@@ -14,9 +14,19 @@ import (
 	"unsafe"
 )
 
+// newMeshFromPointer - Returns new Mesh from pointer
+func newMeshFromPointer(ptr unsafe.Pointer) Mesh {
+	return *(*Mesh)(ptr)
+}
+
 // cptr returns C pointer
 func (m *Mesh) cptr() *C.Mesh {
 	return (*C.Mesh)(unsafe.Pointer(m))
+}
+
+// newMaterialFromPointer - Returns new Material from pointer
+func newMaterialFromPointer(ptr unsafe.Pointer) Material {
+	return *(*Material)(ptr)
 }
 
 // cptr returns C pointer
@@ -24,9 +34,19 @@ func (m *Material) cptr() *C.Material {
 	return (*C.Material)(unsafe.Pointer(m))
 }
 
+// newModelFromPointer - Returns new Model from pointer
+func newModelFromPointer(ptr unsafe.Pointer) Model {
+	return *(*Model)(ptr)
+}
+
 // cptr returns C pointer
 func (m *Model) cptr() *C.Model {
 	return (*C.Model)(unsafe.Pointer(m))
+}
+
+// newRayFromPointer - Returns new Ray from pointer
+func newRayFromPointer(ptr unsafe.Pointer) Ray {
+	return *(*Ray)(ptr)
 }
 
 // cptr returns C pointer
@@ -34,9 +54,19 @@ func (r *Ray) cptr() *C.Ray {
 	return (*C.Ray)(unsafe.Pointer(r))
 }
 
+// newModelAnimationFromPointer - Returns new ModelAnimation from pointer
+func newModelAnimationFromPointer(ptr unsafe.Pointer) ModelAnimation {
+	return *(*ModelAnimation)(ptr)
+}
+
 // cptr returns C pointer
 func (r *ModelAnimation) cptr() *C.ModelAnimation {
 	return (*C.ModelAnimation)(unsafe.Pointer(r))
+}
+
+// newRayCollisionFromPointer - Returns new RayCollision from pointer
+func newRayCollisionFromPointer(ptr unsafe.Pointer) RayCollision {
+	return *(*RayCollision)(ptr)
 }
 
 // DrawLine3D - Draw a line in 3D world space

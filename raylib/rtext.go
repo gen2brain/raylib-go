@@ -10,9 +10,19 @@ import (
 	"unsafe"
 )
 
+// newGlyphInfoFromPointer - Returns new GlyphInfo from pointer
+func newGlyphInfoFromPointer(ptr unsafe.Pointer) GlyphInfo {
+	return *(*GlyphInfo)(ptr)
+}
+
 // cptr returns C pointer
 func (c *GlyphInfo) cptr() *C.GlyphInfo {
 	return (*C.GlyphInfo)(unsafe.Pointer(c))
+}
+
+// newFontFromPointer - Returns new Font from pointer
+func newFontFromPointer(ptr unsafe.Pointer) Font {
+	return *(*Font)(ptr)
 }
 
 // cptr returns C pointer

@@ -1,45 +1,14 @@
 /*
-Package raylib - Go bindings for raylib, a simple and easy-to-use library to learn videogames programming.
+Package raylib - Go bindings for raylib, a simple and easy-to-use library to enjoy videogames programming.
 
 raylib is highly inspired by Borland BGI graphics lib and by XNA framework.
-
 raylib could be useful for prototyping, tools development, graphic applications, embedded systems and education.
 
 NOTE for ADVENTURERS: raylib is a programming library to learn videogames programming; no fancy interface, no visual helpers, no auto-debugging... just coding in the most pure spartan-programmers way.
-
-Example:
-
-	package main
-
-	import "github.com/gen2brain/raylib-go/raylib"
-
-	func main() {
-		rl.InitWindow(800, 450, "raylib [core] example - basic window")
-
-		rl.SetTargetFPS(60)
-
-		for !rl.WindowShouldClose() {
-			rl.BeginDrawing()
-
-			rl.ClearBackground(rl.RayWhite)
-
-			rl.DrawText("Congrats! You created your first window!", 190, 200, 20, rl.LightGray)
-
-			rl.EndDrawing()
-		}
-
-		rl.CloseWindow()
-	}
 */
 package rl
 
-/*
-#include "raylib.h"
-#include <stdlib.h>
-*/
-import "C"
 import (
-	"image"
 	"image/color"
 	"io"
 	"runtime"
@@ -69,59 +38,6 @@ type Wave struct {
 func NewWave(sampleCount, sampleRate, sampleSize, channels uint32, data []byte) Wave {
 	d := unsafe.Pointer(&data[0])
 	return Wave{sampleCount, sampleRate, sampleSize, channels, d}
-}
-
-// newWaveFromPointer - Returns new Wave from pointer
-func newWaveFromPointer(ptr unsafe.Pointer) Wave {
-	return *(*Wave)(ptr)
-}
-
-// Sound source type
-type Sound struct {
-	Stream     AudioStream
-	FrameCount uint32
-	_          [4]byte
-}
-
-// newSoundFromPointer - Returns new Sound from pointer
-func newSoundFromPointer(ptr unsafe.Pointer) Sound {
-	return *(*Sound)(ptr)
-}
-
-// Music type (file streaming from memory)
-// NOTE: Anything longer than ~10 seconds should be streamed
-type Music struct {
-	Stream     AudioStream
-	FrameCount uint32
-	Looping    bool
-	CtxType    int32
-	CtxData    unsafe.Pointer
-}
-
-// newMusicFromPointer - Returns new Music from pointer
-func newMusicFromPointer(ptr unsafe.Pointer) Music {
-	return *(*Music)(ptr)
-}
-
-// AudioStream type
-// NOTE: Useful to create custom audio streams not bound to a specific file
-type AudioStream struct {
-	// Buffer
-	Buffer *C.rAudioBuffer
-	// Processor
-	Processor *C.rAudioProcessor
-	// Frequency (samples per second)
-	SampleRate uint32
-	// Bit depth (bits per sample): 8, 16, 32 (24 not supported)
-	SampleSize uint32
-	// Number of channels (1-mono, 2-stereo)
-	Channels uint32
-	_        [4]byte
-}
-
-// newAudioStreamFromPointer - Returns new AudioStream from pointer
-func newAudioStreamFromPointer(ptr unsafe.Pointer) AudioStream {
-	return *(*AudioStream)(ptr)
 }
 
 // CameraMode type
@@ -483,11 +399,6 @@ func NewVector2(x, y float32) Vector2 {
 	return Vector2{x, y}
 }
 
-// newVector2FromPointer - Returns new Vector2 from pointer
-func newVector2FromPointer(ptr unsafe.Pointer) Vector2 {
-	return *(*Vector2)(ptr)
-}
-
 // Vector3 type
 type Vector3 struct {
 	X float32
@@ -498,11 +409,6 @@ type Vector3 struct {
 // NewVector3 - Returns new Vector3
 func NewVector3(X, Y, Z float32) Vector3 {
 	return Vector3{X, Y, Z}
-}
-
-// newVector3FromPointer - Returns new Vector3 from pointer
-func newVector3FromPointer(ptr unsafe.Pointer) Vector3 {
-	return *(*Vector3)(ptr)
 }
 
 // Vector4 type
@@ -518,11 +424,6 @@ func NewVector4(X, Y, Z, W float32) Vector4 {
 	return Vector4{X, Y, Z, W}
 }
 
-// newVector4FromPointer - Returns new Vector4 from pointer
-func newVector4FromPointer(ptr unsafe.Pointer) Vector4 {
-	return *(*Vector4)(ptr)
-}
-
 // Matrix type (OpenGL style 4x4 - right handed, column major)
 type Matrix struct {
 	M0, M4, M8, M12  float32
@@ -534,11 +435,6 @@ type Matrix struct {
 // NewMatrix - Returns new Matrix
 func NewMatrix(m0, m4, m8, m12, m1, m5, m9, m13, m2, m6, m10, m14, m3, m7, m11, m15 float32) Matrix {
 	return Matrix{m0, m4, m8, m12, m1, m5, m9, m13, m2, m6, m10, m14, m3, m7, m11, m15}
-}
-
-// newMatrixFromPointer - Returns new Matrix from pointer
-func newMatrixFromPointer(ptr unsafe.Pointer) Matrix {
-	return *(*Matrix)(ptr)
 }
 
 // Mat2 type (used for polygon shape rotation matrix)
@@ -576,11 +472,6 @@ func NewColor(r, g, b, a uint8) color.RGBA {
 	return color.RGBA{r, g, b, a}
 }
 
-// newColorFromPointer - Returns new Color from pointer
-func newColorFromPointer(ptr unsafe.Pointer) color.RGBA {
-	return *(*color.RGBA)(ptr)
-}
-
 // Rectangle type
 type Rectangle struct {
 	X      float32
@@ -592,11 +483,6 @@ type Rectangle struct {
 // NewRectangle - Returns new Rectangle
 func NewRectangle(x, y, width, height float32) Rectangle {
 	return Rectangle{x, y, width, height}
-}
-
-// newRectangleFromPointer - Returns new Rectangle from pointer
-func newRectangleFromPointer(ptr unsafe.Pointer) Rectangle {
-	return *(*Rectangle)(ptr)
 }
 
 // ToInt32 converts rectangle to int32 variant
@@ -651,11 +537,6 @@ func NewCamera3D(pos, target, up Vector3, fovy float32, ct CameraProjection) Cam
 	return Camera3D{pos, target, up, fovy, ct}
 }
 
-// newCamera3DFromPointer - Returns new Camera3D from pointer
-func newCamera3DFromPointer(ptr unsafe.Pointer) Camera3D {
-	return *(*Camera3D)(ptr)
-}
-
 // Camera2D type, defines a 2d camera
 type Camera2D struct {
 	// Camera offset (displacement from target)
@@ -673,11 +554,6 @@ func NewCamera2D(offset, target Vector2, rotation, zoom float32) Camera2D {
 	return Camera2D{offset, target, rotation, zoom}
 }
 
-// newCamera2DFromPointer - Returns new Camera2D from pointer
-func newCamera2DFromPointer(ptr unsafe.Pointer) Camera2D {
-	return *(*Camera2D)(ptr)
-}
-
 // BoundingBox type
 type BoundingBox struct {
 	// Minimum vertex box-corner
@@ -689,11 +565,6 @@ type BoundingBox struct {
 // NewBoundingBox - Returns new BoundingBox
 func NewBoundingBox(min, max Vector3) BoundingBox {
 	return BoundingBox{min, max}
-}
-
-// newBoundingBoxFromPointer - Returns new BoundingBox from pointer
-func newBoundingBoxFromPointer(ptr unsafe.Pointer) BoundingBox {
-	return *(*BoundingBox)(ptr)
 }
 
 // Asset file
@@ -816,11 +687,6 @@ type Mesh struct {
 	VboID *uint32
 }
 
-// newMeshFromPointer - Returns new Mesh from pointer
-func newMeshFromPointer(ptr unsafe.Pointer) Mesh {
-	return *(*Mesh)(ptr)
-}
-
 // Material type
 type Material struct {
 	// Shader
@@ -829,11 +695,6 @@ type Material struct {
 	Maps *MaterialMap
 	// Generic parameters (if required)
 	Params [4]float32
-}
-
-// newMaterialFromPointer - Returns new Material from pointer
-func newMaterialFromPointer(ptr unsafe.Pointer) Material {
-	return *(*Material)(ptr)
 }
 
 // GetMap - Get pointer to MaterialMap by map type
@@ -901,11 +762,6 @@ func (m Model) GetBindPose() []Transform {
 	return unsafe.Slice(m.BindPose, m.BoneCount)
 }
 
-// newModelFromPointer - Returns new Model from pointer
-func newModelFromPointer(ptr unsafe.Pointer) Model {
-	return *(*Model)(ptr)
-}
-
 // BoneInfo type
 type BoneInfo struct {
 	Name   [32]int8
@@ -932,11 +788,6 @@ func NewRay(position, direction Vector3) Ray {
 	return Ray{position, direction}
 }
 
-// newRayFromPointer - Returns new Ray from pointer
-func newRayFromPointer(ptr unsafe.Pointer) Ray {
-	return *(*Ray)(ptr)
-}
-
 // ModelAnimation type
 type ModelAnimation struct {
 	BoneCount  int32
@@ -944,11 +795,6 @@ type ModelAnimation struct {
 	Bones      *BoneInfo
 	FramePoses **Transform
 	Name       [32]int8
-}
-
-// newModelAnimationFromPointer - Returns new ModelAnimation from pointer
-func newModelAnimationFromPointer(ptr unsafe.Pointer) ModelAnimation {
-	return *(*ModelAnimation)(ptr)
 }
 
 // RayCollision type - ray hit information
@@ -962,11 +808,6 @@ type RayCollision struct {
 // NewRayCollision - Returns new RayCollision
 func NewRayCollision(hit bool, distance float32, point, normal Vector3) RayCollision {
 	return RayCollision{hit, distance, point, normal}
-}
-
-// newRayCollisionFromPointer - Returns new RayCollision from pointer
-func newRayCollisionFromPointer(ptr unsafe.Pointer) RayCollision {
-	return *(*RayCollision)(ptr)
 }
 
 // BlendMode type
@@ -995,11 +836,6 @@ type Shader struct {
 // NewShader - Returns new Shader
 func NewShader(id uint32, locs *int32) Shader {
 	return Shader{id, locs}
-}
-
-// newShaderFromPointer - Returns new Shader from pointer
-func newShaderFromPointer(ptr unsafe.Pointer) Shader {
-	return *(*Shader)(ptr)
 }
 
 // GetLocation - Get shader value's location
@@ -1031,11 +867,6 @@ func NewGlyphInfo(value int32, offsetX, offsetY, advanceX int32, image Image) Gl
 	return GlyphInfo{value, offsetX, offsetY, advanceX, image}
 }
 
-// newGlyphInfoFromPointer - Returns new GlyphInfo from pointer
-func newGlyphInfoFromPointer(ptr unsafe.Pointer) GlyphInfo {
-	return *(*GlyphInfo)(ptr)
-}
-
 // Font type, includes texture and charSet array data
 type Font struct {
 	// Base size (default chars height)
@@ -1050,11 +881,6 @@ type Font struct {
 	Recs *Rectangle
 	// Characters info data
 	Chars *GlyphInfo
-}
-
-// newFontFromPointer - Returns new Font from pointer
-func newFontFromPointer(ptr unsafe.Pointer) Font {
-	return *(*Font)(ptr)
 }
 
 // PixelFormat - Texture format
@@ -1160,36 +986,6 @@ func NewImage(data []byte, width, height, mipmaps int32, format PixelFormat) *Im
 	return &Image{d, width, height, mipmaps, format}
 }
 
-// newImageFromPointer - Returns new Image from pointer
-func newImageFromPointer(ptr unsafe.Pointer) *Image {
-	return (*Image)(ptr)
-}
-
-// NewImageFromImage - Returns new Image from Go image.Image
-func NewImageFromImage(img image.Image) *Image {
-	size := img.Bounds().Size()
-
-	cx := (C.int)(size.X)
-	cy := (C.int)(size.Y)
-	ccolor := colorCptr(White)
-	ret := C.GenImageColor(cx, cy, *ccolor)
-
-	for y := 0; y < size.Y; y++ {
-		for x := 0; x < size.X; x++ {
-			color := img.At(x, y)
-			r, g, b, a := color.RGBA()
-			rcolor := NewColor(uint8(r), uint8(g), uint8(b), uint8(a))
-			ccolor = colorCptr(rcolor)
-
-			cx = (C.int)(x)
-			cy = (C.int)(y)
-			C.ImageDrawPixel(&ret, cx, cy, *ccolor)
-		}
-	}
-	v := newImageFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // Texture2D type, bpp always RGBA (32bit)
 // NOTE: Data stored in GPU memory
 type Texture2D struct {
@@ -1210,11 +1006,6 @@ func NewTexture2D(id uint32, width, height, mipmaps int32, format PixelFormat) T
 	return Texture2D{id, width, height, mipmaps, format}
 }
 
-// newTexture2DFromPointer - Returns new Texture2D from pointer
-func newTexture2DFromPointer(ptr unsafe.Pointer) Texture2D {
-	return *(*Texture2D)(ptr)
-}
-
 // RenderTexture2D type, for texture rendering
 type RenderTexture2D struct {
 	// Render texture (fbo) id
@@ -1228,11 +1019,6 @@ type RenderTexture2D struct {
 // NewRenderTexture2D - Returns new RenderTexture2D
 func NewRenderTexture2D(id uint32, texture, depth Texture2D) RenderTexture2D {
 	return RenderTexture2D{id, texture, depth}
-}
-
-// newRenderTexture2DFromPointer - Returns new RenderTexture2D from pointer
-func newRenderTexture2DFromPointer(ptr unsafe.Pointer) RenderTexture2D {
-	return *(*RenderTexture2D)(ptr)
 }
 
 // TraceLogLevel parameter of trace log message
