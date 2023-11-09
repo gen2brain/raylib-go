@@ -241,6 +241,38 @@ func Vector3Normalize(v Vector3) Vector3 {
 	return result
 }
 
+// Vector3Project - Calculate the projection of the vector v1 on to v2
+func Vector3Project(v1, v2 Vector3) Vector3 {
+	result := Vector3{}
+
+	v1dv2 := (v1.X*v2.X + v1.Y*v2.Y + v1.Z*v2.Z)
+	v2dv2 := (v2.X*v2.X + v2.Y*v2.Y + v2.Z*v2.Z)
+
+	mag := v1dv2 / v2dv2
+
+	result.X = v2.X * mag
+	result.Y = v2.Y * mag
+	result.Z = v2.Z * mag
+
+	return result
+}
+
+// Vector3Reject - Calculate the rejection of the vector v1 on to v2
+func Vector3Reject(v1, v2 Vector3) Vector3 {
+	result := Vector3{}
+
+	v1dv2 := (v1.X*v2.X + v1.Y*v2.Y + v1.Z*v2.Z)
+	v2dv2 := (v2.X*v2.X + v2.Y*v2.Y + v2.Z*v2.Z)
+
+	mag := v1dv2 / v2dv2
+
+	result.X = v1.X - (v2.X * mag)
+	result.Y = v1.Y - (v2.Y * mag)
+	result.Z = v1.Z - (v2.Z * mag)
+
+	return result
+}
+
 // Vector3Transform - Transforms a Vector3 by a given Matrix
 func Vector3Transform(v Vector3, mat Matrix) Vector3 {
 	result := Vector3{}
