@@ -111,7 +111,27 @@ func (s *Shader) cptr() *C.Shader {
 	return (*C.Shader)(unsafe.Pointer(s))
 }
 
-// WindowShouldClose - Check if KEY_ESCAPE pressed or Close icon pressed
+// newAutomationEventFromPointer - Returns new AutomationEvent from pointer
+func newAutomationEventFromPointer(ptr unsafe.Pointer) AutomationEvent {
+	return *(*AutomationEvent)(ptr)
+}
+
+// cptr returns C pointer
+func (a *AutomationEvent) cptr() *C.AutomationEvent {
+	return (*C.AutomationEvent)(unsafe.Pointer(a))
+}
+
+// newAutomationEventListFromPointer - Returns new AutomationEventList from pointer
+func newAutomationEventListFromPointer(ptr unsafe.Pointer) AutomationEventList {
+	return *(*AutomationEventList)(ptr)
+}
+
+// cptr returns C pointer
+func (a *AutomationEventList) cptr() *C.AutomationEventList {
+	return (*C.AutomationEventList)(unsafe.Pointer(a))
+}
+
+// WindowShouldClose - Check if KeyEscape pressed or Close icon pressed
 func WindowShouldClose() bool {
 	ret := C.WindowShouldClose()
 	v := bool(ret)
@@ -858,6 +878,59 @@ func TakeScreenshot(name string) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	C.TakeScreenshot(cname)
+}
+
+// LoadAutomationEventList - Load automation events list from file, NULL for empty list, capacity = MAX_AUTOMATION_EVENTS
+func LoadAutomationEventList(fileName string) AutomationEventList {
+	cfileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(cfileName))
+
+	ret := C.LoadAutomationEventList(cfileName)
+	v := newAutomationEventListFromPointer(unsafe.Pointer(&ret))
+
+	return v
+}
+
+// UnloadAutomationEventList - Unload automation events list from file
+func UnloadAutomationEventList(list *AutomationEventList) {
+	C.UnloadAutomationEventList(list.cptr())
+}
+
+// ExportAutomationEventList - Export automation events list as text file
+func ExportAutomationEventList(list AutomationEventList, fileName string) bool {
+	cfileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(cfileName))
+
+	ret := C.ExportAutomationEventList(*list.cptr(), cfileName)
+	v := bool(ret)
+
+	return v
+}
+
+// SetAutomationEventList - Set automation event list to record to
+func SetAutomationEventList(list *AutomationEventList) {
+	C.SetAutomationEventList(list.cptr())
+}
+
+// SetAutomationEventBaseFrame - Set automation event internal base frame to start recording
+func SetAutomationEventBaseFrame(frame int) {
+	cframe := (C.int)(frame)
+	C.SetAutomationEventBaseFrame(cframe)
+}
+
+// StartAutomationEventRecording - Start recording automation events (AutomationEventList must be set)
+func StartAutomationEventRecording() {
+	C.StartAutomationEventRecording()
+}
+
+// StopAutomationEventRecording - Stop recording automation events
+func StopAutomationEventRecording() {
+	C.StopAutomationEventRecording()
+}
+
+// PlayAutomationEvent - Play a recorded automation event
+func PlayAutomationEvent(event AutomationEvent) {
+	C.PlayAutomationEvent(*event.cptr())
 }
 
 // IsKeyPressed - Detect if a key has been pressed once
