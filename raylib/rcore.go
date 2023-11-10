@@ -529,6 +529,28 @@ func IsShaderReady(shader Shader) bool {
 	return v
 }
 
+// GetShaderLocation - Get shader uniform location
+func GetShaderLocation(shader Shader, uniformName string) int32 {
+	cshader := shader.cptr()
+	cuniformName := C.CString(uniformName)
+	defer C.free(unsafe.Pointer(cuniformName))
+
+	ret := C.GetShaderLocation(*cshader, cuniformName)
+	v := (int32)(ret)
+	return v
+}
+
+// GetShaderLocationAttrib - Get shader attribute location
+func GetShaderLocationAttrib(shader Shader, attribName string) int32 {
+	cshader := shader.cptr()
+	cuniformName := C.CString(attribName)
+	defer C.free(unsafe.Pointer(cuniformName))
+
+	ret := C.GetShaderLocationAttrib(*cshader, cuniformName)
+	v := (int32)(ret)
+	return v
+}
+
 // SetShaderValue - Set shader uniform value (float)
 func SetShaderValue(shader Shader, locIndex int32, value []float32, uniformType ShaderUniformDataType) {
 	cshader := shader.cptr()
