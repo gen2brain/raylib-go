@@ -75,22 +75,6 @@ const (
 	CameraOrthographic
 )
 
-// ShaderUniformDataType type
-type ShaderUniformDataType int32
-
-// ShaderUniformDataType enumeration
-const (
-	ShaderUniformFloat ShaderUniformDataType = iota
-	ShaderUniformVec2
-	ShaderUniformVec3
-	ShaderUniformVec4
-	ShaderUniformInt
-	ShaderUniformIvec2
-	ShaderUniformIvec3
-	ShaderUniformIvec4
-	ShaderUniformSampler2d
-)
-
 // Some basic Defines
 const (
 	Pi      = 3.1415927
@@ -250,99 +234,69 @@ const (
 	KeyVolumeUp   = 24
 	KeyVolumeDown = 25
 
-	// Mouse Buttons
-	MouseLeftButton    = 0
-	MouseRightButton   = 1
-	MouseMiddleButton  = 2
-	MouseSideButton    = 3
-	MouseExtraButton   = 4
-	MouseForwardButton = 5
-	MouseBackButton    = 6
+	MouseLeftButton   = MouseButtonLeft
+	MouseRightButton  = MouseButtonRight
+	MouseMiddleButton = MouseButtonMiddle
+)
 
-	// Touch points registered
-	MaxTouchPoints = 2
+// Mouse Buttons
+const (
+	MouseButtonLeft = iota
+	MouseButtonRight
+	MouseButtonMiddle
+	MouseButtonSide
+	MouseButtonExtra
+	MouseButtonForward
+	MouseButtonBack
+)
 
-	// Gamepad Number
-	GamepadPlayer1 = 0
-	GamepadPlayer2 = 1
-	GamepadPlayer3 = 2
-	GamepadPlayer4 = 3
+// Mouse cursor
+type MouseCursor = int32
 
-	// Gamepad Buttons/Axis
+const (
+	MouseCursorDefault      MouseCursor = iota // Default pointer shape
+	MouseCursorArrow                           // Arrow shape
+	MouseCursorIBeam                           // Text writing cursor shape
+	MouseCursorCrosshair                       // Cross shape
+	MouseCursorPointingHand                    // Pointing hand cursor
+	MouseCursorResizeEW                        // Horizontal resize/move arrow shape
+	MouseCursorResizeNS                        // Vertical resize/move arrow shape
+	MouseCursorResizeNWSE                      // Top-left to bottom-right diagonal resize/move arrow shape
+	MouseCursorResizeNESW                      // The top-right to bottom-left diagonal resize/move arrow shape
+	MouseCursorResizeAll                       // The omni-directional resize/move cursor shape
+	MouseCursorNotAllowed                      // The operation-not-allowed shape
+)
 
-	// PS3 USB Controller Buttons
-	GamepadPs3ButtonTriangle = 0
-	GamepadPs3ButtonCircle   = 1
-	GamepadPs3ButtonCross    = 2
-	GamepadPs3ButtonSquare   = 3
-	GamepadPs3ButtonL1       = 6
-	GamepadPs3ButtonR1       = 7
-	GamepadPs3ButtonL2       = 4
-	GamepadPs3ButtonR2       = 5
-	GamepadPs3ButtonStart    = 8
-	GamepadPs3ButtonSelect   = 9
-	GamepadPs3ButtonUp       = 24
-	GamepadPs3ButtonRight    = 25
-	GamepadPs3ButtonDown     = 26
-	GamepadPs3ButtonLeft     = 27
-	GamepadPs3ButtonPs       = 12
+// Gamepad Buttons
+const (
+	GamepadButtonUnknown        = iota // Unknown button, just for error checking
+	GamepadButtonLeftFaceUp            // Gamepad left DPAD up button
+	GamepadButtonLeftFaceRight         // Gamepad left DPAD right button
+	GamepadButtonLeftFaceDown          // Gamepad left DPAD down button
+	GamepadButtonLeftFaceLeft          // Gamepad left DPAD left button
+	GamepadButtonRightFaceUp           // Gamepad right button up (i.e. PS3: Triangle, Xbox: Y)
+	GamepadButtonRightFaceRight        // Gamepad right button right (i.e. PS3: Square, Xbox: X)
+	GamepadButtonRightFaceDown         // Gamepad right button down (i.e. PS3: Cross, Xbox: A)
+	GamepadButtonRightFaceLeft         // Gamepad right button left (i.e. PS3: Circle, Xbox: B)
+	GamepadButtonLeftTrigger1          // Gamepad top/back trigger left (first), it could be a trailing button
+	GamepadButtonLeftTrigger2          // Gamepad top/back trigger left (second), it could be a trailing button
+	GamepadButtonRightTrigger1         // Gamepad top/back trigger right (one), it could be a trailing button
+	GamepadButtonRightTrigger2         // Gamepad top/back trigger right (second), it could be a trailing button
+	GamepadButtonMiddleLeft            // Gamepad center buttons, left one (i.e. PS3: Select)
+	GamepadButtonMiddle                // Gamepad center buttons, middle one (i.e. PS3: PS, Xbox: XBOX)
+	GamepadButtonMiddleRight           // Gamepad center buttons, right one (i.e. PS3: Start)
+	GamepadButtonLeftThumb             // Gamepad joystick pressed button left
+	GamepadButtonRightThumb            // Gamepad joystick pressed button right
+)
 
-	// PS3 USB Controller Axis
-	GamepadPs3AxisLeftX  = 0
-	GamepadPs3AxisLeftY  = 1
-	GamepadPs3AxisRightX = 2
-	GamepadPs3AxisRightY = 5
-	// [1..-1] (pressure-level)
-	GamepadPs3AxisL2 = 3
-	// [1..-1] (pressure-level)
-	GamepadPs3AxisR2 = 4
-
-	// Xbox360 USB Controller Buttons
-	GamepadXboxButtonA      = 0
-	GamepadXboxButtonB      = 1
-	GamepadXboxButtonX      = 2
-	GamepadXboxButtonY      = 3
-	GamepadXboxButtonLb     = 4
-	GamepadXboxButtonRb     = 5
-	GamepadXboxButtonSelect = 6
-	GamepadXboxButtonStart  = 7
-	GamepadXboxButtonUp     = 10
-	GamepadXboxButtonRight  = 11
-	GamepadXboxButtonDown   = 12
-	GamepadXboxButtonLeft   = 13
-	GamepadXboxButtonHome   = 8
-
-	// Android Gamepad Controller (SNES CLASSIC)
-	GamepadAndroidDpadUp     = 19
-	GamepadAndroidDpadDown   = 20
-	GamepadAndroidDpadLeft   = 21
-	GamepadAndroidDpadRight  = 22
-	GamepadAndroidDpadCenter = 23
-
-	GamepadAndroidButtonA  = 96
-	GamepadAndroidButtonB  = 97
-	GamepadAndroidButtonC  = 98
-	GamepadAndroidButtonX  = 99
-	GamepadAndroidButtonY  = 100
-	GamepadAndroidButtonZ  = 101
-	GamepadAndroidButtonL1 = 102
-	GamepadAndroidButtonR1 = 103
-	GamepadAndroidButtonL2 = 104
-	GamepadAndroidButtonR2 = 105
-
-	// Xbox360 USB Controller Axis
-	// [-1..1] (left->right)
-	GamepadXboxAxisLeftX = 0
-	// [1..-1] (up->down)
-	GamepadXboxAxisLeftY = 1
-	// [-1..1] (left->right)
-	GamepadXboxAxisRightX = 2
-	// [1..-1] (up->down)
-	GamepadXboxAxisRightY = 3
-	// [-1..1] (pressure-level)
-	GamepadXboxAxisLt = 4
-	// [-1..1] (pressure-level)
-	GamepadXboxAxisRt = 5
+// Gamepad Axis
+const (
+	GamepadAxisLeftX        = iota // Gamepad left stick X axis
+	GamepadAxisLeftY               // Gamepad left stick Y axis
+	GamepadAxisRightX              // Gamepad right stick X axis
+	GamepadAxisRightY              // Gamepad right stick Y axis
+	GamepadAxisLeftTrigger         // Gamepad back trigger left, pressure level: [1..-1]
+	GamepadAxisRightTrigger        // Gamepad back trigger right, pressure level: [1..-1]
 )
 
 // Some Basic Colors
@@ -464,13 +418,8 @@ func NewMat2(m0, m1, m10, m11 float32) Mat2 {
 	return Mat2{m0, m1, m10, m11}
 }
 
-// Quaternion type
-type Quaternion struct {
-	X float32
-	Y float32
-	Z float32
-	W float32
-}
+// Quaternion, 4 components (Vector4 alias)
+type Quaternion = Vector4
 
 // NewQuaternion - Returns new Quaternion
 func NewQuaternion(x, y, z, w float32) Quaternion {
@@ -608,35 +557,54 @@ const (
 
 // Shader location point type
 const (
-	LocVertexPosition = iota
-	LocVertexTexcoord01
-	LocVertexTexcoord02
-	LocVertexNormal
-	LocVertexTangent
-	LocVertexColor
-	LocMatrixMvp
-	LocMatrixView
-	LocMatrixProjection
-	LocMatrixModel
-	LocMatrixNormal
-	LocVectorView
-	LocColorDiffuse
-	LocColorSpecular
-	LocColorAmbient
-	LocMapAlbedo
-	LocMapMetalness
-	LocMapNormal
-	LocMapRoughness
-	LocMapOcclusion
-	LocMapEmission
-	LocMapHeight
-	LocMapCubemap
-	LocMapIrradiance
-	LocMapPrefilter
-	LocMapBrdf
+	ShaderLocVertexPosition = iota
+	ShaderLocVertexTexcoord01
+	ShaderLocVertexTexcoord02
+	ShaderLocVertexNormal
+	ShaderLocVertexTangent
+	ShaderLocVertexColor
+	ShaderLocMatrixMvp
+	ShaderLocMatrixView
+	ShaderLocMatrixProjection
+	ShaderLocMatrixModel
+	ShaderLocMatrixNormal
+	ShaderLocVectorView
+	ShaderLocColorDiffuse
+	ShaderLocColorSpecular
+	ShaderLocColorAmbient
+	ShaderLocMapAlbedo
+	ShaderLocMapMetalness
+	ShaderLocMapNormal
+	ShaderLocMapRoughness
+	ShaderLocMapOcclusion
+	ShaderLocMapEmission
+	ShaderLocMapHeight
+	ShaderLocMapCubemap
+	ShaderLocMapIrradiance
+	ShaderLocMapPrefilter
+	ShaderLocMapBrdf
+
+	ShaderLocMapDiffuse  = ShaderLocMapAlbedo
+	ShaderLocMapSpecular = ShaderLocMapMetalness
 )
 
-// Material map type
+// ShaderUniformDataType type
+type ShaderUniformDataType int32
+
+// ShaderUniformDataType enumeration
+const (
+	ShaderUniformFloat ShaderUniformDataType = iota
+	ShaderUniformVec2
+	ShaderUniformVec3
+	ShaderUniformVec4
+	ShaderUniformInt
+	ShaderUniformIvec2
+	ShaderUniformIvec3
+	ShaderUniformIvec4
+	ShaderUniformSampler2d
+)
+
+// Material map index
 const (
 	MapAlbedo = iota
 	MapMetalness
@@ -649,14 +617,10 @@ const (
 	MapCubemap
 	MapIrradiance
 	MapPrefilter
-)
+	MapBrdf
 
-// Material map type
-const (
-	MapDiffuse     = MapAlbedo
-	MapSpecular    = MapMetalness
-	LocMapDiffuse  = LocMapAlbedo
-	LocMapSpecular = LocMapMetalness
+	MapDiffuse  = MapAlbedo
+	MapSpecular = MapMetalness
 )
 
 // Shader and material limits
@@ -897,6 +861,13 @@ type Font struct {
 	Chars *GlyphInfo
 }
 
+// Font type, defines generation method
+const (
+	FontDefault = iota // Default font generation, anti-aliased
+	FontBitmap         // Bitmap font generation, no anti-aliasing
+	FontSdf            // SDF font generation, requires external shader
+)
+
 // PixelFormat - Texture format
 type PixelFormat int32
 
@@ -979,6 +950,16 @@ const (
 	WrapMirrorClamp
 )
 
+// Cubemap layouts
+const (
+	CubemapLayoutAutoDetect       = iota // Automatically detect layout type
+	CubemapLayoutLineVertical            // Layout is defined by a vertical line with faces
+	CubemapLayoutLineHorizontal          // Layout is defined by a horizontal line with faces
+	CubemapLayoutCrossThreeByFour        // Layout is defined by a 3x4 cross with cubemap faces
+	CubemapLayoutCrossFourByThree        // Layout is defined by a 4x3 cross with cubemap faces
+	CubemapLayoutPanorama                // Layout is defined by a panorama image (equirrectangular map)
+)
+
 // Image type, bpp always RGBA (32bit)
 // NOTE: Data stored in CPU memory (RAM)
 type Image struct {
@@ -1057,23 +1038,6 @@ const (
 	LogFatal
 	// Disable logging
 	LogNone
-)
-
-// Mouse cursor
-type MouseCursor = int32
-
-const (
-	MouseCursorDefault      MouseCursor = iota // Default pointer shape
-	MouseCursorArrow                           // Arrow shape
-	MouseCursorIBeam                           // Text writing cursor shape
-	MouseCursorCrosshair                       // Cross shape
-	MouseCursorPointingHand                    // Pointing hand cursor
-	MouseCursorResizeEW                        // Horizontal resize/move arrow shape
-	MouseCursorResizeNS                        // Vertical resize/move arrow shape
-	MouseCursorResizeNWSE                      // Top-left to bottom-right diagonal resize/move arrow shape
-	MouseCursorResizeNESW                      // The top-right to bottom-left diagonal resize/move arrow shape
-	MouseCursorResizeAll                       // The omni-directional resize/move cursor shape
-	MouseCursorNotAllowed                      // The operation-not-allowed shape
 )
 
 // N-patch layout
