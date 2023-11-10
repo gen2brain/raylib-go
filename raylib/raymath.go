@@ -210,6 +210,18 @@ func Vector3Distance(v1, v2 Vector3) float32 {
 	return float32(math.Sqrt(float64(dx*dx + dy*dy + dz*dz)))
 }
 
+// Vector3Angle - Calculate angle between two vectors
+func Vector3Angle(v1 Vector3, v2 Vector3) float32 {
+	var result float32
+
+	cross := Vector3{X: v1.Y*v2.Z - v1.Z*v2.Y, Y: v1.Z*v2.X - v1.X*v2.Z, Z: v1.X*v2.Y - v1.Y*v2.X}
+	length := float32(math.Sqrt(float64(cross.X*cross.X + cross.Y*cross.Y + cross.Z*cross.Z)))
+	dot := v1.X*v2.X + v1.Y*v2.Y + v1.Z*v2.Z
+	result = float32(math.Atan2(float64(length), float64(dot)))
+
+	return result
+}
+
 // Vector3Scale - Scale provided vector
 func Vector3Scale(v Vector3, scale float32) Vector3 {
 	return NewVector3(v.X*scale, v.Y*scale, v.Z*scale)
@@ -284,6 +296,59 @@ func Vector3Transform(v Vector3, mat Matrix) Vector3 {
 	result.X = mat.M0*x + mat.M4*y + mat.M8*z + mat.M12
 	result.Y = mat.M1*x + mat.M5*y + mat.M9*z + mat.M13
 	result.Z = mat.M2*x + mat.M6*y + mat.M10*z + mat.M14
+
+	return result
+}
+
+// Vector3RotateByAxisAngle - Rotates a vector around an axis
+func Vector3RotateByAxisAngle(v Vector3, axis Vector3, angle float32) Vector3 {
+	// Using Euler-Rodrigues Formula
+	// Ref.: https://en.wikipedia.org/w/index.php?title=Euler%E2%80%93Rodrigues_formula
+
+	result := v
+
+	// Vector3Normalize(axis);
+	length := float32(math.Sqrt(float64(axis.X*axis.X + axis.Y*axis.Y + axis.Z*axis.Z)))
+	if length == 0.0 {
+		length = 1.0
+	}
+	ilength := 1.0 / length
+	axis.X *= ilength
+	axis.Y *= ilength
+	axis.Z *= ilength
+
+	angle /= 2.0
+	a := float32(math.Sin(float64(angle)))
+	b := axis.X * a
+	c := axis.Y * a
+	d := axis.Z * a
+	a = float32(math.Cos(float64(angle)))
+	w := NewVector3(b, c, d)
+
+	// Vector3CrossProduct(w, v)
+	wv := NewVector3(w.Y*v.Z-w.Z*v.Y, w.Z*v.X-w.X*v.Z, w.X*v.Y-w.Y*v.X)
+
+	// Vector3CrossProduct(w, wv)
+	wwv := NewVector3(w.Y*wv.Z-w.Z*wv.Y, w.Z*wv.X-w.X*wv.Z, w.X*wv.Y-w.Y*wv.X)
+
+	// Vector3Scale(wv, 2*a)
+	a *= 2
+	wv.X *= a
+	wv.Y *= a
+	wv.Z *= a
+
+	// Vector3Scale(wwv, 2)
+	wwv.X *= 2
+	wwv.Y *= 2
+	wwv.Z *= 2
+
+	result.X += wv.X
+	result.Y += wv.Y
+	result.Z += wv.Z
+
+	result.X += wwv.X
+	result.Y += wwv.Y
+	result.Z += wwv.Z
 
 	return result
 }
