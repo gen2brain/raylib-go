@@ -12,8 +12,8 @@ func main() {
 
 	rl.InitWindow(int32(screenWidth), int32(screenHeight), "raylib [textures] example - procedural images generation")
 
-	verticalGradient := rl.GenImageGradientV(screenWidth, screenHeight, rl.Red, rl.Blue)
-	horizontalGradient := rl.GenImageGradientH(screenWidth, screenHeight, rl.Red, rl.Blue)
+	verticalGradient := rl.GenImageGradientLinear(screenWidth, screenHeight, 0, rl.Red, rl.Blue)
+	horizontalGradient := rl.GenImageGradientLinear(screenWidth, screenHeight, 90, rl.Red, rl.Blue)
 	radialGradient := rl.GenImageGradientRadial(screenWidth, screenHeight, 0, rl.White, rl.Black)
 	checked := rl.GenImageChecked(screenWidth, screenHeight, 32, 32, rl.Red, rl.Blue)
 	whiteNoise := rl.GenImageWhiteNoise(screenWidth, screenHeight, 0.5)

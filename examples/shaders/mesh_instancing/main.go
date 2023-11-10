@@ -61,9 +61,9 @@ func main() {
 	transforms := make([]rl.Matrix, MAX_INSTANCES)
 
 	shader := rl.LoadShader("glsl330/base_lighting_instanced.vs", "glsl330/lighting.fs")
-	shader.UpdateLocation(rl.LocMatrixMvp, rl.GetShaderLocation(shader, "mvp"))
-	shader.UpdateLocation(rl.LocVectorView, rl.GetShaderLocation(shader, "viewPos"))
-	shader.UpdateLocation(rl.LocMatrixModel, rl.GetShaderLocationAttrib(shader, "instanceTransform"))
+	shader.UpdateLocation(rl.ShaderLocMatrixMvp, rl.GetShaderLocation(shader, "mvp"))
+	shader.UpdateLocation(rl.ShaderLocVectorView, rl.GetShaderLocation(shader, "viewPos"))
+	shader.UpdateLocation(rl.ShaderLocMatrixModel, rl.GetShaderLocationAttrib(shader, "instanceTransform"))
 
 	// ambient light level
 	ambientLoc := rl.GetShaderLocation(shader, "ambient")
@@ -162,7 +162,7 @@ func main() {
 		}
 
 		// Update the light shader with the camera view position
-		rl.SetShaderValue(shader, shader.GetLocation(rl.LocVectorView),
+		rl.SetShaderValue(shader, shader.GetLocation(rl.ShaderLocVectorView),
 			[]float32{camera.Position.X, camera.Position.Y, camera.Position.Z}, rl.ShaderUniformVec3)
 
 		// Apply per-instance transformations

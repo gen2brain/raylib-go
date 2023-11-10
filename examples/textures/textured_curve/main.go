@@ -172,7 +172,7 @@ func drawTexturedCurve() {
 func drawCurve() {
 
 	if showCurve {
-		rl.DrawLineBezierCubic(curveStartPos, curveEndPos, curveStartPosTangent, curveEndPosTangent, 2, rl.Blue)
+		rl.DrawSplineSegmentBezierCubic(curveStartPos, curveEndPos, curveStartPosTangent, curveEndPosTangent, 2, rl.Blue)
 	}
 	rl.DrawLineV(curveStartPos, curveStartPosTangent, rl.SkyBlue)
 	rl.DrawLineV(curveEndPos, curveEndPosTangent, rl.Purple)
