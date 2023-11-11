@@ -1141,6 +1141,49 @@ func QuaternionToAxisAngle(q Quaternion, outAxis *Vector3, outAngle *float32) {
 	*outAngle = resAngle
 }
 
+// QuaternionFromEuler - Get the quaternion equivalent to Euler angles
+// NOTE: Rotation order is ZYX
+func QuaternionFromEuler(pitch, yaw, roll float32) Quaternion {
+	var result Quaternion
+
+	x0 := float32(math.Cos(float64(pitch * 0.5)))
+	x1 := float32(math.Sin(float64(pitch * 0.5)))
+	y0 := float32(math.Cos(float64(yaw * 0.5)))
+	y1 := float32(math.Sin(float64(yaw * 0.5)))
+	z0 := float32(math.Cos(float64(roll * 0.5)))
+	z1 := float32(math.Sin(float64(roll * 0.5)))
+
+	result.X = x1*y0*z0 - x0*y1*z1
+	result.Y = x0*y1*z0 + x1*y0*z1
+	result.Z = x0*y0*z1 - x1*y1*z0
+	result.W = x0*y0*z0 + x1*y1*z1
+
+	return result
+}
+
+// QuaternionToEuler - Get the Euler angles equivalent to quaternion (roll, pitch, yaw)
+// NOTE: Angles are returned in a Vector3 struct in radians
+func QuaternionToEuler(q Quaternion) Vector3 {
+	var result Vector3
+
+	// Roll (x-axis rotation)
+	x0 := 2.0 * (q.W*q.X + q.Y*q.Z)
+	x1 := 1.0 - 2.0*(q.X*q.X+q.Y*q.Y)
+	result.X = float32(math.Atan2(float64(x0), float64(x1)))
+
+	// Pitch (y-axis rotation)
+	y0 := 2.0 * (q.W*q.Y - q.Z*q.X)
+	y0 = Clamp(y0, -1.0, 1.0)
+	result.Y = float32(math.Asin(float64(y0)))
+
+	// Yaw (z-axis rotation)
+	z0 := 2.0 * (q.W*q.Z + q.X*q.Y)
+	z1 := 1.0 - 2.0*(q.Y*q.Y+q.Z*q.Z)
+	result.Z = float32(math.Atan2(float64(z0), float64(z1)))
+
+	return result
+}
+
 // QuaternionTransform - Transform a quaternion given a transformation matrix
 func QuaternionTransform(q Quaternion, mat Matrix) Quaternion {
 	var result Quaternion
