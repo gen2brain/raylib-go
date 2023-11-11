@@ -300,6 +300,17 @@ func Vector3Transform(v Vector3, mat Matrix) Vector3 {
 	return result
 }
 
+// Vector3RotateByQuaternion - Transform a vector by quaternion rotation
+func Vector3RotateByQuaternion(v Vector3, q Quaternion) Vector3 {
+	var result Vector3
+
+	result.X = v.X*(q.X*q.X+q.W*q.W-q.Y*q.Y-q.Z*q.Z) + v.Y*(2*q.X*q.Y-2*q.W*q.Z) + v.Z*(2*q.X*q.Z+2*q.W*q.Y)
+	result.Y = v.X*(2*q.W*q.Z+2*q.X*q.Y) + v.Y*(q.W*q.W-q.X*q.X+q.Y*q.Y-q.Z*q.Z) + v.Z*(-2*q.W*q.X+2*q.Y*q.Z)
+	result.Z = v.X*(-2*q.W*q.Y+2*q.X*q.Z) + v.Y*(2*q.W*q.X+2*q.Y*q.Z) + v.Z*(q.W*q.W-q.X*q.X-q.Y*q.Y+q.Z*q.Z)
+
+	return result
+}
+
 // Vector3RotateByAxisAngle - Rotates a vector around an axis
 func Vector3RotateByAxisAngle(v Vector3, axis Vector3, angle float32) Vector3 {
 	// Using Euler-Rodrigues Formula
