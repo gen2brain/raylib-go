@@ -46,54 +46,54 @@ func EndBlendMode() {
 
 const (
 	// Texture parameters (equivalent to OpenGL defines)
-	RL_TEXTURE_WRAP_S     = 0x2802 // GL_TEXTURE_WRAP_S
-	RL_TEXTURE_WRAP_T     = 0x2803 // GL_TEXTURE_WRAP_T
-	RL_TEXTURE_MAG_FILTER = 0x2800 // GL_TEXTURE_MAG_FILTER
-	RL_TEXTURE_MIN_FILTER = 0x2801 // GL_TEXTURE_MIN_FILTER
+	TextureWrapS     = 0x2802 // GL_TEXTURE_WRAP_S
+	TextureWrapT     = 0x2803 // GL_TEXTURE_WRAP_T
+	TextureMagFilter = 0x2800 // GL_TEXTURE_MAG_FILTER
+	TextureMinFilter = 0x2801 // GL_TEXTURE_MIN_FILTER
 
-	RL_TEXTURE_FILTER_NEAREST            = 0x2600 // GL_NEAREST
-	RL_TEXTURE_FILTER_LINEAR             = 0x2601 // GL_LINEAR
-	RL_TEXTURE_FILTER_MIP_NEAREST        = 0x2700 // GL_NEAREST_MIPMAP_NEAREST
-	RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR = 0x2702 // GL_NEAREST_MIPMAP_LINEAR
-	RL_TEXTURE_FILTER_LINEAR_MIP_NEAREST = 0x2701 // GL_LINEAR_MIPMAP_NEAREST
-	RL_TEXTURE_FILTER_MIP_LINEAR         = 0x2703 // GL_LINEAR_MIPMAP_LINEAR
-	RL_TEXTURE_FILTER_ANISOTROPIC        = 0x3000 // Anisotropic filter (custom identifier)
-	RL_TEXTURE_MIPMAP_BIAS_RATIO         = 0x4000 // Texture mipmap bias, percentage ratio (custom identifier)
+	TextureFilterNearest          = 0x2600 // GL_NEAREST
+	TextureFilterLinear           = 0x2601 // GL_LINEAR
+	TextureFilterMipNearest       = 0x2700 // GL_NEAREST_MIPMAP_NEAREST
+	TextureFilterNearestMipLinear = 0x2702 // GL_NEAREST_MIPMAP_LINEAR
+	TextureFilterLinearMipNearest = 0x2701 // GL_LINEAR_MIPMAP_NEAREST
+	TextureFilterMipLinear        = 0x2703 // GL_LINEAR_MIPMAP_LINEAR
+	TextureFilterAnisotropic      = 0x3000 // Anisotropic filter (custom identifier)
+	TextureMipmapBiasRatio        = 0x4000 // Texture mipmap bias, percentage ratio (custom identifier)
 
-	RL_TEXTURE_WRAP_REPEAT        = 0x2901 // GL_REPEAT
-	RL_TEXTURE_WRAP_CLAMP         = 0x812F // GL_CLAMP_TO_EDGE
-	RL_TEXTURE_WRAP_MIRROR_REPEAT = 0x8370 // GL_MIRRORED_REPEAT
-	RL_TEXTURE_WRAP_MIRROR_CLAMP  = 0x8742 // GL_MIRROR_CLAMP_EXT
+	TextureWrapRepeat       = 0x2901 // GL_REPEAT
+	TextureWrapClamp        = 0x812F // GL_CLAMP_TO_EDGE
+	TextureWrapMirrorRepeat = 0x8370 // GL_MIRRORED_REPEAT
+	TextureWrapMirrorClamp  = 0x8742 // GL_MIRROR_CLAMP_EXT
 
 	// Matrix modes (equivalent to OpenGL)
-	RL_MODELVIEW  = 0x1700 // GL_MODELVIEW
-	RL_PROJECTION = 0x1701 // GL_PROJECTION
-	RL_TEXTURE    = 0x1702 // GL_TEXTURE
+	Modelview  = 0x1700 // GL_MODELVIEW
+	Projection = 0x1701 // GL_PROJECTION
+	Texture    = 0x1702 // GL_TEXTURE
 
 	// Primitive assembly draw modes
-	RL_LINES     = 0x0001 // GL_LINES
-	RL_TRIANGLES = 0x0004 // GL_TRIANGLES
-	RL_QUADS     = 0x0007 // GL_QUADS
+	Lines     = 0x0001 // GL_LINES
+	Triangles = 0x0004 // GL_TRIANGLES
+	Quads     = 0x0007 // GL_QUADS
 
 	// GL equivalent data types
-	RL_UNSIGNED_BYTE = 0x1401 // GL_UNSIGNED_BYTE
-	RL_FLOAT         = 0x1406 // GL_FLOAT
+	UnsignedByte = 0x1401 // GL_UNSIGNED_BYTE
+	Float        = 0x1406 // GL_FLOAT
 
 	// Buffer usage hint
-	RL_STREAM_DRAW  = 0x88E0 // GL_STREAM_DRAW
-	RL_STREAM_READ  = 0x88E1 // GL_STREAM_READ
-	RL_STREAM_COPY  = 0x88E2 // GL_STREAM_COPY
-	RL_STATIC_DRAW  = 0x88E4 // GL_STATIC_DRAW
-	RL_STATIC_READ  = 0x88E5 // GL_STATIC_READ
-	RL_STATIC_COPY  = 0x88E6 // GL_STATIC_COPY
-	RL_DYNAMIC_DRAW = 0x88E8 // GL_DYNAMIC_DRAW
-	RL_DYNAMIC_READ = 0x88E9 // GL_DYNAMIC_READ
-	RL_DYNAMIC_COPY = 0x88EA // GL_DYNAMIC_COPY
+	StreamDraw  = 0x88E0 // GL_STREAM_DRAW
+	StreamRead  = 0x88E1 // GL_STREAM_READ
+	StreamCopy  = 0x88E2 // GL_STREAM_COPY
+	StaticDraw  = 0x88E4 // GL_STATIC_DRAW
+	StaticRead  = 0x88E5 // GL_STATIC_READ
+	StaticCopy  = 0x88E6 // GL_STATIC_COPY
+	DynamicDraw = 0x88E8 // GL_DYNAMIC_DRAW
+	DynamicRead = 0x88E9 // GL_DYNAMIC_READ
+	DynamicCopy = 0x88EA // GL_DYNAMIC_COPY
 
 	// GL Shader type
-	RL_FRAGMENT_SHADER = 0x8B30 // GL_FRAGMENT_SHADER
-	RL_VERTEX_SHADER   = 0x8B31 // GL_VERTEX_SHADER
-	RL_COMPUTE_SHADER  = 0x91B9 // GL_COMPUTE_SHADER
+	FragmentShader = 0x8B30 // GL_FRAGMENT_SHADER
+	VertexShader   = 0x8B31 // GL_VERTEX_SHADER
+	ComputeShader  = 0x91B9 // GL_COMPUTE_SHADER
 )
 
 // rlVertexBuffer - Dynamic vertex buffers (position + texcoords + colors + indices arrays)
@@ -130,139 +130,21 @@ type rlRenderBatch struct {
 
 // OpenGL version
 const (
-	RL_OPENGL_11    int32 = 1
-	RL_OPENGL_21    int32 = 2
-	RL_OPENGL_33    int32 = 3
-	RL_OPENGL_43    int32 = 4
-	RL_OPENGL_ES_20 int32 = 5
+	Opengl11   int32 = 1
+	Opengl21   int32 = 2
+	Opengl33   int32 = 3
+	Opengl43   int32 = 4
+	OpenglEs20 int32 = 5
 )
 
 type rlGlVersion = int32
 
-// RL_LOG_ALL - Trace log level
-// NOTE: Organized by priority level
-const (
-	RL_LOG_ALL     int32 = 0
-	RL_LOG_TRACE   int32 = 1
-	RL_LOG_DEBUG   int32 = 2
-	RL_LOG_INFO    int32 = 3
-	RL_LOG_WARNING int32 = 4
-	RL_LOG_ERROR   int32 = 5
-	RL_LOG_FATAL   int32 = 6
-	RL_LOG_NONE    int32 = 7
-)
-
-type rlTraceLogLevel = int32
-
-// Texture pixel formats
-// NOTE: Support depends on OpenGL version
-const (
-	RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE    int32 = 1
-	RL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA   int32 = 2
-	RL_PIXELFORMAT_UNCOMPRESSED_R5G6B5       int32 = 3
-	RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8       int32 = 4
-	RL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1     int32 = 5
-	RL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4     int32 = 6
-	RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8     int32 = 7
-	RL_PIXELFORMAT_UNCOMPRESSED_R32          int32 = 8
-	RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32    int32 = 9
-	RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32 int32 = 10
-	RL_PIXELFORMAT_COMPRESSED_DXT1_RGB       int32 = 11
-	RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA      int32 = 12
-	RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA      int32 = 13
-	RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA      int32 = 14
-	RL_PIXELFORMAT_COMPRESSED_ETC1_RGB       int32 = 15
-	RL_PIXELFORMAT_COMPRESSED_ETC2_RGB       int32 = 16
-	RL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA  int32 = 17
-	RL_PIXELFORMAT_COMPRESSED_PVRT_RGB       int32 = 18
-	RL_PIXELFORMAT_COMPRESSED_PVRT_RGBA      int32 = 19
-	RL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA  int32 = 20
-	RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA  int32 = 21
-)
-
-type rlPixelFormat = int32
-
-// Texture parameters: filter mode
-// NOTE 1: Filtering considers mipmaps if available in the texture
-// NOTE 2: Filter is accordingly set for minification and magnification
-const (
-	RL_TEXTURE_FILTER_POINT           int32 = 0
-	RL_TEXTURE_FILTER_BILINEAR        int32 = 1
-	RL_TEXTURE_FILTER_TRILINEAR       int32 = 2
-	RL_TEXTURE_FILTER_ANISOTROPIC_4X  int32 = 3
-	RL_TEXTURE_FILTER_ANISOTROPIC_8X  int32 = 4
-	RL_TEXTURE_FILTER_ANISOTROPIC_16X int32 = 5
-)
-
-type rlTextureFilter = int32
-
-// Color blending modes (pre-defined)
-const (
-	RL_BLEND_ALPHA             int32 = 0
-	RL_BLEND_ADDITIVE          int32 = 1
-	RL_BLEND_MULTIPLIED        int32 = 2
-	RL_BLEND_ADD_COLORS        int32 = 3
-	RL_BLEND_SUBTRACT_COLORS   int32 = 4
-	RL_BLEND_ALPHA_PREMULTIPLY int32 = 5
-	RL_BLEND_CUSTOM            int32 = 6
-	RL_BLEND_CUSTOM_SEPARATE   int32 = 7
-)
-
-type rlBlendMode = int32
-
-// Shader location point type
-const (
-	RL_SHADER_LOC_VERTEX_POSITION   int32 = 0
-	RL_SHADER_LOC_VERTEX_TEXCOORD01 int32 = 1
-	RL_SHADER_LOC_VERTEX_TEXCOORD02 int32 = 2
-	RL_SHADER_LOC_VERTEX_NORMAL     int32 = 3
-	RL_SHADER_LOC_VERTEX_TANGENT    int32 = 4
-	RL_SHADER_LOC_VERTEX_COLOR      int32 = 5
-	RL_SHADER_LOC_MATRIX_MVP        int32 = 6
-	RL_SHADER_LOC_MATRIX_VIEW       int32 = 7
-	RL_SHADER_LOC_MATRIX_PROJECTION int32 = 8
-	RL_SHADER_LOC_MATRIX_MODEL      int32 = 9
-	RL_SHADER_LOC_MATRIX_NORMAL     int32 = 10
-	RL_SHADER_LOC_VECTOR_VIEW       int32 = 11
-	RL_SHADER_LOC_COLOR_DIFFUSE     int32 = 12
-	RL_SHADER_LOC_COLOR_SPECULAR    int32 = 13
-	RL_SHADER_LOC_COLOR_AMBIENT     int32 = 14
-	RL_SHADER_LOC_MAP_ALBEDO        int32 = 15
-	RL_SHADER_LOC_MAP_METALNESS     int32 = 16
-	RL_SHADER_LOC_MAP_NORMAL        int32 = 17
-	RL_SHADER_LOC_MAP_ROUGHNESS     int32 = 18
-	RL_SHADER_LOC_MAP_OCCLUSION     int32 = 19
-	RL_SHADER_LOC_MAP_EMISSION      int32 = 20
-	RL_SHADER_LOC_MAP_HEIGHT        int32 = 21
-	RL_SHADER_LOC_MAP_CUBEMAP       int32 = 22
-	RL_SHADER_LOC_MAP_IRRADIANCE    int32 = 23
-	RL_SHADER_LOC_MAP_PREFILTER     int32 = 24
-	RL_SHADER_LOC_MAP_BRDF          int32 = 25
-)
-
-type rlShaderLocationIndex = int32
-
-// Shader uniform data type
-const (
-	RL_SHADER_UNIFORM_FLOAT     int32 = 0
-	RL_SHADER_UNIFORM_VEC2      int32 = 1
-	RL_SHADER_UNIFORM_VEC3      int32 = 2
-	RL_SHADER_UNIFORM_VEC4      int32 = 3
-	RL_SHADER_UNIFORM_INT       int32 = 4
-	RL_SHADER_UNIFORM_IVEC2     int32 = 5
-	RL_SHADER_UNIFORM_IVEC3     int32 = 6
-	RL_SHADER_UNIFORM_IVEC4     int32 = 7
-	RL_SHADER_UNIFORM_SAMPLER2D int32 = 8
-)
-
-type rlShaderUniformDataType = int32
-
 // Shader attribute data types
 const (
-	RL_SHADER_ATTRIB_FLOAT int32 = 0
-	RL_SHADER_ATTRIB_VEC2  int32 = 1
-	RL_SHADER_ATTRIB_VEC3  int32 = 2
-	RL_SHADER_ATTRIB_VEC4  int32 = 3
+	ShaderAttribFloat int32 = 0
+	ShaderAttribVec2  int32 = 1
+	ShaderAttribVec3  int32 = 2
+	ShaderAttribVec4  int32 = 3
 )
 
 type rlShaderAttributeDataType = int32
@@ -270,30 +152,30 @@ type rlShaderAttributeDataType = int32
 // Framebuffer attachment type
 // NOTE: By default up to 8 color channels defined but it can be more
 const (
-	RL_ATTACHMENT_COLOR_CHANNEL0 int32 = 0
-	RL_ATTACHMENT_COLOR_CHANNEL1 int32 = 1
-	RL_ATTACHMENT_COLOR_CHANNEL2 int32 = 2
-	RL_ATTACHMENT_COLOR_CHANNEL3 int32 = 3
-	RL_ATTACHMENT_COLOR_CHANNEL4 int32 = 4
-	RL_ATTACHMENT_COLOR_CHANNEL5 int32 = 5
-	RL_ATTACHMENT_COLOR_CHANNEL6 int32 = 6
-	RL_ATTACHMENT_COLOR_CHANNEL7 int32 = 7
-	RL_ATTACHMENT_DEPTH          int32 = 100
-	RL_ATTACHMENT_STENCIL        int32 = 200
+	AttachmentColorChannel0 int32 = 0
+	AttachmentColorChannel1 int32 = 1
+	AttachmentColorChannel2 int32 = 2
+	AttachmentColorChannel3 int32 = 3
+	AttachmentColorChannel4 int32 = 4
+	AttachmentColorChannel5 int32 = 5
+	AttachmentColorChannel6 int32 = 6
+	AttachmentColorChannel7 int32 = 7
+	AttachmentDepth         int32 = 100
+	AttachmentStencil       int32 = 200
 )
 
 type rlFramebufferAttachType = int32
 
 // Framebuffer texture attachment type
 const (
-	RL_ATTACHMENT_CUBEMAP_POSITIVE_X int32 = 0
-	RL_ATTACHMENT_CUBEMAP_NEGATIVE_X int32 = 1
-	RL_ATTACHMENT_CUBEMAP_POSITIVE_Y int32 = 2
-	RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y int32 = 3
-	RL_ATTACHMENT_CUBEMAP_POSITIVE_Z int32 = 4
-	RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z int32 = 5
-	RL_ATTACHMENT_TEXTURE2D          int32 = 100
-	RL_ATTACHMENT_RENDERBUFFER       int32 = 200
+	AttachmentCubemapPositiveX int32 = 0
+	AttachmentCubemapNegativeX int32 = 1
+	AttachmentCubemapPositiveY int32 = 2
+	AttachmentCubemapNegativeY int32 = 3
+	AttachmentCubemapPositiveZ int32 = 4
+	AttachmentCubemapNegativeZ int32 = 5
+	AttachmentTexture2d        int32 = 100
+	AttachmentRenderbuffer     int32 = 200
 )
 
 type rlFramebufferAttachTextureType = int32
@@ -342,6 +224,17 @@ func Scalef(x float32, y float32, z float32) {
 	cy := C.float(y)
 	cz := C.float(z)
 	C.rlScalef(cx, cy, cz)
+}
+
+// Frustum .
+func Frustum(left float64, right float64, bottom float64, top float64, znear float64, zfar float64) {
+	cleft := C.double(left)
+	cright := C.double(right)
+	cbottom := C.double(bottom)
+	ctop := C.double(top)
+	cznear := C.double(znear)
+	czfar := C.double(zfar)
+	C.rlFrustum(cleft, cright, cbottom, ctop, cznear, czfar)
 }
 
 // Ortho .
@@ -519,6 +412,14 @@ func TextureParameters(id uint32, param int32, value int32) {
 	C.rlTextureParameters(cid, cparam, cvalue)
 }
 
+// CubemapParameters - Set cubemap parameters (filter, wrap)
+func CubemapParameters(id uint32, param int32, value int32) {
+	cid := C.uint(id)
+	cparam := C.int(param)
+	cvalue := C.int(value)
+	C.rlCubemapParameters(cid, cparam, cvalue)
+}
+
 // EnableShader - Enable shader program
 func EnableShader(id uint32) {
 	cid := C.uint(id)
@@ -587,6 +488,12 @@ func DisableBackfaceCulling() {
 	C.rlDisableBackfaceCulling()
 }
 
+// SetCullFace - Set face culling mode
+func SetCullFace(mode int32) {
+	cmode := C.int(mode)
+	C.rlSetCullFace(cmode)
+}
+
 // EnableScissorTest - Enable scissor test
 func EnableScissorTest() {
 	C.rlEnableScissorTest()
@@ -609,6 +516,11 @@ func Scissor(x int32, y int32, width int32, height int32) {
 // EnableWireMode - Enable wire mode
 func EnableWireMode() {
 	C.rlEnableWireMode()
+}
+
+// EnablePointMode - Enable point mode
+func EnablePointMode() {
+	C.rlEnablePointMode()
 }
 
 // DisableWireMode - Disable wire mode
@@ -745,6 +657,11 @@ func GetShaderIdDefault() uint32 {
 	return uint32(C.rlGetShaderIdDefault())
 }
 
+// DrawRenderBatchActive - Update and draw internal render batch
+func DrawRenderBatchActive() {
+	C.rlDrawRenderBatchActive()
+}
+
 // CheckRenderBatchLimit - Check internal buffer overflow for a given number of vertex
 func CheckRenderBatchLimit(vCount int32) bool {
 	cvCount := C.int(vCount)
@@ -821,7 +738,7 @@ func LoadShaderCode(vsCode string, fsCode string) uint32 {
 	return uint32(C.rlLoadShaderCode(cvsCode, cfsCode))
 }
 
-// CompileShader - Compile custom shader and return shader id (type: RL_VERTEX_SHADER, RL_FRAGMENT_SHADER, RL_COMPUTE_SHADER)
+// CompileShader - Compile custom shader and return shader id (type: VERTEX_SHADER, FRAGMENT_SHADER, COMPUTE_SHADER)
 func CompileShader(shaderCode string, type_ int32) uint32 {
 	cshaderCode := C.CString(shaderCode)
 	defer C.free(unsafe.Pointer(cshaderCode))
