@@ -1142,6 +1142,9 @@ func NewRenderTexture2D(id uint32, texture, depth Texture2D) RenderTexture2D {
 	return RenderTexture2D{id, texture, depth}
 }
 
+// TraceLogCallbackFun - function that will recive the trace log messages
+type TraceLogCallbackFun func(int, string)
+
 // TraceLogLevel parameter of trace log message
 type TraceLogLevel int
 
@@ -1183,4 +1186,30 @@ type NPatchInfo struct {
 	Right  int32        // Right border offset
 	Bottom int32        // Bottom border offset
 	Layout NPatchLayout // Layout of the n-patch: 3x3, 1x3 or 3x1
+}
+
+// VrStereoConfig, VR stereo rendering configuration for simulator
+type VrStereoConfig struct {
+	Projection        [2]Matrix  // VR projection matrices (per eye)
+	ViewOffset        [2]Matrix  // VR view offset matrices (per eye)
+	LeftLensCenter    [2]float32 // VR left lens center
+	RightLensCenter   [2]float32 // VR right lens center
+	LeftScreenCenter  [2]float32 // VR left screen center
+	RightScreenCenter [2]float32 // VR right screen center
+	Scale             [2]float32 // VR distortion scale
+	ScaleIn           [2]float32 // VR distortion scale in
+}
+
+// VrDeviceInfo, Head-Mounted-Display device parameters
+type VrDeviceInfo struct {
+	HResolution            int32      // Horizontal resolution in pixels
+	VResolution            int32      // Vertical resolution in pixels
+	HScreenSize            float32    // Horizontal size in meters
+	VScreenSize            float32    // Vertical size in meters
+	VScreenCenter          float32    // Screen center in meters
+	EyeToScreenDistance    float32    // Distance between eye and display in meters
+	LensSeparationDistance float32    // Lens separation distance in meters
+	InterpupillaryDistance float32    // IPD (distance between pupils) in meters
+	LensDistortionValues   [4]float32 // Lens distortion constant parameters
+	ChromaAbCorrection     [4]float32 // Chromatic aberration correction parameters
 }

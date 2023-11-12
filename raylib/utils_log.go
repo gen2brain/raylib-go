@@ -7,9 +7,6 @@ import "C"
 
 import "unsafe"
 
-// TraceLogCallbackFun - function that will recive the trace log messages
-type TraceLogCallbackFun func(int, string)
-
 var internalTraceLogCallbackFun TraceLogCallbackFun = func(int, string) {}
 
 // SetTraceLogCallback - set a call-back function for trace log
