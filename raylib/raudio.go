@@ -74,39 +74,6 @@ func newMusicFromPointer(ptr unsafe.Pointer) Music {
 	return *(*Music)(ptr)
 }
 
-// Sound source type
-type Sound struct {
-	Stream     AudioStream
-	FrameCount uint32
-	_          [4]byte
-}
-
-// Music type (file streaming from memory)
-// NOTE: Anything longer than ~10 seconds should be streamed
-type Music struct {
-	Stream     AudioStream
-	FrameCount uint32
-	Looping    bool
-	CtxType    int32
-	CtxData    unsafe.Pointer
-}
-
-// AudioStream type
-// NOTE: Useful to create custom audio streams not bound to a specific file
-type AudioStream struct {
-	// Buffer
-	Buffer *C.rAudioBuffer
-	// Processor
-	Processor *C.rAudioProcessor
-	// Frequency (samples per second)
-	SampleRate uint32
-	// Bit depth (bits per sample): 8, 16, 32 (24 not supported)
-	SampleSize uint32
-	// Number of channels (1-mono, 2-stereo)
-	Channels uint32
-	_        [4]byte
-}
-
 // InitAudioDevice - Initialize audio device and context
 func InitAudioDevice() {
 	C.InitAudioDevice()

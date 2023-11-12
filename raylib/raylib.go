@@ -41,6 +41,127 @@ func NewWave(sampleCount, sampleRate, sampleSize, channels uint32, data []byte) 
 	return Wave{sampleCount, sampleRate, sampleSize, channels, d}
 }
 
+// Sound source type
+type Sound struct {
+	Stream     AudioStream
+	FrameCount uint32
+	_          [4]byte
+}
+
+// Music type (file streaming from memory)
+// NOTE: Anything longer than ~10 seconds should be streamed
+type Music struct {
+	Stream     AudioStream
+	FrameCount uint32
+	Looping    bool
+	CtxType    int32
+	CtxData    unsafe.Pointer
+}
+
+// AudioStream type
+// NOTE: Useful to create custom audio streams not bound to a specific file
+type AudioStream struct {
+	// Buffer
+	Buffer *AudioBuffer
+	// Processor
+	Processor *AudioProcessor
+	// Frequency (samples per second)
+	SampleRate uint32
+	// Bit depth (bits per sample): 8, 16, 32 (24 not supported)
+	SampleSize uint32
+	// Number of channels (1-mono, 2-stereo)
+	Channels uint32
+	_        [4]byte
+}
+
+type maDataConverter struct {
+	FormatIn                uint32
+	FormatOut               uint32
+	ChannelsIn              uint32
+	ChannelsOut             uint32
+	SampleRateIn            uint32
+	SampleRateOut           uint32
+	DitherMode              uint32
+	ExecutionPath           uint32
+	ChannelConverter        maChannelConverter
+	Resampler               maResampler
+	HasPreFormatConversion  uint8
+	HasPostFormatConversion uint8
+	HasChannelConverter     uint8
+	HasResampler            uint8
+	IsPassthrough           uint8
+	X_ownsHeap              uint8
+	X_pHeap                 *byte
+}
+
+type maChannelConverter struct {
+	Format         uint32
+	ChannelsIn     uint32
+	ChannelsOut    uint32
+	MixingMode     uint32
+	ConversionPath uint32
+	PChannelMapIn  *uint8
+	PChannelMapOut *uint8
+	PShuffleTable  *uint8
+	Weights        [8]byte
+	X_pHeap        *byte
+	X_ownsHeap     uint32
+	Pad_cgo_0      [4]byte
+}
+
+type maResampler struct {
+	PBackend         *byte
+	PBackendVTable   *maResamplingBackendVtable
+	PBackendUserData *byte
+	Format           uint32
+	Channels         uint32
+	SampleRateIn     uint32
+	SampleRateOut    uint32
+	State            [136]byte
+	X_pHeap          *byte
+	X_ownsHeap       uint32
+	Pad_cgo_0        [4]byte
+}
+
+type maResamplingBackendVtable struct {
+	OnGetHeapSize                 *[0]byte
+	OnInit                        *[0]byte
+	OnUninit                      *[0]byte
+	OnProcess                     *[0]byte
+	OnSetRate                     *[0]byte
+	OnGetInputLatency             *[0]byte
+	OnGetOutputLatency            *[0]byte
+	OnGetRequiredInputFrameCount  *[0]byte
+	OnGetExpectedOutputFrameCount *[0]byte
+	OnReset                       *[0]byte
+}
+
+type AudioBuffer struct {
+	Converter            maDataConverter
+	Callback             *[0]byte
+	Processor            *AudioProcessor
+	Volume               float32
+	Pitch                float32
+	Pan                  float32
+	Playing              bool
+	Paused               bool
+	Looping              bool
+	Usage                int32
+	IsSubBufferProcessed [2]bool
+	SizeInFrames         uint32
+	FrameCursorPos       uint32
+	FramesProcessed      uint32
+	Data                 *uint8
+	Next                 *AudioBuffer
+	Prev                 *AudioBuffer
+}
+
+type AudioProcessor struct {
+	Process *[0]byte
+	Next    *AudioProcessor
+	Prev    *AudioProcessor
+}
+
 // AutomationEvent - Automation event
 type AutomationEvent struct {
 	Frame  uint32
