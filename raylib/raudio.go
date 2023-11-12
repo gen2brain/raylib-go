@@ -22,9 +22,6 @@ import (
 	"unsafe"
 )
 
-// AudioCallback function.
-type AudioCallback func(data []float32, frames int)
-
 var internalAudioStreamCallback AudioCallback
 
 // SetAudioStreamCallback - Audio thread callback to request new data

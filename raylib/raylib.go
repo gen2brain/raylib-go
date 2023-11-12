@@ -41,6 +41,9 @@ func NewWave(sampleCount, sampleRate, sampleSize, channels uint32, data []byte) 
 	return Wave{sampleCount, sampleRate, sampleSize, channels, d}
 }
 
+// AudioCallback function.
+type AudioCallback func(data []float32, frames int)
+
 // Sound source type
 type Sound struct {
 	Stream     AudioStream
