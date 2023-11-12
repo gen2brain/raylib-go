@@ -47,7 +47,9 @@ func main() {
 	var (
 		panelRec        = rl.Rectangle{20, 40, 200, 150}
 		panelContentRec = rl.Rectangle{0, 0, 340, 340}
+		panelView       = rl.Rectangle{0, 0, 0, 0}
 		panelScroll     = rl.Vector2{99, -20}
+		mouseCell       = rl.Vector2{0, 0}
 
 		showContentArea = true
 	)
@@ -72,15 +74,15 @@ func main() {
 
 		rl.DrawText(fmt.Sprintf("[%.1f, %.1f]", panelScroll.X, panelScroll.Y), 4, 4, 20, rl.Red)
 
-		view := gui.ScrollPanel(panelRec, "", panelContentRec, &panelScroll)
+		gui.ScrollPanel(panelRec, "", panelContentRec, &panelScroll, &panelView)
 
-		rl.BeginScissorMode(int32(view.X), int32(view.Y), int32(view.Width), int32(view.Height))
+		rl.BeginScissorMode(int32(panelView.X), int32(panelView.Y), int32(panelView.Width), int32(panelView.Height))
 		gui.Grid(rl.Rectangle{
 			float32(panelRec.X + panelScroll.X),
 			float32(panelRec.Y + panelScroll.Y),
 			float32(panelContentRec.Width),
 			float32(panelContentRec.Height),
-		}, "", 16, 3)
+		}, "", 16, 3, &mouseCell)
 		rl.EndScissorMode()
 
 		if showContentArea {

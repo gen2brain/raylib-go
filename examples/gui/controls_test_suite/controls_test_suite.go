@@ -21,7 +21,6 @@ import (
 *       - gui.ComboBox()
 *       - gui.ListView()
 *       - gui.ToggleGroup()
-*       - gui.TextBoxMulti()
 *       - gui.ColorPicker()
 *       - gui.Slider()
 *       - gui.SliderBar()
@@ -86,9 +85,7 @@ func main() {
 		listViewExFocus       int32 = -1
 		listViewExList              = []string{"This", "is", "a", "list view", "with", "disable", "elements", "amazing!"}
 
-		multiTextBoxText          = "Multi text box"
-		multiTextBoxEditMode bool = false
-		colorPickerValue          = rl.Red
+		colorPickerValue = rl.Red
 
 		sliderValue    float32 = 50
 		sliderBarValue float32 = 60
@@ -102,7 +99,7 @@ func main() {
 
 		toggleGroupActive int32 = 0
 
-		// TODO viewScroll = rl.Vector2{0, 0}
+		viewScroll = rl.Vector2{0, 0}
 
 		//----------------------------------------------------------------------------------
 
@@ -166,9 +163,8 @@ func main() {
 
 		gui.SetStyle(gui.TEXTBOX, gui.TEXT_ALIGNMENT, gui.TEXT_ALIGN_CENTER)
 		//GuiSetStyle(VALUEBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
-		if gui.Spinner(rl.Rectangle{25, 135, 125, 30}, "", &spinner001Value, 0, 100, spinnerEditMode) {
-			spinnerEditMode = !spinnerEditMode
-		}
+		gui.Spinner(rl.Rectangle{25, 135, 125, 30}, "", &spinner001Value, 0, 100, spinnerEditMode)
+
 		if gui.ValueBox(rl.Rectangle{25, 175, 125, 30}, "", &valueBox002Value, 0, 100, valueBoxEditMode) {
 			valueBoxEditMode = !valueBoxEditMode
 		}
@@ -220,27 +216,25 @@ func main() {
 		toggleGroupActive = gui.ToggleGroup(rl.Rectangle{165, 400, 140, 25}, "#1#ONE\n#3#TWO\n#8#THREE\n#23#", toggleGroupActive)
 
 		// Third GUI column
-		if gui.TextBoxMulti(rl.Rectangle{320, 25, 225, 140}, &multiTextBoxText, 256, multiTextBoxEditMode) {
-			multiTextBoxEditMode = !multiTextBoxEditMode
-		}
+		gui.Panel(rl.NewRectangle(320, 25, 225, 140), "Panel Info")
 		colorPickerValue = gui.ColorPicker(rl.Rectangle{320, 185, 196, 192}, "", colorPickerValue)
 
 		sliderValue = gui.Slider(rl.Rectangle{355, 400, 165, 20}, "TEST",
 			fmt.Sprintf("%2.2f", sliderValue), sliderValue, -50, 100)
 		sliderBarValue = gui.SliderBar(rl.Rectangle{320, 430, 200, 20}, "",
-			fmt.Sprint("%d", sliderBarValue), sliderBarValue, 0, 100)
+			fmt.Sprintf("%2.2f", sliderBarValue), sliderBarValue, 0, 100)
 		progressValue = gui.ProgressBar(rl.Rectangle{320, 460, 200, 20}, "", "", progressValue, 0, 1)
 
 		// NOTE: View rectangle could be used to perform some scissor test
-		//var view rl.Rectangle = gui.ScrollPanel(rl.Rectangle{560, 25, 100, 160}, "", rl.Rectangle{560, 25, 200, 400}, &viewScroll)
+		var view rl.Rectangle
+		gui.ScrollPanel(rl.Rectangle{560, 25, 102, 354}, "", rl.Rectangle{560, 25, 300, 1200}, &viewScroll, &view)
 
-		gui.Panel(rl.Rectangle{560, 25 + 180, 100, 160}, "Panel Info")
-
-		gui.Grid(rl.Rectangle{560, 25 + 180 + 180, 100, 120}, "", 20, 2)
-
-		gui.StatusBar(rl.Rectangle{0, float32(rl.GetScreenHeight()) - 20, float32(rl.GetScreenWidth()), 20}, "This is a status bar")
+		var mouseCell rl.Vector2
+		gui.Grid(rl.Rectangle{560, 25 + 180 + 195, 100, 120}, "", 20, 3, &mouseCell)
 
 		alphaValue = gui.ColorBarAlpha(rl.Rectangle{320, 490, 200, 30}, "", alphaValue)
+
+		gui.StatusBar(rl.Rectangle{0, float32(rl.GetScreenHeight()) - 20, float32(rl.GetScreenWidth()), 20}, "This is a status bar")
 
 		if showMessageBox {
 			rl.DrawRectangle(0, 0, int32(rl.GetScreenWidth()), int32(rl.GetScreenHeight()), rl.Fade(rl.RayWhite, 0.8))
@@ -255,12 +249,13 @@ func main() {
 
 		if showTextInputBox {
 			rl.DrawRectangle(0, 0, int32(rl.GetScreenWidth()), int32(rl.GetScreenHeight()), rl.Fade(rl.RayWhite, 0.8))
+			var secretViewActive bool
 			var result int32 = gui.TextInputBox(
 				rl.Rectangle{float32(rl.GetScreenWidth())/2 - 120, float32(rl.GetScreenHeight())/2 - 60, 240, 140},
 				"Save",
 				gui.IconText(gui.ICON_FILE_SAVE, "Save file as..."),
 				"Ok;Cancel",
-				&textInput, 255, nil)
+				&textInput, 255, &secretViewActive)
 
 			if result == 1 {
 				// TODO: Validate textInput value and save

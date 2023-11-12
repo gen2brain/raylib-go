@@ -1,7 +1,7 @@
 package raygui
 
 /*
-#cgo CFLAGS: -DRAYGUI_IMPLEMENTATION -Wno-unused-result
+#define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 #include <stdlib.h>
 */
@@ -26,7 +26,7 @@ type GuiStyleProp struct {
 	propertyValue uint32
 }
 
-// STATE_NORMAL - Gui control state
+// Gui control state
 const (
 	STATE_NORMAL   int32 = 0
 	STATE_FOCUSED        = 1
@@ -37,7 +37,7 @@ const (
 // GuiState .
 type GuiState = int32
 
-// TEXT_ALIGN_LEFT - Gui control text alignment
+// Gui control text alignment
 const (
 	TEXT_ALIGN_LEFT   int32 = 0
 	TEXT_ALIGN_CENTER       = 1
@@ -46,6 +46,27 @@ const (
 
 // GuiTextAlignment .
 type GuiTextAlignment = int32
+
+// Gui control text alignment vertical
+const (
+	TEXT_ALIGN_TOP    int32 = 0
+	TEXT_ALIGN_MIDDLE       = 1
+	TEXT_ALIGN_BOTTOM       = 2
+)
+
+// GuiTextWrapMode .
+type GuiTextWrapMode = int32
+
+// Gui control text wrap mode
+// NOTE: Useful for multiline text
+const (
+	TEXT_WRAP_NONE int32 = 0
+	TEXT_WRAP_CHAR       = 1
+	TEXT_WRAP_WORD       = 2
+)
+
+// GuiTextAlignmentVertical .
+type GuiTextAlignmentVertical = int32
 
 // DEFAULT - Gui controls
 const (
@@ -88,7 +109,6 @@ const (
 	BORDER_WIDTH                = 12
 	TEXT_PADDING                = 13
 	TEXT_ALIGNMENT              = 14
-	RESERVED                    = 15
 )
 
 // GuiControlProperty .
@@ -97,10 +117,13 @@ type GuiControlProperty = int32
 // DEFAULT extended properties
 // NOTE: Those properties are common to all controls or global
 const (
-	TEXT_SIZE        int32 = 16
-	TEXT_SPACING           = 17
-	LINE_COLOR             = 18
-	BACKGROUND_COLOR       = 19
+	TEXT_SIZE               int32 = 16
+	TEXT_SPACING                  = 17
+	LINE_COLOR                    = 18
+	BACKGROUND_COLOR              = 19
+	TEXT_LINE_SPACING             = 20
+	TEXT_ALIGNMENT_VERTICAL       = 21
+	TEXT_WRAP_MODE                = 22
 )
 
 // GuiDefaultProperty .
@@ -246,9 +269,10 @@ func IsLocked() bool {
 }
 
 // GuiFade - Set gui controls alpha (global state), alpha goes from 0.0f to 1.0f
-func Fade(alpha float32) {
+func Fade(color rl.Color, alpha float32) {
+	ccolor := (*C.Color)(unsafe.Pointer(&color))
 	calpha := C.float(alpha)
-	C.GuiFade(calpha)
+	C.GuiFade(*ccolor, calpha)
 }
 
 // GuiSetState - Set gui state (global state)
@@ -286,7 +310,7 @@ func WindowBox(bounds rl.Rectangle, title string) bool {
 	cbounds.width = C.float(bounds.Width)
 	ctitle := C.CString(title)
 	defer C.free(unsafe.Pointer(ctitle))
-	return bool(C.GuiWindowBox(cbounds, ctitle))
+	return C.GuiWindowBox(cbounds, ctitle) != 0
 }
 
 // GuiGroupBox - Group Box control with text name
@@ -313,7 +337,7 @@ func Line(bounds rl.Rectangle, text string) {
 	C.GuiLine(cbounds, ctext)
 }
 
-// GuiPanel - Panel control, useful to group controls
+// Panel - Panel control, useful to group controls
 func Panel(bounds rl.Rectangle, text string) {
 	var cbounds C.struct_Rectangle
 	cbounds.width = C.float(bounds.Width)
@@ -325,8 +349,8 @@ func Panel(bounds rl.Rectangle, text string) {
 	C.GuiPanel(cbounds, ctext)
 }
 
-// ScrollPanel control
-func ScrollPanel(bounds rl.Rectangle, text string, content rl.Rectangle, scroll *rl.Vector2) rl.Rectangle {
+// ScrollPanel control - Scroll Panel control
+func ScrollPanel(bounds rl.Rectangle, text string, content rl.Rectangle, scroll *rl.Vector2, view *rl.Rectangle) int32 {
 	var cbounds C.struct_Rectangle
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
@@ -346,17 +370,15 @@ func ScrollPanel(bounds rl.Rectangle, text string, content rl.Rectangle, scroll 
 		scroll.X = float32(cscroll.x)
 		scroll.Y = float32(cscroll.y)
 	}()
+	var cview C.struct_Rectangle
+	cview.x = C.float(view.X)
+	cview.y = C.float(view.Y)
+	cview.width = C.float(view.Width)
+	cview.height = C.float(view.Height)
 
-	var res C.struct_Rectangle
-	res = C.GuiScrollPanel(cbounds, ctext, ccontent, &cscroll)
+	res := C.GuiScrollPanel(cbounds, ctext, ccontent, &cscroll, &cview)
 
-	var goRes rl.Rectangle
-	goRes.X = float32(res.x)
-	goRes.Y = float32(res.y)
-	goRes.Width = float32(res.width)
-	goRes.Height = float32(res.height)
-
-	return goRes
+	return int32(res)
 }
 
 // ScrollBar control (used by GuiScrollPanel())
@@ -395,7 +417,7 @@ func Button(bounds rl.Rectangle, text string) bool {
 	cbounds.height = C.float(bounds.Height)
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
-	return bool(C.GuiButton(cbounds, ctext))
+	return C.GuiButton(cbounds, ctext) != 0
 }
 
 // LabelButton control, show true when clicked
@@ -407,7 +429,7 @@ func LabelButton(bounds rl.Rectangle, text string) bool {
 	cbounds.height = C.float(bounds.Height)
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
-	return bool(C.GuiLabelButton(cbounds, ctext))
+	return C.GuiLabelButton(cbounds, ctext) != 0
 }
 
 // Toggle control, returns true when active
@@ -420,7 +442,8 @@ func Toggle(bounds rl.Rectangle, text string, active bool) bool {
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
 	cactive := C.bool(active)
-	return bool(C.GuiToggle(cbounds, ctext, cactive))
+	C.GuiToggle(cbounds, ctext, &cactive)
+	return bool(cactive)
 }
 
 // ToggleGroup control, returns active toggle index
@@ -433,7 +456,22 @@ func ToggleGroup(bounds rl.Rectangle, text string, active int32) int32 {
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
 	cactive := C.int(active)
-	return int32(C.GuiToggleGroup(cbounds, ctext, cactive))
+	C.GuiToggleGroup(cbounds, ctext, &cactive)
+	return int32(cactive)
+}
+
+// ToggleSlider control, returns true when clicked
+func ToggleSlider(bounds rl.Rectangle, text string, active int32) int32 {
+	var cbounds C.struct_Rectangle
+	cbounds.x = C.float(bounds.X)
+	cbounds.y = C.float(bounds.Y)
+	cbounds.width = C.float(bounds.Width)
+	cbounds.height = C.float(bounds.Height)
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+	cactive := C.int(active)
+	C.GuiToggleSlider(cbounds, ctext, &cactive)
+	return int32(cactive)
 }
 
 // CheckBox control, returns true when active
@@ -446,7 +484,8 @@ func CheckBox(bounds rl.Rectangle, text string, checked bool) bool {
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
 	cchecked := C.bool(checked)
-	return bool(C.GuiCheckBox(cbounds, ctext, cchecked))
+	C.GuiCheckBox(cbounds, ctext, &cchecked)
+	return bool(cchecked)
 }
 
 // ComboBox control, returns selected item index
@@ -459,11 +498,12 @@ func ComboBox(bounds rl.Rectangle, text string, active int32) int32 {
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
 	cactive := C.int(active)
-	return int32(C.GuiComboBox(cbounds, ctext, cactive))
+	C.GuiComboBox(cbounds, ctext, &cactive)
+	return int32(cactive)
 }
 
 // Spinner control, returns selected value
-func Spinner(bounds rl.Rectangle, text string, value *int32, minValue, maxValue int, editMode bool) bool {
+func Spinner(bounds rl.Rectangle, text string, value *int32, minValue, maxValue int, editMode bool) int32 {
 	var cbounds C.struct_Rectangle
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
@@ -484,7 +524,8 @@ func Spinner(bounds rl.Rectangle, text string, value *int32, minValue, maxValue 
 	cmaxValue := C.int(maxValue)
 	ceditMode := C.bool(editMode)
 
-	return bool(C.GuiSpinner(cbounds, ctext, &cvalue, cminValue, cmaxValue, ceditMode))
+	C.GuiSpinner(cbounds, ctext, &cvalue, cminValue, cmaxValue, ceditMode)
+	return int32(cvalue)
 }
 
 // Slider control
@@ -501,7 +542,8 @@ func Slider(bounds rl.Rectangle, textLeft string, textRight string, value float3
 	cvalue := C.float(value)
 	cminValue := C.float(minValue)
 	cmaxValue := C.float(maxValue)
-	return float32(C.GuiSlider(cbounds, ctextLeft, ctextRight, cvalue, cminValue, cmaxValue))
+	C.GuiSlider(cbounds, ctextLeft, ctextRight, &cvalue, cminValue, cmaxValue)
+	return float32(cvalue)
 }
 
 // SliderBar control, returns selected value
@@ -518,7 +560,8 @@ func SliderBar(bounds rl.Rectangle, textLeft string, textRight string, value flo
 	cvalue := C.float(value)
 	cminValue := C.float(minValue)
 	cmaxValue := C.float(maxValue)
-	return float32(C.GuiSliderBar(cbounds, ctextLeft, ctextRight, cvalue, cminValue, cmaxValue))
+	C.GuiSliderBar(cbounds, ctextLeft, ctextRight, &cvalue, cminValue, cmaxValue)
+	return float32(cvalue)
 }
 
 // ProgressBar control, shows current progress value
@@ -535,7 +578,8 @@ func ProgressBar(bounds rl.Rectangle, textLeft string, textRight string, value f
 	cvalue := C.float(value)
 	cminValue := C.float(minValue)
 	cmaxValue := C.float(maxValue)
-	return float32(C.GuiProgressBar(cbounds, ctextLeft, ctextRight, cvalue, cminValue, cmaxValue))
+	C.GuiProgressBar(cbounds, ctextLeft, ctextRight, &cvalue, cminValue, cmaxValue)
+	return float32(cvalue)
 }
 
 // StatusBar control, shows info text
@@ -563,7 +607,7 @@ func DummyRec(bounds rl.Rectangle, text string) {
 }
 
 // Grid control, returns mouse cell position
-func Grid(bounds rl.Rectangle, text string, spacing float32, subdivs int32) rl.Vector2 {
+func Grid(bounds rl.Rectangle, text string, spacing float32, subdivs int32, mouseCell *rl.Vector2) int32 {
 	var cbounds C.struct_Rectangle
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
@@ -573,11 +617,11 @@ func Grid(bounds rl.Rectangle, text string, spacing float32, subdivs int32) rl.V
 	defer C.free(unsafe.Pointer(ctext))
 	cspacing := C.float(spacing)
 	csubdivs := C.int(subdivs)
-	cResult := C.GuiGrid(cbounds, ctext, cspacing, csubdivs)
-	var goRes rl.Vector2
-	goRes.Y = float32(cResult.y)
-	goRes.X = float32(cResult.x)
-	return goRes
+	var cmouseCell C.struct_Vector2
+	cmouseCell.x = C.float(mouseCell.X)
+	cmouseCell.y = C.float(mouseCell.Y)
+	res := C.GuiGrid(cbounds, ctext, cspacing, csubdivs, &cmouseCell)
+	return int32(res)
 }
 
 // ListView control, returns selected list item index
@@ -600,7 +644,8 @@ func ListView(bounds rl.Rectangle, text string, scrollIndex *int32, active int32
 
 	cactive := C.int(active)
 
-	return int32(C.GuiListView(cbounds, ctext, &cscrollIndex, cactive))
+	C.GuiListView(cbounds, ctext, &cscrollIndex, &cactive)
+	return int32(cactive)
 }
 
 // MessageBox control, displays a message
@@ -633,12 +678,12 @@ func ColorPicker(bounds rl.Rectangle, text string, color rl.Color) rl.Color {
 	ccolor.g = C.uchar(color.G)
 	ccolor.b = C.uchar(color.B)
 	ccolor.a = C.uchar(color.A)
-	cResult := C.GuiColorPicker(cbounds, ctext, ccolor)
+	C.GuiColorPicker(cbounds, ctext, &ccolor)
 	var goRes rl.Color
-	goRes.A = byte(cResult.a)
-	goRes.R = byte(cResult.r)
-	goRes.G = byte(cResult.g)
-	goRes.B = byte(cResult.b)
+	goRes.A = byte(ccolor.a)
+	goRes.R = byte(ccolor.r)
+	goRes.G = byte(ccolor.g)
+	goRes.B = byte(ccolor.b)
 	return goRes
 }
 
@@ -656,12 +701,12 @@ func ColorPanel(bounds rl.Rectangle, text string, color rl.Color) rl.Color {
 	ccolor.a = C.uchar(color.A)
 	ccolor.r = C.uchar(color.R)
 	ccolor.g = C.uchar(color.G)
-	cResult := C.GuiColorPanel(cbounds, ctext, ccolor)
+	C.GuiColorPanel(cbounds, ctext, &ccolor)
 	var goRes rl.Color
-	goRes.A = byte(cResult.a)
-	goRes.R = byte(cResult.r)
-	goRes.G = byte(cResult.g)
-	goRes.B = byte(cResult.b)
+	goRes.A = byte(ccolor.a)
+	goRes.R = byte(ccolor.r)
+	goRes.G = byte(ccolor.g)
+	goRes.B = byte(ccolor.b)
 	return goRes
 }
 
@@ -675,7 +720,8 @@ func ColorBarAlpha(bounds rl.Rectangle, text string, alpha float32) float32 {
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
 	calpha := C.float(alpha)
-	return float32(C.GuiColorBarAlpha(cbounds, ctext, calpha))
+	C.GuiColorBarAlpha(cbounds, ctext, &calpha)
+	return float32(calpha)
 }
 
 // ColorBarHue control
@@ -688,7 +734,56 @@ func ColorBarHue(bounds rl.Rectangle, text string, value float32) float32 {
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
 	cvalue := C.float(value)
-	return float32(C.GuiColorBarHue(cbounds, ctext, cvalue))
+	C.GuiColorBarHue(cbounds, ctext, &cvalue)
+	return float32(cvalue)
+}
+
+// ColorPickerHSV - Color Picker control that avoids conversion to RGB on each call (multiple color controls)
+func ColorPickerHSV(bounds rl.Rectangle, text string, colorHSV *rl.Vector3) int32 {
+	var cbounds C.struct_Rectangle
+	cbounds.width = C.float(bounds.Width)
+	cbounds.height = C.float(bounds.Height)
+	cbounds.x = C.float(bounds.X)
+	cbounds.y = C.float(bounds.Y)
+
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+
+	var ccolorHSV C.struct_Vector3
+	ccolorHSV.x = C.float(colorHSV.X)
+	ccolorHSV.y = C.float(colorHSV.Y)
+	ccolorHSV.z = C.float(colorHSV.Z)
+	defer func() {
+		colorHSV.X = float32(ccolorHSV.x)
+		colorHSV.Y = float32(ccolorHSV.y)
+		colorHSV.Z = float32(ccolorHSV.z)
+	}()
+
+	return int32(C.GuiColorPickerHSV(cbounds, ctext, &ccolorHSV))
+}
+
+// ColorPanelHSV - Color Panel control that returns HSV color value, used by GuiColorPickerHSV()
+func ColorPanelHSV(bounds rl.Rectangle, text string, colorHSV *rl.Vector3) int32 {
+	var cbounds C.struct_Rectangle
+	cbounds.width = C.float(bounds.Width)
+	cbounds.height = C.float(bounds.Height)
+	cbounds.x = C.float(bounds.X)
+	cbounds.y = C.float(bounds.Y)
+
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+
+	var ccolorHSV C.struct_Vector3
+	ccolorHSV.x = C.float(colorHSV.X)
+	ccolorHSV.y = C.float(colorHSV.Y)
+	ccolorHSV.z = C.float(colorHSV.Z)
+	defer func() {
+		colorHSV.X = float32(ccolorHSV.x)
+		colorHSV.Y = float32(ccolorHSV.y)
+		colorHSV.Z = float32(ccolorHSV.z)
+	}()
+
+	return int32(C.GuiColorPanelHSV(cbounds, ctext, &ccolorHSV))
 }
 
 // DropdownBox control
@@ -711,7 +806,7 @@ func DropdownBox(bounds rl.Rectangle, text string, active *int32, editMode bool)
 
 	ceditMode := C.bool(editMode)
 
-	return bool(C.GuiDropdownBox(cbounds, ctext, &cactive, ceditMode))
+	return C.GuiDropdownBox(cbounds, ctext, &cactive, ceditMode) != 0
 }
 
 // ValueBox control, updates input text with numbers
@@ -736,7 +831,7 @@ func ValueBox(bounds rl.Rectangle, text string, value *int32, minValue, maxValue
 	cmaxValue := C.int(maxValue)
 	ceditMode := C.bool(editMode)
 
-	return bool(C.GuiValueBox(cbounds, ctext, &cvalue, cminValue, cmaxValue, ceditMode))
+	return C.GuiValueBox(cbounds, ctext, &cvalue, cminValue, cmaxValue, ceditMode) != 0
 }
 
 // TextBox control, updates input text
@@ -763,7 +858,7 @@ func TextBox(bounds rl.Rectangle, text *string, textSize int, editMode bool) boo
 	ctextSize := C.int(textSize)
 	ceditMode := C.bool(editMode)
 
-	return bool(C.GuiTextBox(cbounds, ctext, ctextSize, ceditMode))
+	return C.GuiTextBox(cbounds, ctext, ctextSize, ceditMode) != 0
 }
 
 // LoadStyle file over global style variable (.rgs)
@@ -778,6 +873,11 @@ func LoadStyleDefault() {
 	C.GuiLoadStyleDefault()
 }
 
+// LoadStyleFromMemory - Load style from memory (binary only)
+func LoadStyleFromMemory(data []byte) {
+	C.GuiLoadStyleFromMemory((*C.uchar)(unsafe.Pointer(&data[0])), C.int(len(data)))
+}
+
 // IconText gets text with icon id prepended (if supported)
 func IconText(iconId int32, text string) string {
 	ciconId := C.int(iconId)
@@ -788,266 +888,266 @@ func IconText(iconId int32, text string) string {
 
 // Icons enumeration
 const (
-	ICON_NONE                    int32 = 0
-	ICON_FOLDER_FILE_OPEN              = 1
-	ICON_FILE_SAVE_CLASSIC             = 2
-	ICON_FOLDER_OPEN                   = 3
-	ICON_FOLDER_SAVE                   = 4
-	ICON_FILE_OPEN                     = 5
-	ICON_FILE_SAVE                     = 6
-	ICON_FILE_EXPORT                   = 7
-	ICON_FILE_ADD                      = 8
-	ICON_FILE_DELETE                   = 9
-	ICON_FILETYPE_TEXT                 = 10
-	ICON_FILETYPE_AUDIO                = 11
-	ICON_FILETYPE_IMAGE                = 12
-	ICON_FILETYPE_PLAY                 = 13
-	ICON_FILETYPE_VIDEO                = 14
-	ICON_FILETYPE_INFO                 = 15
-	ICON_FILE_COPY                     = 16
-	ICON_FILE_CUT                      = 17
-	ICON_FILE_PASTE                    = 18
-	ICON_CURSOR_HAND                   = 19
-	ICON_CURSOR_POINTER                = 20
-	ICON_CURSOR_CLASSIC                = 21
-	ICON_PENCIL                        = 22
-	ICON_PENCIL_BIG                    = 23
-	ICON_BRUSH_CLASSIC                 = 24
-	ICON_BRUSH_PAINTER                 = 25
-	ICON_WATER_DROP                    = 26
-	ICON_COLOR_PICKER                  = 27
-	ICON_RUBBER                        = 28
-	ICON_COLOR_BUCKET                  = 29
-	ICON_TEXT_T                        = 30
-	ICON_TEXT_A                        = 31
-	ICON_SCALE                         = 32
-	ICON_RESIZE                        = 33
-	ICON_FILTER_POINT                  = 34
-	ICON_FILTER_BILINEAR               = 35
-	ICON_CROP                          = 36
-	ICON_CROP_ALPHA                    = 37
-	ICON_SQUARE_TOGGLE                 = 38
-	ICON_SYMMETRY                      = 39
-	ICON_SYMMETRY_HORIZONTAL           = 40
-	ICON_SYMMETRY_VERTICAL             = 41
-	ICON_LENS                          = 42
-	ICON_LENS_BIG                      = 43
-	ICON_EYE_ON                        = 44
-	ICON_EYE_OFF                       = 45
-	ICON_FILTER_TOP                    = 46
-	ICON_FILTER                        = 47
-	ICON_TARGET_POINT                  = 48
-	ICON_TARGET_SMALL                  = 49
-	ICON_TARGET_BIG                    = 50
-	ICON_TARGET_MOVE                   = 51
-	ICON_CURSOR_MOVE                   = 52
-	ICON_CURSOR_SCALE                  = 53
-	ICON_CURSOR_SCALE_RIGHT            = 54
-	ICON_CURSOR_SCALE_LEFT             = 55
-	ICON_UNDO                          = 56
-	ICON_REDO                          = 57
-	ICON_REREDO                        = 58
-	ICON_MUTATE                        = 59
-	ICON_ROTATE                        = 60
-	ICON_REPEAT                        = 61
-	ICON_SHUFFLE                       = 62
-	ICON_EMPTYBOX                      = 63
-	ICON_TARGET                        = 64
-	ICON_TARGET_SMALL_FILL             = 65
-	ICON_TARGET_BIG_FILL               = 66
-	ICON_TARGET_MOVE_FILL              = 67
-	ICON_CURSOR_MOVE_FILL              = 68
-	ICON_CURSOR_SCALE_FILL             = 69
-	ICON_CURSOR_SCALE_RIGHT_FILL       = 70
-	ICON_CURSOR_SCALE_LEFT_FILL        = 71
-	ICON_UNDO_FILL                     = 72
-	ICON_REDO_FILL                     = 73
-	ICON_REREDO_FILL                   = 74
-	ICON_MUTATE_FILL                   = 75
-	ICON_ROTATE_FILL                   = 76
-	ICON_REPEAT_FILL                   = 77
-	ICON_SHUFFLE_FILL                  = 78
-	ICON_EMPTYBOX_SMALL                = 79
-	ICON_BOX                           = 80
-	ICON_BOX_TOP                       = 81
-	ICON_BOX_TOP_RIGHT                 = 82
-	ICON_BOX_RIGHT                     = 83
-	ICON_BOX_BOTTOM_RIGHT              = 84
-	ICON_BOX_BOTTOM                    = 85
-	ICON_BOX_BOTTOM_LEFT               = 86
-	ICON_BOX_LEFT                      = 87
-	ICON_BOX_TOP_LEFT                  = 88
-	ICON_BOX_CENTER                    = 89
-	ICON_BOX_CIRCLE_MASK               = 90
-	ICON_POT                           = 91
-	ICON_ALPHA_MULTIPLY                = 92
-	ICON_ALPHA_CLEAR                   = 93
-	ICON_DITHERING                     = 94
-	ICON_MIPMAPS                       = 95
-	ICON_BOX_GRID                      = 96
-	ICON_GRID                          = 97
-	ICON_BOX_CORNERS_SMALL             = 98
-	ICON_BOX_CORNERS_BIG               = 99
-	ICON_FOUR_BOXES                    = 100
-	ICON_GRID_FILL                     = 101
-	ICON_BOX_MULTISIZE                 = 102
-	ICON_ZOOM_SMALL                    = 103
-	ICON_ZOOM_MEDIUM                   = 104
-	ICON_ZOOM_BIG                      = 105
-	ICON_ZOOM_ALL                      = 106
-	ICON_ZOOM_CENTER                   = 107
-	ICON_BOX_DOTS_SMALL                = 108
-	ICON_BOX_DOTS_BIG                  = 109
-	ICON_BOX_CONCENTRIC                = 110
-	ICON_BOX_GRID_BIG                  = 111
-	ICON_OK_TICK                       = 112
-	ICON_CROSS                         = 113
-	ICON_ARROW_LEFT                    = 114
-	ICON_ARROW_RIGHT                   = 115
-	ICON_ARROW_DOWN                    = 116
-	ICON_ARROW_UP                      = 117
-	ICON_ARROW_LEFT_FILL               = 118
-	ICON_ARROW_RIGHT_FILL              = 119
-	ICON_ARROW_DOWN_FILL               = 120
-	ICON_ARROW_UP_FILL                 = 121
-	ICON_AUDIO                         = 122
-	ICON_FX                            = 123
-	ICON_WAVE                          = 124
-	ICON_WAVE_SINUS                    = 125
-	ICON_WAVE_SQUARE                   = 126
-	ICON_WAVE_TRIANGULAR               = 127
-	ICON_CROSS_SMALL                   = 128
-	ICON_PLAYER_PREVIOUS               = 129
-	ICON_PLAYER_PLAY_BACK              = 130
-	ICON_PLAYER_PLAY                   = 131
-	ICON_PLAYER_PAUSE                  = 132
-	ICON_PLAYER_STOP                   = 133
-	ICON_PLAYER_NEXT                   = 134
-	ICON_PLAYER_RECORD                 = 135
-	ICON_MAGNET                        = 136
-	ICON_LOCK_CLOSE                    = 137
-	ICON_LOCK_OPEN                     = 138
-	ICON_CLOCK                         = 139
-	ICON_TOOLS                         = 140
-	ICON_GEAR                          = 141
-	ICON_GEAR_BIG                      = 142
-	ICON_BIN                           = 143
-	ICON_HAND_POINTER                  = 144
-	ICON_LASER                         = 145
-	ICON_COIN                          = 146
-	ICON_EXPLOSION                     = 147
-	ICON_1UP                           = 148
-	ICON_PLAYER                        = 149
-	ICON_PLAYER_JUMP                   = 150
-	ICON_KEY                           = 151
-	ICON_DEMON                         = 152
-	ICON_TEXT_POPUP                    = 153
-	ICON_GEAR_EX                       = 154
-	ICON_CRACK                         = 155
-	ICON_CRACK_POINTS                  = 156
-	ICON_STAR                          = 157
-	ICON_DOOR                          = 158
-	ICON_EXIT                          = 159
-	ICON_MODE_2D                       = 160
-	ICON_MODE_3D                       = 161
-	ICON_CUBE                          = 162
-	ICON_CUBE_FACE_TOP                 = 163
-	ICON_CUBE_FACE_LEFT                = 164
-	ICON_CUBE_FACE_FRONT               = 165
-	ICON_CUBE_FACE_BOTTOM              = 166
-	ICON_CUBE_FACE_RIGHT               = 167
-	ICON_CUBE_FACE_BACK                = 168
-	ICON_CAMERA                        = 169
-	ICON_SPECIAL                       = 170
-	ICON_LINK_NET                      = 171
-	ICON_LINK_BOXES                    = 172
-	ICON_LINK_MULTI                    = 173
-	ICON_LINK                          = 174
-	ICON_LINK_BROKE                    = 175
-	ICON_TEXT_NOTES                    = 176
-	ICON_NOTEBOOK                      = 177
-	ICON_SUITCASE                      = 178
-	ICON_SUITCASE_ZIP                  = 179
-	ICON_MAILBOX                       = 180
-	ICON_MONITOR                       = 181
-	ICON_PRINTER                       = 182
-	ICON_PHOTO_CAMERA                  = 183
-	ICON_PHOTO_CAMERA_FLASH            = 184
-	ICON_HOUSE                         = 185
-	ICON_HEART                         = 186
-	ICON_CORNER                        = 187
-	ICON_VERTICAL_BARS                 = 188
-	ICON_VERTICAL_BARS_FILL            = 189
-	ICON_LIFE_BARS                     = 190
-	ICON_INFO                          = 191
-	ICON_CROSSLINE                     = 192
-	ICON_HELP                          = 193
-	ICON_FILETYPE_ALPHA                = 194
-	ICON_FILETYPE_HOME                 = 195
-	ICON_LAYERS_VISIBLE                = 196
-	ICON_LAYERS                        = 197
-	ICON_WINDOW                        = 198
-	ICON_HIDPI                         = 199
-	ICON_FILETYPE_BINARY               = 200
-	ICON_HEX                           = 201
-	ICON_SHIELD                        = 202
-	ICON_FILE_NEW                      = 203
-	ICON_FOLDER_ADD                    = 204
-	ICON_ALARM                         = 205
-	ICON_CPU                           = 206
-	ICON_ROM                           = 207
-	ICON_STEP_OVER                     = 208
-	ICON_STEP_INTO                     = 209
-	ICON_STEP_OUT                      = 210
-	ICON_RESTART                       = 211
-	ICON_BREAKPOINT_ON                 = 212
-	ICON_BREAKPOINT_OFF                = 213
-	ICON_BURGER_MENU                   = 214
-	ICON_CASE_SENSITIVE                = 215
-	ICON_REG_EXP                       = 216
-	ICON_FOLDER                        = 217
-	ICON_FILE                          = 218
-	ICON_219                           = 219
-	ICON_220                           = 220
-	ICON_221                           = 221
-	ICON_222                           = 222
-	ICON_223                           = 223
-	ICON_224                           = 224
-	ICON_225                           = 225
-	ICON_226                           = 226
-	ICON_227                           = 227
-	ICON_228                           = 228
-	ICON_229                           = 229
-	ICON_230                           = 230
-	ICON_231                           = 231
-	ICON_232                           = 232
-	ICON_233                           = 233
-	ICON_234                           = 234
-	ICON_235                           = 235
-	ICON_236                           = 236
-	ICON_237                           = 237
-	ICON_238                           = 238
-	ICON_239                           = 239
-	ICON_240                           = 240
-	ICON_241                           = 241
-	ICON_242                           = 242
-	ICON_243                           = 243
-	ICON_244                           = 244
-	ICON_245                           = 245
-	ICON_246                           = 246
-	ICON_247                           = 247
-	ICON_248                           = 248
-	ICON_249                           = 249
-	ICON_250                           = 250
-	ICON_251                           = 251
-	ICON_252                           = 252
-	ICON_253                           = 253
-	ICON_254                           = 254
-	ICON_255                           = 255
+	ICON_NONE int32 = iota
+	ICON_FOLDER_FILE_OPEN
+	ICON_FILE_SAVE_CLASSIC
+	ICON_FOLDER_OPEN
+	ICON_FOLDER_SAVE
+	ICON_FILE_OPEN
+	ICON_FILE_SAVE
+	ICON_FILE_EXPORT
+	ICON_FILE_ADD
+	ICON_FILE_DELETE
+	ICON_FILETYPE_TEXT
+	ICON_FILETYPE_AUDIO
+	ICON_FILETYPE_IMAGE
+	ICON_FILETYPE_PLAY
+	ICON_FILETYPE_VIDEO
+	ICON_FILETYPE_INFO
+	ICON_FILE_COPY
+	ICON_FILE_CUT
+	ICON_FILE_PASTE
+	ICON_CURSOR_HAND
+	ICON_CURSOR_POINTER
+	ICON_CURSOR_CLASSIC
+	ICON_PENCIL
+	ICON_PENCIL_BIG
+	ICON_BRUSH_CLASSIC
+	ICON_BRUSH_PAINTER
+	ICON_WATER_DROP
+	ICON_COLOR_PICKER
+	ICON_RUBBER
+	ICON_COLOR_BUCKET
+	ICON_TEXT_T
+	ICON_TEXT_A
+	ICON_SCALE
+	ICON_RESIZE
+	ICON_FILTER_POINT
+	ICON_FILTER_BILINEAR
+	ICON_CROP
+	ICON_CROP_ALPHA
+	ICON_SQUARE_TOGGLE
+	ICON_SYMMETRY
+	ICON_SYMMETRY_HORIZONTAL
+	ICON_SYMMETRY_VERTICAL
+	ICON_LENS
+	ICON_LENS_BIG
+	ICON_EYE_ON
+	ICON_EYE_OFF
+	ICON_FILTER_TOP
+	ICON_FILTER
+	ICON_TARGET_POINT
+	ICON_TARGET_SMALL
+	ICON_TARGET_BIG
+	ICON_TARGET_MOVE
+	ICON_CURSOR_MOVE
+	ICON_CURSOR_SCALE
+	ICON_CURSOR_SCALE_RIGHT
+	ICON_CURSOR_SCALE_LEFT
+	ICON_UNDO
+	ICON_REDO
+	ICON_REREDO
+	ICON_MUTATE
+	ICON_ROTATE
+	ICON_REPEAT
+	ICON_SHUFFLE
+	ICON_EMPTYBOX
+	ICON_TARGET
+	ICON_TARGET_SMALL_FILL
+	ICON_TARGET_BIG_FILL
+	ICON_TARGET_MOVE_FILL
+	ICON_CURSOR_MOVE_FILL
+	ICON_CURSOR_SCALE_FILL
+	ICON_CURSOR_SCALE_RIGHT_FILL
+	ICON_CURSOR_SCALE_LEFT_FILL
+	ICON_UNDO_FILL
+	ICON_REDO_FILL
+	ICON_REREDO_FILL
+	ICON_MUTATE_FILL
+	ICON_ROTATE_FILL
+	ICON_REPEAT_FILL
+	ICON_SHUFFLE_FILL
+	ICON_EMPTYBOX_SMALL
+	ICON_BOX
+	ICON_BOX_TOP
+	ICON_BOX_TOP_RIGHT
+	ICON_BOX_RIGHT
+	ICON_BOX_BOTTOM_RIGHT
+	ICON_BOX_BOTTOM
+	ICON_BOX_BOTTOM_LEFT
+	ICON_BOX_LEFT
+	ICON_BOX_TOP_LEFT
+	ICON_BOX_CENTER
+	ICON_BOX_CIRCLE_MASK
+	ICON_POT
+	ICON_ALPHA_MULTIPLY
+	ICON_ALPHA_CLEAR
+	ICON_DITHERING
+	ICON_MIPMAPS
+	ICON_BOX_GRID
+	ICON_GRID
+	ICON_BOX_CORNERS_SMALL
+	ICON_BOX_CORNERS_BIG
+	ICON_FOUR_BOXES
+	ICON_GRID_FILL
+	ICON_BOX_MULTISIZE
+	ICON_ZOOM_SMALL
+	ICON_ZOOM_MEDIUM
+	ICON_ZOOM_BIG
+	ICON_ZOOM_ALL
+	ICON_ZOOM_CENTER
+	ICON_BOX_DOTS_SMALL
+	ICON_BOX_DOTS_BIG
+	ICON_BOX_CONCENTRIC
+	ICON_BOX_GRID_BIG
+	ICON_OK_TICK
+	ICON_CROSS
+	ICON_ARROW_LEFT
+	ICON_ARROW_RIGHT
+	ICON_ARROW_DOWN
+	ICON_ARROW_UP
+	ICON_ARROW_LEFT_FILL
+	ICON_ARROW_RIGHT_FILL
+	ICON_ARROW_DOWN_FILL
+	ICON_ARROW_UP_FILL
+	ICON_AUDIO
+	ICON_FX
+	ICON_WAVE
+	ICON_WAVE_SINUS
+	ICON_WAVE_SQUARE
+	ICON_WAVE_TRIANGULAR
+	ICON_CROSS_SMALL
+	ICON_PLAYER_PREVIOUS
+	ICON_PLAYER_PLAY_BACK
+	ICON_PLAYER_PLAY
+	ICON_PLAYER_PAUSE
+	ICON_PLAYER_STOP
+	ICON_PLAYER_NEXT
+	ICON_PLAYER_RECORD
+	ICON_MAGNET
+	ICON_LOCK_CLOSE
+	ICON_LOCK_OPEN
+	ICON_CLOCK
+	ICON_TOOLS
+	ICON_GEAR
+	ICON_GEAR_BIG
+	ICON_BIN
+	ICON_HAND_POINTER
+	ICON_LASER
+	ICON_COIN
+	ICON_EXPLOSION
+	ICON_1UP
+	ICON_PLAYER
+	ICON_PLAYER_JUMP
+	ICON_KEY
+	ICON_DEMON
+	ICON_TEXT_POPUP
+	ICON_GEAR_EX
+	ICON_CRACK
+	ICON_CRACK_POINTS
+	ICON_STAR
+	ICON_DOOR
+	ICON_EXIT
+	ICON_MODE_2D
+	ICON_MODE_3D
+	ICON_CUBE
+	ICON_CUBE_FACE_TOP
+	ICON_CUBE_FACE_LEFT
+	ICON_CUBE_FACE_FRONT
+	ICON_CUBE_FACE_BOTTOM
+	ICON_CUBE_FACE_RIGHT
+	ICON_CUBE_FACE_BACK
+	ICON_CAMERA
+	ICON_SPECIAL
+	ICON_LINK_NET
+	ICON_LINK_BOXES
+	ICON_LINK_MULTI
+	ICON_LINK
+	ICON_LINK_BROKE
+	ICON_TEXT_NOTES
+	ICON_NOTEBOOK
+	ICON_SUITCASE
+	ICON_SUITCASE_ZIP
+	ICON_MAILBOX
+	ICON_MONITOR
+	ICON_PRINTER
+	ICON_PHOTO_CAMERA
+	ICON_PHOTO_CAMERA_FLASH
+	ICON_HOUSE
+	ICON_HEART
+	ICON_CORNER
+	ICON_VERTICAL_BARS
+	ICON_VERTICAL_BARS_FILL
+	ICON_LIFE_BARS
+	ICON_INFO
+	ICON_CROSSLINE
+	ICON_HELP
+	ICON_FILETYPE_ALPHA
+	ICON_FILETYPE_HOME
+	ICON_LAYERS_VISIBLE
+	ICON_LAYERS
+	ICON_WINDOW
+	ICON_HIDPI
+	ICON_FILETYPE_BINARY
+	ICON_HEX
+	ICON_SHIELD
+	ICON_FILE_NEW
+	ICON_FOLDER_ADD
+	ICON_ALARM
+	ICON_CPU
+	ICON_ROM
+	ICON_STEP_OVER
+	ICON_STEP_INTO
+	ICON_STEP_OUT
+	ICON_RESTART
+	ICON_BREAKPOINT_ON
+	ICON_BREAKPOINT_OFF
+	ICON_BURGER_MENU
+	ICON_CASE_SENSITIVE
+	ICON_REG_EXP
+	ICON_FOLDER
+	ICON_FILE
+	ICON_SAND_TIMER
+	ICON_220
+	ICON_221
+	ICON_222
+	ICON_223
+	ICON_224
+	ICON_225
+	ICON_226
+	ICON_227
+	ICON_228
+	ICON_229
+	ICON_230
+	ICON_231
+	ICON_232
+	ICON_233
+	ICON_234
+	ICON_235
+	ICON_236
+	ICON_237
+	ICON_238
+	ICON_239
+	ICON_240
+	ICON_241
+	ICON_242
+	ICON_243
+	ICON_244
+	ICON_245
+	ICON_246
+	ICON_247
+	ICON_248
+	ICON_249
+	ICON_250
+	ICON_251
+	ICON_252
+	ICON_253
+	ICON_254
+	ICON_255
 )
 
 // TextInputBox control, ask for text
-func TextInputBox(bounds rl.Rectangle, title, message, buttons string, text *string, textMaxSize int32, secretViewActive *int32) int32 {
+func TextInputBox(bounds rl.Rectangle, title, message, buttons string, text *string, textMaxSize int32, secretViewActive *bool) int32 {
 	var cbounds C.struct_Rectangle
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
@@ -1078,48 +1178,16 @@ func TextInputBox(bounds rl.Rectangle, title, message, buttons string, text *str
 
 	ctextMaxSize := C.int(textMaxSize)
 
-	if secretViewActive == nil {
-		secretViewActive = new(int32)
-	}
-	csecretViewActive := C.int(*secretViewActive)
+	csecretViewActive := C.bool(*secretViewActive)
 	defer func() {
-		*secretViewActive = int32(csecretViewActive)
+		*secretViewActive = bool(csecretViewActive)
 	}()
 
 	return int32(C.GuiTextInputBox(cbounds, ctitle, cmessage, cbuttons, ctext, ctextMaxSize, &csecretViewActive))
 }
 
-// TextBoxMulti control with multiple lines
-func TextBoxMulti(bounds rl.Rectangle, text *string, textSize int32, editMode bool) bool {
-	var cbounds C.struct_Rectangle
-	cbounds.x = C.float(bounds.X)
-	cbounds.y = C.float(bounds.Y)
-	cbounds.width = C.float(bounds.Width)
-	cbounds.height = C.float(bounds.Height)
-
-	bs := []byte(*text)
-	if len(bs) == 0 {
-		bs = []byte{byte(0)}
-	}
-	if 0 < len(bs) && bs[len(bs)-1] != byte(0) { // minimalize allocation
-		bs = append(bs, byte(0)) // for next input symbols
-	}
-	ctext := (*C.char)(unsafe.Pointer(&bs[0]))
-	defer func() {
-		*text = strings.TrimSpace(strings.Trim(string(bs), "\x00"))
-		// no need : C.free(unsafe.Pointer(ctext))
-	}()
-
-	ctextSize := (C.int)(textSize)
-	ceditMode := (C.bool)(editMode)
-
-	return bool(C.GuiTextBoxMulti(cbounds, ctext, ctextSize, ceditMode))
-}
-
 // ListViewEx control with extended parameters
 func ListViewEx(bounds rl.Rectangle, text []string, focus, scrollIndex *int32, active int32) int32 {
-	// int GuiListViewEx(Rectangle bounds, const char **text, int count, int *focus, int *scrollIndex, int active)
-
 	var cbounds C.struct_Rectangle
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
@@ -1149,7 +1217,8 @@ func ListViewEx(bounds rl.Rectangle, text []string, focus, scrollIndex *int32, a
 
 	cactive := C.int(active)
 
-	return int32(C.GuiListViewEx(cbounds, (**C.char)(ctext.Pointer), count, &cfocus, &cscrollIndex, cactive))
+	C.GuiListViewEx(cbounds, (**C.char)(ctext.Pointer), count, &cfocus, &cscrollIndex, &cactive)
+	return int32(cactive)
 }
 
 // TabBar control
