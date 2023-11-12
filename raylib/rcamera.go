@@ -110,7 +110,7 @@ func CameraYaw(camera *Camera, angle float32, rotateAroundTarget uint8) {
 // CameraPitch - Rotates the camera around its right vector, pitch is "looking up and down"
 //   - lockView prevents camera overrotation (aka "somersaults")
 //   - rotateAroundTarget defines if rotation is around target or around its position
-//   - rotateUp rotates the up direction as well (typically only usefull in CAMERA_FREE)
+//   - rotateUp rotates the up direction as well (typically only useful in CAMERA_FREE)
 //
 // NOTE: angle must be provided in radians
 func CameraPitch(camera *Camera, angle float32, lockView uint8, rotateAroundTarget uint8, rotateUp uint8) {
