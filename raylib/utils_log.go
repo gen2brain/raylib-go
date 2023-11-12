@@ -19,8 +19,8 @@ func SetTraceLogCallback(fn TraceLogCallbackFun) {
 }
 
 //export internalTraceLogCallbackGo
-func internalTraceLogCallbackGo(logType C.int, cstr unsafe.Pointer, len C.int) {
-	str := string(C.GoBytes(cstr, len))
+func internalTraceLogCallbackGo(logType C.int, cstr unsafe.Pointer, length C.int) {
+	str := string(C.GoBytes(cstr, length))
 	lt := int(logType)
 	internalTraceLogCallbackFun(lt, str)
 }

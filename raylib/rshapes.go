@@ -404,8 +404,8 @@ func DrawSplineSegmentLinear(p1, p2 Vector2, thick float32, col color.RGBA) {
 func DrawSplineSegmentBasis(p1, p2, p3, p4 Vector2, thick float32, col color.RGBA) {
 	cp1 := p1.cptr()
 	cp2 := p2.cptr()
-	cp3 := p2.cptr()
-	cp4 := p2.cptr()
+	cp3 := p3.cptr()
+	cp4 := p4.cptr()
 	cthick := (C.float)(thick)
 	ccolor := colorCptr(col)
 	C.DrawSplineSegmentBasis(*cp1, *cp2, *cp3, *cp4, cthick, *ccolor)
@@ -415,8 +415,8 @@ func DrawSplineSegmentBasis(p1, p2, p3, p4 Vector2, thick float32, col color.RGB
 func DrawSplineSegmentCatmullRom(p1, p2, p3, p4 Vector2, thick float32, col color.RGBA) {
 	cp1 := p1.cptr()
 	cp2 := p2.cptr()
-	cp3 := p2.cptr()
-	cp4 := p2.cptr()
+	cp3 := p3.cptr()
+	cp4 := p4.cptr()
 	cthick := (C.float)(thick)
 	ccolor := colorCptr(col)
 	C.DrawSplineSegmentCatmullRom(*cp1, *cp2, *cp3, *cp4, cthick, *ccolor)
@@ -426,7 +426,7 @@ func DrawSplineSegmentCatmullRom(p1, p2, p3, p4 Vector2, thick float32, col colo
 func DrawSplineSegmentBezierQuadratic(p1, p2, p3 Vector2, thick float32, col color.RGBA) {
 	cp1 := p1.cptr()
 	cp2 := p2.cptr()
-	cp3 := p2.cptr()
+	cp3 := p3.cptr()
 	cthick := (C.float)(thick)
 	ccolor := colorCptr(col)
 	C.DrawSplineSegmentBezierQuadratic(*cp1, *cp2, *cp3, cthick, *ccolor)
@@ -436,8 +436,8 @@ func DrawSplineSegmentBezierQuadratic(p1, p2, p3 Vector2, thick float32, col col
 func DrawSplineSegmentBezierCubic(p1, p2, p3, p4 Vector2, thick float32, col color.RGBA) {
 	cp1 := p1.cptr()
 	cp2 := p2.cptr()
-	cp3 := p2.cptr()
-	cp4 := p2.cptr()
+	cp3 := p3.cptr()
+	cp4 := p4.cptr()
 	cthick := (C.float)(thick)
 	ccolor := colorCptr(col)
 	C.DrawSplineSegmentBezierCubic(*cp1, *cp2, *cp3, *cp4, cthick, *ccolor)
@@ -457,8 +457,8 @@ func GetSplinePointLinear(p1, p2 Vector2, t float32) Vector2 {
 func GetSplinePointBasis(p1, p2, p3, p4 Vector2, t float32) Vector2 {
 	cp1 := p1.cptr()
 	cp2 := p2.cptr()
-	cp3 := p2.cptr()
-	cp4 := p2.cptr()
+	cp3 := p3.cptr()
+	cp4 := p4.cptr()
 	ct := (C.float)(t)
 	ret := C.GetSplinePointBasis(*cp1, *cp2, *cp3, *cp4, ct)
 	v := newVector2FromPointer(unsafe.Pointer(&ret))
@@ -469,8 +469,8 @@ func GetSplinePointBasis(p1, p2, p3, p4 Vector2, t float32) Vector2 {
 func GetSplinePointCatmullRom(p1, p2, p3, p4 Vector2, t float32) Vector2 {
 	cp1 := p1.cptr()
 	cp2 := p2.cptr()
-	cp3 := p2.cptr()
-	cp4 := p2.cptr()
+	cp3 := p3.cptr()
+	cp4 := p4.cptr()
 	ct := (C.float)(t)
 	ret := C.GetSplinePointCatmullRom(*cp1, *cp2, *cp3, *cp4, ct)
 	v := newVector2FromPointer(unsafe.Pointer(&ret))
@@ -481,7 +481,7 @@ func GetSplinePointCatmullRom(p1, p2, p3, p4 Vector2, t float32) Vector2 {
 func GetSplinePointBezierQuad(p1, p2, p3 Vector2, t float32) Vector2 {
 	cp1 := p1.cptr()
 	cp2 := p2.cptr()
-	cp3 := p2.cptr()
+	cp3 := p3.cptr()
 	ct := (C.float)(t)
 	ret := C.GetSplinePointBezierQuad(*cp1, *cp2, *cp3, ct)
 	v := newVector2FromPointer(unsafe.Pointer(&ret))
@@ -492,8 +492,8 @@ func GetSplinePointBezierQuad(p1, p2, p3 Vector2, t float32) Vector2 {
 func GetSplinePointBezierCubic(p1, p2, p3, p4 Vector2, t float32) Vector2 {
 	cp1 := p1.cptr()
 	cp2 := p2.cptr()
-	cp3 := p2.cptr()
-	cp4 := p2.cptr()
+	cp3 := p3.cptr()
+	cp4 := p4.cptr()
 	ct := (C.float)(t)
 	ret := C.GetSplinePointBezierCubic(*cp1, *cp2, *cp3, *cp4, ct)
 	v := newVector2FromPointer(unsafe.Pointer(&ret))

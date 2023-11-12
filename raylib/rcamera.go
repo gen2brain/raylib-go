@@ -125,14 +125,14 @@ func CameraPitch(camera *Camera, angle float32, lockView uint8, rotateAroundTarg
 		// to allow only viewing straight up or down.
 
 		// Clamp view up
-		var maxAngleUp float32 = Vector3Angle(up, targetPosition)
+		maxAngleUp := Vector3Angle(up, targetPosition)
 		maxAngleUp = maxAngleUp - 0.001 // avoid numerical errors
 		if angle > maxAngleUp {
 			angle = maxAngleUp
 		}
 
 		// Clamp view down
-		var maxAngleDown float32 = Vector3Angle(Vector3Negate(up), targetPosition)
+		maxAngleDown := Vector3Angle(Vector3Negate(up), targetPosition)
 		maxAngleDown = maxAngleDown * -1.0  // downwards angle is negative
 		maxAngleDown = maxAngleDown + 0.001 // avoid numerical errors
 		if angle < maxAngleDown {

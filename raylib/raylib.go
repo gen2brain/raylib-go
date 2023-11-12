@@ -37,6 +37,7 @@ type Wave struct {
 // NewWave - Returns new Wave
 func NewWave(sampleCount, sampleRate, sampleSize, channels uint32, data []byte) Wave {
 	d := unsafe.Pointer(&data[0])
+
 	return Wave{sampleCount, sampleRate, sampleSize, channels, d}
 }
 
@@ -375,8 +376,8 @@ type Vector3 struct {
 }
 
 // NewVector3 - Returns new Vector3
-func NewVector3(X, Y, Z float32) Vector3 {
-	return Vector3{X, Y, Z}
+func NewVector3(x, y, z float32) Vector3 {
+	return Vector3{x, y, z}
 }
 
 // Vector4 type
@@ -388,8 +389,8 @@ type Vector4 struct {
 }
 
 // NewVector4 - Returns new Vector4
-func NewVector4(X, Y, Z, W float32) Vector4 {
-	return Vector4{X, Y, Z, W}
+func NewVector4(x, y, z, w float32) Vector4 {
+	return Vector4{x, y, z, w}
 }
 
 // Matrix type (OpenGL style 4x4 - right handed, column major)
@@ -677,7 +678,7 @@ type Material struct {
 
 // GetMap - Get pointer to MaterialMap by map type
 func (mt Material) GetMap(index int32) *MaterialMap {
-	return (*MaterialMap)(unsafe.Pointer(uintptr(unsafe.Pointer(mt.Maps)) + uintptr(index)*uintptr(unsafe.Sizeof(MaterialMap{}))))
+	return (*MaterialMap)(unsafe.Pointer(uintptr(unsafe.Pointer(mt.Maps)) + uintptr(index)*unsafe.Sizeof(MaterialMap{})))
 }
 
 // MaterialMap type
@@ -978,6 +979,7 @@ type Image struct {
 // NewImage - Returns new Image
 func NewImage(data []byte, width, height, mipmaps int32, format PixelFormat) *Image {
 	d := unsafe.Pointer(&data[0])
+
 	return &Image{d, width, height, mipmaps, format}
 }
 

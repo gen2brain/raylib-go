@@ -294,7 +294,7 @@ func SetWindowOpacity(opacity float32) {
 
 // GetWindowHandle - Get native window handle
 func GetWindowHandle() unsafe.Pointer {
-	v := unsafe.Pointer((C.GetWindowHandle()))
+	v := C.GetWindowHandle()
 	return v
 }
 

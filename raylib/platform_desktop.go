@@ -43,6 +43,7 @@ func HideCursor() {
 func IsCursorHidden() bool {
 	ret := C.IsCursorHidden()
 	v := bool(ret)
+
 	return v
 }
 
@@ -50,6 +51,7 @@ func IsCursorHidden() bool {
 func IsCursorOnScreen() bool {
 	ret := C.IsCursorOnScreen()
 	v := bool(ret)
+
 	return v
 }
 
@@ -67,6 +69,7 @@ func DisableCursor() {
 func IsFileDropped() bool {
 	ret := C.IsFileDropped()
 	v := bool(ret)
+
 	return v
 }
 
@@ -94,5 +97,6 @@ func OpenAsset(name string) (Asset, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return f, nil
 }

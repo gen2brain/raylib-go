@@ -22,30 +22,22 @@ func Clamp(value, min, max float32) float32 {
 
 // Lerp - Calculate linear interpolation between two floats
 func Lerp(start, end, amount float32) float32 {
-	var result float32 = start + amount*(end-start)
-
-	return result
+	return start + amount*(end-start)
 }
 
 // Normalize - Normalize input value within input range
 func Normalize(value, start, end float32) float32 {
-	var result float32 = (value - start) / (end - start)
-
-	return result
+	return (value - start) / (end - start)
 }
 
 // Remap - Remap input value within input range to output range
 func Remap(value, inputStart, inputEnd, outputStart, outputEnd float32) float32 {
-	var result float32 = (value-inputStart)/(inputEnd-inputStart)*(outputEnd-outputStart) + outputStart
-
-	return result
+	return (value-inputStart)/(inputEnd-inputStart)*(outputEnd-outputStart) + outputStart
 }
 
 // Wrap - Wrap input value from min to max
 func Wrap(value, min, max float32) float32 {
-	var result float32 = float32(float64(value) - float64(max-min)*math.Floor(float64((value-min)/(max-min))))
-
-	return result
+	return float32(float64(value) - float64(max-min)*math.Floor(float64((value-min)/(max-min))))
 }
 
 // FloatEquals - Check whether two given floats are almost equal
@@ -111,6 +103,7 @@ func Vector2DistanceSqr(v1 Vector2, v2 Vector2) float32 {
 // Vector2Angle - Calculate angle from two vectors in radians
 func Vector2Angle(v1, v2 Vector2) float32 {
 	result := math.Atan2(float64(v2.Y), float64(v2.X)) - math.Atan2(float64(v1.Y), float64(v1.X))
+
 	return float32(result)
 }
 
@@ -149,9 +142,9 @@ func Vector2Normalize(v Vector2) Vector2 {
 func Vector2Transform(v Vector2, mat Matrix) Vector2 {
 	var result = Vector2{}
 
-	var x float32 = v.X
-	var y float32 = v.Y
-	var z float32 = 0
+	var x = v.X
+	var y = v.Y
+	var z float32
 
 	result.X = mat.M0*x + mat.M4*y + mat.M8*z + mat.M12
 	result.Y = mat.M1*x + mat.M5*y + mat.M9*z + mat.M13
@@ -168,7 +161,7 @@ func Vector2Lerp(v1, v2 Vector2, amount float32) Vector2 {
 func Vector2Reflect(v Vector2, normal Vector2) Vector2 {
 	var result = Vector2{}
 
-	var dotProduct float32 = v.X*normal.X + v.Y*normal.Y // Dot product
+	dotProduct := v.X*normal.X + v.Y*normal.Y // Dot product
 
 	result.X = v.X - 2.0*normal.X*dotProduct
 	result.Y = v.Y - 2.0*normal.Y*dotProduct
@@ -193,9 +186,9 @@ func Vector2Rotate(v Vector2, angle float32) Vector2 {
 func Vector2MoveTowards(v Vector2, target Vector2, maxDistance float32) Vector2 {
 	var result = Vector2{}
 
-	var dx float32 = target.X - v.X
-	var dy float32 = target.Y - v.Y
-	var value float32 = dx*dx + dy*dy
+	dx := target.X - v.X
+	dy := target.Y - v.Y
+	value := dx*dx + dy*dy
 
 	if value == 0 || maxDistance >= 0 && value <= maxDistance*maxDistance {
 		return target
@@ -228,16 +221,16 @@ func Vector2Clamp(v Vector2, min Vector2, max Vector2) Vector2 {
 func Vector2ClampValue(v Vector2, min float32, max float32) Vector2 {
 	var result = v
 
-	var length float32 = v.X*v.X + v.Y*v.Y
+	length := v.X*v.X + v.Y*v.Y
 	if length > 0.0 {
 		length = float32(math.Sqrt(float64(length)))
 
 		if length < min {
-			var scale float32 = min / length
+			scale := min / length
 			result.X = v.X * scale
 			result.Y = v.Y * scale
 		} else if length > max {
-			var scale float32 = max / length
+			scale := max / length
 			result.X = v.X * scale
 			result.Y = v.Y * scale
 		}
@@ -371,9 +364,9 @@ func Vector3Distance(v1, v2 Vector3) float32 {
 func Vector3DistanceSqr(v1 Vector3, v2 Vector3) float32 {
 	var result float32
 
-	var dx float32 = v2.X - v1.X
-	var dy float32 = v2.Y - v1.Y
-	var dz float32 = v2.Z - v1.Z
+	dx := v2.X - v1.X
+	dy := v2.Y - v1.Y
+	dz := v2.Z - v1.Z
 	result = dx*dx + dy*dy + dz*dz
 
 	return result
@@ -644,38 +637,38 @@ func Vector3Unproject(source Vector3, projection Matrix, view Matrix) Vector3 {
 
 	// Calculate inverted matrix -> MatrixInvert(matViewProj);
 	// Cache the matrix values (speed optimization)
-	var a00 float32 = matViewProj.M0
-	var a01 float32 = matViewProj.M1
-	var a02 float32 = matViewProj.M2
-	var a03 float32 = matViewProj.M3
-	var a10 float32 = matViewProj.M4
-	var a11 float32 = matViewProj.M5
-	var a12 float32 = matViewProj.M6
-	var a13 float32 = matViewProj.M7
-	var a20 float32 = matViewProj.M8
-	var a21 float32 = matViewProj.M9
-	var a22 float32 = matViewProj.M10
-	var a23 float32 = matViewProj.M11
-	var a30 float32 = matViewProj.M12
-	var a31 float32 = matViewProj.M13
-	var a32 float32 = matViewProj.M14
-	var a33 float32 = matViewProj.M15
+	var a00 = matViewProj.M0
+	var a01 = matViewProj.M1
+	var a02 = matViewProj.M2
+	var a03 = matViewProj.M3
+	var a10 = matViewProj.M4
+	var a11 = matViewProj.M5
+	var a12 = matViewProj.M6
+	var a13 = matViewProj.M7
+	var a20 = matViewProj.M8
+	var a21 = matViewProj.M9
+	var a22 = matViewProj.M10
+	var a23 = matViewProj.M11
+	var a30 = matViewProj.M12
+	var a31 = matViewProj.M13
+	var a32 = matViewProj.M14
+	var a33 = matViewProj.M15
 
-	var b00 float32 = a00*a11 - a01*a10
-	var b01 float32 = a00*a12 - a02*a10
-	var b02 float32 = a00*a13 - a03*a10
-	var b03 float32 = a01*a12 - a02*a11
-	var b04 float32 = a01*a13 - a03*a11
-	var b05 float32 = a02*a13 - a03*a12
-	var b06 float32 = a20*a31 - a21*a30
-	var b07 float32 = a20*a32 - a22*a30
-	var b08 float32 = a20*a33 - a23*a30
-	var b09 float32 = a21*a32 - a22*a31
-	var b10 float32 = a21*a33 - a23*a31
-	var b11 float32 = a22*a33 - a23*a32
+	var b00 = a00*a11 - a01*a10
+	var b01 = a00*a12 - a02*a10
+	var b02 = a00*a13 - a03*a10
+	var b03 = a01*a12 - a02*a11
+	var b04 = a01*a13 - a03*a11
+	var b05 = a02*a13 - a03*a12
+	var b06 = a20*a31 - a21*a30
+	var b07 = a20*a32 - a22*a30
+	var b08 = a20*a33 - a23*a30
+	var b09 = a21*a32 - a22*a31
+	var b10 = a21*a33 - a23*a31
+	var b11 = a22*a33 - a23*a32
 
 	// Calculate the invert determinant (inlined to avoid double-caching)
-	var invDet float32 = 1.0 / (b00*b11 - b01*b10 + b02*b09 + b03*b08 - b04*b07 + b05*b06)
+	var invDet = 1.0 / (b00*b11 - b01*b10 + b02*b09 + b03*b08 - b04*b07 + b05*b06)
 
 	var matViewProjInv = Matrix{
 		M0:  (a11*b11 - a12*b10 + a13*b09) * invDet,
@@ -744,17 +737,17 @@ func Vector3Clamp(v Vector3, min Vector3, max Vector3) Vector3 {
 func Vector3ClampValue(v Vector3, min float32, max float32) Vector3 {
 	var result = v
 
-	var length float32 = v.X*v.X + v.Y*v.Y + v.Z*v.Z
+	length := v.X*v.X + v.Y*v.Y + v.Z*v.Z
 	if length > 0.0 {
 		length = float32(math.Sqrt(float64(length)))
 
 		if length < min {
-			var scale float32 = min / length
+			scale := min / length
 			result.X = v.X * scale
 			result.Y = v.Y * scale
 			result.Z = v.Z * scale
 		} else if length > max {
-			var scale float32 = max / length
+			scale := max / length
 			result.X = v.X * scale
 			result.Y = v.Y * scale
 			result.Z = v.Z * scale
@@ -779,8 +772,8 @@ func Vector3Equals(p Vector3, q Vector3) bool {
 func Vector3Refract(v Vector3, n Vector3, r float32) Vector3 {
 	var result = Vector3{}
 
-	var dot float32 = v.X*n.X + v.Y*n.Y + v.Z*n.Z
-	var d float32 = 1.0 - r*r*(1.0-dot*dot)
+	dot := v.X*n.X + v.Y*n.Y + v.Z*n.Z
+	d := 1.0 - r*r*(1.0-dot*dot)
 
 	if d >= 0.0 {
 		d = float32(math.Sqrt(float64(d)))
@@ -1201,12 +1194,12 @@ func MatrixRotateXYZ(ang Vector3) Matrix {
 func MatrixRotateZYX(angle Vector3) Matrix {
 	var result = Matrix{}
 
-	var cz float32 = float32(math.Cos(float64(angle.Z)))
-	var sz float32 = float32(math.Sin(float64(angle.Z)))
-	var cy float32 = float32(math.Cos(float64(angle.Y)))
-	var sy float32 = float32(math.Sin(float64(angle.Y)))
-	var cx float32 = float32(math.Cos(float64(angle.X)))
-	var sx float32 = float32(math.Sin(float64(angle.X)))
+	var cz = float32(math.Cos(float64(angle.Z)))
+	var sz = float32(math.Sin(float64(angle.Z)))
+	var cy = float32(math.Cos(float64(angle.Y)))
+	var sy = float32(math.Sin(float64(angle.Y)))
+	var cx = float32(math.Cos(float64(angle.X)))
+	var sx = float32(math.Sin(float64(angle.X)))
 
 	result.M0 = cz * cy
 	result.M4 = cz*sy*sx - cx*sz
@@ -1502,12 +1495,12 @@ func QuaternionNlerp(q1 Quaternion, q2 Quaternion, amount float32) Quaternion {
 	result.W = q1.W + amount*(q2.W-q1.W)
 
 	// QuaternionNormalize(q);
-	var q = result
-	var length float32 = float32(math.Sqrt(float64(q.X*q.X + q.Y*q.Y + q.Z*q.Z + q.W*q.W)))
+	q := result
+	length := float32(math.Sqrt(float64(q.X*q.X + q.Y*q.Y + q.Z*q.Z + q.W*q.W)))
 	if length == 0.0 {
 		length = 1.0
 	}
-	var ilength float32 = 1.0 / length
+	ilength := 1.0 / length
 
 	result.X = q.X * ilength
 	result.Y = q.Y * ilength
@@ -1552,8 +1545,8 @@ func QuaternionSlerp(q1, q2 Quaternion, amount float32) Quaternion {
 func QuaternionFromVector3ToVector3(from Vector3, to Vector3) Quaternion {
 	var result = Quaternion{}
 
-	var cos2Theta float32 = from.X*to.X + from.Y*to.Y + from.Z*to.Z                                               // Vector3DotProduct(from, to)
-	var cross = Vector3{X: from.Y*to.Z - from.Z*to.Y, Y: from.Z*to.X - from.X*to.Z, Z: from.X*to.Y - from.Y*to.X} // Vector3CrossProduct(from, to)
+	cos2Theta := from.X*to.X + from.Y*to.Y + from.Z*to.Z                                                       // Vector3DotProduct(from, to)
+	cross := Vector3{X: from.Y*to.Z - from.Z*to.Y, Y: from.Z*to.X - from.X*to.Z, Z: from.X*to.Y - from.Y*to.X} // Vector3CrossProduct(from, to)
 
 	result.X = cross.X
 	result.Y = cross.Y
@@ -1562,12 +1555,12 @@ func QuaternionFromVector3ToVector3(from Vector3, to Vector3) Quaternion {
 
 	// QuaternionNormalize(q);
 	// NOTE: Normalize to essentially nlerp the original and identity to 0.5
-	var q = result
-	var length float32 = float32(math.Sqrt(float64(q.X*q.X + q.Y*q.Y + q.Z*q.Z + q.W*q.W)))
+	q := result
+	length := float32(math.Sqrt(float64(q.X*q.X + q.Y*q.Y + q.Z*q.Z + q.W*q.W)))
 	if length == 0.0 {
 		length = 1.0
 	}
-	var ilength float32 = 1.0 / length
+	ilength := 1.0 / length
 
 	result.X = q.X * ilength
 	result.Y = q.Y * ilength
