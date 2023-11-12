@@ -369,7 +369,7 @@ func Vector3Distance(v1, v2 Vector3) float32 {
 
 // Vector3DistanceSqr - Calculate square distance between two vectors
 func Vector3DistanceSqr(v1 Vector3, v2 Vector3) float32 {
-	var result float32 = 0.0
+	var result float32
 
 	var dx float32 = v2.X - v1.X
 	var dy float32 = v2.Y - v1.Y
