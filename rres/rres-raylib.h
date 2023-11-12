@@ -566,8 +566,8 @@ int UnpackResourceChunk(rresResourceChunk *chunk)
                 .nb_lanes  = 1                          // Single-threaded
             };
             crypto_argon2_inputs inputs = {
-                .pass = (const uint8_t *)rresGetCipherPassword(),     // User password
-                .pass_size = 16,                        // Password length
+                .pass = (const uint8_t *)rresGetCipherPassword(),   // User password
+                .pass_size = strlen(rresGetCipherPassword()),       // Password length
                 .salt = salt,                           // Salt for the password
                 .salt_size = 16
             };
@@ -641,8 +641,8 @@ int UnpackResourceChunk(rresResourceChunk *chunk)
                 .nb_lanes  = 1                          // Single-threaded
             };
             crypto_argon2_inputs inputs = {
-                .pass = (const uint8_t *)rresGetCipherPassword(),     // User password
-                .pass_size = 16,                        // Password length
+                .pass = (const uint8_t *)rresGetCipherPassword(),   // User password
+                .pass_size = strlen(rresGetCipherPassword()),       // Password length
                 .salt = salt,                           // Salt for the password
                 .salt_size = 16
             };
