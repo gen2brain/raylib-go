@@ -143,7 +143,7 @@ func drawTexturedCurve() {
 		currentNegNormal := rl.Vector2Add(current, rl.Vector2Scale(normal, -curveW))
 
 		rl.SetTexture(texRoad.ID)
-		rl.Begin(rl.RL_QUADS)
+		rl.Begin(rl.Quads)
 
 		rl.Color4ub(255, 255, 255, 255)
 		rl.Normal3f(0, 0, 1)
