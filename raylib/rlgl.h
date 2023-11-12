@@ -59,7 +59,7 @@
 *       #define RL_CULL_DISTANCE_NEAR              0.01    // Default projection matrix near cull distance
 *       #define RL_CULL_DISTANCE_FAR             1000.0    // Default projection matrix far cull distance
 *
-*       When loading a shader, the following vertex attribute and uniform
+*       When loading a shader, the following vertex attributes and uniform
 *       location names are tried to be set automatically:
 *
 *       #define RL_DEFAULT_SHADER_ATTRIB_NAME_POSITION     "vertexPosition"    // Bound by default to shader location: 0
@@ -67,6 +67,7 @@
 *       #define RL_DEFAULT_SHADER_ATTRIB_NAME_NORMAL       "vertexNormal"      // Bound by default to shader location: 2
 *       #define RL_DEFAULT_SHADER_ATTRIB_NAME_COLOR        "vertexColor"       // Bound by default to shader location: 3
 *       #define RL_DEFAULT_SHADER_ATTRIB_NAME_TANGENT      "vertexTangent"     // Bound by default to shader location: 4
+*       #define RL_DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD2    "vertexTexCoord2"   // Bound by default to shader location: 5
 *       #define RL_DEFAULT_SHADER_UNIFORM_NAME_MVP         "mvp"               // model-view-projection matrix
 *       #define RL_DEFAULT_SHADER_UNIFORM_NAME_VIEW        "matView"           // view matrix
 *       #define RL_DEFAULT_SHADER_UNIFORM_NAME_PROJECTION  "matProjection"     // projection matrix
@@ -1064,7 +1065,7 @@ static PFNGLVERTEXATTRIBDIVISOREXTPROC glVertexAttribDivisor = NULL;
 static void rlLoadShaderDefault(void);      // Load default shader
 static void rlUnloadShaderDefault(void);    // Unload default shader
 #if defined(RLGL_SHOW_GL_DETAILS_INFO)
-static char *rlGetCompressedFormatName(int format); // Get compressed format official GL identifier name
+static const char *rlGetCompressedFormatName(int format); // Get compressed format official GL identifier name
 #endif  // RLGL_SHOW_GL_DETAILS_INFO
 #endif  // GRAPHICS_API_OPENGL_33 || GRAPHICS_API_OPENGL_ES2
 
@@ -4689,7 +4690,7 @@ static void rlUnloadShaderDefault(void)
 
 #if defined(RLGL_SHOW_GL_DETAILS_INFO)
 // Get compressed format official GL identifier name
-static char *rlGetCompressedFormatName(int format)
+static const char *rlGetCompressedFormatName(int format)
 {
     switch (format)
     {

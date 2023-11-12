@@ -658,6 +658,7 @@ void InitWindow(int width, int height, const char *title)
 #endif
 
     CORE.Time.frameCounter = 0;
+    CORE.Window.shouldClose = false;
 
     // Initialize random seed
     SetRandomSeed((unsigned int)time(NULL));
@@ -864,6 +865,10 @@ void EndDrawing(void)
     }
 #endif
 
+#if defined(SUPPORT_AUTOMATION_EVENTS)
+    if (automationEventRecording) RecordAutomationEvent();    // Event recording
+#endif
+
 #if !defined(SUPPORT_CUSTOM_FRAME_CONTROL)
     SwapScreenBuffer();                  // Copy back buffer to front buffer (screen)
 
@@ -926,10 +931,6 @@ void EndDrawing(void)
         }
     }
 #endif  // SUPPORT_SCREEN_CAPTURE
-
-#if defined(SUPPORT_AUTOMATION_EVENTS)
-    if (automationEventRecording) RecordAutomationEvent();    // Event recording
-#endif
 
     CORE.Time.frameCounter++;
 }
@@ -1093,19 +1094,19 @@ void BeginScissorMode(int x, int y, int width, int height)
     rlEnableScissorTest();
 
 #if defined(__APPLE__)
-    if (CORE.Window.usingFbo)
+    if (!CORE.Window.usingFbo)
     {
         Vector2 scale = GetWindowScaleDPI();
         rlScissor((int)(x*scale.x), (int)(GetScreenHeight()*scale.y - (((y + height)*scale.y))), (int)(width*scale.x), (int)(height*scale.y));
     }
 #else
-    if (CORE.Window.usingFbo && ((CORE.Window.flags & FLAG_WINDOW_HIGHDPI) > 0))
+    if (!CORE.Window.usingFbo && ((CORE.Window.flags & FLAG_WINDOW_HIGHDPI) > 0))
     {
         Vector2 scale = GetWindowScaleDPI();
         rlScissor((int)(x*scale.x), (int)(CORE.Window.currentFbo.height - (y + height)*scale.y), (int)(width*scale.x), (int)(height*scale.y));
     }
 #endif
-    else 
+    else
     {
         rlScissor(x, CORE.Window.currentFbo.height - (y + height), width, height);
     }
@@ -1588,8 +1589,8 @@ int GetFPS(void)
         average = 0;
         last = 0;
         index = 0;
-        for (int i = 0; i < FPS_CAPTURE_FRAMES_COUNT; i++)
-            history[i] = 0;
+
+        for (int i = 0; i < FPS_CAPTURE_FRAMES_COUNT; i++) history[i] = 0;
     }
 
     if (fpsFrame == 0) return 0;
@@ -1720,7 +1721,7 @@ int GetRandomValue(int min, int max)
 int *LoadRandomSequence(unsigned int count, int min, int max)
 {
     int *values = NULL;
-    
+
 #if defined(SUPPORT_RPRAND_GENERATOR)
     values = rprand_load_sequence(count, min, max);
 #else
@@ -2582,8 +2583,11 @@ void PlayAutomationEvent(AutomationEvent event)
             case INPUT_KEY_UP: CORE.Input.Keyboard.currentKeyState[event.params[0]] = false; break;             // param[0]: key
             case INPUT_KEY_DOWN: {                                                                              // param[0]: key
                 CORE.Input.Keyboard.currentKeyState[event.params[0]] = true;
-                if (CORE.Input.Keyboard.previousKeyState[event.params[0]] == false) {
-                    if (CORE.Input.Keyboard.keyPressedQueueCount < MAX_KEY_PRESSED_QUEUE) {
+
+                if (CORE.Input.Keyboard.previousKeyState[event.params[0]] == false)
+                {
+                    if (CORE.Input.Keyboard.keyPressedQueueCount < MAX_KEY_PRESSED_QUEUE)
+                    {
                         // Add character to the queue
                         CORE.Input.Keyboard.keyPressedQueue[CORE.Input.Keyboard.keyPressedQueueCount] = event.params[0];
                         CORE.Input.Keyboard.keyPressedQueueCount++;
