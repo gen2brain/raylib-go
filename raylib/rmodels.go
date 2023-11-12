@@ -7,7 +7,6 @@ package rl
 import "C"
 
 import (
-	"fmt"
 	"image/color"
 	"runtime"
 	"slices"
@@ -375,7 +374,7 @@ var goManagedMeshIDs []uint32 = make([]uint32, 0)
 func UploadMesh(mesh *Mesh, dynamic bool) {
 	//check if mesh has already been uploaded to prevent duplication
 	if mesh.VaoID != 0 {
-		fmt.Printf("WARNING: VAO: [ID %d] Trying to re-load an already loaded mesh\n", mesh.VaoID)
+		TraceLog(LogWarning, "VAO: [ID %d] Trying to re-load an already loaded mesh", mesh.VaoID)
 		return
 	}
 
