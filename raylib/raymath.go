@@ -454,6 +454,19 @@ func Vector3Reject(v1, v2 Vector3) Vector3 {
 	return result
 }
 
+// Vector3OrthoNormalize - Orthonormalize provided vectors
+// Makes vectors normalized and orthogonal to each other
+// Gram-Schmidt function implementation
+func Vector3OrthoNormalize(v1, v2 *Vector3) {
+	Vector3Normalize(*v1)
+
+	vn1 := Vector3CrossProduct(*v1, *v2)
+	Vector3Normalize(vn1)
+
+	vn2 := Vector3CrossProduct(vn1, *v1)
+	*v2 = vn2
+}
+
 // Vector3Transform - Transforms a Vector3 by a given Matrix
 func Vector3Transform(v Vector3, mat Matrix) Vector3 {
 	result := Vector3{}
