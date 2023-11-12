@@ -575,7 +575,7 @@ func GetShaderLocationAttrib(shader Shader, attribName string) int32 {
 func SetShaderValue(shader Shader, locIndex int32, value []float32, uniformType ShaderUniformDataType) {
 	cshader := shader.cptr()
 	clocIndex := (C.int)(locIndex)
-	cvalue := unsafe.SliceData(value)
+	cvalue := (*C.float)(unsafe.Pointer(&value[0]))
 	cuniformType := (C.int)(uniformType)
 	C.SetShaderValue(*cshader, clocIndex, unsafe.Pointer(cvalue), cuniformType)
 }
@@ -584,7 +584,7 @@ func SetShaderValue(shader Shader, locIndex int32, value []float32, uniformType 
 func SetShaderValueV(shader Shader, locIndex int32, value []float32, uniformType ShaderUniformDataType, count int32) {
 	cshader := shader.cptr()
 	clocIndex := (C.int)(locIndex)
-	cvalue := unsafe.SliceData(value)
+	cvalue := (*C.float)(unsafe.Pointer(&value[0]))
 	cuniformType := (C.int)(uniformType)
 	ccount := (C.int)(count)
 	C.SetShaderValueV(*cshader, clocIndex, unsafe.Pointer(cvalue), cuniformType, ccount)
