@@ -2911,7 +2911,7 @@ func UnloadTexture(texture Texture2D) {
 
 // IsRenderTextureReady - Check if a render texture is ready
 func IsRenderTextureReady(target RenderTexture2D) bool {
-	return isTextureReady(uintptr(unsafe.Pointer(&target)))
+	return isRenderTextureReady(uintptr(unsafe.Pointer(&target)))
 }
 
 // UnloadRenderTexture - Unload render texture from GPU memory (VRAM)
