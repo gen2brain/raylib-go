@@ -337,33 +337,33 @@ var unloadImageColors func(colors *color.RGBA)
 var unloadImagePalette func(colors *color.RGBA)
 var getImageAlphaBorder func(rec uintptr, image uintptr, threshold float32)
 var getImageColor func(image uintptr, x int32, y int32) uintptr
-var imageClearBackground func(dst uintptr, col uintptr)
-var imageDrawPixel func(dst uintptr, posX int32, posY int32, col uintptr)
-var imageDrawPixelV func(dst uintptr, position uintptr, col uintptr)
-var imageDrawLine func(dst uintptr, startPosX int32, startPosY int32, endPosX int32, endPosY int32, col uintptr)
-var imageDrawLineV func(dst uintptr, start uintptr, end uintptr, col uintptr)
-var imageDrawCircle func(dst uintptr, centerX int32, centerY int32, radius int32, col uintptr)
-var imageDrawCircleV func(dst uintptr, center uintptr, radius int32, col uintptr)
-var imageDrawCircleLines func(dst uintptr, centerX int32, centerY int32, radius int32, col uintptr)
-var imageDrawCircleLinesV func(dst uintptr, center uintptr, radius int32, col uintptr)
-var imageDrawRectangle func(dst uintptr, posX int32, posY int32, width int32, height int32, col uintptr)
-var imageDrawRectangleV func(dst uintptr, position uintptr, size uintptr, col uintptr)
-var imageDrawRectangleRec func(dst uintptr, rec uintptr, col uintptr)
-var imageDrawRectangleLines func(dst uintptr, rec uintptr, thick int32, col uintptr)
-var imageDraw func(dst uintptr, src uintptr, srcRec uintptr, dstRec uintptr, tint uintptr)
-var imageDrawText func(dst uintptr, text string, posX int32, posY int32, fontSize int32, col uintptr)
-var imageDrawTextEx func(dst uintptr, font uintptr, text string, position uintptr, fontSize float32, spacing float32, tint uintptr)
-var loadTexture func(fileName string) Texture2D
-var loadTextureFromImage func(image uintptr) Texture2D
-var loadTextureCubemap func(image uintptr, layout int32) Texture2D
-var loadRenderTexture func(width int32, height int32) RenderTexture2D
+var imageClearBackground func(dst *Image, col uintptr)
+var imageDrawPixel func(dst *Image, posX int32, posY int32, col uintptr)
+var imageDrawPixelV func(dst *Image, position uintptr, col uintptr)
+var imageDrawLine func(dst *Image, startPosX int32, startPosY int32, endPosX int32, endPosY int32, col uintptr)
+var imageDrawLineV func(dst *Image, start uintptr, end uintptr, col uintptr)
+var imageDrawCircle func(dst *Image, centerX int32, centerY int32, radius int32, col uintptr)
+var imageDrawCircleV func(dst *Image, center uintptr, radius int32, col uintptr)
+var imageDrawCircleLines func(dst *Image, centerX int32, centerY int32, radius int32, col uintptr)
+var imageDrawCircleLinesV func(dst *Image, center uintptr, radius int32, col uintptr)
+var imageDrawRectangle func(dst *Image, posX int32, posY int32, width int32, height int32, col uintptr)
+var imageDrawRectangleV func(dst *Image, position uintptr, size uintptr, col uintptr)
+var imageDrawRectangleRec func(dst *Image, rec uintptr, col uintptr)
+var imageDrawRectangleLines func(dst *Image, rec uintptr, thick int32, col uintptr)
+var imageDraw func(dst *Image, src uintptr, srcRec uintptr, dstRec uintptr, tint uintptr)
+var imageDrawText func(dst *Image, text string, posX int32, posY int32, fontSize int32, col uintptr)
+var imageDrawTextEx func(dst *Image, font uintptr, text string, position uintptr, fontSize float32, spacing float32, tint uintptr)
+var loadTexture func(texture uintptr, fileName string)
+var loadTextureFromImage func(texture uintptr, image uintptr)
+var loadTextureCubemap func(texture uintptr, image uintptr, layout int32)
+var loadRenderTexture func(texture uintptr, width int32, height int32)
 var isTextureReady func(texture uintptr) bool
 var unloadTexture func(texture uintptr)
 var isRenderTextureReady func(target uintptr) bool
 var unloadRenderTexture func(target uintptr)
-var updateTexture func(texture uintptr, pixels uintptr)
-var updateTextureRec func(texture uintptr, rec uintptr, pixels uintptr)
-var genTextureMipmaps func(texture uintptr)
+var updateTexture func(texture uintptr, pixels *color.RGBA)
+var updateTextureRec func(texture uintptr, rec uintptr, pixels *color.RGBA)
+var genTextureMipmaps func(texture *Texture2D)
 var setTextureFilter func(texture uintptr, filter int32)
 var setTextureWrap func(texture uintptr, wrap int32)
 var drawTexture func(texture uintptr, posX int32, posY int32, tint uintptr)
@@ -2791,114 +2791,168 @@ func GetImageColor(image Image, x int32, y int32) color.RGBA {
 }
 
 // ImageClearBackground - Clear image background with given color
-func ImageClearBackground(dst *Image, col color.RGBA) {}
+func ImageClearBackground(dst *Image, col color.RGBA) {
+	imageClearBackground(dst, *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // ImageDrawPixel - Draw pixel within an image
-func ImageDrawPixel(dst *Image, posX int32, posY int32, col color.RGBA) {}
+func ImageDrawPixel(dst *Image, posX int32, posY int32, col color.RGBA) {
+	imageDrawPixel(dst, posX, posY, *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // ImageDrawPixelV - Draw pixel within an image (Vector version)
-func ImageDrawPixelV(dst *Image, position Vector2, col color.RGBA) {}
+func ImageDrawPixelV(dst *Image, position Vector2, col color.RGBA) {
+	imageDrawPixelV(dst, *(*uintptr)(unsafe.Pointer(&position)), *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // ImageDrawLine - Draw line within an image
 func ImageDrawLine(dst *Image, startPosX int32, startPosY int32, endPosX int32, endPosY int32, col color.RGBA) {
+	imageDrawLine(dst, startPosX, startPosY, endPosX, endPosY, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // ImageDrawLineV - Draw line within an image (Vector version)
-func ImageDrawLineV(dst *Image, start Vector2, end Vector2, col color.RGBA) {}
+func ImageDrawLineV(dst *Image, start Vector2, end Vector2, col color.RGBA) {
+	imageDrawLineV(dst, *(*uintptr)(unsafe.Pointer(&start)), *(*uintptr)(unsafe.Pointer(&end)), *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // ImageDrawCircle - Draw a filled circle within an image
-func ImageDrawCircle(dst *Image, centerX int32, centerY int32, radius int32, col color.RGBA) {}
+func ImageDrawCircle(dst *Image, centerX int32, centerY int32, radius int32, col color.RGBA) {
+	imageDrawCircle(dst, centerX, centerY, radius, *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // ImageDrawCircleV - Draw a filled circle within an image (Vector version)
-func ImageDrawCircleV(dst *Image, center Vector2, radius int32, col color.RGBA) {}
+func ImageDrawCircleV(dst *Image, center Vector2, radius int32, col color.RGBA) {
+	imageDrawCircleV(dst, *(*uintptr)(unsafe.Pointer(&center)), radius, *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // ImageDrawCircleLines - Draw circle outline within an image
 func ImageDrawCircleLines(dst *Image, centerX int32, centerY int32, radius int32, col color.RGBA) {
+	imageDrawCircleLines(dst, centerX, centerY, radius, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // ImageDrawCircleLinesV - Draw circle outline within an image (Vector version)
-func ImageDrawCircleLinesV(dst *Image, center Vector2, radius int32, col color.RGBA) {}
+func ImageDrawCircleLinesV(dst *Image, center Vector2, radius int32, col color.RGBA) {
+	imageDrawCircleLinesV(dst, *(*uintptr)(unsafe.Pointer(&center)), radius, *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // ImageDrawRectangle - Draw rectangle within an image
 func ImageDrawRectangle(dst *Image, posX int32, posY int32, width int32, height int32, col color.RGBA) {
+	imageDrawRectangle(dst, posX, posY, width, height, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // ImageDrawRectangleV - Draw rectangle within an image (Vector version)
-func ImageDrawRectangleV(dst *Image, position Vector2, size Vector2, col color.RGBA) {}
+func ImageDrawRectangleV(dst *Image, position Vector2, size Vector2, col color.RGBA) {
+	imageDrawRectangleV(dst, *(*uintptr)(unsafe.Pointer(&position)), *(*uintptr)(unsafe.Pointer(&size)), *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // ImageDrawRectangleRec - Draw rectangle within an image
-func ImageDrawRectangleRec(dst *Image, rec Rectangle, col color.RGBA) {}
+func ImageDrawRectangleRec(dst *Image, rec Rectangle, col color.RGBA) {
+	imageDrawRectangleRec(dst, uintptr(unsafe.Pointer(&rec)), *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // ImageDrawRectangleLines - Draw rectangle lines within an image
-func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int32, col color.RGBA) {}
+func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int32, col color.RGBA) {
+	imageDrawRectangleLines(dst, uintptr(unsafe.Pointer(&rec)), thick, *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // ImageDraw - Draw a source image within a destination image (tint applied to source)
-func ImageDraw(dst *Image, src Image, srcRec Rectangle, dstRec Rectangle, tint color.RGBA) {}
+func ImageDraw(dst *Image, src Image, srcRec Rectangle, dstRec Rectangle, tint color.RGBA) {
+	imageDraw(dst, uintptr(unsafe.Pointer(&src)), uintptr(unsafe.Pointer(&srcRec)), uintptr(unsafe.Pointer(&dstRec)), *(*uintptr)(unsafe.Pointer(&tint)))
+}
 
 // ImageDrawText - Draw text (using default font) within an image (destination)
 func ImageDrawText(dst *Image, text string, posX int32, posY int32, fontSize int32, col color.RGBA) {
+	imageDrawText(dst, text, posX, posY, fontSize, *(*uintptr)(unsafe.Pointer(&col)))
+
 }
 
 // ImageDrawTextEx - Draw text (custom sprite font) within an image (destination)
 func ImageDrawTextEx(dst *Image, font Font, text string, position Vector2, fontSize float32, spacing float32, tint color.RGBA) {
+	imageDrawTextEx(dst, uintptr(unsafe.Pointer(&font)), text, *(*uintptr)(unsafe.Pointer(&position)), fontSize, spacing, *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // LoadTexture - Load texture from file into GPU memory (VRAM)
 func LoadTexture(fileName string) Texture2D {
-	return Texture2D{}
+	var texture Texture2D
+	loadTexture(uintptr(unsafe.Pointer(&texture)), fileName)
+	return texture
 }
 
 // LoadTextureFromImage - Load texture from image data
 func LoadTextureFromImage(image Image) Texture2D {
-	return Texture2D{}
+	var texture Texture2D
+	loadTextureFromImage(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&image)))
+	return texture
 }
 
 // LoadTextureCubemap - Load cubemap from image, multiple image cubemap layouts supported
 func LoadTextureCubemap(image Image, layout int32) Texture2D {
-	return Texture2D{}
+	var texture Texture2D
+	loadTextureCubemap(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&image)), layout)
+	return texture
 }
 
 // LoadRenderTexture - Load texture for rendering (framebuffer)
 func LoadRenderTexture(width int32, height int32) RenderTexture2D {
-	return RenderTexture2D{}
+	var texture RenderTexture2D
+	loadRenderTexture(uintptr(unsafe.Pointer(&texture)), width, height)
+	return texture
 }
 
 // IsTextureReady - Check if a texture is ready
 func IsTextureReady(texture Texture2D) bool {
-	return false
+	return isTextureReady(uintptr(unsafe.Pointer(&texture)))
 }
 
 // UnloadTexture - Unload texture from GPU memory (VRAM)
-func UnloadTexture(texture Texture2D) {}
+func UnloadTexture(texture Texture2D) {
+	unloadTexture(uintptr(unsafe.Pointer(&texture)))
+}
 
 // IsRenderTextureReady - Check if a render texture is ready
 func IsRenderTextureReady(target RenderTexture2D) bool {
-	return false
+	return isTextureReady(uintptr(unsafe.Pointer(&target)))
 }
 
 // UnloadRenderTexture - Unload render texture from GPU memory (VRAM)
-func UnloadRenderTexture(target RenderTexture2D) {}
+func UnloadRenderTexture(target RenderTexture2D) {
+	unloadRenderTexture(uintptr(unsafe.Pointer(&target)))
+}
 
 // UpdateTexture - Update GPU texture with new data
-func UpdateTexture(texture Texture2D, pixels unsafe.Pointer) {}
+func UpdateTexture(texture Texture2D, pixels []color.RGBA) {
+	updateTexture(uintptr(unsafe.Pointer(&texture)), unsafe.SliceData(pixels))
+}
 
 // UpdateTextureRec - Update GPU texture rectangle with new data
-func UpdateTextureRec(texture Texture2D, rec Rectangle, pixels unsafe.Pointer) {}
+func UpdateTextureRec(texture Texture2D, rec Rectangle, pixels []color.RGBA) {
+	updateTextureRec(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&rec)), unsafe.SliceData(pixels))
+}
 
 // GenTextureMipmaps - Generate GPU mipmaps for a texture
-func GenTextureMipmaps(texture *Texture2D) {}
+func GenTextureMipmaps(texture *Texture2D) {
+	genTextureMipmaps(texture)
+}
 
 // SetTextureFilter - Set texture scaling filter mode
-func SetTextureFilter(texture Texture2D, filter int32) {}
+func SetTextureFilter(texture Texture2D, filter int32) {
+	setTextureFilter(uintptr(unsafe.Pointer(&texture)), filter)
+}
 
 // SetTextureWrap - Set texture wrapping mode
-func SetTextureWrap(texture Texture2D, wrap int32) {}
+func SetTextureWrap(texture Texture2D, wrap int32) {
+	setTextureWrap(uintptr(unsafe.Pointer(&texture)), wrap)
+}
 
 // DrawTexture - Draw a Texture2D
-func DrawTexture(texture Texture2D, posX int32, posY int32, tint color.RGBA) {}
+func DrawTexture(texture Texture2D, posX int32, posY int32, tint color.RGBA) {
+	drawTexture(uintptr(unsafe.Pointer(&texture)), posX, posY, *(*uintptr)(unsafe.Pointer(&tint)))
+}
 
 // DrawTextureV - Draw a Texture2D with position defined as Vector2
-func DrawTextureV(texture Texture2D, position Vector2, tint color.RGBA) {}
+func DrawTextureV(texture Texture2D, position Vector2, tint color.RGBA) {
+	drawTextureV(uintptr(unsafe.Pointer(&texture)), *(*uintptr)(unsafe.Pointer(&position)), *(*uintptr)(unsafe.Pointer(&tint)))
+}
 
 // DrawTextureEx - Draw a Texture2D with extended parameters
 func DrawTextureEx(texture Texture2D, position Vector2, rotation float32, scale float32, tint color.RGBA) {
