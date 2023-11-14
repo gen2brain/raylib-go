@@ -283,60 +283,60 @@ var checkCollisionLines func(startPos1 uintptr, endPos1 uintptr, startPos2 uintp
 var checkCollisionPointLine func(point uintptr, p1 uintptr, p2 uintptr, threshold int32) bool
 var getCollisionRec func(rec uintptr, rec1 uintptr, rec2 uintptr)
 var loadImage func(img uintptr, fileName string)
-var loadImageRaw func(fileName string, width int32, height int32, format int32, headerSize int32) Image
-var loadImageSvg func(fileNameOrString string, width int32, height int32) Image
-var loadImageAnim func(fileName string, frames []int32) Image
-var loadImageFromMemory func(fileType string, fileData []byte, dataSize int32) Image
-var loadImageFromTexture func(texture uintptr) Image
-var loadImageFromScreen func() Image
+var loadImageRaw func(img uintptr, fileName string, width int32, height int32, format int32, headerSize int32)
+var loadImageSvg func(img uintptr, fileNameOrString string, width int32, height int32)
+var loadImageAnim func(img uintptr, fileName string, frames []int32)
+var loadImageFromMemory func(img uintptr, fileType string, fileData []byte, dataSize int32)
+var loadImageFromTexture func(img uintptr, texture uintptr)
+var loadImageFromScreen func(img uintptr)
 var isImageReady func(image uintptr) bool
 var unloadImage func(image uintptr)
 var exportImage func(image uintptr, fileName string) bool
-var exportImageToMemory func(image uintptr, fileType string, fileSize []int32) []byte
+var exportImageToMemory func(image uintptr, fileType string, fileSize *int32) *byte
 var exportImageAsCode func(image uintptr, fileName string) bool
-var genImageColor func(width int32, height int32, col uintptr) Image
-var genImageGradientLinear func(width int32, height int32, direction int32, start uintptr, end uintptr) Image
-var genImageGradientRadial func(width int32, height int32, density float32, inner uintptr, outer uintptr) Image
-var genImageGradientSquare func(width int32, height int32, density float32, inner uintptr, outer uintptr) Image
-var genImageChecked func(width int32, height int32, checksX int32, checksY int32, col1 uintptr, col2 uintptr) Image
-var genImageWhiteNoise func(width int32, height int32, factor float32) Image
-var genImagePerlinNoise func(width int32, height int32, offsetX int32, offsetY int32, scale float32) Image
-var genImageCellular func(width int32, height int32, tileSize int32) Image
-var genImageText func(width int32, height int32, text string) Image
-var imageCopy func(image uintptr) Image
-var imageFromImage func(image uintptr, rec uintptr) Image
-var imageText func(text string, fontSize int32, col uintptr) Image
-var imageTextEx func(font uintptr, text string, fontSize float32, spacing float32, tint uintptr) Image
-var imageFormat func(image uintptr, newFormat int32)
-var imageToPOT func(image uintptr, fill uintptr)
-var imageCrop func(image uintptr, crop uintptr)
-var imageAlphaCrop func(image uintptr, threshold float32)
-var imageAlphaClear func(image uintptr, col uintptr, threshold float32)
-var imageAlphaMask func(image uintptr, alphaMask uintptr)
-var imageAlphaPremultiply func(image uintptr)
-var imageBlurGaussian func(image uintptr, blurSize int32)
-var imageResize func(image uintptr, newWidth int32, newHeight int32)
-var imageResizeNN func(image uintptr, newWidth int32, newHeight int32)
-var imageResizeCanvas func(image uintptr, newWidth int32, newHeight int32, offsetX int32, offsetY int32, fill uintptr)
-var imageMipmaps func(image uintptr)
-var imageDither func(image uintptr, rBpp int32, gBpp int32, bBpp int32, aBpp int32)
-var imageFlipVertical func(image uintptr)
-var imageFlipHorizontal func(image uintptr)
-var imageRotate func(image uintptr, degrees int32)
-var imageRotateCW func(image uintptr)
-var imageRotateCCW func(image uintptr)
-var imageColorTint func(image uintptr, col uintptr)
-var imageColorInvert func(image uintptr)
-var imageColorGrayscale func(image uintptr)
-var imageColorContrast func(image uintptr, contrast float32)
-var imageColorBrightness func(image uintptr, brightness int32)
-var imageColorReplace func(image uintptr, col uintptr, replace uintptr)
+var genImageColor func(image uintptr, width int32, height int32, col uintptr)
+var genImageGradientLinear func(image uintptr, width int32, height int32, direction int32, start uintptr, end uintptr)
+var genImageGradientRadial func(image uintptr, width int32, height int32, density float32, inner uintptr, outer uintptr)
+var genImageGradientSquare func(image uintptr, width int32, height int32, density float32, inner uintptr, outer uintptr)
+var genImageChecked func(image uintptr, width int32, height int32, checksX int32, checksY int32, col1 uintptr, col2 uintptr)
+var genImageWhiteNoise func(image uintptr, width int32, height int32, factor float32)
+var genImagePerlinNoise func(image uintptr, width int32, height int32, offsetX int32, offsetY int32, scale float32)
+var genImageCellular func(image uintptr, width int32, height int32, tileSize int32)
+var genImageText func(image uintptr, width int32, height int32, text string)
+var imageCopy func(retImage uintptr, image uintptr)
+var imageFromImage func(retImage uintptr, image uintptr, rec uintptr)
+var imageText func(retImage uintptr, text string, fontSize int32, col uintptr)
+var imageTextEx func(retImage uintptr, font uintptr, text string, fontSize float32, spacing float32, tint uintptr)
+var imageFormat func(image *Image, newFormat int32)
+var imageToPOT func(image *Image, fill uintptr)
+var imageCrop func(image *Image, crop uintptr)
+var imageAlphaCrop func(image *Image, threshold float32)
+var imageAlphaClear func(image *Image, col uintptr, threshold float32)
+var imageAlphaMask func(image *Image, alphaMask uintptr)
+var imageAlphaPremultiply func(image *Image)
+var imageBlurGaussian func(image *Image, blurSize int32)
+var imageResize func(image *Image, newWidth int32, newHeight int32)
+var imageResizeNN func(image *Image, newWidth int32, newHeight int32)
+var imageResizeCanvas func(image *Image, newWidth int32, newHeight int32, offsetX int32, offsetY int32, fill uintptr)
+var imageMipmaps func(image *Image)
+var imageDither func(image *Image, rBpp int32, gBpp int32, bBpp int32, aBpp int32)
+var imageFlipVertical func(image *Image)
+var imageFlipHorizontal func(image *Image)
+var imageRotate func(image *Image, degrees int32)
+var imageRotateCW func(image *Image)
+var imageRotateCCW func(image *Image)
+var imageColorTint func(image *Image, col uintptr)
+var imageColorInvert func(image *Image)
+var imageColorGrayscale func(image *Image)
+var imageColorContrast func(image *Image, contrast float32)
+var imageColorBrightness func(image *Image, brightness int32)
+var imageColorReplace func(image *Image, col uintptr, replace uintptr)
 var loadImageColors func(image uintptr) *color.RGBA
-var loadImagePalette func(image uintptr, maxPaletteSize int32, colorCount []int32) *color.RGBA
-var unloadImageColors func(colors uintptr)
-var unloadImagePalette func(colors uintptr)
-var getImageAlphaBorder func(image uintptr, threshold float32) Rectangle
-var getImageColor func(image uintptr, x int32, y int32) color.RGBA
+var loadImagePalette func(image uintptr, maxPaletteSize int32, colorCount *int32) *color.RGBA
+var unloadImageColors func(colors *color.RGBA)
+var unloadImagePalette func(colors *color.RGBA)
+var getImageAlphaBorder func(rec uintptr, image uintptr, threshold float32)
+var getImageColor func(image uintptr, x int32, y int32) uintptr
 var imageClearBackground func(dst uintptr, col uintptr)
 var imageDrawPixel func(dst uintptr, posX int32, posY int32, col uintptr)
 var imageDrawPixelV func(dst uintptr, position uintptr, col uintptr)
@@ -2472,219 +2472,322 @@ func LoadImage(fileName string) Image {
 
 // LoadImageRaw - Load image from RAW file data
 func LoadImageRaw(fileName string, width int32, height int32, format int32, headerSize int32) Image {
-	return Image{}
+	var img Image
+	loadImageRaw(uintptr(unsafe.Pointer(&img)), fileName, width, height, format, headerSize)
+	return img
 }
 
 // LoadImageSvg - Load image from SVG file data or string with specified size
 func LoadImageSvg(fileNameOrString string, width int32, height int32) Image {
-	return Image{}
+	var img Image
+	loadImageSvg(uintptr(unsafe.Pointer(&img)), fileNameOrString, width, height)
+	return img
 }
 
 // LoadImageAnim - Load image sequence from file (frames appended to image.data)
 func LoadImageAnim(fileName string, frames []int32) Image {
-	return Image{}
+	var img Image
+	loadImageAnim(uintptr(unsafe.Pointer(&img)), fileName, frames)
+	return img
 }
 
 // LoadImageFromMemory - Load image from memory buffer, fileType refers to extension: i.e. '.png'
 func LoadImageFromMemory(fileType string, fileData []byte, dataSize int32) Image {
-	return Image{}
+	var img Image
+	loadImageFromMemory(uintptr(unsafe.Pointer(&img)), fileType, fileData, dataSize)
+	return img
 }
 
 // LoadImageFromTexture - Load image from GPU texture data
 func LoadImageFromTexture(texture Texture2D) Image {
-	return Image{}
+	var img Image
+	loadImageFromTexture(uintptr(unsafe.Pointer(&img)), uintptr(unsafe.Pointer(&texture)))
+	return img
 }
 
 // LoadImageFromScreen - Load image from screen buffer and (screenshot)
 func LoadImageFromScreen() Image {
-	return Image{}
+	var img Image
+	loadImageFromScreen(uintptr(unsafe.Pointer(&img)))
+	return img
 }
 
 // IsImageReady - Check if an image is ready
 func IsImageReady(image Image) bool {
-	return false
+	return isImageReady(uintptr(unsafe.Pointer(&image)))
 }
 
 // UnloadImage - Unload image from CPU memory (RAM)
-func UnloadImage(image Image) {}
+func UnloadImage(image Image) {
+	unloadImage(uintptr(unsafe.Pointer(&image)))
+}
 
 // ExportImage - Export image data to file, returns true on success
 func ExportImage(image Image, fileName string) bool {
-	return false
+	return exportImage(uintptr(unsafe.Pointer(&image)), fileName)
 }
 
 // ExportImageToMemory - Export image to memory buffer
-func ExportImageToMemory(image Image, fileType string, fileSize []int32) []byte {
-	return nil
+func ExportImageToMemory(image Image, fileType string) []byte {
+	var fileSize int32
+	ret := exportImageToMemory(uintptr(unsafe.Pointer(&image)), fileType, &fileSize)
+	return unsafe.Slice(ret, fileSize)
 }
 
 // ExportImageAsCode - Export image as code file defining an array of bytes, returns true on success
 func ExportImageAsCode(image Image, fileName string) bool {
-	return false
+	return exportImageAsCode(uintptr(unsafe.Pointer(&image)), fileName)
 }
 
 // GenImageColor - Generate image: plain color
 func GenImageColor(width int32, height int32, col color.RGBA) Image {
-	return Image{}
+	var image Image
+	genImageColor(uintptr(unsafe.Pointer(&image)), width, height, *(*uintptr)(unsafe.Pointer(&col)))
+	return image
 }
 
 // GenImageGradientLinear - Generate image: linear gradient, direction in degrees [0..360], 0=Vertical gradient
 func GenImageGradientLinear(width int32, height int32, direction int32, start color.RGBA, end color.RGBA) Image {
-	return Image{}
+	var image Image
+	genImageGradientLinear(uintptr(unsafe.Pointer(&image)), width, height, direction, *(*uintptr)(unsafe.Pointer(&start)), *(*uintptr)(unsafe.Pointer(&end)))
+	return image
 }
 
 // GenImageGradientRadial - Generate image: radial gradient
 func GenImageGradientRadial(width int32, height int32, density float32, inner color.RGBA, outer color.RGBA) Image {
-	return Image{}
+	var image Image
+	genImageGradientRadial(uintptr(unsafe.Pointer(&image)), width, height, density, *(*uintptr)(unsafe.Pointer(&inner)), *(*uintptr)(unsafe.Pointer(&outer)))
+	return image
 }
 
 // GenImageGradientSquare - Generate image: square gradient
 func GenImageGradientSquare(width int32, height int32, density float32, inner color.RGBA, outer color.RGBA) Image {
-	return Image{}
+	var image Image
+	genImageGradientSquare(uintptr(unsafe.Pointer(&image)), width, height, density, *(*uintptr)(unsafe.Pointer(&inner)), *(*uintptr)(unsafe.Pointer(&outer)))
+	return image
 }
 
 // GenImageChecked - Generate image: checked
 func GenImageChecked(width int32, height int32, checksX int32, checksY int32, col1 color.RGBA, col2 color.RGBA) Image {
-	return Image{}
+	var image Image
+	genImageChecked(uintptr(unsafe.Pointer(&image)), width, height, checksX, checksY, *(*uintptr)(unsafe.Pointer(&col1)), *(*uintptr)(unsafe.Pointer(&col2)))
+	return image
 }
 
 // GenImageWhiteNoise - Generate image: white noise
 func GenImageWhiteNoise(width int32, height int32, factor float32) Image {
-	return Image{}
+	var image Image
+	genImageWhiteNoise(uintptr(unsafe.Pointer(&image)), width, height, factor)
+	return image
 }
 
 // GenImagePerlinNoise - Generate image: perlin noise
 func GenImagePerlinNoise(width int32, height int32, offsetX int32, offsetY int32, scale float32) Image {
-	return Image{}
+	var image Image
+	genImagePerlinNoise(uintptr(unsafe.Pointer(&image)), width, height, offsetX, offsetY, scale)
+	return image
 }
 
 // GenImageCellular - Generate image: cellular algorithm, bigger tileSize means bigger cells
 func GenImageCellular(width int32, height int32, tileSize int32) Image {
-	return Image{}
+	var image Image
+	genImageCellular(uintptr(unsafe.Pointer(&image)), width, height, tileSize)
+	return image
 }
 
 // GenImageText - Generate image: grayscale image from text data
 func GenImageText(width int32, height int32, text string) Image {
-	return Image{}
+	var image Image
+	genImageText(uintptr(unsafe.Pointer(&image)), width, height, text)
+	return image
 }
 
 // ImageCopy - Create an image duplicate (useful for transformations)
 func ImageCopy(image Image) Image {
-	return Image{}
+	var retImage Image
+	imageCopy(uintptr(unsafe.Pointer(&retImage)), uintptr(unsafe.Pointer(&image)))
+	return retImage
 }
 
 // ImageFromImage - Create an image from another image piece
 func ImageFromImage(image Image, rec Rectangle) Image {
-	return Image{}
+	var retImage Image
+	imageFromImage(uintptr(unsafe.Pointer(&retImage)), uintptr(unsafe.Pointer(&image)), uintptr(unsafe.Pointer(&rec)))
+	return retImage
 }
 
 // ImageText - Create an image from text (default font)
 func ImageText(text string, fontSize int32, col color.RGBA) Image {
-	return Image{}
+	var retImage Image
+	imageText(uintptr(unsafe.Pointer(&retImage)), text, fontSize, *(*uintptr)(unsafe.Pointer(&col)))
+	return retImage
 }
 
 // ImageTextEx - Create an image from text (custom sprite font)
 func ImageTextEx(font Font, text string, fontSize float32, spacing float32, tint color.RGBA) Image {
-	return Image{}
+	var retImage Image
+	imageTextEx(uintptr(unsafe.Pointer(&retImage)), uintptr(unsafe.Pointer(&font)), text, fontSize, spacing, *(*uintptr)(unsafe.Pointer(&tint)))
+	return retImage
 }
 
 // ImageFormat - Convert image data to desired format
-func ImageFormat(image *Image, newFormat int32) {}
+func ImageFormat(image *Image, newFormat int32) {
+	imageFormat(image, newFormat)
+}
 
 // ImageToPOT - Convert image to POT (power-of-two)
-func ImageToPOT(image *Image, fill color.RGBA) {}
+func ImageToPOT(image *Image, fill color.RGBA) {
+	imageToPOT(image, *(*uintptr)(unsafe.Pointer(&fill)))
+}
 
 // ImageCrop - Crop an image to a defined rectangle
-func ImageCrop(image *Image, crop Rectangle) {}
+func ImageCrop(image *Image, crop Rectangle) {
+	imageCrop(image, uintptr(unsafe.Pointer(&crop)))
+}
 
 // ImageAlphaCrop - Crop image depending on alpha value
-func ImageAlphaCrop(image *Image, threshold float32) {}
+func ImageAlphaCrop(image *Image, threshold float32) {
+	imageAlphaCrop(image, threshold)
+}
 
 // ImageAlphaClear - Clear alpha channel to desired color
-func ImageAlphaClear(image *Image, col color.RGBA, threshold float32) {}
+func ImageAlphaClear(image *Image, col color.RGBA, threshold float32) {
+	imageAlphaClear(image, *(*uintptr)(unsafe.Pointer(&col)), threshold)
+}
 
 // ImageAlphaMask - Apply alpha mask to image
-func ImageAlphaMask(image *Image, alphaMask Image) {}
+func ImageAlphaMask(image *Image, alphaMask Image) {
+	imageAlphaMask(image, uintptr(unsafe.Pointer(&alphaMask)))
+}
 
 // ImageAlphaPremultiply - Premultiply alpha channel
-func ImageAlphaPremultiply(image *Image) {}
+func ImageAlphaPremultiply(image *Image) {
+	imageAlphaPremultiply(image)
+}
 
 // ImageBlurGaussian - Apply Gaussian blur using a box blur approximation
-func ImageBlurGaussian(image *Image, blurSize int32) {}
+func ImageBlurGaussian(image *Image, blurSize int32) {
+	imageBlurGaussian(image, blurSize)
+}
 
 // ImageResize - Resize image (Bicubic scaling algorithm)
-func ImageResize(image *Image, newWidth int32, newHeight int32) {}
+func ImageResize(image *Image, newWidth int32, newHeight int32) {
+	imageResize(image, newWidth, newHeight)
+}
 
 // ImageResizeNN - Resize image (Nearest-Neighbor scaling algorithm)
-func ImageResizeNN(image *Image, newWidth int32, newHeight int32) {}
+func ImageResizeNN(image *Image, newWidth int32, newHeight int32) {
+	imageResizeNN(image, newWidth, newHeight)
+}
 
 // ImageResizeCanvas - Resize canvas and fill with color
 func ImageResizeCanvas(image *Image, newWidth int32, newHeight int32, offsetX int32, offsetY int32, fill color.RGBA) {
+	imageResizeCanvas(image, newWidth, newHeight, offsetX, offsetY, *(*uintptr)(unsafe.Pointer(&fill)))
 }
 
 // ImageMipmaps - Compute all mipmap levels for a provided image
-func ImageMipmaps(image *Image) {}
+func ImageMipmaps(image *Image) {
+	imageMipmaps(image)
+}
 
 // ImageDither - Dither image data to 16bpp or lower (Floyd-Steinberg dithering)
-func ImageDither(image *Image, rBpp int32, gBpp int32, bBpp int32, aBpp int32) {}
+func ImageDither(image *Image, rBpp int32, gBpp int32, bBpp int32, aBpp int32) {
+	imageDither(image, rBpp, gBpp, bBpp, aBpp)
+}
 
 // ImageFlipVertical - Flip image vertically
-func ImageFlipVertical(image *Image) {}
+func ImageFlipVertical(image *Image) {
+	imageFlipVertical(image)
+}
 
 // ImageFlipHorizontal - Flip image horizontally
-func ImageFlipHorizontal(image *Image) {}
+func ImageFlipHorizontal(image *Image) {
+	imageFlipHorizontal(image)
+}
 
 // ImageRotate - Rotate image by input angle in degrees (-359 to 359)
-func ImageRotate(image *Image, degrees int32) {}
+func ImageRotate(image *Image, degrees int32) {
+	imageRotate(image, degrees)
+}
 
 // ImageRotateCW - Rotate image clockwise 90deg
-func ImageRotateCW(image *Image) {}
+func ImageRotateCW(image *Image) {
+	imageRotateCW(image)
+}
 
 // ImageRotateCCW - Rotate image counter-clockwise 90deg
-func ImageRotateCCW(image *Image) {}
+func ImageRotateCCW(image *Image) {
+	imageRotateCCW(image)
+}
 
 // ImageColorTint - Modify image color: tint
-func ImageColorTint(image *Image, col color.RGBA) {}
+func ImageColorTint(image *Image, col color.RGBA) {
+	imageColorTint(image, *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // ImageColorInvert - Modify image color: invert
-func ImageColorInvert(image *Image) {}
+func ImageColorInvert(image *Image) {
+	imageColorInvert(image)
+}
 
 // ImageColorGrayscale - Modify image color: grayscale
-func ImageColorGrayscale(image *Image) {}
+func ImageColorGrayscale(image *Image) {
+	imageColorGrayscale(image)
+}
 
 // ImageColorContrast - Modify image color: contrast (-100 to 100)
-func ImageColorContrast(image *Image, contrast float32) {}
+func ImageColorContrast(image *Image, contrast float32) {
+	imageColorContrast(image, contrast)
+}
 
 // ImageColorBrightness - Modify image color: brightness (-255 to 255)
-func ImageColorBrightness(image *Image, brightness int32) {}
+func ImageColorBrightness(image *Image, brightness int32) {
+	imageColorBrightness(image, brightness)
+}
 
 // ImageColorReplace - Modify image color: replace color
-func ImageColorReplace(image *Image, col color.RGBA, replace color.RGBA) {}
+func ImageColorReplace(image *Image, col color.RGBA, replace color.RGBA) {
+	imageColorReplace(image, *(*uintptr)(unsafe.Pointer(&col)), *(*uintptr)(unsafe.Pointer(&replace)))
+}
 
 // LoadImageColors - Load color data from image as a Color array (RGBA - 32bit)
-func LoadImageColors(image Image) *color.RGBA {
-	return &color.RGBA{}
+//
+// NOTE: Memory allocated should be freed using UnloadImageColors()
+func LoadImageColors(image Image) []color.RGBA {
+	ret := loadImageColors(uintptr(unsafe.Pointer(&image)))
+	return unsafe.Slice(ret, image.Width*image.Height)
 }
 
 // LoadImagePalette - Load colors palette from image as a Color array (RGBA - 32bit)
-func LoadImagePalette(image Image, maxPaletteSize int32, colorCount []int32) *color.RGBA {
-	return &color.RGBA{}
+//
+// NOTE: Memory allocated should be freed using UnloadImagePalette()
+func LoadImagePalette(image Image, maxPaletteSize int32) []color.RGBA {
+	var colorCount int32
+	ret := loadImagePalette(uintptr(unsafe.Pointer(&image)), maxPaletteSize, &colorCount)
+	return unsafe.Slice(ret, colorCount)
 }
 
 // UnloadImageColors - Unload color data loaded with LoadImageColors()
-func UnloadImageColors(colors *color.RGBA) {}
+func UnloadImageColors(colors []color.RGBA) {
+	unloadImageColors(unsafe.SliceData(colors))
+}
 
 // UnloadImagePalette - Unload colors palette loaded with LoadImagePalette()
-func UnloadImagePalette(colors *color.RGBA) {}
+func UnloadImagePalette(colors []color.RGBA) {
+	unloadImagePalette(unsafe.SliceData(colors))
+}
 
 // GetImageAlphaBorder - Get image alpha border rectangle
 func GetImageAlphaBorder(image Image, threshold float32) Rectangle {
-	return Rectangle{}
+	var rec Rectangle
+	getImageAlphaBorder(uintptr(unsafe.Pointer(&rec)), uintptr(unsafe.Pointer(&image)), threshold)
+	return rec
 }
 
 // GetImageColor - Get image pixel color at (x, y) position
 func GetImageColor(image Image, x int32, y int32) color.RGBA {
-	return color.RGBA{}
+	ret := getImageColor(uintptr(unsafe.Pointer(&image)), x, y)
+	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
 // ImageClearBackground - Clear image background with given color
