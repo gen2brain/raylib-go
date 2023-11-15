@@ -372,30 +372,30 @@ var drawTextureEx func(texture uintptr, position uintptr, rotation float32, scal
 var drawTextureRec func(texture uintptr, source uintptr, position uintptr, tint uintptr)
 var drawTexturePro func(texture uintptr, source uintptr, dest uintptr, origin uintptr, rotation float32, tint uintptr)
 var drawTextureNPatch func(texture uintptr, nPatchInfo uintptr, dest uintptr, origin uintptr, rotation float32, tint uintptr)
-var fade func(col uintptr, alpha float32) color.RGBA
+var fade func(col uintptr, alpha float32) uintptr
 var colorToInt func(col uintptr) int32
-var colorNormalize func(col uintptr) Vector4
-var colorFromNormalized func(normalized uintptr) color.RGBA
-var colorToHSV func(col uintptr) Vector3
-var colorFromHSV func(hue float32, saturation float32, value float32) color.RGBA
-var colorTint func(col uintptr, tint uintptr) color.RGBA
-var colorBrightness func(col uintptr, factor float32) color.RGBA
-var colorContrast func(col uintptr, contrast float32) color.RGBA
-var colorAlpha func(col uintptr, alpha float32) color.RGBA
-var colorAlphaBlend func(dst uintptr, src uintptr, tint uintptr) color.RGBA
-var getColor func(hexValue uint32) color.RGBA
-var getPixelColor func(srcPtr uintptr, format int32) color.RGBA
-var setPixelColor func(dstPtr uintptr, col uintptr, format int32)
+var colorNormalize func(vector4 uintptr, col uintptr)
+var colorFromNormalized func(normalized uintptr) uintptr
+var colorToHSV func(vector3 uintptr, col uintptr)
+var colorFromHSV func(hue float32, saturation float32, value float32) uintptr
+var colorTint func(col uintptr, tint uintptr) uintptr
+var colorBrightness func(col uintptr, factor float32) uintptr
+var colorContrast func(col uintptr, contrast float32) uintptr
+var colorAlpha func(col uintptr, alpha float32) uintptr
+var colorAlphaBlend func(dst uintptr, src uintptr, tint uintptr) uintptr
+var getColor func(hexValue uint32) uintptr
+var getPixelColor func(srcPtr unsafe.Pointer, format int32) uintptr
+var setPixelColor func(dstPtr unsafe.Pointer, col uintptr, format int32)
 var getPixelDataSize func(width int32, height int32, format int32) int32
-var getFontDefault func() Font
-var loadFont func(fileName string) Font
-var loadFontEx func(fileName string, fontSize int32, codepoints []int32, codepointCount int32) Font
-var loadFontFromImage func(image uintptr, key uintptr, firstChar int32) Font
-var loadFontFromMemory func(fileType string, fileData []byte, dataSize int32, fontSize int32, codepoints []int32, codepointCount int32) Font
+var getFontDefault func(font uintptr)
+var loadFont func(font uintptr, fileName string)
+var loadFontEx func(font uintptr, fileName string, fontSize int32, codepoints []int32, codepointCount int32)
+var loadFontFromImage func(font uintptr, image uintptr, key uintptr, firstChar int32)
+var loadFontFromMemory func(font uintptr, fileType string, fileData []byte, dataSize int32, fontSize int32, codepoints []int32, codepointCount int32)
 var isFontReady func(font uintptr) bool
 var loadFontData func(fileData []byte, dataSize int32, fontSize int32, codepoints []int32, codepointCount int32, _type int32) *GlyphInfo
-var genImageFontAtlas func(glyphs uintptr, glyphRecs []*Rectangle, glyphCount int32, fontSize int32, padding int32, packMethod int32) Image
-var unloadFontData func(glyphs uintptr, glyphCount int32)
+var genImageFontAtlas func(image uintptr, glyphs *GlyphInfo, glyphRecs []*Rectangle, glyphCount int32, fontSize int32, padding int32, packMethod int32)
+var unloadFontData func(glyphs *GlyphInfo, glyphCount int32)
 var unloadFont func(font uintptr)
 var exportFontAsCode func(font uintptr, fileName string) bool
 var drawFPS func(posX int32, posY int32)
@@ -406,39 +406,40 @@ var drawTextCodepoint func(font uintptr, codepoint int32, position uintptr, font
 var drawTextCodepoints func(font uintptr, codepoints []int32, codepointCount int32, position uintptr, fontSize float32, spacing float32, tint uintptr)
 var setTextLineSpacing func(spacing int32)
 var measureText func(text string, fontSize int32) int32
-var measureTextEx func(font uintptr, text string, fontSize float32, spacing float32) Vector2
+var measureTextEx func(font uintptr, text string, fontSize float32, spacing float32) uintptr
 var getGlyphIndex func(font uintptr, codepoint int32) int32
-var getGlyphInfo func(font uintptr, codepoint int32) GlyphInfo
-var getGlyphAtlasRec func(font uintptr, codepoint int32) Rectangle
-var loadUTF8 func(codepoints []int32, length int32) string
-var unloadUTF8 func(text string)
-var loadCodepoints func(text string, count []int32) []int32
-var unloadCodepoints func(codepoints []int32)
-var getCodepointCount func(text string) int32
-var getCodepoint func(text string, codepointSize []int32) int32
-var getCodepointNext func(text string, codepointSize []int32) int32
-var getCodepointPrevious func(text string, codepointSize []int32) int32
-var codepointToUTF8 func(codepoint int32, utf8Size []int32) string
-var textCopy func(dst string, src string) int32
-var textIsEqual func(text1 string, text2 string) bool
-var textLength func(text string) uint32
-var textFormat func(text string, args uintptr) string
-var textSubtext func(text string, position int32, length int32) string
-var textReplace func(text string, replace string, by string) string
-var textInsert func(text string, insert string, position int32) string
-var textJoin func(textList []string, count int32, delimiter string) string
-var textSplit func(text string, delimiter int8, count []int32) []string
-var textAppend func(text string, _append string, position []int32)
-var textFindIndex func(text string, find string) int32
-var textToUpper func(text string) string
-var textToLower func(text string) string
-var textToPascal func(text string) string
-var textToInteger func(text string) int32
+var getGlyphInfo func(glyphInfo uintptr, font uintptr, codepoint int32)
+var getGlyphAtlasRec func(rec uintptr, font uintptr, codepoint int32)
+
+// var loadUTF8 func(codepoints []int32, length int32) string
+// var unloadUTF8 func(text string)
+// var loadCodepoints func(text string, count []int32) []int32
+// var unloadCodepoints func(codepoints []int32)
+// var getCodepointCount func(text string) int32
+// var getCodepoint func(text string, codepointSize []int32) int32
+// var getCodepointNext func(text string, codepointSize []int32) int32
+// var getCodepointPrevious func(text string, codepointSize []int32) int32
+// var codepointToUTF8 func(codepoint int32, utf8Size []int32) string
+// var textCopy func(dst string, src string) int32
+// var textIsEqual func(text1 string, text2 string) bool
+// var textLength func(text string) uint32
+// var textFormat func(text string, args uintptr) string
+// var textSubtext func(text string, position int32, length int32) string
+// var textReplace func(text string, replace string, by string) string
+// var textInsert func(text string, insert string, position int32) string
+// var textJoin func(textList []string, count int32, delimiter string) string
+// var textSplit func(text string, delimiter int8, count []int32) []string
+// var textAppend func(text string, _append string, position []int32)
+// var textFindIndex func(text string, find string) int32
+// var textToUpper func(text string) string
+// var textToLower func(text string) string
+// var textToPascal func(text string) string
+// var textToInteger func(text string) int32
 var drawLine3D func(startPos uintptr, endPos uintptr, col uintptr)
 var drawPoint3D func(position uintptr, col uintptr)
 var drawCircle3D func(center uintptr, radius float32, rotationAxis uintptr, rotationAngle float32, col uintptr)
 var drawTriangle3D func(v1 uintptr, v2 uintptr, v3 uintptr, col uintptr)
-var drawTriangleStrip3D func(points uintptr, pointCount int32, col uintptr)
+var drawTriangleStrip3D func(points *Vector3, pointCount int32, col uintptr)
 var drawCube func(position uintptr, width float32, height float32, length float32, col uintptr)
 var drawCubeV func(position uintptr, size uintptr, col uintptr)
 var drawCubeWires func(position uintptr, width float32, height float32, length float32, col uintptr)
@@ -966,30 +967,30 @@ func init() {
 	purego.RegisterLibFunc(&getGlyphIndex, raylibDll, "GetGlyphIndex")
 	purego.RegisterLibFunc(&getGlyphInfo, raylibDll, "GetGlyphInfo")
 	purego.RegisterLibFunc(&getGlyphAtlasRec, raylibDll, "GetGlyphAtlasRec")
-	purego.RegisterLibFunc(&loadUTF8, raylibDll, "LoadUTF8")
-	purego.RegisterLibFunc(&unloadUTF8, raylibDll, "UnloadUTF8")
-	purego.RegisterLibFunc(&loadCodepoints, raylibDll, "LoadCodepoints")
-	purego.RegisterLibFunc(&unloadCodepoints, raylibDll, "UnloadCodepoints")
-	purego.RegisterLibFunc(&getCodepointCount, raylibDll, "GetCodepointCount")
-	purego.RegisterLibFunc(&getCodepoint, raylibDll, "GetCodepoint")
-	purego.RegisterLibFunc(&getCodepointNext, raylibDll, "GetCodepointNext")
-	purego.RegisterLibFunc(&getCodepointPrevious, raylibDll, "GetCodepointPrevious")
-	purego.RegisterLibFunc(&codepointToUTF8, raylibDll, "CodepointToUTF8")
-	purego.RegisterLibFunc(&textCopy, raylibDll, "TextCopy")
-	purego.RegisterLibFunc(&textIsEqual, raylibDll, "TextIsEqual")
-	purego.RegisterLibFunc(&textLength, raylibDll, "TextLength")
-	purego.RegisterLibFunc(&textFormat, raylibDll, "TextFormat")
-	purego.RegisterLibFunc(&textSubtext, raylibDll, "TextSubtext")
-	purego.RegisterLibFunc(&textReplace, raylibDll, "TextReplace")
-	purego.RegisterLibFunc(&textInsert, raylibDll, "TextInsert")
-	purego.RegisterLibFunc(&textJoin, raylibDll, "TextJoin")
-	purego.RegisterLibFunc(&textSplit, raylibDll, "TextSplit")
-	purego.RegisterLibFunc(&textAppend, raylibDll, "TextAppend")
-	purego.RegisterLibFunc(&textFindIndex, raylibDll, "TextFindIndex")
-	purego.RegisterLibFunc(&textToUpper, raylibDll, "TextToUpper")
-	purego.RegisterLibFunc(&textToLower, raylibDll, "TextToLower")
-	purego.RegisterLibFunc(&textToPascal, raylibDll, "TextToPascal")
-	purego.RegisterLibFunc(&textToInteger, raylibDll, "TextToInteger")
+	// purego.RegisterLibFunc(&loadUTF8, raylibDll, "LoadUTF8")
+	// purego.RegisterLibFunc(&unloadUTF8, raylibDll, "UnloadUTF8")
+	// purego.RegisterLibFunc(&loadCodepoints, raylibDll, "LoadCodepoints")
+	// purego.RegisterLibFunc(&unloadCodepoints, raylibDll, "UnloadCodepoints")
+	// purego.RegisterLibFunc(&getCodepointCount, raylibDll, "GetCodepointCount")
+	// purego.RegisterLibFunc(&getCodepoint, raylibDll, "GetCodepoint")
+	// purego.RegisterLibFunc(&getCodepointNext, raylibDll, "GetCodepointNext")
+	// purego.RegisterLibFunc(&getCodepointPrevious, raylibDll, "GetCodepointPrevious")
+	// purego.RegisterLibFunc(&codepointToUTF8, raylibDll, "CodepointToUTF8")
+	// purego.RegisterLibFunc(&textCopy, raylibDll, "TextCopy")
+	// purego.RegisterLibFunc(&textIsEqual, raylibDll, "TextIsEqual")
+	// purego.RegisterLibFunc(&textLength, raylibDll, "TextLength")
+	// purego.RegisterLibFunc(&textFormat, raylibDll, "TextFormat")
+	// purego.RegisterLibFunc(&textSubtext, raylibDll, "TextSubtext")
+	// purego.RegisterLibFunc(&textReplace, raylibDll, "TextReplace")
+	// purego.RegisterLibFunc(&textInsert, raylibDll, "TextInsert")
+	// purego.RegisterLibFunc(&textJoin, raylibDll, "TextJoin")
+	// purego.RegisterLibFunc(&textSplit, raylibDll, "TextSplit")
+	// purego.RegisterLibFunc(&textAppend, raylibDll, "TextAppend")
+	// purego.RegisterLibFunc(&textFindIndex, raylibDll, "TextFindIndex")
+	// purego.RegisterLibFunc(&textToUpper, raylibDll, "TextToUpper")
+	// purego.RegisterLibFunc(&textToLower, raylibDll, "TextToLower")
+	// purego.RegisterLibFunc(&textToPascal, raylibDll, "TextToPascal")
+	// purego.RegisterLibFunc(&textToInteger, raylibDll, "TextToInteger")
 	purego.RegisterLibFunc(&drawLine3D, raylibDll, "DrawLine3D")
 	purego.RegisterLibFunc(&drawPoint3D, raylibDll, "DrawPoint3D")
 	purego.RegisterLibFunc(&drawCircle3D, raylibDll, "DrawCircle3D")
@@ -1698,6 +1699,8 @@ func MemFree(ptr unsafe.Pointer) {
 }
 
 // SetTraceLogCallback - Set custom trace log
+//
+// REVIEW NEEDED! 2023-11-15 JupiterRider: The argument list paramter isn't impelmented yet.
 func SetTraceLogCallback(fn TraceLogCallbackFun) {
 	setTraceLogCallback(traceLogCallbackWrapper(fn))
 }
@@ -2956,338 +2959,418 @@ func DrawTextureV(texture Texture2D, position Vector2, tint color.RGBA) {
 
 // DrawTextureEx - Draw a Texture2D with extended parameters
 func DrawTextureEx(texture Texture2D, position Vector2, rotation float32, scale float32, tint color.RGBA) {
+	drawTextureEx(uintptr(unsafe.Pointer(&texture)), *(*uintptr)(unsafe.Pointer(&position)), rotation, scale, *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // DrawTextureRec - Draw a part of a texture defined by a rectangle
-func DrawTextureRec(texture Texture2D, source Rectangle, position Vector2, tint color.RGBA) {}
+func DrawTextureRec(texture Texture2D, source Rectangle, position Vector2, tint color.RGBA) {
+	drawTextureRec(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&source)), *(*uintptr)(unsafe.Pointer(&position)), *(*uintptr)(unsafe.Pointer(&tint)))
+}
 
 // DrawTexturePro - Draw a part of a texture defined by a rectangle with 'pro' parameters
 func DrawTexturePro(texture Texture2D, source Rectangle, dest Rectangle, origin Vector2, rotation float32, tint color.RGBA) {
+	drawTexturePro(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&source)), uintptr(unsafe.Pointer(&dest)), *(*uintptr)(unsafe.Pointer(&origin)), rotation, *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // DrawTextureNPatch - Draws a texture (or part of it) that stretches or shrinks nicely
 func DrawTextureNPatch(texture Texture2D, nPatchInfo NPatchInfo, dest Rectangle, origin Vector2, rotation float32, tint color.RGBA) {
+	drawTextureNPatch(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&nPatchInfo)), uintptr(unsafe.Pointer(&dest)), *(*uintptr)(unsafe.Pointer(&origin)), rotation, *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // Fade - Get color with alpha applied, alpha goes from 0.0f to 1.0f
 func Fade(col color.RGBA, alpha float32) color.RGBA {
-	return color.RGBA{}
+	ret := fade(*(*uintptr)(unsafe.Pointer(&col)), alpha)
+	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
 // ColorToInt - Get hexadecimal value for a Color
 func ColorToInt(col color.RGBA) int32 {
-	return 0
+	return colorToInt(*(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // ColorNormalize - Get Color normalized as float [0..1]
 func ColorNormalize(col color.RGBA) Vector4 {
-	return Vector4{}
+	var vector4 Vector4
+	colorNormalize(uintptr(unsafe.Pointer(&vector4)), *(*uintptr)(unsafe.Pointer(&col)))
+	return vector4
 }
 
 // ColorFromNormalized - Get Color from normalized values [0..1]
 func ColorFromNormalized(normalized Vector4) color.RGBA {
-	return color.RGBA{}
+	ret := colorFromNormalized(*(*uintptr)(unsafe.Pointer(&normalized)))
+	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
 // ColorToHSV - Get HSV values for a Color, hue [0..360], saturation/value [0..1]
 func ColorToHSV(col color.RGBA) Vector3 {
-	return Vector3{}
+	var vector3 Vector3
+	colorToHSV(uintptr(unsafe.Pointer(&vector3)), *(*uintptr)(unsafe.Pointer(&col)))
+	return vector3
 }
 
 // ColorFromHSV - Get a Color from HSV values, hue [0..360], saturation/value [0..1]
 func ColorFromHSV(hue float32, saturation float32, value float32) color.RGBA {
-	return color.RGBA{}
+	ret := colorFromHSV(hue, saturation, value)
+	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
 // ColorTint - Get color multiplied with another color
 func ColorTint(col color.RGBA, tint color.RGBA) color.RGBA {
-	return color.RGBA{}
+	ret := colorTint(*(*uintptr)(unsafe.Pointer(&col)), *(*uintptr)(unsafe.Pointer(&tint)))
+	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
 // ColorBrightness - Get color with brightness correction, brightness factor goes from -1.0f to 1.0f
 func ColorBrightness(col color.RGBA, factor float32) color.RGBA {
-	return color.RGBA{}
+	ret := colorBrightness(*(*uintptr)(unsafe.Pointer(&col)), factor)
+	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
 // ColorContrast - Get color with contrast correction, contrast values between -1.0f and 1.0f
 func ColorContrast(col color.RGBA, contrast float32) color.RGBA {
-	return color.RGBA{}
+	ret := colorContrast(*(*uintptr)(unsafe.Pointer(&col)), contrast)
+	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
 // ColorAlpha - Get color with alpha applied, alpha goes from 0.0f to 1.0f
 func ColorAlpha(col color.RGBA, alpha float32) color.RGBA {
-	return color.RGBA{}
+	ret := colorAlpha(*(*uintptr)(unsafe.Pointer(&col)), alpha)
+	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
 // ColorAlphaBlend - Get src alpha-blended into dst color with tint
 func ColorAlphaBlend(dst color.RGBA, src color.RGBA, tint color.RGBA) color.RGBA {
-	return color.RGBA{}
+	ret := colorAlphaBlend(*(*uintptr)(unsafe.Pointer(&dst)), *(*uintptr)(unsafe.Pointer(&src)), *(*uintptr)(unsafe.Pointer(&tint)))
+	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
 // GetColor - Get Color structure from hexadecimal value
 func GetColor(hexValue uint32) color.RGBA {
-	return color.RGBA{}
+	ret := getColor(hexValue)
+	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
 // GetPixelColor - Get Color from a source pixel pointer of certain format
 func GetPixelColor(srcPtr unsafe.Pointer, format int32) color.RGBA {
-	return color.RGBA{}
+	ret := getPixelColor(srcPtr, format)
+	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
 // SetPixelColor - Set color formatted into destination pixel pointer
-func SetPixelColor(dstPtr unsafe.Pointer, col color.RGBA, format int32) {}
+func SetPixelColor(dstPtr unsafe.Pointer, col color.RGBA, format int32) {
+	setPixelColor(dstPtr, *(*uintptr)(unsafe.Pointer(&col)), format)
+}
 
 // GetPixelDataSize - Get pixel data size in bytes for certain format
 func GetPixelDataSize(width int32, height int32, format int32) int32 {
-	return 0
+	return getPixelDataSize(width, height, format)
 }
 
 // GetFontDefault - Get the default Font
 func GetFontDefault() Font {
-	return Font{}
+	var font Font
+	getFontDefault(uintptr(unsafe.Pointer(&font)))
+	return font
 }
 
 // LoadFont - Load font from file into GPU memory (VRAM)
 func LoadFont(fileName string) Font {
-	return Font{}
+	var font Font
+	loadFont(uintptr(unsafe.Pointer(&font)), fileName)
+	return font
 }
 
 // LoadFontEx - Load font from file with extended parameters, use NULL for codepoints and 0 for codepointCount to load the default character setFont
-func LoadFontEx(fileName string, fontSize int32, codepoints []int32, codepointCount int32) Font {
-	return Font{}
+func LoadFontEx(fileName string, fontSize int32, codepoints []rune) Font {
+	var font Font
+	codepointCount := int32(len(codepoints))
+	loadFontEx(uintptr(unsafe.Pointer(&font)), fileName, fontSize, codepoints, codepointCount)
+	return font
 }
 
 // LoadFontFromImage - Load font from Image (XNA style)
-func LoadFontFromImage(image Image, key color.RGBA, firstChar int32) Font {
-	return Font{}
+func LoadFontFromImage(image Image, key color.RGBA, firstChar rune) Font {
+	var font Font
+	loadFontFromImage(uintptr(unsafe.Pointer(&font)), uintptr(unsafe.Pointer(&image)), *(*uintptr)(unsafe.Pointer(&key)), firstChar)
+	return font
 }
 
 // LoadFontFromMemory - Load font from memory buffer, fileType refers to extension: i.e. '.ttf'
-func LoadFontFromMemory(fileType string, fileData []byte, dataSize int32, fontSize int32, codepoints []int32, codepointCount int32) Font {
-	return Font{}
+func LoadFontFromMemory(fileType string, fileData []byte, fontSize int32, codepoints []rune) Font {
+	var font Font
+	dataSize := int32(len(fileData))
+	codepointCount := int32(len(codepoints))
+	loadFontFromMemory(uintptr(unsafe.Pointer(&font)), fileType, fileData, dataSize, fontSize, codepoints, codepointCount)
+	return font
 }
 
 // IsFontReady - Check if a font is ready
 func IsFontReady(font Font) bool {
-	return false
+	return isFontReady(uintptr(unsafe.Pointer(&font)))
 }
 
 // LoadFontData - Load font data for further use
-func LoadFontData(fileData []byte, dataSize int32, fontSize int32, codepoints []int32, codepointCount int32, _type int32) *GlyphInfo {
-	return &GlyphInfo{}
+func LoadFontData(fileData []byte, fontSize int32, codepoints []rune, typ int32) []GlyphInfo {
+	dataSize := int32(len(fileData))
+	codepointCount := int32(len(codepoints))
+	ret := loadFontData(fileData, dataSize, fontSize, codepoints, codepointCount, typ)
+	return unsafe.Slice(ret, codepointCount)
 }
 
 // GenImageFontAtlas - Generate image font atlas using chars info
-func GenImageFontAtlas(glyphs *GlyphInfo, glyphRecs []*Rectangle, glyphCount int32, fontSize int32, padding int32, packMethod int32) Image {
-	return Image{}
+func GenImageFontAtlas(glyphs []GlyphInfo, glyphRecs []*Rectangle, fontSize int32, padding int32, packMethod int32) Image {
+	var image Image
+	glyphCount := int32(len(glyphs))
+	genImageFontAtlas(uintptr(unsafe.Pointer(&image)), unsafe.SliceData(glyphs), glyphRecs, glyphCount, fontSize, padding, packMethod)
+	return image
 }
 
 // UnloadFontData - Unload font chars info data (RAM)
-func UnloadFontData(glyphs *GlyphInfo, glyphCount int32) {}
+func UnloadFontData(glyphs []GlyphInfo) {
+	glyphCount := int32(len(glyphs))
+	unloadFontData(unsafe.SliceData(glyphs), glyphCount)
+}
 
 // UnloadFont - Unload font from GPU memory (VRAM)
-func UnloadFont(font Font) {}
+func UnloadFont(font Font) {
+	unloadFont(uintptr(unsafe.Pointer(&font)))
+}
 
 // ExportFontAsCode - Export font as code file, returns true on success
 func ExportFontAsCode(font Font, fileName string) bool {
-	return false
+	return exportFontAsCode(uintptr(unsafe.Pointer(&font)), fileName)
 }
 
 // DrawFPS - Draw current FPS
-func DrawFPS(posX int32, posY int32) {}
+func DrawFPS(posX int32, posY int32) {
+	drawFPS(posX, posY)
+}
 
 // DrawText - Draw text (using default font)
-func DrawText(text string, posX int32, posY int32, fontSize int32, col color.RGBA) {}
+func DrawText(text string, posX int32, posY int32, fontSize int32, col color.RGBA) {
+	drawText(text, posX, posY, fontSize, *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // DrawTextEx - Draw text using font and additional parameters
 func DrawTextEx(font Font, text string, position Vector2, fontSize float32, spacing float32, tint color.RGBA) {
+	drawTextEx(uintptr(unsafe.Pointer(&font)), text, *(*uintptr)(unsafe.Pointer(&position)), fontSize, spacing, *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // DrawTextPro - Draw text using Font and pro parameters (rotation)
 func DrawTextPro(font Font, text string, position Vector2, origin Vector2, rotation float32, fontSize float32, spacing float32, tint color.RGBA) {
+	drawTextPro(uintptr(unsafe.Pointer(&font)), text, *(*uintptr)(unsafe.Pointer(&position)), *(*uintptr)(unsafe.Pointer(&origin)), rotation, fontSize, spacing, *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // DrawTextCodepoint - Draw one character (codepoint)
-func DrawTextCodepoint(font Font, codepoint int32, position Vector2, fontSize float32, tint color.RGBA) {
+func DrawTextCodepoint(font Font, codepoint rune, position Vector2, fontSize float32, tint color.RGBA) {
+	drawTextCodepoint(uintptr(unsafe.Pointer(&font)), codepoint, *(*uintptr)(unsafe.Pointer(&position)), fontSize, *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // DrawTextCodepoints - Draw multiple character (codepoint)
-func DrawTextCodepoints(font Font, codepoints []int32, codepointCount int32, position Vector2, fontSize float32, spacing float32, tint color.RGBA) {
+func DrawTextCodepoints(font Font, codepoints []rune, position Vector2, fontSize float32, spacing float32, tint color.RGBA) {
+	codepointCount := int32(len(codepoints))
+	drawTextCodepoints(uintptr(unsafe.Pointer(&font)), codepoints, codepointCount, *(*uintptr)(unsafe.Pointer(&position)), fontSize, spacing, *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // SetTextLineSpacing - Set vertical line spacing when drawing with line-breaks
-func SetTextLineSpacing(spacing int32) {}
+func SetTextLineSpacing(spacing int32) {
+	setTextLineSpacing(spacing)
+}
 
 // MeasureText - Measure string width for default font
 func MeasureText(text string, fontSize int32) int32 {
-	return 0
+	return measureText(text, fontSize)
 }
 
 // MeasureTextEx - Measure string size for Font
 func MeasureTextEx(font Font, text string, fontSize float32, spacing float32) Vector2 {
-	return Vector2{}
+	ret := measureTextEx(uintptr(unsafe.Pointer(&font)), text, fontSize, spacing)
+	return *(*Vector2)(unsafe.Pointer(&ret))
 }
 
 // GetGlyphIndex - Get glyph index position in font for a codepoint (unicode character), fallback to '?' if not found
-func GetGlyphIndex(font Font, codepoint int32) int32 {
-	return 0
+func GetGlyphIndex(font Font, codepoint rune) int32 {
+	return getGlyphIndex(uintptr(unsafe.Pointer(&font)), codepoint)
 }
 
 // GetGlyphInfo - Get glyph font info data for a codepoint (unicode character), fallback to '?' if not found
-func GetGlyphInfo(font Font, codepoint int32) GlyphInfo {
-	return GlyphInfo{}
+func GetGlyphInfo(font Font, codepoint rune) GlyphInfo {
+	var glyphInfo GlyphInfo
+	getGlyphInfo(uintptr(unsafe.Pointer(&glyphInfo)), uintptr(unsafe.Pointer(&font)), codepoint)
+	return glyphInfo
 }
 
 // GetGlyphAtlasRec - Get glyph rectangle in font atlas for a codepoint (unicode character), fallback to '?' if not found
-func GetGlyphAtlasRec(font Font, codepoint int32) Rectangle {
-	return Rectangle{}
+func GetGlyphAtlasRec(font Font, codepoint rune) Rectangle {
+	var rec Rectangle
+	getGlyphAtlasRec(uintptr(unsafe.Pointer(&rec)), uintptr(unsafe.Pointer(&font)), codepoint)
+	return rec
 }
 
-// LoadUTF8 - Load UTF-8 text encoded from codepoints array
-func LoadUTF8(codepoints []int32, length int32) string {
-	return ""
-}
+// // LoadUTF8 - Load UTF-8 text encoded from codepoints array
+// func LoadUTF8(codepoints []int32, length int32) string {
+// 	return ""
+// }
 
-// UnloadUTF8 - Unload UTF-8 text encoded from codepoints array
-func UnloadUTF8(text string) {}
+// // UnloadUTF8 - Unload UTF-8 text encoded from codepoints array
+// func UnloadUTF8(text string) {}
 
-// LoadCodepoints - Load all codepoints from a UTF-8 text string, codepoints count returned by parameter
-func LoadCodepoints(text string, count []int32) []int32 {
-	return nil
-}
+// // LoadCodepoints - Load all codepoints from a UTF-8 text string, codepoints count returned by parameter
+// func LoadCodepoints(text string, count []int32) []int32 {
+// 	return nil
+// }
 
-// UnloadCodepoints - Unload codepoints data from memory
-func UnloadCodepoints(codepoints []int32) {}
+// // UnloadCodepoints - Unload codepoints data from memory
+// func UnloadCodepoints(codepoints []int32) {}
 
-// GetCodepointCount - Get total number of codepoints in a UTF-8 encoded string
-func GetCodepointCount(text string) int32 {
-	return 0
-}
+// // GetCodepointCount - Get total number of codepoints in a UTF-8 encoded string
+// func GetCodepointCount(text string) int32 {
+// 	return 0
+// }
 
-// GetCodepoint - Get next codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure
-func GetCodepoint(text string, codepointSize []int32) int32 {
-	return 0
-}
+// // GetCodepoint - Get next codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure
+// func GetCodepoint(text string, codepointSize []int32) int32 {
+// 	return 0
+// }
 
-// GetCodepointNext - Get next codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure
-func GetCodepointNext(text string, codepointSize []int32) int32 {
-	return 0
-}
+// // GetCodepointNext - Get next codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure
+// func GetCodepointNext(text string, codepointSize []int32) int32 {
+// 	return 0
+// }
 
-// GetCodepointPrevious - Get previous codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure
-func GetCodepointPrevious(text string, codepointSize []int32) int32 {
-	return 0
-}
+// // GetCodepointPrevious - Get previous codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure
+// func GetCodepointPrevious(text string, codepointSize []int32) int32 {
+// 	return 0
+// }
 
-// CodepointToUTF8 - Encode one codepoint into UTF-8 byte array (array length returned as parameter)
-func CodepointToUTF8(codepoint int32, utf8Size []int32) string {
-	return ""
-}
+// // CodepointToUTF8 - Encode one codepoint into UTF-8 byte array (array length returned as parameter)
+// func CodepointToUTF8(codepoint int32, utf8Size []int32) string {
+// 	return ""
+// }
 
-// TextCopy - Copy one string to another, returns bytes copied
-func TextCopy(dst string, src string) int32 {
-	return 0
-}
+// // TextCopy - Copy one string to another, returns bytes copied
+// func TextCopy(dst string, src string) int32 {
+// 	return 0
+// }
 
-// TextIsEqual - Check if two text string are equal
-func TextIsEqual(text1 string, text2 string) bool {
-	return false
-}
+// // TextIsEqual - Check if two text string are equal
+// func TextIsEqual(text1 string, text2 string) bool {
+// 	return false
+// }
 
-// TextLength - Get text length, checks for '\0' ending
-func TextLength(text string) uint32 {
-	return 0
-}
+// // TextLength - Get text length, checks for '\0' ending
+// func TextLength(text string) uint32 {
+// 	return 0
+// }
 
-// TextFormat - Text formatting with variables (sprintf() style)
-func TextFormat(text string, args ...any) string {
-	return ""
-}
+// // TextFormat - Text formatting with variables (sprintf() style)
+// func TextFormat(text string, args ...any) string {
+// 	return ""
+// }
 
-// TextSubtext - Get a piece of a text string
-func TextSubtext(text string, position int32, length int32) string {
-	return ""
-}
+// // TextSubtext - Get a piece of a text string
+// func TextSubtext(text string, position int32, length int32) string {
+// 	return ""
+// }
 
-// TextReplace - Replace text string (WARNING: memory must be freed!)
-func TextReplace(text string, replace string, by string) string {
-	return ""
-}
+// // TextReplace - Replace text string (WARNING: memory must be freed!)
+// func TextReplace(text string, replace string, by string) string {
+// 	return ""
+// }
 
-// TextInsert - Insert text in a position (WARNING: memory must be freed!)
-func TextInsert(text string, insert string, position int32) string {
-	return ""
-}
+// // TextInsert - Insert text in a position (WARNING: memory must be freed!)
+// func TextInsert(text string, insert string, position int32) string {
+// 	return ""
+// }
 
-// TextJoin - Join text strings with delimiter
-func TextJoin(textList []string, count int32, delimiter string) string {
-	return ""
-}
+// // TextJoin - Join text strings with delimiter
+// func TextJoin(textList []string, count int32, delimiter string) string {
+// 	return ""
+// }
 
-// TextSplit - Split text into multiple strings
-func TextSplit(text string, delimiter int8, count []int32) []string {
-	return nil
-}
+// // TextSplit - Split text into multiple strings
+// func TextSplit(text string, delimiter int8, count []int32) []string {
+// 	return nil
+// }
 
-// TextAppend - Append text at specific position and move cursor!
-func TextAppend(text string, _append string, position []int32) {}
+// // TextAppend - Append text at specific position and move cursor!
+// func TextAppend(text string, _append string, position []int32) {}
 
-// TextFindIndex - Find first text occurrence within a string
-func TextFindIndex(text string, find string) int32 {
-	return 0
-}
+// // TextFindIndex - Find first text occurrence within a string
+// func TextFindIndex(text string, find string) int32 {
+// 	return 0
+// }
 
-// TextToUpper - Get upper case version of provided string
-func TextToUpper(text string) string {
-	return ""
-}
+// // TextToUpper - Get upper case version of provided string
+// func TextToUpper(text string) string {
+// 	return ""
+// }
 
-// TextToLower - Get lower case version of provided string
-func TextToLower(text string) string {
-	return ""
-}
+// // TextToLower - Get lower case version of provided string
+// func TextToLower(text string) string {
+// 	return ""
+// }
 
-// TextToPascal - Get Pascal case notation version of provided string
-func TextToPascal(text string) string {
-	return ""
-}
+// // TextToPascal - Get Pascal case notation version of provided string
+// func TextToPascal(text string) string {
+// 	return ""
+// }
 
-// TextToInteger - Get integer value from text (negative values not supported)
-func TextToInteger(text string) int32 {
-	return 0
-}
+// // TextToInteger - Get integer value from text (negative values not supported)
+// func TextToInteger(text string) int32 {
+// 	return 0
+// }
 
 // DrawLine3D - Draw a line in 3D world space
-func DrawLine3D(startPos Vector3, endPos Vector3, col color.RGBA) {}
+func DrawLine3D(startPos Vector3, endPos Vector3, col color.RGBA) {
+	drawLine3D(uintptr(unsafe.Pointer(&startPos)), uintptr(unsafe.Pointer(&endPos)), *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // DrawPoint3D - Draw a point in 3D space, actually a small line
-func DrawPoint3D(position Vector3, col color.RGBA) {}
+func DrawPoint3D(position Vector3, col color.RGBA) {
+	drawPoint3D(uintptr(unsafe.Pointer(&position)), *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // DrawCircle3D - Draw a circle in 3D world space
 func DrawCircle3D(center Vector3, radius float32, rotationAxis Vector3, rotationAngle float32, col color.RGBA) {
+	drawCircle3D(uintptr(unsafe.Pointer(&center)), radius, uintptr(unsafe.Pointer(&rotationAxis)), rotationAngle, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawTriangle3D - Draw a color-filled triangle (vertex in counter-clockwise order!)
-func DrawTriangle3D(v1 Vector3, v2 Vector3, v3 Vector3, col color.RGBA) {}
+func DrawTriangle3D(v1 Vector3, v2 Vector3, v3 Vector3, col color.RGBA) {
+	drawTriangle3D(uintptr(unsafe.Pointer(&v1)), uintptr(unsafe.Pointer(&v2)), uintptr(unsafe.Pointer(&v3)), *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // DrawTriangleStrip3D - Draw a triangle strip defined by points
-func DrawTriangleStrip3D(points *Vector3, pointCount int32, col color.RGBA) {}
+func DrawTriangleStrip3D(points []Vector3, col color.RGBA) {
+	pointCount := int32(len(points))
+	drawTriangleStrip3D(unsafe.SliceData(points), pointCount, *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // DrawCube - Draw cube
-func DrawCube(position Vector3, width float32, height float32, length float32, col color.RGBA) {}
+func DrawCube(position Vector3, width float32, height float32, length float32, col color.RGBA) {
+	drawCube(uintptr(unsafe.Pointer(&position)), width, height, length, *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // DrawCubeV - Draw cube (Vector version)
-func DrawCubeV(position Vector3, size Vector3, col color.RGBA) {}
+func DrawCubeV(position Vector3, size Vector3, col color.RGBA) {
+	drawCubeV(uintptr(unsafe.Pointer(&position)), uintptr(unsafe.Pointer(&size)), *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // DrawCubeWires - Draw cube wires
 func DrawCubeWires(position Vector3, width float32, height float32, length float32, col color.RGBA) {
+	drawCubeWires(uintptr(unsafe.Pointer(&position)), width, height, length, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawCubeWiresV - Draw cube wires (Vector version)
-func DrawCubeWiresV(position Vector3, size Vector3, col color.RGBA) {}
+func DrawCubeWiresV(position Vector3, size Vector3, col color.RGBA) {
+	drawCubeWiresV(uintptr(unsafe.Pointer(&position)), uintptr(unsafe.Pointer(&size)), *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // DrawSphere - Draw sphere
-func DrawSphere(centerPos Vector3, radius float32, col color.RGBA) {}
+func DrawSphere(centerPos Vector3, radius float32, col color.RGBA) {
+	drawSphere(uintptr(unsafe.Pointer(&centerPos)), radius, *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // DrawSphereEx - Draw sphere with extended parameters
 func DrawSphereEx(centerPos Vector3, radius float32, rings int32, slices int32, col color.RGBA) {}
