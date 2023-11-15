@@ -9,6 +9,8 @@ Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use l
 
 raylib C source code is included and compiled together with bindings. Note that the first build can take a few minutes.
 
+It is also possible to use raylib-go without cgo (Windows only; see requirements below).
+
 ### Requirements
 
 ##### Ubuntu
@@ -36,6 +38,17 @@ raylib C source code is included and compiled together with bindings. Note that 
 On macOS you need Xcode or Command Line Tools for Xcode.
 
 ##### Windows
+
+###### purego (without cgo)
+
+Download the raylib.dll from the assets on the [releases page](https://github.com/raysan5/raylib/releases). It is contained in the `raylib-*_win64_msvc*.zip`.
+Put the raylib.dll into the root folder of your project.
+
+As of November 15, 2023, raylib 5.0 is the requierd version.
+
+You can also build the dll yourself. You can find more in [raylib's wiki](https://github.com/raysan5/raylib/wiki/Working-on-Windows).
+
+###### cgo 
 
 On Windows you need C compiler, like [Mingw-w64](https://mingw-w64.org) or [TDM-GCC](http://tdm-gcc.tdragon.net/).
 You can also build binary in [MSYS2](https://msys2.github.io/) shell.
