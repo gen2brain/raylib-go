@@ -44,7 +44,7 @@ On macOS you need Xcode or Command Line Tools for Xcode.
 Download the raylib.dll from the assets on the [releases page](https://github.com/raysan5/raylib/releases). It is contained in the `raylib-*_win64_msvc*.zip`.
 Put the raylib.dll into the root folder of your project.
 
-As of November 15, 2023, raylib 5.0 is the requierd version.
+As of November 15, 2023, raylib 5.0 is the required version.
 
 You can also build the dll yourself. You can find more in [raylib's wiki](https://github.com/raysan5/raylib/wiki/Working-on-Windows).
 
