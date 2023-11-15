@@ -456,11 +456,11 @@ var drawCapsuleWires func(startPos uintptr, endPos uintptr, radius float32, slic
 var drawPlane func(centerPos uintptr, size uintptr, col uintptr)
 var drawRay func(ray uintptr, col uintptr)
 var drawGrid func(slices int32, spacing float32)
-var loadModel func(fileName string) Model
-var loadModelFromMesh func(mesh uintptr) Model
+var loadModel func(model uintptr, fileName string)
+var loadModelFromMesh func(model uintptr, mesh uintptr)
 var isModelReady func(model uintptr) bool
 var unloadModel func(model uintptr)
-var getModelBoundingBox func(model uintptr) BoundingBox
+var getModelBoundingBox func(boundingBox uintptr, model uintptr)
 var drawModel func(model uintptr, position uintptr, scale float32, tint uintptr)
 var drawModelEx func(model uintptr, position uintptr, rotationAxis uintptr, rotationAngle float32, scale uintptr, tint uintptr)
 var drawModelWires func(model uintptr, position uintptr, scale float32, tint uintptr)
@@ -469,57 +469,57 @@ var drawBoundingBox func(box uintptr, col uintptr)
 var drawBillboard func(camera uintptr, texture uintptr, position uintptr, size float32, tint uintptr)
 var drawBillboardRec func(camera uintptr, texture uintptr, source uintptr, position uintptr, size uintptr, tint uintptr)
 var drawBillboardPro func(camera uintptr, texture uintptr, source uintptr, position uintptr, up uintptr, size uintptr, origin uintptr, rotation float32, tint uintptr)
-var uploadMesh func(mesh uintptr, dynamic bool)
-var updateMeshBuffer func(mesh uintptr, index int32, data uintptr, dataSize int32, offset int32)
+var uploadMesh func(mesh *Mesh, dynamic bool)
+var updateMeshBuffer func(mesh uintptr, index int32, data []byte, dataSize int32, offset int32)
 var unloadMesh func(mesh uintptr)
 var drawMesh func(mesh uintptr, material uintptr, transform uintptr)
-var drawMeshInstanced func(mesh uintptr, material uintptr, transforms uintptr, instances int32)
+var drawMeshInstanced func(mesh uintptr, material uintptr, transforms []Matrix, instances int32)
 var exportMesh func(mesh uintptr, fileName string) bool
-var getMeshBoundingBox func(mesh uintptr) BoundingBox
-var genMeshTangents func(mesh uintptr)
-var genMeshPoly func(sides int32, radius float32) Mesh
-var genMeshPlane func(width float32, length float32, resX int32, resZ int32) Mesh
-var genMeshCube func(width float32, height float32, length float32) Mesh
-var genMeshSphere func(radius float32, rings int32, slices int32) Mesh
-var genMeshHemiSphere func(radius float32, rings int32, slices int32) Mesh
-var genMeshCylinder func(radius float32, height float32, slices int32) Mesh
-var genMeshCone func(radius float32, height float32, slices int32) Mesh
-var genMeshTorus func(radius float32, size float32, radSeg int32, sides int32) Mesh
-var genMeshKnot func(radius float32, size float32, radSeg int32, sides int32) Mesh
-var genMeshHeightmap func(heightmap uintptr, size uintptr) Mesh
-var genMeshCubicmap func(cubicmap uintptr, cubeSize uintptr) Mesh
-var loadMaterials func(fileName string, materialCount []int32) *Material
-var loadMaterialDefault func() Material
+var getMeshBoundingBox func(boundingBox uintptr, mesh uintptr)
+var genMeshTangents func(mesh *Mesh)
+var genMeshPoly func(mesh uintptr, sides int32, radius float32)
+var genMeshPlane func(mesh uintptr, width float32, length float32, resX int32, resZ int32)
+var genMeshCube func(mesh uintptr, width float32, height float32, length float32)
+var genMeshSphere func(mesh uintptr, radius float32, rings int32, slices int32)
+var genMeshHemiSphere func(mesh uintptr, radius float32, rings int32, slices int32)
+var genMeshCylinder func(mesh uintptr, radius float32, height float32, slices int32)
+var genMeshCone func(mesh uintptr, radius float32, height float32, slices int32)
+var genMeshTorus func(mesh uintptr, radius float32, size float32, radSeg int32, sides int32)
+var genMeshKnot func(mesh uintptr, radius float32, size float32, radSeg int32, sides int32)
+var genMeshHeightmap func(mesh uintptr, heightmap uintptr, size uintptr)
+var genMeshCubicmap func(mesh uintptr, cubicmap uintptr, cubeSize uintptr)
+var loadMaterials func(fileName string, materialCount *int32) *Material
+var loadMaterialDefault func(material uintptr)
 var isMaterialReady func(material uintptr) bool
 var unloadMaterial func(material uintptr)
-var setMaterialTexture func(material uintptr, mapType int32, texture uintptr)
-var setModelMeshMaterial func(model uintptr, meshId int32, materialId int32)
-var loadModelAnimations func(fileName string, animCount []int32) *ModelAnimation
+var setMaterialTexture func(material *Material, mapType int32, texture uintptr)
+var setModelMeshMaterial func(model *Model, meshId int32, materialId int32)
+var loadModelAnimations func(fileName string, animCount *int32) *ModelAnimation
 var updateModelAnimation func(model uintptr, anim uintptr, frame int32)
 var unloadModelAnimation func(anim uintptr)
-var unloadModelAnimations func(animations uintptr, animCount int32)
+var unloadModelAnimations func(animations *ModelAnimation, animCount int32)
 var isModelAnimationValid func(model uintptr, anim uintptr) bool
 var checkCollisionSpheres func(center1 uintptr, radius1 float32, center2 uintptr, radius2 float32) bool
 var checkCollisionBoxes func(box1 uintptr, box2 uintptr) bool
 var checkCollisionBoxSphere func(box uintptr, center uintptr, radius float32) bool
-var getRayCollisionSphere func(ray uintptr, center uintptr, radius float32) RayCollision
-var getRayCollisionBox func(ray uintptr, box uintptr) RayCollision
-var getRayCollisionMesh func(ray uintptr, mesh uintptr, transform uintptr) RayCollision
-var getRayCollisionTriangle func(ray uintptr, p1 uintptr, p2 uintptr, p3 uintptr) RayCollision
-var getRayCollisionQuad func(ray uintptr, p1 uintptr, p2 uintptr, p3 uintptr, p4 uintptr) RayCollision
+var getRayCollisionSphere func(rayCollision uintptr, ray uintptr, center uintptr, radius float32)
+var getRayCollisionBox func(rayCollision uintptr, ray uintptr, box uintptr)
+var getRayCollisionMesh func(rayCollision uintptr, ray uintptr, mesh uintptr, transform uintptr)
+var getRayCollisionTriangle func(rayCollision uintptr, ray uintptr, p1 uintptr, p2 uintptr, p3 uintptr)
+var getRayCollisionQuad func(rayCollision uintptr, ray uintptr, p1 uintptr, p2 uintptr, p3 uintptr, p4 uintptr)
 var initAudioDevice func()
 var closeAudioDevice func()
 var isAudioDeviceReady func() bool
 var setMasterVolume func(volume float32)
 var getMasterVolume func() float32
-var loadWave func(fileName string) Wave
-var loadWaveFromMemory func(fileType string, fileData []byte, dataSize int32) Wave
+var loadWave func(wave uintptr, fileName string)
+var loadWaveFromMemory func(wave uintptr, fileType string, fileData []byte, dataSize int32)
 var isWaveReady func(wave uintptr) bool
 var loadSound func(sound uintptr, fileName string)
 var loadSoundFromWave func(sound uintptr, wave uintptr)
 var loadSoundAlias func(sound uintptr, source uintptr)
 var isSoundReady func(sound uintptr) bool
-var updateSound func(sound uintptr, data uintptr, sampleCount int32)
+var updateSound func(sound uintptr, data []byte, sampleCount int32)
 var unloadWave func(wave uintptr)
 var unloadSound func(sound uintptr)
 var unloadSoundAlias func(alias uintptr)
@@ -533,10 +533,10 @@ var isSoundPlaying func(sound uintptr) bool
 var setSoundVolume func(sound uintptr, volume float32)
 var setSoundPitch func(sound uintptr, pitch float32)
 var setSoundPan func(sound uintptr, pan float32)
-var waveCopy func(wave uintptr) Wave
-var waveCrop func(wave uintptr, initSample int32, finalSample int32)
-var waveFormat func(wave uintptr, sampleRate int32, sampleSize int32, channels int32)
-var loadWaveSamples func(wave uintptr) []float32
+var waveCopy func(copy uintptr, wave uintptr)
+var waveCrop func(wave *Wave, initSample int32, finalSample int32)
+var waveFormat func(wave *Wave, sampleRate int32, sampleSize int32, channels int32)
+var loadWaveSamples func(wave uintptr) *float32
 var unloadWaveSamples func(samples []float32)
 var loadMusicStream func(music uintptr, fileName string)
 var loadMusicStreamFromMemory func(sound uintptr, fileType string, data []byte, dataSize int32)
@@ -557,7 +557,7 @@ var getMusicTimePlayed func(music uintptr) float32
 var loadAudioStream func(audioStream uintptr, sampleRate uint32, sampleSize uint32, channels uint32)
 var isAudioStreamReady func(stream uintptr) bool
 var unloadAudioStream func(stream uintptr)
-var updateAudioStream func(stream uintptr, data uintptr, frameCount int32)
+var updateAudioStream func(stream uintptr, data []float32, frameCount int32)
 var isAudioStreamProcessed func(stream uintptr) bool
 var playAudioStream func(stream uintptr)
 var pauseAudioStream func(stream uintptr)
@@ -3373,469 +3373,729 @@ func DrawSphere(centerPos Vector3, radius float32, col color.RGBA) {
 }
 
 // DrawSphereEx - Draw sphere with extended parameters
-func DrawSphereEx(centerPos Vector3, radius float32, rings int32, slices int32, col color.RGBA) {}
+func DrawSphereEx(centerPos Vector3, radius float32, rings int32, slices int32, col color.RGBA) {
+	drawSphereEx(uintptr(unsafe.Pointer(&centerPos)), radius, rings, slices, *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // DrawSphereWires - Draw sphere wires
 func DrawSphereWires(centerPos Vector3, radius float32, rings int32, slices int32, col color.RGBA) {
+	drawSphereWires(uintptr(unsafe.Pointer(&centerPos)), radius, rings, slices, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawCylinder - Draw a cylinder/cone
 func DrawCylinder(position Vector3, radiusTop float32, radiusBottom float32, height float32, slices int32, col color.RGBA) {
+	drawCylinder(uintptr(unsafe.Pointer(&position)), radiusTop, radiusBottom, height, slices, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawCylinderEx - Draw a cylinder with base at startPos and top at endPos
 func DrawCylinderEx(startPos Vector3, endPos Vector3, startRadius float32, endRadius float32, sides int32, col color.RGBA) {
+	drawCylinderEx(uintptr(unsafe.Pointer(&startPos)), uintptr(unsafe.Pointer(&endPos)), startRadius, endRadius, sides, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawCylinderWires - Draw a cylinder/cone wires
 func DrawCylinderWires(position Vector3, radiusTop float32, radiusBottom float32, height float32, slices int32, col color.RGBA) {
+	drawCylinderWires(uintptr(unsafe.Pointer(&position)), radiusTop, radiusBottom, height, slices, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawCylinderWiresEx - Draw a cylinder wires with base at startPos and top at endPos
 func DrawCylinderWiresEx(startPos Vector3, endPos Vector3, startRadius float32, endRadius float32, sides int32, col color.RGBA) {
+	drawCylinderWiresEx(uintptr(unsafe.Pointer(&startPos)), uintptr(unsafe.Pointer(&endPos)), startRadius, endRadius, sides, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawCapsule - Draw a capsule with the center of its sphere caps at startPos and endPos
 func DrawCapsule(startPos Vector3, endPos Vector3, radius float32, slices int32, rings int32, col color.RGBA) {
+	drawCapsule(uintptr(unsafe.Pointer(&startPos)), uintptr(unsafe.Pointer(&endPos)), radius, slices, rings, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawCapsuleWires - Draw capsule wireframe with the center of its sphere caps at startPos and endPos
 func DrawCapsuleWires(startPos Vector3, endPos Vector3, radius float32, slices int32, rings int32, col color.RGBA) {
+	drawCapsuleWires(uintptr(unsafe.Pointer(&startPos)), uintptr(unsafe.Pointer(&endPos)), radius, slices, rings, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawPlane - Draw a plane XZ
-func DrawPlane(centerPos Vector3, size Vector2, col color.RGBA) {}
+func DrawPlane(centerPos Vector3, size Vector2, col color.RGBA) {
+	drawPlane(uintptr(unsafe.Pointer(&centerPos)), *(*uintptr)(unsafe.Pointer(&size)), *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // DrawRay - Draw a ray line
-func DrawRay(ray Ray, col color.RGBA) {}
+func DrawRay(ray Ray, col color.RGBA) {
+	drawRay(uintptr(unsafe.Pointer(&ray)), *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // DrawGrid - Draw a grid (centered at (0, 0, 0))
-func DrawGrid(slices int32, spacing float32) {}
+func DrawGrid(slices int32, spacing float32) {
+	drawGrid(slices, spacing)
+}
 
 // LoadModel - Load model from files (meshes and materials)
 func LoadModel(fileName string) Model {
-	return Model{}
+	var model Model
+	loadModel(uintptr(unsafe.Pointer(&model)), fileName)
+	return model
 }
 
 // LoadModelFromMesh - Load model from generated mesh (default material)
 func LoadModelFromMesh(mesh Mesh) Model {
-	return Model{}
+	var model Model
+	loadModelFromMesh(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&mesh)))
+	return model
 }
 
 // IsModelReady - Check if a model is ready
 func IsModelReady(model Model) bool {
-	return false
+	return isModelReady(uintptr(unsafe.Pointer(&model)))
 }
 
 // UnloadModel - Unload model (including meshes) from memory (RAM and/or VRAM)
-func UnloadModel(model Model) {}
+func UnloadModel(model Model) {
+	unloadModel(uintptr(unsafe.Pointer(&model)))
+}
 
 // GetModelBoundingBox - Compute model bounding box limits (considers all meshes)
 func GetModelBoundingBox(model Model) BoundingBox {
-	return BoundingBox{}
+	var boundingBox BoundingBox
+	getModelBoundingBox(uintptr(unsafe.Pointer(&boundingBox)), uintptr(unsafe.Pointer(&model)))
+	return boundingBox
 }
 
 // DrawModel - Draw a model (with texture if set)
-func DrawModel(model Model, position Vector3, scale float32, tint color.RGBA) {}
+func DrawModel(model Model, position Vector3, scale float32, tint color.RGBA) {
+	drawModel(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&position)), scale, *(*uintptr)(unsafe.Pointer(&tint)))
+}
 
 // DrawModelEx - Draw a model with extended parameters
 func DrawModelEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint color.RGBA) {
+	drawModelEx(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&position)), uintptr(unsafe.Pointer(&rotationAxis)), rotationAngle, uintptr(unsafe.Pointer(&scale)), *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // DrawModelWires - Draw a model wires (with texture if set)
-func DrawModelWires(model Model, position Vector3, scale float32, tint color.RGBA) {}
+func DrawModelWires(model Model, position Vector3, scale float32, tint color.RGBA) {
+	drawModelWires(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&position)), scale, *(*uintptr)(unsafe.Pointer(&tint)))
+}
 
 // DrawModelWiresEx - Draw a model wires (with texture if set) with extended parameters
 func DrawModelWiresEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint color.RGBA) {
+	drawModelWiresEx(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&position)), uintptr(unsafe.Pointer(&rotationAxis)), rotationAngle, uintptr(unsafe.Pointer(&scale)), *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // DrawBoundingBox - Draw bounding box (wires)
-func DrawBoundingBox(box BoundingBox, col color.RGBA) {}
+func DrawBoundingBox(box BoundingBox, col color.RGBA) {
+	drawBoundingBox(uintptr(unsafe.Pointer(&box)), *(*uintptr)(unsafe.Pointer(&col)))
+}
 
 // DrawBillboard - Draw a billboard texture
 func DrawBillboard(camera Camera, texture Texture2D, position Vector3, size float32, tint color.RGBA) {
+	drawBillboard(uintptr(unsafe.Pointer(&camera)), uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&position)), size, *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // DrawBillboardRec - Draw a billboard texture defined by source
 func DrawBillboardRec(camera Camera, texture Texture2D, source Rectangle, position Vector3, size Vector2, tint color.RGBA) {
+	drawBillboardRec(uintptr(unsafe.Pointer(&camera)), uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&source)), uintptr(unsafe.Pointer(&position)), *(*uintptr)(unsafe.Pointer(&size)), *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // DrawBillboardPro - Draw a billboard texture defined by source and rotation
 func DrawBillboardPro(camera Camera, texture Texture2D, source Rectangle, position Vector3, up Vector3, size Vector2, origin Vector2, rotation float32, tint color.RGBA) {
+	drawBillboardPro(uintptr(unsafe.Pointer(&camera)), uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&source)), uintptr(unsafe.Pointer(&position)), uintptr(unsafe.Pointer(&up)), *(*uintptr)(unsafe.Pointer(&size)), *(*uintptr)(unsafe.Pointer(&origin)), rotation, *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // UploadMesh - Upload mesh vertex data in GPU and provide VAO/VBO ids
-func UploadMesh(mesh *Mesh, dynamic bool) {}
+func UploadMesh(mesh *Mesh, dynamic bool) {
+	uploadMesh(mesh, dynamic)
+}
 
 // UpdateMeshBuffer - Update mesh vertex data in GPU for a specific buffer index
-func UpdateMeshBuffer(mesh Mesh, index int32, data unsafe.Pointer, dataSize int32, offset int32) {}
+func UpdateMeshBuffer(mesh Mesh, index int32, data []byte, offset int32) {
+	dataSize := int32(len(data))
+	updateMeshBuffer(uintptr(unsafe.Pointer(&mesh)), index, data, dataSize, offset)
+}
 
 // UnloadMesh - Unload mesh data from CPU and GPU
-func UnloadMesh(mesh Mesh) {}
+func UnloadMesh(mesh *Mesh) {
+	unloadMesh(uintptr(unsafe.Pointer(mesh)))
+}
 
 // DrawMesh - Draw a 3d mesh with material and transform
-func DrawMesh(mesh Mesh, material Material, transform Matrix) {}
+func DrawMesh(mesh Mesh, material Material, transform Matrix) {
+	drawMesh(uintptr(unsafe.Pointer(&mesh)), uintptr(unsafe.Pointer(&material)), uintptr(unsafe.Pointer(&transform)))
+}
 
 // DrawMeshInstanced - Draw multiple mesh instances with material and different transforms
-func DrawMeshInstanced(mesh Mesh, material Material, transforms *Matrix, instances int32) {}
+func DrawMeshInstanced(mesh Mesh, material Material, transforms []Matrix, instances int32) {
+	drawMeshInstanced(uintptr(unsafe.Pointer(&mesh)), uintptr(unsafe.Pointer(&material)), transforms, instances)
+}
 
 // ExportMesh - Export mesh data to file, returns true on success
 func ExportMesh(mesh Mesh, fileName string) bool {
-	return false
+	return exportMesh(uintptr(unsafe.Pointer(&mesh)), fileName)
 }
 
 // GetMeshBoundingBox - Compute mesh bounding box limits
 func GetMeshBoundingBox(mesh Mesh) BoundingBox {
-	return BoundingBox{}
+	var boundingBox BoundingBox
+	getMeshBoundingBox(uintptr(unsafe.Pointer(&boundingBox)), uintptr(unsafe.Pointer(&mesh)))
+	return boundingBox
 }
 
 // GenMeshTangents - Compute mesh tangents
-func GenMeshTangents(mesh *Mesh) {}
+func GenMeshTangents(mesh *Mesh) {
+	genMeshTangents(mesh)
+}
 
 // GenMeshPoly - Generate polygonal mesh
 func GenMeshPoly(sides int32, radius float32) Mesh {
-	return Mesh{}
+	var mesh Mesh
+	genMeshPoly(uintptr(unsafe.Pointer(&mesh)), sides, radius)
+	return mesh
 }
 
 // GenMeshPlane - Generate plane mesh (with subdivisions)
 func GenMeshPlane(width float32, length float32, resX int32, resZ int32) Mesh {
-	return Mesh{}
+	var mesh Mesh
+	genMeshPlane(uintptr(unsafe.Pointer(&mesh)), width, length, resX, resZ)
+	return mesh
 }
 
 // GenMeshCube - Generate cuboid mesh
 func GenMeshCube(width float32, height float32, length float32) Mesh {
-	return Mesh{}
+	var mesh Mesh
+	genMeshCube(uintptr(unsafe.Pointer(&mesh)), width, height, length)
+	return mesh
 }
 
 // GenMeshSphere - Generate sphere mesh (standard sphere)
 func GenMeshSphere(radius float32, rings int32, slices int32) Mesh {
-	return Mesh{}
+	var mesh Mesh
+	genMeshSphere(uintptr(unsafe.Pointer(&mesh)), radius, rings, slices)
+	return mesh
 }
 
 // GenMeshHemiSphere - Generate half-sphere mesh (no bottom cap)
 func GenMeshHemiSphere(radius float32, rings int32, slices int32) Mesh {
-	return Mesh{}
+	var mesh Mesh
+	genMeshHemiSphere(uintptr(unsafe.Pointer(&mesh)), radius, rings, slices)
+	return mesh
 }
 
 // GenMeshCylinder - Generate cylinder mesh
 func GenMeshCylinder(radius float32, height float32, slices int32) Mesh {
-	return Mesh{}
+	var mesh Mesh
+	genMeshCylinder(uintptr(unsafe.Pointer(&mesh)), radius, height, slices)
+	return mesh
 }
 
 // GenMeshCone - Generate cone/pyramid mesh
 func GenMeshCone(radius float32, height float32, slices int32) Mesh {
-	return Mesh{}
+	var mesh Mesh
+	genMeshCone(uintptr(unsafe.Pointer(&mesh)), radius, height, slices)
+	return mesh
 }
 
 // GenMeshTorus - Generate torus mesh
 func GenMeshTorus(radius float32, size float32, radSeg int32, sides int32) Mesh {
-	return Mesh{}
+	var mesh Mesh
+	genMeshTorus(uintptr(unsafe.Pointer(&mesh)), radius, size, radSeg, sides)
+	return mesh
 }
 
 // GenMeshKnot - Generate trefoil knot mesh
 func GenMeshKnot(radius float32, size float32, radSeg int32, sides int32) Mesh {
-	return Mesh{}
+	var mesh Mesh
+	genMeshKnot(uintptr(unsafe.Pointer(&mesh)), radius, size, radSeg, sides)
+	return mesh
 }
 
 // GenMeshHeightmap - Generate heightmap mesh from image data
 func GenMeshHeightmap(heightmap Image, size Vector3) Mesh {
-	return Mesh{}
+	var mesh Mesh
+	genMeshHeightmap(uintptr(unsafe.Pointer(&mesh)), uintptr(unsafe.Pointer(&heightmap)), uintptr(unsafe.Pointer(&size)))
+	return mesh
 }
 
 // GenMeshCubicmap - Generate cubes-based map mesh from image data
 func GenMeshCubicmap(cubicmap Image, cubeSize Vector3) Mesh {
-	return Mesh{}
+	var mesh Mesh
+	genMeshCubicmap(uintptr(unsafe.Pointer(&mesh)), uintptr(unsafe.Pointer(&cubicmap)), uintptr(unsafe.Pointer(&cubeSize)))
+	return mesh
 }
 
 // LoadMaterials - Load materials from model file
-func LoadMaterials(fileName string, materialCount []int32) *Material {
-	return &Material{}
+func LoadMaterials(fileName string) []Material {
+	var materialCount int32
+	ret := loadMaterials(fileName, &materialCount)
+	return unsafe.Slice(ret, materialCount)
 }
 
 // LoadMaterialDefault - Load default material (Supports: DIFFUSE, SPECULAR, NORMAL maps)
 func LoadMaterialDefault() Material {
-	return Material{}
+	var material Material
+	loadMaterialDefault(uintptr(unsafe.Pointer(&material)))
+	return material
 }
 
 // IsMaterialReady - Check if a material is ready
 func IsMaterialReady(material Material) bool {
-	return false
+	return isMaterialReady(uintptr(unsafe.Pointer(&material)))
 }
 
 // UnloadMaterial - Unload material from GPU memory (VRAM)
-func UnloadMaterial(material Material) {}
+func UnloadMaterial(material Material) {
+	unloadMaterial(uintptr(unsafe.Pointer(&material)))
+}
 
 // SetMaterialTexture - Set texture for a material map type (MATERIAL_MAP_DIFFUSE, MATERIAL_MAP_SPECULAR...)
-func SetMaterialTexture(material *Material, mapType int32, texture Texture2D) {}
+func SetMaterialTexture(material *Material, mapType int32, texture Texture2D) {
+	setMaterialTexture(material, mapType, uintptr(unsafe.Pointer(&texture)))
+}
 
 // SetModelMeshMaterial - Set material for a mesh
-func SetModelMeshMaterial(model *Model, meshId int32, materialId int32) {}
+func SetModelMeshMaterial(model *Model, meshId int32, materialId int32) {
+	setModelMeshMaterial(model, meshId, materialId)
+}
 
 // LoadModelAnimations - Load model animations from file
-func LoadModelAnimations(fileName string, animCount []int32) *ModelAnimation {
-	return &ModelAnimation{}
+func LoadModelAnimations(fileName string) []ModelAnimation {
+	var animCount int32
+	ret := loadModelAnimations(fileName, &animCount)
+	return unsafe.Slice(ret, animCount)
 }
 
 // UpdateModelAnimation - Update model animation pose
-func UpdateModelAnimation(model Model, anim ModelAnimation, frame int32) {}
+func UpdateModelAnimation(model Model, anim ModelAnimation, frame int32) {
+	updateModelAnimation(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&anim)), frame)
+}
 
 // UnloadModelAnimation - Unload animation data
-func UnloadModelAnimation(anim ModelAnimation) {}
+func UnloadModelAnimation(anim ModelAnimation) {
+	unloadModelAnimation(uintptr(unsafe.Pointer(&anim)))
+}
 
 // UnloadModelAnimations - Unload animation array data
-func UnloadModelAnimations(animations *ModelAnimation, animCount int32) {}
+func UnloadModelAnimations(animations []ModelAnimation) {
+	animCount := int32(len(animations))
+	unloadModelAnimations(unsafe.SliceData(animations), animCount)
+}
 
 // IsModelAnimationValid - Check model animation skeleton match
 func IsModelAnimationValid(model Model, anim ModelAnimation) bool {
-	return false
+	return isModelAnimationValid(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&anim)))
 }
 
 // CheckCollisionSpheres - Check collision between two spheres
 func CheckCollisionSpheres(center1 Vector3, radius1 float32, center2 Vector3, radius2 float32) bool {
-	return false
+	return checkCollisionSpheres(uintptr(unsafe.Pointer(&center1)), radius1, uintptr(unsafe.Pointer(&center2)), radius2)
 }
 
 // CheckCollisionBoxes - Check collision between two bounding boxes
 func CheckCollisionBoxes(box1 BoundingBox, box2 BoundingBox) bool {
-	return false
+	return checkCollisionBoxes(uintptr(unsafe.Pointer(&box1)), uintptr(unsafe.Pointer(&box2)))
 }
 
 // CheckCollisionBoxSphere - Check collision between box and sphere
 func CheckCollisionBoxSphere(box BoundingBox, center Vector3, radius float32) bool {
-	return false
+	return checkCollisionBoxSphere(uintptr(unsafe.Pointer(&box)), uintptr(unsafe.Pointer(&center)), radius)
 }
 
 // GetRayCollisionSphere - Get collision info between ray and sphere
 func GetRayCollisionSphere(ray Ray, center Vector3, radius float32) RayCollision {
-	return RayCollision{}
+	var rayCollision RayCollision
+	getRayCollisionSphere(uintptr(unsafe.Pointer(&rayCollision)), uintptr(unsafe.Pointer(&ray)), uintptr(unsafe.Pointer(&center)), radius)
+	return rayCollision
 }
 
 // GetRayCollisionBox - Get collision info between ray and box
 func GetRayCollisionBox(ray Ray, box BoundingBox) RayCollision {
-	return RayCollision{}
+	var rayCollision RayCollision
+	getRayCollisionBox(uintptr(unsafe.Pointer(&rayCollision)), uintptr(unsafe.Pointer(&ray)), uintptr(unsafe.Pointer(&box)))
+	return rayCollision
 }
 
 // GetRayCollisionMesh - Get collision info between ray and mesh
 func GetRayCollisionMesh(ray Ray, mesh Mesh, transform Matrix) RayCollision {
-	return RayCollision{}
+	var rayCollision RayCollision
+	getRayCollisionMesh(uintptr(unsafe.Pointer(&rayCollision)), uintptr(unsafe.Pointer(&ray)), uintptr(unsafe.Pointer(&mesh)), uintptr(unsafe.Pointer(&transform)))
+	return rayCollision
 }
 
 // GetRayCollisionTriangle - Get collision info between ray and triangle
 func GetRayCollisionTriangle(ray Ray, p1 Vector3, p2 Vector3, p3 Vector3) RayCollision {
-	return RayCollision{}
+	var rayCollision RayCollision
+	getRayCollisionTriangle(uintptr(unsafe.Pointer(&rayCollision)), uintptr(unsafe.Pointer(&ray)), uintptr(unsafe.Pointer(&p1)), uintptr(unsafe.Pointer(&p2)), uintptr(unsafe.Pointer(&p3)))
+	return rayCollision
 }
 
 // GetRayCollisionQuad - Get collision info between ray and quad
 func GetRayCollisionQuad(ray Ray, p1 Vector3, p2 Vector3, p3 Vector3, p4 Vector3) RayCollision {
-	return RayCollision{}
+	var rayCollision RayCollision
+	getRayCollisionQuad(uintptr(unsafe.Pointer(&rayCollision)), uintptr(unsafe.Pointer(&ray)), uintptr(unsafe.Pointer(&p1)), uintptr(unsafe.Pointer(&p2)), uintptr(unsafe.Pointer(&p3)), uintptr(unsafe.Pointer(&p4)))
+	return rayCollision
 }
 
 // InitAudioDevice - Initialize audio device and context
-func InitAudioDevice() {}
+func InitAudioDevice() {
+	initAudioDevice()
+}
 
 // CloseAudioDevice - Close the audio device and context
-func CloseAudioDevice() {}
+func CloseAudioDevice() {
+	closeAudioDevice()
+}
 
 // IsAudioDeviceReady - Check if audio device has been initialized successfully
 func IsAudioDeviceReady() bool {
-	return true
+	return isAudioDeviceReady()
 }
 
 // SetMasterVolume - Set master volume (listener)
-func SetMasterVolume(volume float32) {}
+func SetMasterVolume(volume float32) {
+	setMasterVolume(volume)
+}
 
 // GetMasterVolume - Get master volume (listener)
 func GetMasterVolume() float32 {
-	return 0
+	return getMasterVolume()
 }
 
 // LoadWave - Load wave data from file
 func LoadWave(fileName string) Wave {
-	return Wave{}
+	var wave Wave
+	loadWave(uintptr(unsafe.Pointer(&wave)), fileName)
+	return wave
 }
 
 // LoadWaveFromMemory - Load wave from memory buffer, fileType refers to extension: i.e. '.wav'
 func LoadWaveFromMemory(fileType string, fileData []byte, dataSize int32) Wave {
-	return Wave{}
+	var wave Wave
+	loadWaveFromMemory(uintptr(unsafe.Pointer(&wave)), fileType, fileData, dataSize)
+	return wave
 }
 
 // IsWaveReady - Checks if wave data is ready
 func IsWaveReady(wave Wave) bool {
-	return true
+	return isWaveReady(uintptr(unsafe.Pointer(&wave)))
 }
 
-// // LoadSound - Load sound from file
-// func LoadSound(fileName string) Sound {
-// 	return Sound{}
-// }
+// LoadSound - Load sound from file
+func LoadSound(fileName string) Sound {
+	var sound Sound
+	loadSound(uintptr(unsafe.Pointer(&sound)), fileName)
+	return sound
+}
 
-// // LoadSoundFromWave - Load sound from wave data
-// func LoadSoundFromWave(wave Wave) Sound {}
+// LoadSoundFromWave - Load sound from wave data
+func LoadSoundFromWave(wave Wave) Sound {
+	var sound Sound
+	loadSoundFromWave(uintptr(unsafe.Pointer(&sound)), uintptr(unsafe.Pointer(&wave)))
+	return sound
+}
 
-// // LoadSoundAlias - Create a new sound that shares the same sample data as the source sound, does not own the sound data
-// func LoadSoundAlias(source Sound) Sound {}
+// LoadSoundAlias - Create a new sound that shares the same sample data as the source sound, does not own the sound data
+func LoadSoundAlias(source Sound) Sound {
+	var sound Sound
+	loadSoundAlias(uintptr(unsafe.Pointer(&sound)), uintptr(unsafe.Pointer(&source)))
+	return sound
+}
 
-// // IsSoundReady - Checks if a sound is ready
-// func IsSoundReady(sound Sound) bool {}
+// IsSoundReady - Checks if a sound is ready
+func IsSoundReady(sound Sound) bool {
+	return isSoundReady(uintptr(unsafe.Pointer(&sound)))
+}
 
-// // UpdateSound - Update sound buffer with new data
-// func UpdateSound(sound Sound, data unsafe.Pointer, sampleCount int32) {}
+// UpdateSound - Update sound buffer with new data
+func UpdateSound(sound Sound, data []byte, sampleCount int32) {
+	updateSound(uintptr(unsafe.Pointer(&sound)), data, sampleCount)
+}
 
-// // UnloadWave - Unload wave data
-// func UnloadWave(wave Wave) {}
+// UnloadWave - Unload wave data
+func UnloadWave(wave Wave) {
+	unloadWave(uintptr(unsafe.Pointer(&wave)))
+}
 
-// // UnloadSound - Unload sound
-// func UnloadSound(sound Sound) {}
+// UnloadSound - Unload sound
+func UnloadSound(sound Sound) {
+	unloadSound(uintptr(unsafe.Pointer(&sound)))
+}
 
-// // UnloadSoundAlias - Unload a sound alias (does not deallocate sample data)
-// func UnloadSoundAlias(alias Sound) {}
+// UnloadSoundAlias - Unload a sound alias (does not deallocate sample data)
+func UnloadSoundAlias(alias Sound) {
+	unloadSoundAlias(uintptr(unsafe.Pointer(&alias)))
+}
 
-// // ExportWave - Export wave data to file, returns true on success
-// func ExportWave(wave Wave, fileName string) bool {}
+// ExportWave - Export wave data to file, returns true on success
+func ExportWave(wave Wave, fileName string) bool {
+	return exportWave(uintptr(unsafe.Pointer(&wave)), fileName)
+}
 
-// // ExportWaveAsCode - Export wave sample data to code (.h), returns true on success
-// func ExportWaveAsCode(wave Wave, fileName string) bool {}
+// ExportWaveAsCode - Export wave sample data to code (.h), returns true on success
+func ExportWaveAsCode(wave Wave, fileName string) bool {
+	return exportWaveAsCode(uintptr(unsafe.Pointer(&wave)), fileName)
+}
 
-// // PlaySound - Play a sound
-// func PlaySound(sound Sound) {}
+// PlaySound - Play a sound
+func PlaySound(sound Sound) {
+	playSound(uintptr(unsafe.Pointer(&sound)))
+}
 
-// // StopSound - Stop playing a sound
-// func StopSound(sound Sound) {}
+// StopSound - Stop playing a sound
+func StopSound(sound Sound) {
+	stopSound(uintptr(unsafe.Pointer(&sound)))
+}
 
-// // PauseSound - Pause a sound
-// func PauseSound(sound Sound) {}
+// PauseSound - Pause a sound
+func PauseSound(sound Sound) {
+	pauseSound(uintptr(unsafe.Pointer(&sound)))
+}
 
-// // ResumeSound - Resume a paused sound
-// func ResumeSound(sound Sound) {}
+// ResumeSound - Resume a paused sound
+func ResumeSound(sound Sound) {
+	resumeSound(uintptr(unsafe.Pointer(&sound)))
+}
 
-// // IsSoundPlaying - Check if a sound is currently playing
-// func IsSoundPlaying(sound Sound) bool {}
+// IsSoundPlaying - Check if a sound is currently playing
+func IsSoundPlaying(sound Sound) bool {
+	return isSoundPlaying(uintptr(unsafe.Pointer(&sound)))
+}
 
-// // SetSoundVolume - Set volume for a sound (1.0 is max level)
-// func SetSoundVolume(sound Sound, volume float32) {}
+// SetSoundVolume - Set volume for a sound (1.0 is max level)
+func SetSoundVolume(sound Sound, volume float32) {
+	setSoundVolume(uintptr(unsafe.Pointer(&sound)), volume)
+}
 
-// // SetSoundPitch - Set pitch for a sound (1.0 is base level)
-// func SetSoundPitch(sound Sound, pitch float32) {}
+// SetSoundPitch - Set pitch for a sound (1.0 is base level)
+func SetSoundPitch(sound Sound, pitch float32) {
+	setSoundPitch(uintptr(unsafe.Pointer(&sound)), pitch)
+}
 
-// // SetSoundPan - Set pan for a sound (0.5 is center)
-// func SetSoundPan(sound Sound, pan float32) {}
+// SetSoundPan - Set pan for a sound (0.5 is center)
+func SetSoundPan(sound Sound, pan float32) {
+	setSoundPan(uintptr(unsafe.Pointer(&sound)), pan)
+}
 
-// // WaveCopy - Copy a wave to a new wave
-// func WaveCopy(wave Wave) Wave {}
+// WaveCopy - Copy a wave to a new wave
+func WaveCopy(wave Wave) Wave {
+	var copy Wave
+	waveCopy(uintptr(unsafe.Pointer(&copy)), uintptr(unsafe.Pointer(&wave)))
+	return copy
+}
 
-// // WaveCrop - Crop a wave to defined samples range
-// func WaveCrop(wave *Wave, initSample int32, finalSample int32) {}
+// WaveCrop - Crop a wave to defined samples range
+func WaveCrop(wave *Wave, initSample int32, finalSample int32) {
+	waveCrop(wave, initSample, finalSample)
+}
 
-// // WaveFormat - Convert wave data to desired format
-// func WaveFormat(wave *Wave, sampleRate int32, sampleSize int32, channels int32) {}
+// WaveFormat - Convert wave data to desired format
+func WaveFormat(wave *Wave, sampleRate int32, sampleSize int32, channels int32) {
+	waveFormat(wave, sampleRate, sampleRate, channels)
+}
 
-// // LoadWaveSamples - Load samples data from wave as a 32bit float data array
-// func LoadWaveSamples(wave Wave) []float32 {}
+// LoadWaveSamples - Load samples data from wave as a 32bit float data array
+func LoadWaveSamples(wave Wave) []float32 {
+	ret := loadWaveSamples(uintptr(unsafe.Pointer(&wave)))
+	return unsafe.Slice(ret, wave.FrameCount*wave.Channels)
+}
 
-// // UnloadWaveSamples - Unload samples data loaded with LoadWaveSamples()
-// func UnloadWaveSamples(samples []float32) {}
+// UnloadWaveSamples - Unload samples data loaded with LoadWaveSamples()
+func UnloadWaveSamples(samples []float32) {
+	unloadWaveSamples(samples)
+}
 
-// // LoadMusicStream - Load music stream from file
-// func LoadMusicStream(fileName string) Music {}
+// LoadMusicStream - Load music stream from file
+func LoadMusicStream(fileName string) Music {
+	var music Music
+	loadMusicStream(uintptr(unsafe.Pointer(&music)), fileName)
+	return music
+}
 
-// // LoadMusicStreamFromMemory - Load music stream from data
-// func LoadMusicStreamFromMemory(fileType string, data []byte, dataSize int32) Music {}
+// LoadMusicStreamFromMemory - Load music stream from data
+func LoadMusicStreamFromMemory(fileType string, data []byte, dataSize int32) Music {
+	var music Music
+	loadMusicStreamFromMemory(uintptr(unsafe.Pointer(&music)), fileType, data, dataSize)
+	return music
+}
 
-// // IsMusicReady - Checks if a music stream is ready
-// func IsMusicReady(music Music) bool {}
+// IsMusicReady - Checks if a music stream is ready
+func IsMusicReady(music Music) bool {
+	return isMusicReady(uintptr(unsafe.Pointer(&music)))
+}
 
-// // UnloadMusicStream - Unload music stream
-// func UnloadMusicStream(music Music) {}
+// UnloadMusicStream - Unload music stream
+func UnloadMusicStream(music Music) {
+	unloadMusicStream(uintptr(unsafe.Pointer(&music)))
+}
 
-// // PlayMusicStream - Start music playing
-// func PlayMusicStream(music Music) {}
+// PlayMusicStream - Start music playing
+func PlayMusicStream(music Music) {
+	playMusicStream(uintptr(unsafe.Pointer(&music)))
+}
 
-// // IsMusicStreamPlaying - Check if music is playing
-// func IsMusicStreamPlaying(music Music) bool {}
+// IsMusicStreamPlaying - Check if music is playing
+func IsMusicStreamPlaying(music Music) bool {
+	return isMusicStreamPlaying(uintptr(unsafe.Pointer(&music)))
+}
 
-// // UpdateMusicStream - Updates buffers for music streaming
-// func UpdateMusicStream(music Music) {}
+// UpdateMusicStream - Updates buffers for music streaming
+func UpdateMusicStream(music Music) {
+	updateMusicStream(uintptr(unsafe.Pointer(&music)))
+}
 
-// // StopMusicStream - Stop music playing
-// func StopMusicStream(music Music) {}
+// StopMusicStream - Stop music playing
+func StopMusicStream(music Music) {
+	stopMusicStream(uintptr(unsafe.Pointer(&music)))
+}
 
-// // PauseMusicStream - Pause music playing
-// func PauseMusicStream(music Music) {}
+// PauseMusicStream - Pause music playing
+func PauseMusicStream(music Music) {
+	pauseMusicStream(uintptr(unsafe.Pointer(&music)))
+}
 
-// // ResumeMusicStream - Resume playing paused music
-// func ResumeMusicStream(music Music) {}
+// ResumeMusicStream - Resume playing paused music
+func ResumeMusicStream(music Music) {
+	resumeMusicStream(uintptr(unsafe.Pointer(&music)))
+}
 
-// // SeekMusicStream - Seek music to a position (in seconds)
-// func SeekMusicStream(music Music, position float32) {}
+// SeekMusicStream - Seek music to a position (in seconds)
+func SeekMusicStream(music Music, position float32) {
+	seekMusicStream(uintptr(unsafe.Pointer(&music)), position)
+}
 
-// // SetMusicVolume - Set volume for music (1.0 is max level)
-// func SetMusicVolume(music Music, volume float32) {}
+// SetMusicVolume - Set volume for music (1.0 is max level)
+func SetMusicVolume(music Music, volume float32) {
+	setMusicVolume(uintptr(unsafe.Pointer(&music)), volume)
+}
 
-// // SetMusicPitch - Set pitch for a music (1.0 is base level)
-// func SetMusicPitch(music Music, pitch float32) {}
+// SetMusicPitch - Set pitch for a music (1.0 is base level)
+func SetMusicPitch(music Music, pitch float32) {
+	setMusicPitch(uintptr(unsafe.Pointer(&music)), pitch)
+}
 
-// // SetMusicPan - Set pan for a music (0.5 is center)
-// func SetMusicPan(music Music, pan float32) {}
+// SetMusicPan - Set pan for a music (0.5 is center)
+func SetMusicPan(music Music, pan float32) {
+	setMusicPan(uintptr(unsafe.Pointer(&music)), pan)
+}
 
-// // GetMusicTimeLength - Get music time length (in seconds)
-// func GetMusicTimeLength(music Music) float32 {}
+// GetMusicTimeLength - Get music time length (in seconds)
+func GetMusicTimeLength(music Music) float32 {
+	return getMusicTimeLength(uintptr(unsafe.Pointer(&music)))
+}
 
-// // GetMusicTimePlayed - Get current music time played (in seconds)
-// func GetMusicTimePlayed(music Music) float32 {}
+// GetMusicTimePlayed - Get current music time played (in seconds)
+func GetMusicTimePlayed(music Music) float32 {
+	return getMusicTimePlayed(uintptr(unsafe.Pointer(&music)))
+}
 
-// // LoadAudioStream - Load audio stream (to stream raw audio pcm data)
-// func LoadAudioStream(sampleRate uint32, sampleSize uint32, channels uint32) AudioStream {}
+// LoadAudioStream - Load audio stream (to stream raw audio pcm data)
+func LoadAudioStream(sampleRate uint32, sampleSize uint32, channels uint32) AudioStream {
+	var audioStream AudioStream
+	loadAudioStream(uintptr(unsafe.Pointer(&audioStream)), sampleRate, sampleSize, channels)
+	return audioStream
+}
 
-// // IsAudioStreamReady - Checks if an audio stream is ready
-// func IsAudioStreamReady(stream AudioStream) bool {}
+// IsAudioStreamReady - Checks if an audio stream is ready
+func IsAudioStreamReady(stream AudioStream) bool {
+	return isAudioStreamReady(uintptr(unsafe.Pointer(&stream)))
+}
 
-// // UnloadAudioStream - Unload audio stream and free memory
-// func UnloadAudioStream(stream AudioStream) {}
+// UnloadAudioStream - Unload audio stream and free memory
+func UnloadAudioStream(stream AudioStream) {
+	unloadAudioStream(uintptr(unsafe.Pointer(&stream)))
+}
 
-// // UpdateAudioStream - Update audio stream buffers with data
-// func UpdateAudioStream(stream AudioStream, data unsafe.Pointer, frameCount int32) {}
+// UpdateAudioStream - Update audio stream buffers with data
+func UpdateAudioStream(stream AudioStream, data []float32) {
+	frameCount := int32(len(data))
+	updateAudioStream(uintptr(unsafe.Pointer(&stream)), data, frameCount)
+}
 
-// // IsAudioStreamProcessed - Check if any audio stream buffers requires refill
-// func IsAudioStreamProcessed(stream AudioStream) bool {}
+// IsAudioStreamProcessed - Check if any audio stream buffers requires refill
+func IsAudioStreamProcessed(stream AudioStream) bool {
+	return isAudioStreamProcessed(uintptr(unsafe.Pointer(&stream)))
+}
 
-// // PlayAudioStream - Play audio stream
-// func PlayAudioStream(stream AudioStream) {}
+// PlayAudioStream - Play audio stream
+func PlayAudioStream(stream AudioStream) {
+	playAudioStream(uintptr(unsafe.Pointer(&stream)))
+}
 
-// // PauseAudioStream - Pause audio stream
-// func PauseAudioStream(stream AudioStream) {}
+// PauseAudioStream - Pause audio stream
+func PauseAudioStream(stream AudioStream) {
+	pauseAudioStream(uintptr(unsafe.Pointer(&stream)))
+}
 
-// // ResumeAudioStream - Resume audio stream
-// func ResumeAudioStream(stream AudioStream) {}
+// ResumeAudioStream - Resume audio stream
+func ResumeAudioStream(stream AudioStream) {
+	resumeAudioStream(uintptr(unsafe.Pointer(&stream)))
+}
 
-// // IsAudioStreamPlaying - Check if audio stream is playing
-// func IsAudioStreamPlaying(stream AudioStream) bool {}
+// IsAudioStreamPlaying - Check if audio stream is playing
+func IsAudioStreamPlaying(stream AudioStream) bool {
+	return isAudioStreamPlaying(uintptr(unsafe.Pointer(&stream)))
+}
 
-// // StopAudioStream - Stop audio stream
-// func StopAudioStream(stream AudioStream) {}
+// StopAudioStream - Stop audio stream
+func StopAudioStream(stream AudioStream) {
+	stopAudioStream(uintptr(unsafe.Pointer(&stream)))
+}
 
-// // SetAudioStreamVolume - Set volume for audio stream (1.0 is max level)
-// func SetAudioStreamVolume(stream AudioStream, volume float32) {}
+// SetAudioStreamVolume - Set volume for audio stream (1.0 is max level)
+func SetAudioStreamVolume(stream AudioStream, volume float32) {
+	setAudioStreamVolume(uintptr(unsafe.Pointer(&stream)), volume)
+}
 
-// // SetAudioStreamPitch - Set pitch for audio stream (1.0 is base level)
-// func SetAudioStreamPitch(stream AudioStream, pitch float32) {}
+// SetAudioStreamPitch - Set pitch for audio stream (1.0 is base level)
+func SetAudioStreamPitch(stream AudioStream, pitch float32) {
+	setAudioStreamPitch(uintptr(unsafe.Pointer(&stream)), pitch)
+}
 
-// // SetAudioStreamPan - Set pan for audio stream (0.5 is centered)
-// func SetAudioStreamPan(stream AudioStream, pan float32) {}
+// SetAudioStreamPan - Set pan for audio stream (0.5 is centered)
+func SetAudioStreamPan(stream AudioStream, pan float32) {
+	setAudioStreamPan(uintptr(unsafe.Pointer(&stream)), pan)
+}
 
-// // SetAudioStreamBufferSizeDefault - Default size for new audio streams
-// func SetAudioStreamBufferSizeDefault(size int32) {}
+// SetAudioStreamBufferSizeDefault - Default size for new audio streams
+func SetAudioStreamBufferSizeDefault(size int32) {
+	setAudioStreamBufferSizeDefault(size)
+}
 
-// // SetAudioStreamCallback - Audio thread callback to request new data
-// func SetAudioStreamCallback(stream AudioStream, callback AudioCallback) {}
+// SetAudioStreamCallback - Audio thread callback to request new data
+func SetAudioStreamCallback(stream AudioStream, callback AudioCallback) {
+	fn := purego.NewCallback(func(bufferData unsafe.Pointer, frames int32) uintptr {
+		callback(unsafe.Slice((*float32)(bufferData), frames), int(frames))
+		return 0
+	})
+	setAudioStreamCallback(uintptr(unsafe.Pointer(&stream)), fn)
+}
 
-// // AttachAudioStreamProcessor - Attach audio stream processor to stream, receives the samples as <float>s
-// func AttachAudioStreamProcessor(stream AudioStream, processor AudioCallback) {}
+// AttachAudioStreamProcessor - Attach audio stream processor to stream, receives the samples as <float>s
+func AttachAudioStreamProcessor(stream AudioStream, processor AudioCallback) {
+	fn := purego.NewCallback(func(bufferData unsafe.Pointer, frames int32) uintptr {
+		processor(unsafe.Slice((*float32)(bufferData), frames), int(frames))
+		return 0
+	})
+	attachAudioStreamProcessor(uintptr(unsafe.Pointer(&stream)), fn)
+}
 
-// // DetachAudioStreamProcessor - Detach audio stream processor from stream
-// func DetachAudioStreamProcessor(stream AudioStream, processor AudioCallback) {}
+// DetachAudioStreamProcessor - Detach audio stream processor from stream
+func DetachAudioStreamProcessor(stream AudioStream, processor AudioCallback) {
+	fn := purego.NewCallback(func(bufferData unsafe.Pointer, frames int32) uintptr {
+		processor(unsafe.Slice((*float32)(bufferData), frames), int(frames))
+		return 0
+	})
+	detachAudioStreamProcessor(uintptr(unsafe.Pointer(&stream)), fn)
+}
 
-// // AttachAudioMixedProcessor - Attach audio stream processor to the entire audio pipeline, receives the samples as <float>s
-// func AttachAudioMixedProcessor(processor AudioCallback) {}
+// AttachAudioMixedProcessor - Attach audio stream processor to the entire audio pipeline, receives the samples as <float>s
+func AttachAudioMixedProcessor(processor AudioCallback) {
+	fn := purego.NewCallback(func(bufferData unsafe.Pointer, frames int32) uintptr {
+		processor(unsafe.Slice((*float32)(bufferData), frames), int(frames))
+		return 0
+	})
+	attachAudioMixedProcessor(fn)
+}
 
-// // DetachAudioMixedProcessor - Detach audio stream processor from the entire audio pipeline
-// func DetachAudioMixedProcessor(processor AudioCallback) {}
+// DetachAudioMixedProcessor - Detach audio stream processor from the entire audio pipeline
+func DetachAudioMixedProcessor(processor AudioCallback) {
+	fn := purego.NewCallback(func(bufferData unsafe.Pointer, frames int32) uintptr {
+		processor(unsafe.Slice((*float32)(bufferData), frames), int(frames))
+		return 0
+	})
+	detachAudioMixedProcessor(fn)
+}
