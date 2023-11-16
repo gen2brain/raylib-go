@@ -39,6 +39,13 @@ On macOS you need Xcode or Command Line Tools for Xcode.
 
 ##### Windows
 
+###### cgo
+
+On Windows you need C compiler, like [Mingw-w64](https://mingw-w64.org) or [TDM-GCC](http://tdm-gcc.tdragon.net/).
+You can also build binary in [MSYS2](https://msys2.github.io/) shell.
+
+To remove console window, build with `-ldflags "-H=windowsgui"`.
+
 ###### purego (without cgo)
 
 Download the raylib.dll from the assets on the [releases page](https://github.com/raysan5/raylib/releases). It is contained in the `raylib-*_win64_msvc*.zip`.
@@ -47,13 +54,6 @@ Put the raylib.dll into the root folder of your project or copy it into `C:\Wind
 As of November 15, 2023, raylib 5.0 is the required version.
 
 It is also possible build the dll yourself. You can find more infos at [raylib's wiki](https://github.com/raysan5/raylib/wiki/Working-on-Windows).
-
-###### cgo
-
-On Windows you need C compiler, like [Mingw-w64](https://mingw-w64.org) or [TDM-GCC](http://tdm-gcc.tdragon.net/).
-You can also build binary in [MSYS2](https://msys2.github.io/) shell.
-
-To remove console window, build with `-ldflags "-H=windowsgui"`.
 
 ##### Android
 
