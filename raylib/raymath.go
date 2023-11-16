@@ -135,7 +135,10 @@ func Vector2Divide(v1, v2 Vector2) Vector2 {
 
 // Vector2Normalize - Normalize provided vector
 func Vector2Normalize(v Vector2) Vector2 {
-	return Vector2Scale(v, 1/Vector2Length(v))
+	if l := Vector2Length(v); l > 0 {
+		return Vector2Scale(v, 1/l)
+	}
+	return v
 }
 
 // Vector2Transform - Transforms a Vector2 by a given Matrix
