@@ -42,9 +42,7 @@ On macOS you need Xcode or Command Line Tools for Xcode.
 ###### purego (without cgo)
 
 Download the raylib.dll from the assets on the [releases page](https://github.com/raysan5/raylib/releases). It is contained in the `raylib-*_win64_msvc*.zip`.
-Put the raylib.dll into the root folder of your project.
-
-It is also possible to put the dll into `C:\Windows\System32` for a system wide installation.
+Put the raylib.dll into the root folder of your project or copy it into `C:\Windows\System32` for a system-wide installation.
 
 As of November 15, 2023, raylib 5.0 is the required version.
 
