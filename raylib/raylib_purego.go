@@ -6,6 +6,7 @@ package rl
 import (
 	"image"
 	"image/color"
+	"os"
 	"unsafe"
 
 	"github.com/ebitengine/purego"
@@ -131,10 +132,11 @@ var setTraceLogCallback func(callback uintptr)
 // var setSaveFileDataCallback func(callback uintptr)
 // var setLoadFileTextCallback func(callback uintptr)
 // var setSaveFileTextCallback func(callback uintptr)
-var loadFileData func(fileName string, dataSize *int32) *byte
-var unloadFileData func(data *byte)
-var saveFileData func(fileName string, data unsafe.Pointer, dataSize int32) bool
-var exportDataAsCode func(data *byte, dataSize int32, fileName string) bool
+// var loadFileData func(fileName string, dataSize *int32) *byte
+// var unloadFileData func(data *byte)
+// var saveFileData func(fileName string, data unsafe.Pointer, dataSize int32) bool
+
+// var exportDataAsCode func(data *byte, dataSize int32, fileName string) bool
 
 // var loadFileText func(fileName string) string
 // var unloadFileText func(text string)
@@ -148,9 +150,11 @@ var exportDataAsCode func(data *byte, dataSize int32, fileName string) bool
 // var getFileNameWithoutExt func(filePath string) string
 // var getDirectoryPath func(filePath string) string
 // var getPrevDirectoryPath func(dirPath string) string
-var getWorkingDirectory func() string
-var getApplicationDirectory func() string
-var changeDirectory func(dir string) bool
+// var getWorkingDirectory func() string
+
+// var getApplicationDirectory func() string
+
+// var changeDirectory func(dir string) bool
 
 // var isPathFile func(path string) bool
 // var loadDirectoryFiles func(dirPath string) FilePathList
@@ -294,7 +298,8 @@ var isImageReady func(image uintptr) bool
 var unloadImage func(image uintptr)
 var exportImage func(image uintptr, fileName string) bool
 var exportImageToMemory func(image uintptr, fileType string, fileSize *int32) *byte
-var exportImageAsCode func(image uintptr, fileName string) bool
+
+// var exportImageAsCode func(image uintptr, fileName string) bool
 var genImageColor func(image uintptr, width int32, height int32, col uintptr)
 var genImageGradientLinear func(image uintptr, width int32, height int32, direction int32, start uintptr, end uintptr)
 var genImageGradientRadial func(image uintptr, width int32, height int32, density float32, inner uintptr, outer uintptr)
@@ -398,7 +403,8 @@ var loadFontData func(fileData []byte, dataSize int32, fontSize int32, codepoint
 var genImageFontAtlas func(image uintptr, glyphs *GlyphInfo, glyphRecs []*Rectangle, glyphCount int32, fontSize int32, padding int32, packMethod int32)
 var unloadFontData func(glyphs *GlyphInfo, glyphCount int32)
 var unloadFont func(font uintptr)
-var exportFontAsCode func(font uintptr, fileName string) bool
+
+// var exportFontAsCode func(font uintptr, fileName string) bool
 var drawFPS func(posX int32, posY int32)
 var drawText func(text string, posX int32, posY int32, fontSize int32, col uintptr)
 var drawTextEx func(font uintptr, text string, position uintptr, fontSize float32, spacing float32, tint uintptr)
@@ -525,7 +531,8 @@ var unloadWave func(wave uintptr)
 var unloadSound func(sound uintptr)
 var unloadSoundAlias func(alias uintptr)
 var exportWave func(wave uintptr, fileName string) bool
-var exportWaveAsCode func(wave uintptr, fileName string) bool
+
+// var exportWaveAsCode func(wave uintptr, fileName string) bool
 var playSound func(sound uintptr)
 var stopSound func(sound uintptr)
 var pauseSound func(sound uintptr)
@@ -692,10 +699,10 @@ func init() {
 	// purego.RegisterLibFunc(&setSaveFileDataCallback, raylibDll, "SetSaveFileDataCallback")
 	// purego.RegisterLibFunc(&setLoadFileTextCallback, raylibDll, "SetLoadFileTextCallback")
 	// purego.RegisterLibFunc(&setSaveFileTextCallback, raylibDll, "SetSaveFileTextCallback")
-	purego.RegisterLibFunc(&loadFileData, raylibDll, "LoadFileData")
-	purego.RegisterLibFunc(&unloadFileData, raylibDll, "UnloadFileData")
-	purego.RegisterLibFunc(&saveFileData, raylibDll, "SaveFileData")
-	purego.RegisterLibFunc(&exportDataAsCode, raylibDll, "ExportDataAsCode")
+	// purego.RegisterLibFunc(&loadFileData, raylibDll, "LoadFileData")
+	// purego.RegisterLibFunc(&unloadFileData, raylibDll, "UnloadFileData")
+	// purego.RegisterLibFunc(&saveFileData, raylibDll, "SaveFileData")
+	// purego.RegisterLibFunc(&exportDataAsCode, raylibDll, "ExportDataAsCode")
 	// purego.RegisterLibFunc(&loadFileText, raylibDll, "LoadFileText")
 	// purego.RegisterLibFunc(&unloadFileText, raylibDll, "UnloadFileText")
 	// purego.RegisterLibFunc(&saveFileText, raylibDll, "SaveFileText")
@@ -708,9 +715,9 @@ func init() {
 	// purego.RegisterLibFunc(&getFileNameWithoutExt, raylibDll, "GetFileNameWithoutExt")
 	// purego.RegisterLibFunc(&getDirectoryPath, raylibDll, "GetDirectoryPath")
 	// purego.RegisterLibFunc(&getPrevDirectoryPath, raylibDll, "GetPrevDirectoryPath")
-	purego.RegisterLibFunc(&getWorkingDirectory, raylibDll, "GetWorkingDirectory")
-	purego.RegisterLibFunc(&getApplicationDirectory, raylibDll, "GetApplicationDirectory")
-	purego.RegisterLibFunc(&changeDirectory, raylibDll, "ChangeDirectory")
+	// purego.RegisterLibFunc(&getWorkingDirectory, raylibDll, "GetWorkingDirectory")
+	// purego.RegisterLibFunc(&getApplicationDirectory, raylibDll, "GetApplicationDirectory")
+	// purego.RegisterLibFunc(&changeDirectory, raylibDll, "ChangeDirectory")
 	// purego.RegisterLibFunc(&isPathFile, raylibDll, "IsPathFile")
 	// purego.RegisterLibFunc(&loadDirectoryFiles, raylibDll, "LoadDirectoryFiles")
 	// purego.RegisterLibFunc(&loadDirectoryFilesEx, raylibDll, "LoadDirectoryFilesEx")
@@ -851,7 +858,7 @@ func init() {
 	purego.RegisterLibFunc(&unloadImage, raylibDll, "UnloadImage")
 	purego.RegisterLibFunc(&exportImage, raylibDll, "ExportImage")
 	purego.RegisterLibFunc(&exportImageToMemory, raylibDll, "ExportImageToMemory")
-	purego.RegisterLibFunc(&exportImageAsCode, raylibDll, "ExportImageAsCode")
+	// purego.RegisterLibFunc(&exportImageAsCode, raylibDll, "ExportImageAsCode")
 	purego.RegisterLibFunc(&genImageColor, raylibDll, "GenImageColor")
 	purego.RegisterLibFunc(&genImageGradientLinear, raylibDll, "GenImageGradientLinear")
 	purego.RegisterLibFunc(&genImageGradientRadial, raylibDll, "GenImageGradientRadial")
@@ -955,7 +962,7 @@ func init() {
 	purego.RegisterLibFunc(&genImageFontAtlas, raylibDll, "GenImageFontAtlas")
 	purego.RegisterLibFunc(&unloadFontData, raylibDll, "UnloadFontData")
 	purego.RegisterLibFunc(&unloadFont, raylibDll, "UnloadFont")
-	purego.RegisterLibFunc(&exportFontAsCode, raylibDll, "ExportFontAsCode")
+	// purego.RegisterLibFunc(&exportFontAsCode, raylibDll, "ExportFontAsCode")
 	purego.RegisterLibFunc(&drawFPS, raylibDll, "DrawFPS")
 	purego.RegisterLibFunc(&drawText, raylibDll, "DrawText")
 	purego.RegisterLibFunc(&drawTextEx, raylibDll, "DrawTextEx")
@@ -1081,7 +1088,7 @@ func init() {
 	purego.RegisterLibFunc(&unloadSound, raylibDll, "UnloadSound")
 	purego.RegisterLibFunc(&unloadSoundAlias, raylibDll, "UnloadSoundAlias")
 	purego.RegisterLibFunc(&exportWave, raylibDll, "ExportWave")
-	purego.RegisterLibFunc(&exportWaveAsCode, raylibDll, "ExportWaveAsCode")
+	// purego.RegisterLibFunc(&exportWaveAsCode, raylibDll, "ExportWaveAsCode")
 	purego.RegisterLibFunc(&playSound, raylibDll, "PlaySound")
 	purego.RegisterLibFunc(&stopSound, raylibDll, "StopSound")
 	purego.RegisterLibFunc(&pauseSound, raylibDll, "PauseSound")
@@ -1238,28 +1245,28 @@ func SetWindowTitle(title string) {
 }
 
 // SetWindowPosition - Set window position on screen (only PLATFORM_DESKTOP)
-func SetWindowPosition(x int32, y int32) {
-	setWindowPosition(x, y)
+func SetWindowPosition(x int, y int) {
+	setWindowPosition(int32(x), int32(y))
 }
 
 // SetWindowMonitor - Set monitor for the current window
-func SetWindowMonitor(monitor int32) {
-	setWindowMonitor(monitor)
+func SetWindowMonitor(monitor int) {
+	setWindowMonitor(int32(monitor))
 }
 
 // SetWindowMinSize - Set window minimum dimensions (for FLAG_WINDOW_RESIZABLE)
-func SetWindowMinSize(width int32, height int32) {
-	setWindowMinSize(width, height)
+func SetWindowMinSize(width int, height int) {
+	setWindowMinSize(int32(width), int32(height))
 }
 
 // SetWindowMaxSize - Set window maximum dimensions (for FLAG_WINDOW_RESIZABLE)
-func SetWindowMaxSize(width int32, height int32) {
-	setWindowMaxSize(width, height)
+func SetWindowMaxSize(width int, height int) {
+	setWindowMaxSize(int32(width), int32(height))
 }
 
 // SetWindowSize - Set window dimensions
-func SetWindowSize(width int32, height int32) {
-	setWindowSize(width, height)
+func SetWindowSize(width int, height int) {
+	setWindowSize(int32(width), int32(height))
 }
 
 // SetWindowOpacity - Set window opacity [0.0f..1.0f] (only PLATFORM_DESKTOP)
@@ -1298,44 +1305,44 @@ func GetRenderHeight() int {
 }
 
 // GetMonitorCount - Get number of connected monitors
-func GetMonitorCount() int32 {
-	return getMonitorCount()
+func GetMonitorCount() int {
+	return int(getMonitorCount())
 }
 
 // GetCurrentMonitor - Get current connected monitor
-func GetCurrentMonitor() int32 {
-	return getCurrentMonitor()
+func GetCurrentMonitor() int {
+	return int(getCurrentMonitor())
 }
 
 // GetMonitorPosition - Get specified monitor position
-func GetMonitorPosition(monitor int32) Vector2 {
-	ret := getMonitorPosition(monitor)
+func GetMonitorPosition(monitor int) Vector2 {
+	ret := getMonitorPosition(int32(monitor))
 	return *(*Vector2)(unsafe.Pointer(&ret))
 }
 
 // GetMonitorWidth - Get specified monitor width (current video mode used by monitor)
-func GetMonitorWidth(monitor int32) int32 {
-	return getMonitorWidth(monitor)
+func GetMonitorWidth(monitor int) int {
+	return int(getMonitorWidth(int32(monitor)))
 }
 
 // GetMonitorHeight - Get specified monitor height (current video mode used by monitor)
-func GetMonitorHeight(monitor int32) int32 {
-	return getMonitorHeight(monitor)
+func GetMonitorHeight(monitor int) int {
+	return int(getMonitorHeight(int32(monitor)))
 }
 
 // GetMonitorPhysicalWidth - Get specified monitor physical width in millimetres
-func GetMonitorPhysicalWidth(monitor int32) int32 {
-	return getMonitorPhysicalWidth(monitor)
+func GetMonitorPhysicalWidth(monitor int) int {
+	return int(getMonitorPhysicalWidth(int32(monitor)))
 }
 
 // GetMonitorPhysicalHeight - Get specified monitor physical height in millimetres
-func GetMonitorPhysicalHeight(monitor int32) int32 {
-	return getMonitorPhysicalHeight(monitor)
+func GetMonitorPhysicalHeight(monitor int) int {
+	return int(getMonitorPhysicalHeight(int32(monitor)))
 }
 
 // GetMonitorRefreshRate - Get specified monitor refresh rate
-func GetMonitorRefreshRate(monitor int32) int32 {
-	return getMonitorRefreshRate(monitor)
+func GetMonitorRefreshRate(monitor int) int {
+	return int(getMonitorRefreshRate(int32(monitor)))
 }
 
 // GetWindowPosition - Get window position XY on monitor
@@ -1351,8 +1358,8 @@ func GetWindowScaleDPI() Vector2 {
 }
 
 // GetMonitorName - Get the human-readable, UTF-8 encoded name of the specified monitor
-func GetMonitorName(monitor int32) string {
-	return getMonitorName(monitor)
+func GetMonitorName(monitor int) string {
+	return getMonitorName(int32(monitor))
 }
 
 // SetClipboardText - Set clipboard text content
@@ -1533,8 +1540,8 @@ func SetShaderValue(shader Shader, locIndex int32, value []float32, uniformType 
 }
 
 // SetShaderValueV - Set shader uniform value vector
-func SetShaderValueV(shader Shader, locIndex int32, value []float32, uniformType int32, count int32) {
-	setShaderValueV(uintptr(unsafe.Pointer(&shader)), locIndex, value, uniformType, count)
+func SetShaderValueV(shader Shader, locIndex int32, value []float32, uniformType ShaderUniformDataType, count int32) {
+	setShaderValueV(uintptr(unsafe.Pointer(&shader)), locIndex, value, int32(uniformType), count)
 }
 
 // SetShaderValueMatrix - Set shader uniform value (matrix 4x4)
@@ -1680,8 +1687,8 @@ func TraceLog(logLevel TraceLogLevel, text string, args ...any) {
 }
 
 // SetTraceLogLevel - Set the current threshold (minimum) log level
-func SetTraceLogLevel(logLevel int32) {
-	setTraceLogLevel(logLevel)
+func SetTraceLogLevel(logLevel TraceLogLevel) {
+	setTraceLogLevel(int32(logLevel))
 }
 
 // MemAlloc - Internal memory allocator
@@ -1718,30 +1725,30 @@ func SetTraceLogCallback(fn TraceLogCallbackFun) {
 // // SetSaveFileTextCallback - Set custom file text data saver
 // func SetSaveFileTextCallback(callback SaveFileTextCallback) {}
 
-// LoadFileData - Load file data as byte array (read)
-//
-// Note: Because the slice is allocated in C, use UnloadFileData when it isn't needed anymore.
-func LoadFileData(fileName string, dataSize *int32) []byte {
-	ret := loadFileData(fileName, dataSize)
-	return unsafe.Slice(ret, int(*dataSize))
-}
+// // LoadFileData - Load file data as byte array (read)
+// //
+// // Note: Because the slice is allocated in C, use UnloadFileData when it isn't needed anymore.
+// func LoadFileData(fileName string, dataSize *int32) []byte {
+// 	ret := loadFileData(fileName, dataSize)
+// 	return unsafe.Slice(ret, int(*dataSize))
+// }
 
-// UnloadFileData - Unload file data allocated by LoadFileData()
-func UnloadFileData(data []byte) {
-	unloadFileData(unsafe.SliceData(data))
-}
+// // UnloadFileData - Unload file data allocated by LoadFileData()
+// func UnloadFileData(data []byte) {
+// 	unloadFileData(unsafe.SliceData(data))
+// }
 
-// SaveFileData - Save data to file from byte array (write), returns true on success
-//
-// Note: As an alternative, you could use go's os.WriteFile function.
-func SaveFileData(fileName string, data []byte, dataSize int32) bool {
-	return saveFileData(fileName, unsafe.Pointer(unsafe.SliceData(data)), dataSize)
-}
+// // SaveFileData - Save data to file from byte array (write), returns true on success
+// //
+// // Note: As an alternative, you could use go's os.WriteFile function.
+// func SaveFileData(fileName string, data []byte, dataSize int32) bool {
+// 	return saveFileData(fileName, unsafe.Pointer(unsafe.SliceData(data)), dataSize)
+// }
 
 // ExportDataAsCode - Export data to code (.h), returns true on success
-func ExportDataAsCode(data []byte, dataSize int32, fileName string) bool {
-	return exportDataAsCode(unsafe.SliceData(data), dataSize, fileName)
-}
+// func ExportDataAsCode(data []byte, dataSize int32, fileName string) bool {
+// 	return exportDataAsCode(unsafe.SliceData(data), dataSize, fileName)
+// }
 
 // // LoadFileText - Load text data from file (read), returns a '\0' terminated string
 // func LoadFileText(fileName string) string {}
@@ -1779,20 +1786,20 @@ func ExportDataAsCode(data []byte, dataSize int32, fileName string) bool {
 // // GetPrevDirectoryPath - Get previous directory path for a given path (uses static string)
 // func GetPrevDirectoryPath(dirPath string) string {}
 
-// GetWorkingDirectory - Get current working directory (uses static string)
-func GetWorkingDirectory() string {
-	return getWorkingDirectory()
-}
+// // GetWorkingDirectory - Get current working directory (uses static string)
+// func GetWorkingDirectory() string {
+// 	return getWorkingDirectory()
+// }
 
-// GetApplicationDirectory - Get the directory of the running application (uses static string)
-func GetApplicationDirectory() string {
-	return getApplicationDirectory()
-}
+// // GetApplicationDirectory - Get the directory of the running application (uses static string)
+// func GetApplicationDirectory() string {
+// 	return getApplicationDirectory()
+// }
 
-// ChangeDirectory - Change working directory, return true on success
-func ChangeDirectory(dir string) bool {
-	return changeDirectory(dir)
-}
+// // ChangeDirectory - Change working directory, return true on success
+// func ChangeDirectory(dir string) bool {
+// 	return changeDirectory(dir)
+// }
 
 // // IsPathFile - Check if a given path is a file or a directory
 // func IsPathFile(path string) bool {}
@@ -1885,8 +1892,8 @@ func SetAutomationEventList(list *AutomationEventList) {
 }
 
 // SetAutomationEventBaseFrame - Set automation event internal base frame to start recording
-func SetAutomationEventBaseFrame(frame int32) {
-	setAutomationEventBaseFrame(frame)
+func SetAutomationEventBaseFrame(frame int) {
+	setAutomationEventBaseFrame(int32(frame))
 }
 
 // StartAutomationEventRecording - Start recording automation events (AutomationEventList must be set)
@@ -2288,8 +2295,8 @@ func DrawRectangleRounded(rec Rectangle, roundness float32, segments int32, col 
 }
 
 // DrawRectangleRoundedLines - Draw rectangle with rounded edges outline
-func DrawRectangleRoundedLines(rec Rectangle, roundness float32, segments int32, lineThick float32, col color.RGBA) {
-	drawRectangleRoundedLines(uintptr(unsafe.Pointer(&rec)), roundness, segments, lineThick, *(*uintptr)(unsafe.Pointer(&col)))
+func DrawRectangleRoundedLines(rec Rectangle, roundness float32, segments float32, lineThick float32, col color.RGBA) {
+	drawRectangleRoundedLines(uintptr(unsafe.Pointer(&rec)), roundness, int32(segments), lineThick, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawTriangle - Draw a color-filled triangle (vertex in counter-clockwise order!)
@@ -2482,24 +2489,24 @@ func LoadImageRaw(fileName string, width int32, height int32, format PixelFormat
 }
 
 // LoadImageSvg - Load image from SVG file data or string with specified size
-func LoadImageSvg(fileNameOrString string, width int32, height int32) Image {
+func LoadImageSvg(fileNameOrString string, width int32, height int32) *Image {
 	var img Image
 	loadImageSvg(uintptr(unsafe.Pointer(&img)), fileNameOrString, width, height)
-	return img
+	return &img
 }
 
 // LoadImageAnim - Load image sequence from file (frames appended to image.data)
-func LoadImageAnim(fileName string, frames []int32) Image {
+func LoadImageAnim(fileName string, frames []int32) *Image {
 	var img Image
 	loadImageAnim(uintptr(unsafe.Pointer(&img)), fileName, frames)
-	return img
+	return &img
 }
 
 // LoadImageFromMemory - Load image from memory buffer, fileType refers to extension: i.e. '.png'
-func LoadImageFromMemory(fileType string, fileData []byte, dataSize int32) Image {
+func LoadImageFromMemory(fileType string, fileData []byte, dataSize int32) *Image {
 	var img Image
 	loadImageFromMemory(uintptr(unsafe.Pointer(&img)), fileType, fileData, dataSize)
-	return img
+	return &img
 }
 
 // LoadImageFromTexture - Load image from GPU texture data
@@ -2510,15 +2517,15 @@ func LoadImageFromTexture(texture Texture2D) *Image {
 }
 
 // LoadImageFromScreen - Load image from screen buffer and (screenshot)
-func LoadImageFromScreen() Image {
+func LoadImageFromScreen() *Image {
 	var img Image
 	loadImageFromScreen(uintptr(unsafe.Pointer(&img)))
-	return img
+	return &img
 }
 
 // IsImageReady - Check if an image is ready
-func IsImageReady(image Image) bool {
-	return isImageReady(uintptr(unsafe.Pointer(&image)))
+func IsImageReady(image *Image) bool {
+	return isImageReady(uintptr(unsafe.Pointer(image)))
 }
 
 // UnloadImage - Unload image from CPU memory (RAM)
@@ -2538,10 +2545,10 @@ func ExportImageToMemory(image Image, fileType string) []byte {
 	return unsafe.Slice(ret, fileSize)
 }
 
-// ExportImageAsCode - Export image as code file defining an array of bytes, returns true on success
-func ExportImageAsCode(image Image, fileName string) bool {
-	return exportImageAsCode(uintptr(unsafe.Pointer(&image)), fileName)
-}
+// // ExportImageAsCode - Export image as code file defining an array of bytes, returns true on success
+// func ExportImageAsCode(image Image, fileName string) bool {
+// 	return exportImageAsCode(uintptr(unsafe.Pointer(&image)), fileName)
+// }
 
 // GenImageColor - Generate image: plain color
 func GenImageColor(width int, height int, col color.RGBA) *Image {
@@ -2565,10 +2572,10 @@ func GenImageGradientRadial(width int, height int, density float32, inner color.
 }
 
 // GenImageGradientSquare - Generate image: square gradient
-func GenImageGradientSquare(width int32, height int32, density float32, inner color.RGBA, outer color.RGBA) Image {
+func GenImageGradientSquare(width int, height int, density float32, inner color.RGBA, outer color.RGBA) *Image {
 	var image Image
-	genImageGradientSquare(uintptr(unsafe.Pointer(&image)), width, height, density, *(*uintptr)(unsafe.Pointer(&inner)), *(*uintptr)(unsafe.Pointer(&outer)))
-	return image
+	genImageGradientSquare(uintptr(unsafe.Pointer(&image)), int32(width), int32(height), density, *(*uintptr)(unsafe.Pointer(&inner)), *(*uintptr)(unsafe.Pointer(&outer)))
+	return &image
 }
 
 // GenImageChecked - Generate image: checked
@@ -2586,31 +2593,31 @@ func GenImageWhiteNoise(width int, height int, factor float32) *Image {
 }
 
 // GenImagePerlinNoise - Generate image: perlin noise
-func GenImagePerlinNoise(width int32, height int32, offsetX int32, offsetY int32, scale float32) Image {
+func GenImagePerlinNoise(width int, height int, offsetX int32, offsetY int32, scale float32) *Image {
 	var image Image
-	genImagePerlinNoise(uintptr(unsafe.Pointer(&image)), width, height, offsetX, offsetY, scale)
-	return image
+	genImagePerlinNoise(uintptr(unsafe.Pointer(&image)), int32(width), int32(height), offsetX, offsetY, scale)
+	return &image
 }
 
 // GenImageCellular - Generate image: cellular algorithm, bigger tileSize means bigger cells
-func GenImageCellular(width int, height int, tileSize int32) *Image {
+func GenImageCellular(width int, height int, tileSize int) *Image {
 	var image Image
-	genImageCellular(uintptr(unsafe.Pointer(&image)), int32(width), int32(height), tileSize)
+	genImageCellular(uintptr(unsafe.Pointer(&image)), int32(width), int32(height), int32(tileSize))
 	return &image
 }
 
 // GenImageText - Generate image: grayscale image from text data
-func GenImageText(width int32, height int32, text string) Image {
+func GenImageText(width int, height int, text string) Image {
 	var image Image
-	genImageText(uintptr(unsafe.Pointer(&image)), width, height, text)
+	genImageText(uintptr(unsafe.Pointer(&image)), int32(width), int32(height), text)
 	return image
 }
 
 // ImageCopy - Create an image duplicate (useful for transformations)
-func ImageCopy(image Image) Image {
+func ImageCopy(image *Image) *Image {
 	var retImage Image
-	imageCopy(uintptr(unsafe.Pointer(&retImage)), uintptr(unsafe.Pointer(&image)))
-	return retImage
+	imageCopy(uintptr(unsafe.Pointer(&retImage)), uintptr(unsafe.Pointer(image)))
+	return &retImage
 }
 
 // ImageFromImage - Create an image from another image piece
@@ -2660,8 +2667,8 @@ func ImageAlphaClear(image *Image, col color.RGBA, threshold float32) {
 }
 
 // ImageAlphaMask - Apply alpha mask to image
-func ImageAlphaMask(image *Image, alphaMask Image) {
-	imageAlphaMask(image, uintptr(unsafe.Pointer(&alphaMask)))
+func ImageAlphaMask(image *Image, alphaMask *Image) {
+	imageAlphaMask(image, uintptr(unsafe.Pointer(alphaMask)))
 }
 
 // ImageAlphaPremultiply - Premultiply alpha channel
@@ -2855,8 +2862,8 @@ func ImageDrawRectangleRec(dst *Image, rec Rectangle, col color.RGBA) {
 }
 
 // ImageDrawRectangleLines - Draw rectangle lines within an image
-func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int32, col color.RGBA) {
-	imageDrawRectangleLines(dst, uintptr(unsafe.Pointer(&rec)), thick, *(*uintptr)(unsafe.Pointer(&col)))
+func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int, col color.RGBA) {
+	imageDrawRectangleLines(dst, uintptr(unsafe.Pointer(&rec)), int32(thick), *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // ImageDraw - Draw a source image within a destination image (tint applied to source)
@@ -2865,7 +2872,7 @@ func ImageDraw(dst *Image, src *Image, srcRec Rectangle, dstRec Rectangle, tint 
 }
 
 // ImageDrawText - Draw text (using default font) within an image (destination)
-func ImageDrawText(dst *Image, text string, posX int32, posY int32, fontSize int32, col color.RGBA) {
+func ImageDrawText(dst *Image, posX int32, posY int32, text string, fontSize int32, col color.RGBA) {
 	imageDrawText(dst, text, posX, posY, fontSize, *(*uintptr)(unsafe.Pointer(&col)))
 
 }
@@ -2944,8 +2951,8 @@ func SetTextureFilter(texture Texture2D, filter TextureFilterMode) {
 }
 
 // SetTextureWrap - Set texture wrapping mode
-func SetTextureWrap(texture Texture2D, wrap int32) {
-	setTextureWrap(uintptr(unsafe.Pointer(&texture)), wrap)
+func SetTextureWrap(texture Texture2D, wrap TextureWrapMode) {
+	setTextureWrap(uintptr(unsafe.Pointer(&texture)), int32(wrap))
 }
 
 // DrawTexture - Draw a Texture2D
@@ -3046,8 +3053,8 @@ func ColorAlphaBlend(dst color.RGBA, src color.RGBA, tint color.RGBA) color.RGBA
 }
 
 // GetColor - Get Color structure from hexadecimal value
-func GetColor(hexValue uint32) color.RGBA {
-	ret := getColor(hexValue)
+func GetColor(hexValue uint) color.RGBA {
+	ret := getColor(uint32(hexValue))
 	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
@@ -3137,10 +3144,10 @@ func UnloadFont(font Font) {
 	unloadFont(uintptr(unsafe.Pointer(&font)))
 }
 
-// ExportFontAsCode - Export font as code file, returns true on success
-func ExportFontAsCode(font Font, fileName string) bool {
-	return exportFontAsCode(uintptr(unsafe.Pointer(&font)), fileName)
-}
+// // ExportFontAsCode - Export font as code file, returns true on success
+// func ExportFontAsCode(font Font, fileName string) bool {
+// 	return exportFontAsCode(uintptr(unsafe.Pointer(&font)), fileName)
+// }
 
 // DrawFPS - Draw current FPS
 func DrawFPS(posX int32, posY int32) {
@@ -3174,8 +3181,8 @@ func DrawTextCodepoints(font Font, codepoints []rune, position Vector2, fontSize
 }
 
 // SetTextLineSpacing - Set vertical line spacing when drawing with line-breaks
-func SetTextLineSpacing(spacing int32) {
-	setTextLineSpacing(spacing)
+func SetTextLineSpacing(spacing int) {
+	setTextLineSpacing(int32(spacing))
 }
 
 // MeasureText - Measure string width for default font
@@ -3505,9 +3512,9 @@ func UploadMesh(mesh *Mesh, dynamic bool) {
 }
 
 // UpdateMeshBuffer - Update mesh vertex data in GPU for a specific buffer index
-func UpdateMeshBuffer(mesh Mesh, index int32, data []byte, offset int32) {
+func UpdateMeshBuffer(mesh Mesh, index int32, data []byte, offset int) {
 	dataSize := int32(len(data))
-	updateMeshBuffer(uintptr(unsafe.Pointer(&mesh)), index, data, dataSize, offset)
+	updateMeshBuffer(uintptr(unsafe.Pointer(&mesh)), index, data, dataSize, int32(offset))
 }
 
 // UnloadMesh - Unload mesh data from CPU and GPU
@@ -3543,16 +3550,16 @@ func GenMeshTangents(mesh *Mesh) {
 }
 
 // GenMeshPoly - Generate polygonal mesh
-func GenMeshPoly(sides int32, radius float32) Mesh {
+func GenMeshPoly(sides int, radius float32) Mesh {
 	var mesh Mesh
-	genMeshPoly(uintptr(unsafe.Pointer(&mesh)), sides, radius)
+	genMeshPoly(uintptr(unsafe.Pointer(&mesh)), int32(sides), radius)
 	return mesh
 }
 
 // GenMeshPlane - Generate plane mesh (with subdivisions)
-func GenMeshPlane(width float32, length float32, resX int32, resZ int32) Mesh {
+func GenMeshPlane(width float32, length float32, resX int, resZ int) Mesh {
 	var mesh Mesh
-	genMeshPlane(uintptr(unsafe.Pointer(&mesh)), width, length, resX, resZ)
+	genMeshPlane(uintptr(unsafe.Pointer(&mesh)), width, length, int32(resX), int32(resZ))
 	return mesh
 }
 
@@ -3564,44 +3571,44 @@ func GenMeshCube(width float32, height float32, length float32) Mesh {
 }
 
 // GenMeshSphere - Generate sphere mesh (standard sphere)
-func GenMeshSphere(radius float32, rings int32, slices int32) Mesh {
+func GenMeshSphere(radius float32, rings int, slices int) Mesh {
 	var mesh Mesh
-	genMeshSphere(uintptr(unsafe.Pointer(&mesh)), radius, rings, slices)
+	genMeshSphere(uintptr(unsafe.Pointer(&mesh)), radius, int32(rings), int32(slices))
 	return mesh
 }
 
 // GenMeshHemiSphere - Generate half-sphere mesh (no bottom cap)
-func GenMeshHemiSphere(radius float32, rings int32, slices int32) Mesh {
+func GenMeshHemiSphere(radius float32, rings int, slices int) Mesh {
 	var mesh Mesh
-	genMeshHemiSphere(uintptr(unsafe.Pointer(&mesh)), radius, rings, slices)
+	genMeshHemiSphere(uintptr(unsafe.Pointer(&mesh)), radius, int32(rings), int32(slices))
 	return mesh
 }
 
 // GenMeshCylinder - Generate cylinder mesh
-func GenMeshCylinder(radius float32, height float32, slices int32) Mesh {
+func GenMeshCylinder(radius float32, height float32, slices int) Mesh {
 	var mesh Mesh
-	genMeshCylinder(uintptr(unsafe.Pointer(&mesh)), radius, height, slices)
+	genMeshCylinder(uintptr(unsafe.Pointer(&mesh)), radius, height, int32(slices))
 	return mesh
 }
 
 // GenMeshCone - Generate cone/pyramid mesh
-func GenMeshCone(radius float32, height float32, slices int32) Mesh {
+func GenMeshCone(radius float32, height float32, slices int) Mesh {
 	var mesh Mesh
-	genMeshCone(uintptr(unsafe.Pointer(&mesh)), radius, height, slices)
+	genMeshCone(uintptr(unsafe.Pointer(&mesh)), radius, height, int32(slices))
 	return mesh
 }
 
 // GenMeshTorus - Generate torus mesh
-func GenMeshTorus(radius float32, size float32, radSeg int32, sides int32) Mesh {
+func GenMeshTorus(radius float32, size float32, radSeg int, sides int) Mesh {
 	var mesh Mesh
-	genMeshTorus(uintptr(unsafe.Pointer(&mesh)), radius, size, radSeg, sides)
+	genMeshTorus(uintptr(unsafe.Pointer(&mesh)), radius, size, int32(radSeg), int32(sides))
 	return mesh
 }
 
 // GenMeshKnot - Generate trefoil knot mesh
-func GenMeshKnot(radius float32, size float32, radSeg int32, sides int32) Mesh {
+func GenMeshKnot(radius float32, size float32, radSeg int, sides int) Mesh {
 	var mesh Mesh
-	genMeshKnot(uintptr(unsafe.Pointer(&mesh)), radius, size, radSeg, sides)
+	genMeshKnot(uintptr(unsafe.Pointer(&mesh)), radius, size, int32(radSeg), int32(sides))
 	return mesh
 }
 
@@ -3826,10 +3833,10 @@ func ExportWave(wave Wave, fileName string) bool {
 	return exportWave(uintptr(unsafe.Pointer(&wave)), fileName)
 }
 
-// ExportWaveAsCode - Export wave sample data to code (.h), returns true on success
-func ExportWaveAsCode(wave Wave, fileName string) bool {
-	return exportWaveAsCode(uintptr(unsafe.Pointer(&wave)), fileName)
-}
+// // ExportWaveAsCode - Export wave sample data to code (.h), returns true on success
+// func ExportWaveAsCode(wave Wave, fileName string) bool {
+// 	return exportWaveAsCode(uintptr(unsafe.Pointer(&wave)), fileName)
+// }
 
 // PlaySound - Play a sound
 func PlaySound(sound Sound) {
@@ -4134,4 +4141,22 @@ func (i *Image) ToImage() image.Image {
 	img.Pix = pixels
 
 	return img
+}
+
+// OpenAsset - Open asset
+func OpenAsset(name string) (Asset, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
+}
+
+// HomeDir - Returns user home directory
+// NOTE: On Android this returns internal data path and must be called after InitWindow
+func HomeDir() string {
+	if homeDir, err := os.UserHomeDir(); err == nil {
+		return homeDir
+	}
+	return ""
 }
