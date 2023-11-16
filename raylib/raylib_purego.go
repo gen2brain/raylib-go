@@ -4,6 +4,7 @@
 package rl
 
 import (
+	"image"
 	"image/color"
 	"unsafe"
 
@@ -1277,23 +1278,23 @@ func GetWindowHandle() unsafe.Pointer {
 }
 
 // GetScreenWidth - Get current screen width
-func GetScreenWidth() int32 {
-	return getScreenWidth()
+func GetScreenWidth() int {
+	return int(getScreenWidth())
 }
 
 // GetScreenHeight - Get current screen height
-func GetScreenHeight() int32 {
-	return getScreenHeight()
+func GetScreenHeight() int {
+	return int(getScreenHeight())
 }
 
 // GetRenderWidth - Get current render width (it considers HiDPI)
-func GetRenderWidth() int32 {
-	return getRenderWidth()
+func GetRenderWidth() int {
+	return int(getRenderWidth())
 }
 
 // GetRenderHeight - Get current render height (it considers HiDPI)
-func GetRenderHeight() int32 {
-	return getRenderHeight()
+func GetRenderHeight() int {
+	return int(getRenderHeight())
 }
 
 // GetMonitorCount - Get number of connected monitors
@@ -1460,8 +1461,8 @@ func EndShaderMode() {
 }
 
 // BeginBlendMode - Begin blending mode (alpha, additive, multiplied, subtract, custom)
-func BeginBlendMode(mode int32) {
-	beginBlendMode(mode)
+func BeginBlendMode(mode BlendMode) {
+	beginBlendMode(int32(mode))
 }
 
 // EndBlendMode - End blending mode (reset to default: alpha blending)
@@ -1527,8 +1528,8 @@ func GetShaderLocationAttrib(shader Shader, attribName string) int32 {
 }
 
 // SetShaderValue - Set shader uniform value
-func SetShaderValue(shader Shader, locIndex int32, value []float32, uniformType int32) {
-	setShaderValue(uintptr(unsafe.Pointer(&shader)), locIndex, value, uniformType)
+func SetShaderValue(shader Shader, locIndex int32, value []float32, uniformType ShaderUniformDataType) {
+	setShaderValue(uintptr(unsafe.Pointer(&shader)), locIndex, value, int32(uniformType))
 }
 
 // SetShaderValueV - Set shader uniform value vector
@@ -1674,8 +1675,8 @@ func OpenURL(url string) {
 }
 
 // TraceLog - Show trace log messages (LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERROR...)
-func TraceLog(logLevel int32, text string, args ...any) {
-	traceLog(logLevel, text, args...)
+func TraceLog(logLevel TraceLogLevel, text string, args ...any) {
+	traceLog(int32(logLevel), text, args...)
 }
 
 // SetTraceLogLevel - Set the current threshold (minimum) log level
@@ -1843,8 +1844,8 @@ func LoadDroppedFiles() []string {
 	return gostrings
 }
 
-// // UnloadDroppedFiles - Unload dropped filepaths
-// func UnloadDroppedFiles(files FilePathList) {}
+// UnloadDroppedFiles - Unload dropped filepaths
+func UnloadDroppedFiles() {}
 
 // // GetFileModTime - Get file modification time (last write time)
 // func GetFileModTime(fileName string) int64 {}
@@ -2098,13 +2099,13 @@ func SetGesturesEnabled(flags uint32) {
 }
 
 // IsGestureDetected - Check if a gesture have been detected
-func IsGestureDetected(gesture uint32) bool {
-	return isGestureDetected(gesture)
+func IsGestureDetected(gesture Gestures) bool {
+	return isGestureDetected(uint32(gesture))
 }
 
 // GetGestureDetected - Get latest detected gesture
-func GetGestureDetected() int32 {
-	return getGestureDetected()
+func GetGestureDetected() Gestures {
+	return Gestures(getGestureDetected())
 }
 
 // GetGestureHoldDuration - Get gesture hold time in milliseconds
@@ -2467,17 +2468,17 @@ func GetCollisionRec(rec1 Rectangle, rec2 Rectangle) Rectangle {
 }
 
 // LoadImage - Load image from file into CPU memory (RAM)
-func LoadImage(fileName string) Image {
+func LoadImage(fileName string) *Image {
 	var img Image
 	loadImage(uintptr(unsafe.Pointer(&img)), fileName)
-	return img
+	return &img
 }
 
 // LoadImageRaw - Load image from RAW file data
-func LoadImageRaw(fileName string, width int32, height int32, format int32, headerSize int32) Image {
+func LoadImageRaw(fileName string, width int32, height int32, format PixelFormat, headerSize int32) *Image {
 	var img Image
-	loadImageRaw(uintptr(unsafe.Pointer(&img)), fileName, width, height, format, headerSize)
-	return img
+	loadImageRaw(uintptr(unsafe.Pointer(&img)), fileName, width, height, int32(format), headerSize)
+	return &img
 }
 
 // LoadImageSvg - Load image from SVG file data or string with specified size
@@ -2502,10 +2503,10 @@ func LoadImageFromMemory(fileType string, fileData []byte, dataSize int32) Image
 }
 
 // LoadImageFromTexture - Load image from GPU texture data
-func LoadImageFromTexture(texture Texture2D) Image {
+func LoadImageFromTexture(texture Texture2D) *Image {
 	var img Image
 	loadImageFromTexture(uintptr(unsafe.Pointer(&img)), uintptr(unsafe.Pointer(&texture)))
-	return img
+	return &img
 }
 
 // LoadImageFromScreen - Load image from screen buffer and (screenshot)
@@ -2521,8 +2522,8 @@ func IsImageReady(image Image) bool {
 }
 
 // UnloadImage - Unload image from CPU memory (RAM)
-func UnloadImage(image Image) {
-	unloadImage(uintptr(unsafe.Pointer(&image)))
+func UnloadImage(image *Image) {
+	unloadImage(uintptr(unsafe.Pointer(image)))
 }
 
 // ExportImage - Export image data to file, returns true on success
@@ -2543,24 +2544,24 @@ func ExportImageAsCode(image Image, fileName string) bool {
 }
 
 // GenImageColor - Generate image: plain color
-func GenImageColor(width int32, height int32, col color.RGBA) Image {
+func GenImageColor(width int, height int, col color.RGBA) *Image {
 	var image Image
-	genImageColor(uintptr(unsafe.Pointer(&image)), width, height, *(*uintptr)(unsafe.Pointer(&col)))
-	return image
+	genImageColor(uintptr(unsafe.Pointer(&image)), int32(width), int32(height), *(*uintptr)(unsafe.Pointer(&col)))
+	return &image
 }
 
 // GenImageGradientLinear - Generate image: linear gradient, direction in degrees [0..360], 0=Vertical gradient
-func GenImageGradientLinear(width int32, height int32, direction int32, start color.RGBA, end color.RGBA) Image {
+func GenImageGradientLinear(width int, height int, direction int, start color.RGBA, end color.RGBA) *Image {
 	var image Image
-	genImageGradientLinear(uintptr(unsafe.Pointer(&image)), width, height, direction, *(*uintptr)(unsafe.Pointer(&start)), *(*uintptr)(unsafe.Pointer(&end)))
-	return image
+	genImageGradientLinear(uintptr(unsafe.Pointer(&image)), int32(width), int32(height), int32(direction), *(*uintptr)(unsafe.Pointer(&start)), *(*uintptr)(unsafe.Pointer(&end)))
+	return &image
 }
 
 // GenImageGradientRadial - Generate image: radial gradient
-func GenImageGradientRadial(width int32, height int32, density float32, inner color.RGBA, outer color.RGBA) Image {
+func GenImageGradientRadial(width int, height int, density float32, inner color.RGBA, outer color.RGBA) *Image {
 	var image Image
-	genImageGradientRadial(uintptr(unsafe.Pointer(&image)), width, height, density, *(*uintptr)(unsafe.Pointer(&inner)), *(*uintptr)(unsafe.Pointer(&outer)))
-	return image
+	genImageGradientRadial(uintptr(unsafe.Pointer(&image)), int32(width), int32(height), density, *(*uintptr)(unsafe.Pointer(&inner)), *(*uintptr)(unsafe.Pointer(&outer)))
+	return &image
 }
 
 // GenImageGradientSquare - Generate image: square gradient
@@ -2571,17 +2572,17 @@ func GenImageGradientSquare(width int32, height int32, density float32, inner co
 }
 
 // GenImageChecked - Generate image: checked
-func GenImageChecked(width int32, height int32, checksX int32, checksY int32, col1 color.RGBA, col2 color.RGBA) Image {
+func GenImageChecked(width int, height int, checksX int, checksY int, col1 color.RGBA, col2 color.RGBA) *Image {
 	var image Image
-	genImageChecked(uintptr(unsafe.Pointer(&image)), width, height, checksX, checksY, *(*uintptr)(unsafe.Pointer(&col1)), *(*uintptr)(unsafe.Pointer(&col2)))
-	return image
+	genImageChecked(uintptr(unsafe.Pointer(&image)), int32(width), int32(height), int32(checksX), int32(checksY), *(*uintptr)(unsafe.Pointer(&col1)), *(*uintptr)(unsafe.Pointer(&col2)))
+	return &image
 }
 
 // GenImageWhiteNoise - Generate image: white noise
-func GenImageWhiteNoise(width int32, height int32, factor float32) Image {
+func GenImageWhiteNoise(width int, height int, factor float32) *Image {
 	var image Image
-	genImageWhiteNoise(uintptr(unsafe.Pointer(&image)), width, height, factor)
-	return image
+	genImageWhiteNoise(uintptr(unsafe.Pointer(&image)), int32(width), int32(height), factor)
+	return &image
 }
 
 // GenImagePerlinNoise - Generate image: perlin noise
@@ -2592,10 +2593,10 @@ func GenImagePerlinNoise(width int32, height int32, offsetX int32, offsetY int32
 }
 
 // GenImageCellular - Generate image: cellular algorithm, bigger tileSize means bigger cells
-func GenImageCellular(width int32, height int32, tileSize int32) Image {
+func GenImageCellular(width int, height int, tileSize int32) *Image {
 	var image Image
-	genImageCellular(uintptr(unsafe.Pointer(&image)), width, height, tileSize)
-	return image
+	genImageCellular(uintptr(unsafe.Pointer(&image)), int32(width), int32(height), tileSize)
+	return &image
 }
 
 // GenImageText - Generate image: grayscale image from text data
@@ -2634,8 +2635,8 @@ func ImageTextEx(font Font, text string, fontSize float32, spacing float32, tint
 }
 
 // ImageFormat - Convert image data to desired format
-func ImageFormat(image *Image, newFormat int32) {
-	imageFormat(image, newFormat)
+func ImageFormat(image *Image, newFormat PixelFormat) {
+	imageFormat(image, int32(newFormat))
 }
 
 // ImageToPOT - Convert image to POT (power-of-two)
@@ -2756,8 +2757,8 @@ func ImageColorReplace(image *Image, col color.RGBA, replace color.RGBA) {
 // LoadImageColors - Load color data from image as a Color array (RGBA - 32bit)
 //
 // NOTE: Memory allocated should be freed using UnloadImageColors()
-func LoadImageColors(image Image) []color.RGBA {
-	ret := loadImageColors(uintptr(unsafe.Pointer(&image)))
+func LoadImageColors(image *Image) []color.RGBA {
+	ret := loadImageColors(uintptr(unsafe.Pointer(image)))
 	return unsafe.Slice(ret, image.Width*image.Height)
 }
 
@@ -2859,8 +2860,8 @@ func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int32, col color.R
 }
 
 // ImageDraw - Draw a source image within a destination image (tint applied to source)
-func ImageDraw(dst *Image, src Image, srcRec Rectangle, dstRec Rectangle, tint color.RGBA) {
-	imageDraw(dst, uintptr(unsafe.Pointer(&src)), uintptr(unsafe.Pointer(&srcRec)), uintptr(unsafe.Pointer(&dstRec)), *(*uintptr)(unsafe.Pointer(&tint)))
+func ImageDraw(dst *Image, src *Image, srcRec Rectangle, dstRec Rectangle, tint color.RGBA) {
+	imageDraw(dst, uintptr(unsafe.Pointer(src)), uintptr(unsafe.Pointer(&srcRec)), uintptr(unsafe.Pointer(&dstRec)), *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // ImageDrawText - Draw text (using default font) within an image (destination)
@@ -2870,7 +2871,7 @@ func ImageDrawText(dst *Image, text string, posX int32, posY int32, fontSize int
 }
 
 // ImageDrawTextEx - Draw text (custom sprite font) within an image (destination)
-func ImageDrawTextEx(dst *Image, font Font, text string, position Vector2, fontSize float32, spacing float32, tint color.RGBA) {
+func ImageDrawTextEx(dst *Image, position Vector2, font Font, text string, fontSize float32, spacing float32, tint color.RGBA) {
 	imageDrawTextEx(dst, uintptr(unsafe.Pointer(&font)), text, *(*uintptr)(unsafe.Pointer(&position)), fontSize, spacing, *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
@@ -2882,9 +2883,9 @@ func LoadTexture(fileName string) Texture2D {
 }
 
 // LoadTextureFromImage - Load texture from image data
-func LoadTextureFromImage(image Image) Texture2D {
+func LoadTextureFromImage(image *Image) Texture2D {
 	var texture Texture2D
-	loadTextureFromImage(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&image)))
+	loadTextureFromImage(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(image)))
 	return texture
 }
 
@@ -2938,8 +2939,8 @@ func GenTextureMipmaps(texture *Texture2D) {
 }
 
 // SetTextureFilter - Set texture scaling filter mode
-func SetTextureFilter(texture Texture2D, filter int32) {
-	setTextureFilter(uintptr(unsafe.Pointer(&texture)), filter)
+func SetTextureFilter(texture Texture2D, filter TextureFilterMode) {
+	setTextureFilter(uintptr(unsafe.Pointer(&texture)), int32(filter))
 }
 
 // SetTextureWrap - Set texture wrapping mode
@@ -4098,4 +4099,39 @@ func DetachAudioMixedProcessor(processor AudioCallback) {
 		return 0
 	})
 	detachAudioMixedProcessor(fn)
+}
+
+// SetCallbackFunc - Sets callback function
+func SetCallbackFunc(func()) {
+}
+
+// NewImageFromImage - Returns new Image from Go image.Image
+func NewImageFromImage(img image.Image) *Image {
+	size := img.Bounds().Size()
+
+	ret := GenImageColor(size.X, size.Y, White)
+
+	for y := 0; y < size.Y; y++ {
+		for x := 0; x < size.X; x++ {
+			col := img.At(x, y)
+			r, g, b, a := col.RGBA()
+			rcolor := NewColor(uint8(r), uint8(g), uint8(b), uint8(a))
+			ImageDrawPixel(ret, int32(x), int32(y), rcolor)
+		}
+	}
+
+	return ret
+}
+
+// ToImage converts a Image to Go image.Image
+func (i *Image) ToImage() image.Image {
+	img := image.NewRGBA(image.Rect(0, 0, int(i.Width), int(i.Height)))
+
+	// Get pixel data from image (RGBA 32bit)
+	ret := LoadImageColors(i)
+	pixels := (*[1 << 24]uint8)(unsafe.Pointer(unsafe.SliceData(ret)))[0 : i.Width*i.Height*4]
+
+	img.Pix = pixels
+
+	return img
 }
