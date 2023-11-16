@@ -1,5 +1,5 @@
-//go:build !cgo
-// +build !cgo
+//go:build !cgo && windows
+// +build !cgo,windows
 
 package rl
 
@@ -127,48 +127,9 @@ var memAlloc func(size uint32) unsafe.Pointer
 var memRealloc func(ptr unsafe.Pointer, size uint32) unsafe.Pointer
 var memFree func(ptr unsafe.Pointer)
 var setTraceLogCallback func(callback uintptr)
-
-// var setLoadFileDataCallback func(callback uintptr)
-// var setSaveFileDataCallback func(callback uintptr)
-// var setLoadFileTextCallback func(callback uintptr)
-// var setSaveFileTextCallback func(callback uintptr)
-// var loadFileData func(fileName string, dataSize *int32) *byte
-// var unloadFileData func(data *byte)
-// var saveFileData func(fileName string, data unsafe.Pointer, dataSize int32) bool
-
-// var exportDataAsCode func(data *byte, dataSize int32, fileName string) bool
-
-// var loadFileText func(fileName string) string
-// var unloadFileText func(text string)
-// var saveFileText func(fileName string, text string) bool
-// var fileExists func(fileName string) bool
-// var directoryExists func(dirPath string) bool
-// var isFileExtension func(fileName string, ext string) bool
-// var getFileLength func(fileName string) int32
-// var getFileExtension func(fileName string) string
-// var getFileName func(filePath string) string
-// var getFileNameWithoutExt func(filePath string) string
-// var getDirectoryPath func(filePath string) string
-// var getPrevDirectoryPath func(dirPath string) string
-// var getWorkingDirectory func() string
-
-// var getApplicationDirectory func() string
-
-// var changeDirectory func(dir string) bool
-
-// var isPathFile func(path string) bool
-// var loadDirectoryFiles func(dirPath string) FilePathList
-// var loadDirectoryFilesEx func(basePath string, filter string, scanSubdirs bool) FilePathList
-// var unloadDirectoryFiles func(files uintptr)
 var isFileDropped func() bool
 var loadDroppedFiles func(files uintptr)
 var unloadDroppedFiles func(files uintptr)
-
-// var getFileModTime func(fileName string) int64
-// var compressData func(data []byte, dataSize int32, compDataSize []int32) []byte
-// var decompressData func(compData []byte, compDataSize int32, dataSize []int32) []byte
-// var encodeDataBase64 func(data []byte, dataSize int32, outputSize []int32) string
-// var decodeDataBase64 func(data []byte, outputSize []int32) []byte
 var loadAutomationEventList func(automationEventList uintptr, fileName string) uintptr
 var unloadAutomationEventList func(list uintptr)
 var exportAutomationEventList func(list uintptr, fileName string) bool
@@ -222,9 +183,6 @@ var getGestureDragVector func() uintptr
 var getGestureDragAngle func() float32
 var getGesturePinchVector func() uintptr
 var getGesturePinchAngle func() float32
-
-// var updateCamera func(camera uintptr, mode int32)
-// var updateCameraPro func(camera uintptr, movement uintptr, rotation uintptr, zoom float32)
 var setShapesTexture func(texture uintptr, source uintptr)
 var drawPixel func(posX int32, posY int32, col uintptr)
 var drawPixelV func(position uintptr, col uintptr)
@@ -298,8 +256,6 @@ var isImageReady func(image uintptr) bool
 var unloadImage func(image uintptr)
 var exportImage func(image uintptr, fileName string) bool
 var exportImageToMemory func(image uintptr, fileType string, fileSize *int32) *byte
-
-// var exportImageAsCode func(image uintptr, fileName string) bool
 var genImageColor func(image uintptr, width int32, height int32, col uintptr)
 var genImageGradientLinear func(image uintptr, width int32, height int32, direction int32, start uintptr, end uintptr)
 var genImageGradientRadial func(image uintptr, width int32, height int32, density float32, inner uintptr, outer uintptr)
@@ -403,8 +359,6 @@ var loadFontData func(fileData []byte, dataSize int32, fontSize int32, codepoint
 var genImageFontAtlas func(image uintptr, glyphs *GlyphInfo, glyphRecs []*Rectangle, glyphCount int32, fontSize int32, padding int32, packMethod int32)
 var unloadFontData func(glyphs *GlyphInfo, glyphCount int32)
 var unloadFont func(font uintptr)
-
-// var exportFontAsCode func(font uintptr, fileName string) bool
 var drawFPS func(posX int32, posY int32)
 var drawText func(text string, posX int32, posY int32, fontSize int32, col uintptr)
 var drawTextEx func(font uintptr, text string, position uintptr, fontSize float32, spacing float32, tint uintptr)
@@ -417,31 +371,6 @@ var measureTextEx func(font uintptr, text string, fontSize float32, spacing floa
 var getGlyphIndex func(font uintptr, codepoint int32) int32
 var getGlyphInfo func(glyphInfo uintptr, font uintptr, codepoint int32)
 var getGlyphAtlasRec func(rec uintptr, font uintptr, codepoint int32)
-
-// var loadUTF8 func(codepoints []int32, length int32) string
-// var unloadUTF8 func(text string)
-// var loadCodepoints func(text string, count []int32) []int32
-// var unloadCodepoints func(codepoints []int32)
-// var getCodepointCount func(text string) int32
-// var getCodepoint func(text string, codepointSize []int32) int32
-// var getCodepointNext func(text string, codepointSize []int32) int32
-// var getCodepointPrevious func(text string, codepointSize []int32) int32
-// var codepointToUTF8 func(codepoint int32, utf8Size []int32) string
-// var textCopy func(dst string, src string) int32
-// var textIsEqual func(text1 string, text2 string) bool
-// var textLength func(text string) uint32
-// var textFormat func(text string, args uintptr) string
-// var textSubtext func(text string, position int32, length int32) string
-// var textReplace func(text string, replace string, by string) string
-// var textInsert func(text string, insert string, position int32) string
-// var textJoin func(textList []string, count int32, delimiter string) string
-// var textSplit func(text string, delimiter int8, count []int32) []string
-// var textAppend func(text string, _append string, position []int32)
-// var textFindIndex func(text string, find string) int32
-// var textToUpper func(text string) string
-// var textToLower func(text string) string
-// var textToPascal func(text string) string
-// var textToInteger func(text string) int32
 var drawLine3D func(startPos uintptr, endPos uintptr, col uintptr)
 var drawPoint3D func(position uintptr, col uintptr)
 var drawCircle3D func(center uintptr, radius float32, rotationAxis uintptr, rotationAngle float32, col uintptr)
@@ -531,8 +460,6 @@ var unloadWave func(wave uintptr)
 var unloadSound func(sound uintptr)
 var unloadSoundAlias func(alias uintptr)
 var exportWave func(wave uintptr, fileName string) bool
-
-// var exportWaveAsCode func(wave uintptr, fileName string) bool
 var playSound func(sound uintptr)
 var stopSound func(sound uintptr)
 var pauseSound func(sound uintptr)
@@ -695,41 +622,9 @@ func init() {
 	purego.RegisterLibFunc(&memRealloc, raylibDll, "MemRealloc")
 	purego.RegisterLibFunc(&memFree, raylibDll, "MemFree")
 	purego.RegisterLibFunc(&setTraceLogCallback, raylibDll, "SetTraceLogCallback")
-	// purego.RegisterLibFunc(&setLoadFileDataCallback, raylibDll, "SetLoadFileDataCallback")
-	// purego.RegisterLibFunc(&setSaveFileDataCallback, raylibDll, "SetSaveFileDataCallback")
-	// purego.RegisterLibFunc(&setLoadFileTextCallback, raylibDll, "SetLoadFileTextCallback")
-	// purego.RegisterLibFunc(&setSaveFileTextCallback, raylibDll, "SetSaveFileTextCallback")
-	// purego.RegisterLibFunc(&loadFileData, raylibDll, "LoadFileData")
-	// purego.RegisterLibFunc(&unloadFileData, raylibDll, "UnloadFileData")
-	// purego.RegisterLibFunc(&saveFileData, raylibDll, "SaveFileData")
-	// purego.RegisterLibFunc(&exportDataAsCode, raylibDll, "ExportDataAsCode")
-	// purego.RegisterLibFunc(&loadFileText, raylibDll, "LoadFileText")
-	// purego.RegisterLibFunc(&unloadFileText, raylibDll, "UnloadFileText")
-	// purego.RegisterLibFunc(&saveFileText, raylibDll, "SaveFileText")
-	// purego.RegisterLibFunc(&fileExists, raylibDll, "FileExists")
-	// purego.RegisterLibFunc(&directoryExists, raylibDll, "DirectoryExists")
-	// purego.RegisterLibFunc(&isFileExtension, raylibDll, "IsFileExtension")
-	// purego.RegisterLibFunc(&getFileLength, raylibDll, "GetFileLength")
-	// purego.RegisterLibFunc(&getFileExtension, raylibDll, "GetFileExtension")
-	// purego.RegisterLibFunc(&getFileName, raylibDll, "GetFileName")
-	// purego.RegisterLibFunc(&getFileNameWithoutExt, raylibDll, "GetFileNameWithoutExt")
-	// purego.RegisterLibFunc(&getDirectoryPath, raylibDll, "GetDirectoryPath")
-	// purego.RegisterLibFunc(&getPrevDirectoryPath, raylibDll, "GetPrevDirectoryPath")
-	// purego.RegisterLibFunc(&getWorkingDirectory, raylibDll, "GetWorkingDirectory")
-	// purego.RegisterLibFunc(&getApplicationDirectory, raylibDll, "GetApplicationDirectory")
-	// purego.RegisterLibFunc(&changeDirectory, raylibDll, "ChangeDirectory")
-	// purego.RegisterLibFunc(&isPathFile, raylibDll, "IsPathFile")
-	// purego.RegisterLibFunc(&loadDirectoryFiles, raylibDll, "LoadDirectoryFiles")
-	// purego.RegisterLibFunc(&loadDirectoryFilesEx, raylibDll, "LoadDirectoryFilesEx")
-	// purego.RegisterLibFunc(&unloadDirectoryFiles, raylibDll, "UnloadDirectoryFiles")
 	purego.RegisterLibFunc(&isFileDropped, raylibDll, "IsFileDropped")
 	purego.RegisterLibFunc(&loadDroppedFiles, raylibDll, "LoadDroppedFiles")
 	purego.RegisterLibFunc(&unloadDroppedFiles, raylibDll, "UnloadDroppedFiles")
-	// purego.RegisterLibFunc(&getFileModTime, raylibDll, "GetFileModTime")
-	// purego.RegisterLibFunc(&compressData, raylibDll, "CompressData")
-	// purego.RegisterLibFunc(&decompressData, raylibDll, "DecompressData")
-	// purego.RegisterLibFunc(&encodeDataBase64, raylibDll, "EncodeDataBase64")
-	// purego.RegisterLibFunc(&decodeDataBase64, raylibDll, "DecodeDataBase64")
 	purego.RegisterLibFunc(&loadAutomationEventList, raylibDll, "LoadAutomationEventList")
 	purego.RegisterLibFunc(&unloadAutomationEventList, raylibDll, "UnloadAutomationEventList")
 	purego.RegisterLibFunc(&exportAutomationEventList, raylibDll, "ExportAutomationEventList")
@@ -783,8 +678,6 @@ func init() {
 	purego.RegisterLibFunc(&getGestureDragAngle, raylibDll, "GetGestureDragAngle")
 	purego.RegisterLibFunc(&getGesturePinchVector, raylibDll, "GetGesturePinchVector")
 	purego.RegisterLibFunc(&getGesturePinchAngle, raylibDll, "GetGesturePinchAngle")
-	// purego.RegisterLibFunc(&updateCamera, raylibDll, "UpdateCamera")
-	// purego.RegisterLibFunc(&updateCameraPro, raylibDll, "UpdateCameraPro")
 	purego.RegisterLibFunc(&setShapesTexture, raylibDll, "SetShapesTexture")
 	purego.RegisterLibFunc(&drawPixel, raylibDll, "DrawPixel")
 	purego.RegisterLibFunc(&drawPixelV, raylibDll, "DrawPixelV")
@@ -858,7 +751,6 @@ func init() {
 	purego.RegisterLibFunc(&unloadImage, raylibDll, "UnloadImage")
 	purego.RegisterLibFunc(&exportImage, raylibDll, "ExportImage")
 	purego.RegisterLibFunc(&exportImageToMemory, raylibDll, "ExportImageToMemory")
-	// purego.RegisterLibFunc(&exportImageAsCode, raylibDll, "ExportImageAsCode")
 	purego.RegisterLibFunc(&genImageColor, raylibDll, "GenImageColor")
 	purego.RegisterLibFunc(&genImageGradientLinear, raylibDll, "GenImageGradientLinear")
 	purego.RegisterLibFunc(&genImageGradientRadial, raylibDll, "GenImageGradientRadial")
@@ -962,7 +854,6 @@ func init() {
 	purego.RegisterLibFunc(&genImageFontAtlas, raylibDll, "GenImageFontAtlas")
 	purego.RegisterLibFunc(&unloadFontData, raylibDll, "UnloadFontData")
 	purego.RegisterLibFunc(&unloadFont, raylibDll, "UnloadFont")
-	// purego.RegisterLibFunc(&exportFontAsCode, raylibDll, "ExportFontAsCode")
 	purego.RegisterLibFunc(&drawFPS, raylibDll, "DrawFPS")
 	purego.RegisterLibFunc(&drawText, raylibDll, "DrawText")
 	purego.RegisterLibFunc(&drawTextEx, raylibDll, "DrawTextEx")
@@ -975,30 +866,6 @@ func init() {
 	purego.RegisterLibFunc(&getGlyphIndex, raylibDll, "GetGlyphIndex")
 	purego.RegisterLibFunc(&getGlyphInfo, raylibDll, "GetGlyphInfo")
 	purego.RegisterLibFunc(&getGlyphAtlasRec, raylibDll, "GetGlyphAtlasRec")
-	// purego.RegisterLibFunc(&loadUTF8, raylibDll, "LoadUTF8")
-	// purego.RegisterLibFunc(&unloadUTF8, raylibDll, "UnloadUTF8")
-	// purego.RegisterLibFunc(&loadCodepoints, raylibDll, "LoadCodepoints")
-	// purego.RegisterLibFunc(&unloadCodepoints, raylibDll, "UnloadCodepoints")
-	// purego.RegisterLibFunc(&getCodepointCount, raylibDll, "GetCodepointCount")
-	// purego.RegisterLibFunc(&getCodepoint, raylibDll, "GetCodepoint")
-	// purego.RegisterLibFunc(&getCodepointNext, raylibDll, "GetCodepointNext")
-	// purego.RegisterLibFunc(&getCodepointPrevious, raylibDll, "GetCodepointPrevious")
-	// purego.RegisterLibFunc(&codepointToUTF8, raylibDll, "CodepointToUTF8")
-	// purego.RegisterLibFunc(&textCopy, raylibDll, "TextCopy")
-	// purego.RegisterLibFunc(&textIsEqual, raylibDll, "TextIsEqual")
-	// purego.RegisterLibFunc(&textLength, raylibDll, "TextLength")
-	// purego.RegisterLibFunc(&textFormat, raylibDll, "TextFormat")
-	// purego.RegisterLibFunc(&textSubtext, raylibDll, "TextSubtext")
-	// purego.RegisterLibFunc(&textReplace, raylibDll, "TextReplace")
-	// purego.RegisterLibFunc(&textInsert, raylibDll, "TextInsert")
-	// purego.RegisterLibFunc(&textJoin, raylibDll, "TextJoin")
-	// purego.RegisterLibFunc(&textSplit, raylibDll, "TextSplit")
-	// purego.RegisterLibFunc(&textAppend, raylibDll, "TextAppend")
-	// purego.RegisterLibFunc(&textFindIndex, raylibDll, "TextFindIndex")
-	// purego.RegisterLibFunc(&textToUpper, raylibDll, "TextToUpper")
-	// purego.RegisterLibFunc(&textToLower, raylibDll, "TextToLower")
-	// purego.RegisterLibFunc(&textToPascal, raylibDll, "TextToPascal")
-	// purego.RegisterLibFunc(&textToInteger, raylibDll, "TextToInteger")
 	purego.RegisterLibFunc(&drawLine3D, raylibDll, "DrawLine3D")
 	purego.RegisterLibFunc(&drawPoint3D, raylibDll, "DrawPoint3D")
 	purego.RegisterLibFunc(&drawCircle3D, raylibDll, "DrawCircle3D")
@@ -1088,7 +955,6 @@ func init() {
 	purego.RegisterLibFunc(&unloadSound, raylibDll, "UnloadSound")
 	purego.RegisterLibFunc(&unloadSoundAlias, raylibDll, "UnloadSoundAlias")
 	purego.RegisterLibFunc(&exportWave, raylibDll, "ExportWave")
-	// purego.RegisterLibFunc(&exportWaveAsCode, raylibDll, "ExportWaveAsCode")
 	purego.RegisterLibFunc(&playSound, raylibDll, "PlaySound")
 	purego.RegisterLibFunc(&stopSound, raylibDll, "StopSound")
 	purego.RegisterLibFunc(&pauseSound, raylibDll, "PauseSound")
@@ -1713,106 +1579,6 @@ func SetTraceLogCallback(fn TraceLogCallbackFun) {
 	setTraceLogCallback(traceLogCallbackWrapper(fn))
 }
 
-// // SetLoadFileDataCallback - Set custom file binary data loader
-// func SetLoadFileDataCallback(callback LoadFileDataCallback) {}
-
-// // SetSaveFileDataCallback - Set custom file binary data saver
-// func SetSaveFileDataCallback(callback SaveFileDataCallback) {}
-
-// // SetLoadFileTextCallback - Set custom file text data loader
-// func SetLoadFileTextCallback(callback LoadFileTextCallback) {}
-
-// // SetSaveFileTextCallback - Set custom file text data saver
-// func SetSaveFileTextCallback(callback SaveFileTextCallback) {}
-
-// // LoadFileData - Load file data as byte array (read)
-// //
-// // Note: Because the slice is allocated in C, use UnloadFileData when it isn't needed anymore.
-// func LoadFileData(fileName string, dataSize *int32) []byte {
-// 	ret := loadFileData(fileName, dataSize)
-// 	return unsafe.Slice(ret, int(*dataSize))
-// }
-
-// // UnloadFileData - Unload file data allocated by LoadFileData()
-// func UnloadFileData(data []byte) {
-// 	unloadFileData(unsafe.SliceData(data))
-// }
-
-// // SaveFileData - Save data to file from byte array (write), returns true on success
-// //
-// // Note: As an alternative, you could use go's os.WriteFile function.
-// func SaveFileData(fileName string, data []byte, dataSize int32) bool {
-// 	return saveFileData(fileName, unsafe.Pointer(unsafe.SliceData(data)), dataSize)
-// }
-
-// ExportDataAsCode - Export data to code (.h), returns true on success
-// func ExportDataAsCode(data []byte, dataSize int32, fileName string) bool {
-// 	return exportDataAsCode(unsafe.SliceData(data), dataSize, fileName)
-// }
-
-// // LoadFileText - Load text data from file (read), returns a '\0' terminated string
-// func LoadFileText(fileName string) string {}
-
-// // UnloadFileText - Unload file text data allocated by LoadFileText()
-// func UnloadFileText(text string) {}
-
-// // SaveFileText - Save text data to file (write), string must be '\0' terminated, returns true on success
-// func SaveFileText(fileName string, text string) bool {}
-
-// // FileExists - Check if file exists
-// func FileExists(fileName string) bool {}
-
-// // DirectoryExists - Check if a directory path exists
-// func DirectoryExists(dirPath string) bool {}
-
-// // IsFileExtension - Check file extension (including point: .png, .wav)
-// func IsFileExtension(fileName string, ext string) bool {}
-
-// // GetFileLength - Get file length in bytes (NOTE: GetFileSize() conflicts with windows.h)
-// func GetFileLength(fileName string) int32 {}
-
-// // GetFileExtension - Get pointer to extension for a filename string (includes dot: '.png')
-// func GetFileExtension(fileName string) string {}
-
-// // GetFileName - Get pointer to filename for a path string
-// func GetFileName(filePath string) string {}
-
-// // GetFileNameWithoutExt - Get filename string without extension (uses static string)
-// func GetFileNameWithoutExt(filePath string) string {}
-
-// // GetDirectoryPath - Get full path for a given fileName with path (uses static string)
-// func GetDirectoryPath(filePath string) string {}
-
-// // GetPrevDirectoryPath - Get previous directory path for a given path (uses static string)
-// func GetPrevDirectoryPath(dirPath string) string {}
-
-// // GetWorkingDirectory - Get current working directory (uses static string)
-// func GetWorkingDirectory() string {
-// 	return getWorkingDirectory()
-// }
-
-// // GetApplicationDirectory - Get the directory of the running application (uses static string)
-// func GetApplicationDirectory() string {
-// 	return getApplicationDirectory()
-// }
-
-// // ChangeDirectory - Change working directory, return true on success
-// func ChangeDirectory(dir string) bool {
-// 	return changeDirectory(dir)
-// }
-
-// // IsPathFile - Check if a given path is a file or a directory
-// func IsPathFile(path string) bool {}
-
-// // LoadDirectoryFiles - Load directory filepaths
-// func LoadDirectoryFiles(dirPath string) FilePathList {}
-
-// // LoadDirectoryFilesEx - Load directory filepaths with extension filtering and recursive directory scan
-// func LoadDirectoryFilesEx(basePath string, filter string, scanSubdirs bool) FilePathList {}
-
-// // UnloadDirectoryFiles - Unload filepaths
-// func UnloadDirectoryFiles(files FilePathList) {}
-
 // IsFileDropped - Check if a file has been dropped into window
 //
 // REVIEW NEEDED! 2023-11-12 JupiterRider: This funtions always returns true.
@@ -1853,21 +1619,6 @@ func LoadDroppedFiles() []string {
 
 // UnloadDroppedFiles - Unload dropped filepaths
 func UnloadDroppedFiles() {}
-
-// // GetFileModTime - Get file modification time (last write time)
-// func GetFileModTime(fileName string) int64 {}
-
-// // CompressData - Compress data (DEFLATE algorithm), memory must be MemFree()
-// func CompressData(data []byte, dataSize int32, compDataSize []int32) []byte {}
-
-// // DecompressData - Decompress data (DEFLATE algorithm), memory must be MemFree()
-// func DecompressData(compData []byte, compDataSize int32, dataSize []int32) []byte {}
-
-// // EncodeDataBase64 - Encode data to Base64 string, memory must be MemFree()
-// func EncodeDataBase64(data []byte, dataSize int32, outputSize []int32) string {}
-
-// // DecodeDataBase64 - Decode Base64 string data, memory must be MemFree()
-// func DecodeDataBase64(data []byte, outputSize []int32) []byte {}
 
 // LoadAutomationEventList - Load automation events list from file, NULL for empty list, capacity = MAX_AUTOMATION_EVENTS
 func LoadAutomationEventList(fileName string) AutomationEventList {
@@ -2141,12 +1892,6 @@ func GetGesturePinchVector() Vector2 {
 func GetGesturePinchAngle() float32 {
 	return getGesturePinchAngle()
 }
-
-// // UpdateCamera - Update camera position for selected mode
-// func UpdateCamera(camera *Camera, mode int32) {}
-
-// // UpdateCameraPro - Update camera movement/rotation
-// func UpdateCameraPro(camera *Camera, movement Vector3, rotation Vector3, zoom float32) {}
 
 // SetShapesTexture - Set texture and rectangle to be used on shapes drawing
 func SetShapesTexture(texture Texture2D, source Rectangle) {
@@ -2544,11 +2289,6 @@ func ExportImageToMemory(image Image, fileType string) []byte {
 	ret := exportImageToMemory(uintptr(unsafe.Pointer(&image)), fileType, &fileSize)
 	return unsafe.Slice(ret, fileSize)
 }
-
-// // ExportImageAsCode - Export image as code file defining an array of bytes, returns true on success
-// func ExportImageAsCode(image Image, fileName string) bool {
-// 	return exportImageAsCode(uintptr(unsafe.Pointer(&image)), fileName)
-// }
 
 // GenImageColor - Generate image: plain color
 func GenImageColor(width int, height int, col color.RGBA) *Image {
@@ -3144,11 +2884,6 @@ func UnloadFont(font Font) {
 	unloadFont(uintptr(unsafe.Pointer(&font)))
 }
 
-// // ExportFontAsCode - Export font as code file, returns true on success
-// func ExportFontAsCode(font Font, fileName string) bool {
-// 	return exportFontAsCode(uintptr(unsafe.Pointer(&font)), fileName)
-// }
-
 // DrawFPS - Draw current FPS
 func DrawFPS(posX int32, posY int32) {
 	drawFPS(posX, posY)
@@ -3214,120 +2949,6 @@ func GetGlyphAtlasRec(font Font, codepoint rune) Rectangle {
 	getGlyphAtlasRec(uintptr(unsafe.Pointer(&rec)), uintptr(unsafe.Pointer(&font)), codepoint)
 	return rec
 }
-
-// // LoadUTF8 - Load UTF-8 text encoded from codepoints array
-// func LoadUTF8(codepoints []int32, length int32) string {
-// 	return ""
-// }
-
-// // UnloadUTF8 - Unload UTF-8 text encoded from codepoints array
-// func UnloadUTF8(text string) {}
-
-// // LoadCodepoints - Load all codepoints from a UTF-8 text string, codepoints count returned by parameter
-// func LoadCodepoints(text string, count []int32) []int32 {
-// 	return nil
-// }
-
-// // UnloadCodepoints - Unload codepoints data from memory
-// func UnloadCodepoints(codepoints []int32) {}
-
-// // GetCodepointCount - Get total number of codepoints in a UTF-8 encoded string
-// func GetCodepointCount(text string) int32 {
-// 	return 0
-// }
-
-// // GetCodepoint - Get next codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure
-// func GetCodepoint(text string, codepointSize []int32) int32 {
-// 	return 0
-// }
-
-// // GetCodepointNext - Get next codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure
-// func GetCodepointNext(text string, codepointSize []int32) int32 {
-// 	return 0
-// }
-
-// // GetCodepointPrevious - Get previous codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure
-// func GetCodepointPrevious(text string, codepointSize []int32) int32 {
-// 	return 0
-// }
-
-// // CodepointToUTF8 - Encode one codepoint into UTF-8 byte array (array length returned as parameter)
-// func CodepointToUTF8(codepoint int32, utf8Size []int32) string {
-// 	return ""
-// }
-
-// // TextCopy - Copy one string to another, returns bytes copied
-// func TextCopy(dst string, src string) int32 {
-// 	return 0
-// }
-
-// // TextIsEqual - Check if two text string are equal
-// func TextIsEqual(text1 string, text2 string) bool {
-// 	return false
-// }
-
-// // TextLength - Get text length, checks for '\0' ending
-// func TextLength(text string) uint32 {
-// 	return 0
-// }
-
-// // TextFormat - Text formatting with variables (sprintf() style)
-// func TextFormat(text string, args ...any) string {
-// 	return ""
-// }
-
-// // TextSubtext - Get a piece of a text string
-// func TextSubtext(text string, position int32, length int32) string {
-// 	return ""
-// }
-
-// // TextReplace - Replace text string (WARNING: memory must be freed!)
-// func TextReplace(text string, replace string, by string) string {
-// 	return ""
-// }
-
-// // TextInsert - Insert text in a position (WARNING: memory must be freed!)
-// func TextInsert(text string, insert string, position int32) string {
-// 	return ""
-// }
-
-// // TextJoin - Join text strings with delimiter
-// func TextJoin(textList []string, count int32, delimiter string) string {
-// 	return ""
-// }
-
-// // TextSplit - Split text into multiple strings
-// func TextSplit(text string, delimiter int8, count []int32) []string {
-// 	return nil
-// }
-
-// // TextAppend - Append text at specific position and move cursor!
-// func TextAppend(text string, _append string, position []int32) {}
-
-// // TextFindIndex - Find first text occurrence within a string
-// func TextFindIndex(text string, find string) int32 {
-// 	return 0
-// }
-
-// // TextToUpper - Get upper case version of provided string
-// func TextToUpper(text string) string {
-// 	return ""
-// }
-
-// // TextToLower - Get lower case version of provided string
-// func TextToLower(text string) string {
-// 	return ""
-// }
-
-// // TextToPascal - Get Pascal case notation version of provided string
-// func TextToPascal(text string) string {
-// 	return ""
-// }
-
-// // TextToInteger - Get integer value from text (negative values not supported)
-// func TextToInteger(text string) int32 {
-// 	return 0
-// }
 
 // DrawLine3D - Draw a line in 3D world space
 func DrawLine3D(startPos Vector3, endPos Vector3, col color.RGBA) {
@@ -3832,11 +3453,6 @@ func UnloadSoundAlias(alias Sound) {
 func ExportWave(wave Wave, fileName string) bool {
 	return exportWave(uintptr(unsafe.Pointer(&wave)), fileName)
 }
-
-// // ExportWaveAsCode - Export wave sample data to code (.h), returns true on success
-// func ExportWaveAsCode(wave Wave, fileName string) bool {
-// 	return exportWaveAsCode(uintptr(unsafe.Pointer(&wave)), fileName)
-// }
 
 // PlaySound - Play a sound
 func PlaySound(sound Sound) {
