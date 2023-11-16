@@ -5,22 +5,35 @@ package rl
 
 import (
 	"fmt"
+	"unsafe"
 
 	"github.com/ebitengine/purego"
 	"golang.org/x/sys/windows"
 )
 
 const (
-	libname = "raylib.dll"
+	libname         = "raylib.dll"
+	requiredVersion = "5.0"
 )
 
 // loadLibrary loads the raylib dll and panics on error
 func loadLibrary() uintptr {
-	if handle, err := windows.LoadLibrary(libname); err != nil {
+	handle, err := windows.LoadLibrary(libname)
+	if err != nil {
 		panic(fmt.Errorf("cannot load library %s: %w", libname, err))
-	} else {
-		return uintptr(handle)
 	}
+
+	proc, err := windows.GetProcAddress(handle, "raylib_version")
+	if err != nil {
+		panic(err)
+	}
+
+	version := windows.BytePtrToString(**(***byte)(unsafe.Pointer(&proc)))
+	if version != requiredVersion {
+		panic(fmt.Errorf("version %s of %s doesn't match the required version %s", version, libname, requiredVersion))
+	}
+
+	return uintptr(handle)
 }
 
 func traceLogCallbackWrapper(fn TraceLogCallbackFun) uintptr {
