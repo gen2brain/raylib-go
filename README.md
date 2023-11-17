@@ -1,4 +1,4 @@
-![logo](https://goo.gl/XlIcXz)
+![image](https://github.com/unklnik/raylib-go/assets/146096950/10ffd740-ce93-46cd-8712-735ee55972e1)![logo](https://goo.gl/XlIcXz)
 ## raylib-go
 [![Build Status](https://github.com/gen2brain/raylib-go/actions/workflows/build.yml/badge.svg)](https://github.com/gen2brain/raylib-go/actions)
 [![GoDoc](https://godoc.org/github.com/gen2brain/raylib-go/raylib?status.svg)](https://godoc.org/github.com/gen2brain/raylib-go/raylib)
@@ -50,6 +50,9 @@ To remove console window, build with `-ldflags "-H=windowsgui"`.
 
 Download the raylib.dll from the assets on the [releases page](https://github.com/raysan5/raylib/releases). It is contained in the `raylib-*_win64_msvc*.zip`.
 Put the raylib.dll into the root folder of your project or copy it into `C:\Windows\System32` for a system-wide installation.
+Disable CGO in Go enviroment
+
+    go env -w CGO_ENABLED=0
 
 As of November 15, 2023, raylib 5.0 is the required version.
 
