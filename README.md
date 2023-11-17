@@ -46,7 +46,7 @@ You can also build binary in [MSYS2](https://msys2.github.io/) shell.
 
 To remove console window, build with `-ldflags "-H=windowsgui"`.
 
-###### purego (without cgo)
+###### purego (without cgo, i.e. CGO_ENABLED=0)
 
 Download the raylib.dll from the assets on the [releases page](https://github.com/raysan5/raylib/releases). It is contained in the `raylib-*_win64_msvc*.zip`.
 Put the raylib.dll into the root folder of your project or copy it into `C:\Windows\System32` for a system-wide installation.
