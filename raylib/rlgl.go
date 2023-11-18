@@ -52,36 +52,36 @@ const (
 	ComputeShader  = 0x91B9 // GL_COMPUTE_SHADER
 )
 
-// rlVertexBuffer - Dynamic vertex buffers (position + texcoords + colors + indices arrays)
-type rlVertexBuffer struct {
-	elementCount int32
-	vertices     []float32
-	texcoords    []float32
-	colors       []uint8
-	indices      []uint32
-	vaoId        uint32
-	vboId        [4]uint32
+// VertexBuffer - Dynamic vertex buffers (position + texcoords + colors + indices arrays)
+type VertexBuffer struct {
+	ElementCount int32
+	Vertices     *float32
+	Texcoords    *float32
+	Colors       *uint8
+	Indices      *uint32
+	VaoId        uint32
+	VboId        [4]uint32
 }
 
-// rlDrawCall - Draw call type
+// DrawCall - Draw call type
 // NOTE: Only texture changes register a new draw, other state-change-related elements are not
 // used at this moment (vaoId, shaderId, matrices), raylib just forces a batch draw call if any
 // of those state-change happens (this is done in core module)
-type rlDrawCall struct {
-	mode            int32
-	vertexCount     int32
-	vertexAlignment int32
-	textureId       uint32
+type DrawCall struct {
+	Mode            int32
+	VertexCount     int32
+	VertexAlignment int32
+	TextureId       uint32
 }
 
-// rlRenderBatch type
-type rlRenderBatch struct {
-	bufferCount   int32
-	currentBuffer int32
-	vertexBuffer  []rlVertexBuffer
-	draws         []rlDrawCall
-	drawCounter   int32
-	currentDepth  float32
+// RenderBatch type
+type RenderBatch struct {
+	BufferCount   int32
+	CurrentBuffer int32
+	VertexBuffer  *VertexBuffer
+	Draws         *DrawCall
+	DrawCounter   int32
+	DurrentDepth  float32
 }
 
 // OpenGL version
@@ -93,7 +93,8 @@ const (
 	OpenglEs20 int32 = 5
 )
 
-type rlGlVersion = int32
+// GlVersion type
+type GlVersion = int32
 
 // Shader attribute data types
 const (
@@ -103,7 +104,8 @@ const (
 	ShaderAttribVec4  int32 = 3
 )
 
-type rlShaderAttributeDataType = int32
+// ShaderAttributeDataType type
+type ShaderAttributeDataType = int32
 
 // Framebuffer attachment type
 // NOTE: By default up to 8 color channels defined but it can be more
@@ -120,7 +122,8 @@ const (
 	AttachmentStencil       int32 = 200
 )
 
-type rlFramebufferAttachType = int32
+// FramebufferAttachType type
+type FramebufferAttachType = int32
 
 // Framebuffer texture attachment type
 const (
@@ -134,4 +137,5 @@ const (
 	AttachmentRenderbuffer     int32 = 200
 )
 
-type rlFramebufferAttachTextureType = int32
+// FramebufferAttachTextureType type
+type FramebufferAttachTextureType = int32

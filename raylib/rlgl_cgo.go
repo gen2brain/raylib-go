@@ -472,15 +472,15 @@ func SetBlendFactorsSeparate(glSrcRGB int32, glDstRGB int32, glSrcAlpha int32, g
 	C.rlSetBlendFactorsSeparate(cglSrcRGB, cglDstRGB, cglSrcAlpha, cglDstAlpha, cglEqRGB, cglEqAlpha)
 }
 
-// glInit - Initialize rlgl (buffers, shaders, textures, states)
-func glInit(width int32, height int32) {
+// GlInit - Initialize rlgl (buffers, shaders, textures, states)
+func GlInit(width int32, height int32) {
 	cwidth := C.int(width)
 	cheight := C.int(height)
 	C.rlglInit(cwidth, cheight)
 }
 
-// glClose - De-inititialize rlgl (buffers, shaders, textures)
-func glClose() {
+// GlClose - De-inititialize rlgl (buffers, shaders, textures)
+func GlClose() {
 	C.rlglClose()
 }
 
@@ -519,6 +519,27 @@ func GetTextureIdDefault() uint32 {
 // GetShaderIdDefault - Get default shader id
 func GetShaderIdDefault() uint32 {
 	return uint32(C.rlGetShaderIdDefault())
+}
+
+// LoadRenderBatch - Load a render batch system
+func LoadRenderBatch(numBuffers int32, bufferElements int32) RenderBatch {
+	ret := C.rlLoadRenderBatch(C.int(numBuffers), C.int(bufferElements))
+	return *(*RenderBatch)(unsafe.Pointer(&ret))
+}
+
+// UnloadRenderBatch - Unload render batch system
+func UnloadRenderBatch(batch RenderBatch) {
+	C.rlUnloadRenderBatch(*(*C.rlRenderBatch)(unsafe.Pointer(&batch)))
+}
+
+// DrawRenderBatch - Draw render batch data (Update->Draw->Reset)
+func DrawRenderBatch(batch *RenderBatch) {
+	C.rlDrawRenderBatch((*C.rlRenderBatch)(unsafe.Pointer(batch)))
+}
+
+// SetRenderBatchActive - Set the active render batch for rlgl (NULL for default internal)
+func SetRenderBatchActive(batch *RenderBatch) {
+	C.rlSetRenderBatchActive((*C.rlRenderBatch)(unsafe.Pointer(batch)))
 }
 
 // DrawRenderBatchActive - Update and draw internal render batch

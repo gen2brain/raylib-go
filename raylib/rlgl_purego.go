@@ -86,6 +86,10 @@ var rlSetFramebufferHeight func(height int32)
 var rlGetFramebufferHeight func() int32
 var rlGetTextureIdDefault func() uint32
 var rlGetShaderIdDefault func() uint32
+var rlLoadRenderBatch func(batch uintptr, numBuffers int32, bufferElements int32)
+var rlUnloadRenderBatch func(batch uintptr)
+var rlDrawRenderBatch func(batch *RenderBatch)
+var rlSetRenderBatchActive func(batch *RenderBatch)
 var rlDrawRenderBatchActive func()
 var rlCheckRenderBatchLimit func(vCount int32) bool
 var rlSetTexture func(id uint32)
@@ -197,6 +201,10 @@ func initRlglPurego() {
 	purego.RegisterLibFunc(&rlGetFramebufferHeight, raylibDll, "rlGetFramebufferHeight")
 	purego.RegisterLibFunc(&rlGetTextureIdDefault, raylibDll, "rlGetTextureIdDefault")
 	purego.RegisterLibFunc(&rlGetShaderIdDefault, raylibDll, "rlGetShaderIdDefault")
+	purego.RegisterLibFunc(&rlLoadRenderBatch, raylibDll, "rlLoadRenderBatch")
+	purego.RegisterLibFunc(&rlUnloadRenderBatch, raylibDll, "rlUnloadRenderBatch")
+	purego.RegisterLibFunc(&rlDrawRenderBatch, raylibDll, "rlDrawRenderBatch")
+	purego.RegisterLibFunc(&rlSetRenderBatchActive, raylibDll, "rlSetRenderBatchActive")
 	purego.RegisterLibFunc(&rlDrawRenderBatchActive, raylibDll, "rlDrawRenderBatchActive")
 	purego.RegisterLibFunc(&rlCheckRenderBatchLimit, raylibDll, "rlCheckRenderBatchLimit")
 	purego.RegisterLibFunc(&rlSetTexture, raylibDll, "rlSetTexture")
@@ -581,13 +589,13 @@ func SetBlendFactorsSeparate(glSrcRGB int32, glDstRGB int32, glSrcAlpha int32, g
 	rlSetBlendFactorsSeparate(glSrcRGB, glDstRGB, glSrcAlpha, glDstAlpha, glEqRGB, glEqAlpha)
 }
 
-// glInit - Initialize rlgl (buffers, shaders, textures, states)
-func glInit(width int32, height int32) {
+// GlInit - Initialize rlgl (buffers, shaders, textures, states)
+func GlInit(width int32, height int32) {
 	rlglInit(width, height)
 }
 
-// glClose - De-inititialize rlgl (buffers, shaders, textures)
-func glClose() {
+// GlClose - De-inititialize rlgl (buffers, shaders, textures)
+func GlClose() {
 	rlglClose()
 }
 
@@ -624,6 +632,28 @@ func GetTextureIdDefault() uint32 {
 // GetShaderIdDefault - Get default shader id
 func GetShaderIdDefault() uint32 {
 	return rlGetShaderIdDefault()
+}
+
+// LoadRenderBatch - Load a render batch system
+func LoadRenderBatch(numBuffers int32, bufferElements int32) RenderBatch {
+	var batch RenderBatch
+	rlLoadRenderBatch(uintptr(unsafe.Pointer(&batch)), numBuffers, bufferElements)
+	return batch
+}
+
+// UnloadRenderBatch - Unload render batch system
+func UnloadRenderBatch(batch RenderBatch) {
+	rlUnloadRenderBatch(uintptr(unsafe.Pointer(&batch)))
+}
+
+// DrawRenderBatch - Draw render batch data (Update->Draw->Reset)
+func DrawRenderBatch(batch *RenderBatch) {
+	rlDrawRenderBatch(batch)
+}
+
+// rlSetRenderBatchActive - Set the active render batch for rlgl (NULL for default internal)
+func SetRenderBatchActive(batch *RenderBatch) {
+	rlSetRenderBatchActive(batch)
 }
 
 // DrawRenderBatchActive - Update and draw internal render batch
