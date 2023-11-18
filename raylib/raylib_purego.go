@@ -512,6 +512,8 @@ var detachAudioMixedProcessor func(processor uintptr)
 func init() {
 	raylibDll = loadLibrary()
 
+	initRlglPurego()
+
 	purego.RegisterLibFunc(&initWindow, raylibDll, "InitWindow")
 	purego.RegisterLibFunc(&closeWindow, raylibDll, "CloseWindow")
 	purego.RegisterLibFunc(&windowShouldClose, raylibDll, "WindowShouldClose")
