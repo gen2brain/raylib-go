@@ -1,5 +1,5 @@
-github.com/ebitengine/purego v0.5.0 h1:JrMGKfRIAM4/QVKaesIIT7m/UVjTj5GYhRSQYwfVdpo=
-github.com/ebitengine/purego v0.5.0/go.mod h1:ah1In8AOtksoNK6yk5z1HTJeUkC1Ez4Wk2idgGslMwQ=
+github.com/ebitengine/purego v0.6.0-alpha.1.0.20231118171415-63c6fec935c5 h1:yi8prWU9muoK5wqNcMX2dXxiIeflbKRs8NeVhX+cH0I=
+github.com/ebitengine/purego v0.6.0-alpha.1.0.20231118171415-63c6fec935c5/go.mod h1:ah1In8AOtksoNK6yk5z1HTJeUkC1Ez4Wk2idgGslMwQ=
 github.com/jakecoffman/cp v1.2.1 h1:zkhc2Gpo9l4NLUZfeG3j33+3bQD7MkqPa+n5PdX+5mI=
 github.com/jakecoffman/cp v1.2.1/go.mod h1:JjY/Fp6d8E1CHnu74gWNnU0+b9VzEdUVPoJxg2PsTQg=
 github.com/neguse/go-box2d-lite v0.0.0-20170921151050-5d8ed9b7272b h1:+67TGbwfgeB5o03Rx+ZBW44zAQ+wUujcwdRA0p9CbJI=
