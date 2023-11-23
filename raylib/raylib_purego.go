@@ -1582,8 +1582,6 @@ func SetTraceLogCallback(fn TraceLogCallbackFun) {
 }
 
 // IsFileDropped - Check if a file has been dropped into window
-//
-// REVIEW NEEDED! 2023-11-12 JupiterRider: This funtions always returns true.
 func IsFileDropped() bool {
 	return isFileDropped()
 }
