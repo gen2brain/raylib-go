@@ -621,6 +621,8 @@ func Grid(bounds rl.Rectangle, text string, spacing float32, subdivs int32, mous
 	cmouseCell.x = C.float(mouseCell.X)
 	cmouseCell.y = C.float(mouseCell.Y)
 	res := C.GuiGrid(cbounds, ctext, cspacing, csubdivs, &cmouseCell)
+	mouseCell.X = float32(cmouseCell.x)
+	mouseCell.Y = float32(cmouseCell.y)
 	return int32(res)
 }
 
