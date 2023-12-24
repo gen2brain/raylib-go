@@ -184,6 +184,13 @@ func LoadRenderTexture(width, height int32) RenderTexture2D {
 	return v
 }
 
+// LoadTextureCubemap - Loads a texture for a cubemap using given layout
+func LoadTextureCubemap(image Image, layout int32) Texture2D {
+	ret := C.LoadTextureCubemap(image, layout)
+	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // UnloadImage - Unload image from CPU memory (RAM)
 func UnloadImage(image *Image) {
 	cimage := image.cptr()
