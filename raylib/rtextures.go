@@ -188,7 +188,7 @@ func LoadRenderTexture(width, height int32) RenderTexture2D {
 func LoadTextureCubemap(image *Image, layout int32) Texture2D {
 	cimage := image.cptr()
 	clayout := (C.int)(layout)
-	ret := C.LoadTextureCubemap(cimage, clayout)
+	ret := C.LoadTextureCubemap(*cimage, clayout)
 	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
 	return v
 }
