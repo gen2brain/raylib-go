@@ -93,6 +93,15 @@ func DrawCircle3D(center Vector3, radius float32, rotationAxis Vector3, rotation
 	C.DrawCircle3D(*ccenter, cradius, *crotationAxis, crotationAngle, *ccolor)
 }
 
+// DrawTriangle3D - Draw a color-filled triangle (vertex in counter-clockwise order!)
+func DrawTriangle3D(v1 Vector3, v2 Vector3, v3 Vector3, col color.RGBA) {
+	cv1 := v1.cptr()
+	cv2 := v2.cptr()
+	cv3 := v3.cptr()
+	ccolor := colorCptr(col)
+	C.DrawTriangle3D(*cv1, *cv2, *cv3, *ccolor)
+}
+
 // DrawCube - Draw cube
 func DrawCube(position Vector3, width float32, height float32, length float32, col color.RGBA) {
 	cposition := position.cptr()
