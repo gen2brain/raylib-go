@@ -2,4 +2,4 @@
 
 2D Physics library for videogames.
 
-A port of Victor Fisac's [physac engine](https://github.com/raysan5/raylib/blob/master/src/physac.h).
+A port of Victor Fisac's [physac engine](https://github.com/raysan5/physac/blob/master/src/physac.h).
