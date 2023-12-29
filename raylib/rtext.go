@@ -74,14 +74,14 @@ func LoadFontFromImage(image Image, key color.RGBA, firstChar int32) Font {
 }
 
 // LoadFontFromMemory - Load font from memory buffer, fileType refers to extension: i.e. ".ttf"
-func LoadFontFromMemory(fileType string, fileData []byte, dataSize int32, fontSize int32, fontChars *int32, charsCount int32) Font {
+func LoadFontFromMemory(fileType string, fileData []byte, fontSize int32, codepoints []rune) Font {
 	cfileType := C.CString(fileType)
 	defer C.free(unsafe.Pointer(cfileType))
 	cfileData := (*C.uchar)(unsafe.Pointer(&fileData[0]))
-	cdataSize := (C.int)(dataSize)
+	cdataSize := (C.int)(len(fileData))
 	cfontSize := (C.int)(fontSize)
-	cfontChars := (*C.int)(unsafe.Pointer(fontChars))
-	ccharsCount := (C.int)(charsCount)
+	cfontChars := (*C.int)(unsafe.SliceData(codepoints))
+	ccharsCount := (C.int)(len(codepoints))
 	ret := C.LoadFontFromMemory(cfileType, cfileData, cdataSize, cfontSize, cfontChars, ccharsCount)
 	v := newFontFromPointer(unsafe.Pointer(&ret))
 	return v
