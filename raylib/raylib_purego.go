@@ -2637,9 +2637,9 @@ func LoadTextureFromImage(image *Image) Texture2D {
 }
 
 // LoadTextureCubemap - Load cubemap from image, multiple image cubemap layouts supported
-func LoadTextureCubemap(image Image, layout int32) Texture2D {
+func LoadTextureCubemap(image *Image, layout int32) Texture2D {
 	var texture Texture2D
-	loadTextureCubemap(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&image)), layout)
+	loadTextureCubemap(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(image)), layout)
 	return texture
 }
 
