@@ -526,7 +526,7 @@ func Shatter(body *Body, position rl.Vector2, force float32) {
 
 // GetBodies - Returns the slice of created physics bodies
 func GetBodies() []*Body {
-	return bodies[:]
+	return bodies[:bodiesCount]
 }
 
 // GetBodiesCount - Returns the current amount of created physics bodies
