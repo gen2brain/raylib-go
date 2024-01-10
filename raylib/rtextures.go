@@ -282,6 +282,15 @@ func ImageCopy(image *Image) *Image {
 	return v
 }
 
+// Create an image from another image piece
+func ImageFromImage(image Image, rec Rectangle) Image {
+	cimage := image.cptr()
+	crec := rec.cptr()
+	ret := C.ImageFromImage(*cimage, *crec)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return *v
+}
+
 // ImageText - Create an image from text (default font)
 func ImageText(text string, fontSize int32, col color.RGBA) *Image {
 	ctext := C.CString(text)
