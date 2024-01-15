@@ -184,15 +184,6 @@ func LoadRenderTexture(width, height int32) RenderTexture2D {
 	return v
 }
 
-// LoadTextureCubemap - Loads a texture for a cubemap using given layout
-func LoadTextureCubemap(image *Image, layout int32) Texture2D {
-	cimage := image.cptr()
-	clayout := (C.int)(layout)
-	ret := C.LoadTextureCubemap(*cimage, clayout)
-	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // UnloadImage - Unload image from CPU memory (RAM)
 func UnloadImage(image *Image) {
 	cimage := image.cptr()
@@ -255,11 +246,12 @@ func UpdateTextureRec(texture Texture2D, rec Rectangle, pixels []color.RGBA) {
 }
 
 // ExportImage - Export image as a PNG file
-func ExportImage(image Image, fileName string) {
+func ExportImage(image Image, fileName string) bool {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	cimage := image.cptr()
-	C.ExportImage(*cimage, cfileName)
+
+	return bool(C.ExportImage(*cimage, cfileName))
 }
 
 // ExportImageToMemory - Export image to memory buffer
@@ -280,15 +272,6 @@ func ImageCopy(image *Image) *Image {
 	ret := C.ImageCopy(*cimage)
 	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
-}
-
-// Create an image from another image piece
-func ImageFromImage(image Image, rec Rectangle) Image {
-	cimage := image.cptr()
-	crec := rec.cptr()
-	ret := C.ImageFromImage(*cimage, *crec)
-	v := newImageFromPointer(unsafe.Pointer(&ret))
-	return *v
 }
 
 // ImageText - Create an image from text (default font)
