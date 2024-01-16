@@ -255,11 +255,11 @@ func UpdateTextureRec(texture Texture2D, rec Rectangle, pixels []color.RGBA) {
 }
 
 // ExportImage - Export image as a PNG file
-func ExportImage(image Image, fileName string) {
+func ExportImage(image Image, fileName string) bool {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	cimage := image.cptr()
-	C.ExportImage(*cimage, cfileName)
+	return bool(C.ExportImage(*cimage, cfileName))
 }
 
 // ExportImageToMemory - Export image to memory buffer
