@@ -667,12 +667,67 @@ func SetUniformSampler(locIndex int32, textureId uint32) {
 	C.rlSetUniformSampler(clocIndex, ctextureId)
 }
 
+// LoadComputeShaderProgram -
+func LoadComputeShaderProgram(shaderID uint) uint {
+	cshaderID := C.uint(shaderID)
+	return uint(C.rlLoadComputeShaderProgram(cshaderID))
+}
+
 // ComputeShaderDispatch - Dispatch compute shader (equivalent to *draw* for graphics pilepine)
 func ComputeShaderDispatch(groupX uint32, groupY uint32, groupZ uint32) {
 	cgroupX := C.uint(groupX)
 	cgroupY := C.uint(groupY)
 	cgroupZ := C.uint(groupZ)
 	C.rlComputeShaderDispatch(cgroupX, cgroupY, cgroupZ)
+}
+
+// LoadShaderBuffer - Load shader storage buffer object (SSBO)
+func LoadShaderBuffer(size uint32, data unsafe.Pointer, usageHint int32) uint32 {
+	csize := C.uint(size)
+	cdata := data
+	cusageHint := C.int(usageHint)
+	return uint32(C.rlLoadShaderBuffer(csize, cdata, cusageHint))
+}
+
+// UnloadShaderBuffer - Unload shader storage buffer object (SSBO)
+func UnloadShaderBuffer(id uint32) {
+	cid := C.uint(id)
+	C.rlUnloadShaderBuffer(cid)
+}
+
+// UpdateShaderBuffer - Update SSBO buffer data
+func UpdateShaderBuffer(id uint32, data unsafe.Pointer, dataSize uint32, offset uint32) {
+	cid := C.uint(id)
+	cdata := data
+	cdataSize := C.uint(dataSize)
+	coffset := C.uint(offset)
+	C.rlUpdateShaderBuffer(cid, cdata, cdataSize, coffset)
+}
+
+// BindShaderBuffer - Bind SSBO buffer
+func BindShaderBuffer(id uint32, index uint32) {
+	cid := C.uint(id)
+	cindex := C.uint(index)
+	C.rlBindShaderBuffer(cid, cindex)
+}
+
+// ReadShaderBuffer - Read SSBO buffer data (GPU->CPU)
+func ReadShaderBuffer(id uint32, dest unsafe.Pointer, count uint32, offset uint32) {
+	cid := C.uint(id)
+	cdest := dest
+	ccount := C.uint(count)
+	coffset := C.uint(offset)
+	C.rlReadShaderBuffer(cid, cdest, ccount, coffset)
+}
+
+// CopyShaderBuffer - Copy SSBO data between buffers
+func CopyShaderBuffer(destId uint32, srcId uint32, destOffset uint32, srcOffset uint32, count uint32) {
+	cdestId := C.uint(destId)
+	csrcId := C.uint(srcId)
+	cdestOffset := C.uint(destOffset)
+	csrcOffset := C.uint(srcOffset)
+	ccount := C.uint(count)
+	C.rlCopyShaderBuffer(cdestId, csrcId, cdestOffset, csrcOffset, ccount)
 }
 
 // GetShaderBufferSize - Get SSBO buffer size
