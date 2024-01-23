@@ -108,7 +108,14 @@ var rlUnloadShaderProgram func(id uint32)
 var rlGetLocationUniform func(shaderId uint32, uniformName string) int32
 var rlGetLocationAttrib func(shaderId uint32, attribName string) int32
 var rlSetUniformSampler func(locIndex int32, textureId uint32)
+var rlLoadComputeShaderProgram func(shaderID uint32) uint32
 var rlComputeShaderDispatch func(groupX uint32, groupY uint32, groupZ uint32)
+var rlLoadShaderBuffer func(size uint32, data unsafe.Pointer, usageHint int32) uint32
+var rlUnloadShaderBuffer func(id uint32)
+var rlUpdateShaderBuffer func(id uint32, data unsafe.Pointer, dataSize uint32, offset uint32)
+var rlBindShaderBuffer func(id uint32, index uint32)
+var rlReadShaderBuffer func(id uint32, dest unsafe.Pointer, count uint32, offset uint32)
+var rlCopyShaderBuffer func(destId uint32, srcId uint32, destOffset uint32, srcOffset uint32, count uint32)
 var rlGetShaderBufferSize func(id uint32) uint32
 var rlBindImageTexture func(id uint32, index uint32, format int32, readonly bool)
 var rlGetMatrixModelview func(matrix uintptr)
@@ -223,7 +230,14 @@ func initRlglPurego() {
 	purego.RegisterLibFunc(&rlGetLocationUniform, raylibDll, "rlGetLocationUniform")
 	purego.RegisterLibFunc(&rlGetLocationAttrib, raylibDll, "rlGetLocationAttrib")
 	purego.RegisterLibFunc(&rlSetUniformSampler, raylibDll, "rlSetUniformSampler")
+	purego.RegisterLibFunc(&rlLoadComputeShaderProgram, raylibDll, "rlLoadComputeShaderProgram")
 	purego.RegisterLibFunc(&rlComputeShaderDispatch, raylibDll, "rlComputeShaderDispatch")
+	purego.RegisterLibFunc(&rlLoadShaderBuffer, raylibDll, "rlLoadShaderBuffer")
+	purego.RegisterLibFunc(&rlUnloadShaderBuffer, raylibDll, "rlUnloadShaderBuffer")
+	purego.RegisterLibFunc(&rlUpdateShaderBuffer, raylibDll, "rlUpdateShaderBuffer")
+	purego.RegisterLibFunc(&rlBindShaderBuffer, raylibDll, "rlBindShaderBuffer")
+	purego.RegisterLibFunc(&rlReadShaderBuffer, raylibDll, "rlReadShaderBuffer")
+	purego.RegisterLibFunc(&rlCopyShaderBuffer, raylibDll, "rlCopyShaderBuffer")
 	purego.RegisterLibFunc(&rlGetShaderBufferSize, raylibDll, "rlGetShaderBufferSize")
 	purego.RegisterLibFunc(&rlBindImageTexture, raylibDll, "rlBindImageTexture")
 	purego.RegisterLibFunc(&rlGetMatrixModelview, raylibDll, "rlGetMatrixModelview")
@@ -746,9 +760,44 @@ func SetUniformSampler(locIndex int32, textureId uint32) {
 	rlSetUniformSampler(locIndex, textureId)
 }
 
+// LoadComputeShaderProgram - Load compute shader program
+func LoadComputeShaderProgram(shaderID uint32) uint32 {
+	return rlLoadComputeShaderProgram(shaderID)
+}
+
 // ComputeShaderDispatch - Dispatch compute shader (equivalent to *draw* for graphics pilepine)
 func ComputeShaderDispatch(groupX uint32, groupY uint32, groupZ uint32) {
 	rlComputeShaderDispatch(groupX, groupY, groupZ)
+}
+
+// LoadShaderBuffer loads a shader storage buffer object (SSBO)
+func LoadShaderBuffer(size uint32, data unsafe.Pointer, usageHint int32) uint32 {
+	return rlLoadShaderBuffer(size, data, usageHint)
+}
+
+// UnloadShaderBuffer - Unload shader storage buffer object (SSBO)
+func UnloadShaderBuffer(id uint32) {
+	rlUnloadShaderBuffer(id)
+}
+
+// UpdateShaderBuffer - Update SSBO buffer data
+func UpdateShaderBuffer(id uint32, data unsafe.Pointer, dataSize uint32, offset uint32) {
+	rlUpdateShaderBuffer(id, data, dataSize, offset)
+}
+
+// BindShaderBuffer - Bind SSBO buffer
+func BindShaderBuffer(id uint32, index uint32) {
+	rlBindShaderBuffer(id, index)
+}
+
+// ReadShaderBuffer - Read SSBO buffer data (GPU->CPU)
+func ReadShaderBuffer(id uint32, dest unsafe.Pointer, count uint32, offset uint32) {
+	rlReadShaderBuffer(id, dest, count, offset)
+}
+
+// CopyShaderBuffer - Copy SSBO data between buffers
+func CopyShaderBuffer(destId uint32, srcId uint32, destOffset uint32, srcOffset uint32, count uint32) {
+	rlCopyShaderBuffer(destId, srcId, destOffset, srcOffset, count)
 }
 
 // GetShaderBufferSize - Get SSBO buffer size
