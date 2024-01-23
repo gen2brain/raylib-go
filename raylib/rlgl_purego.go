@@ -108,7 +108,7 @@ var rlUnloadShaderProgram func(id uint32)
 var rlGetLocationUniform func(shaderId uint32, uniformName string) int32
 var rlGetLocationAttrib func(shaderId uint32, attribName string) int32
 var rlSetUniformSampler func(locIndex int32, textureId uint32)
-var rlLoadComputeShaderProgram func(shaderID uint) uint
+var rlLoadComputeShaderProgram func(shaderID uint32) uint32
 var rlComputeShaderDispatch func(groupX uint32, groupY uint32, groupZ uint32)
 var rlLoadShaderBuffer func(size uint32, data unsafe.Pointer, usageHint int32) uint32
 var rlUnloadShaderBuffer func(id uint32)
@@ -233,7 +233,7 @@ func initRlglPurego() {
 	purego.RegisterLibFunc(&rlLoadComputeShaderProgram, raylibDll, "rlLoadComputeShaderProgram")
 	purego.RegisterLibFunc(&rlComputeShaderDispatch, raylibDll, "rlComputeShaderDispatch")
 	purego.RegisterLibFunc(&rlLoadShaderBuffer, raylibDll, "rlLoadShaderBuffer")
-	purego.RegisterLibFunc(&rlUnloadShaderBuffer, "rlUnloadShaderBuffer")
+	purego.RegisterLibFunc(&rlUnloadShaderBuffer, raylibDll, "rlUnloadShaderBuffer")
 	purego.RegisterLibFunc(&rlUpdateShaderBuffer, raylibDll, "rlUpdateShaderBuffer")
 	purego.RegisterLibFunc(&rlBindShaderBuffer, raylibDll, "rlBindShaderBuffer")
 	purego.RegisterLibFunc(&rlReadShaderBuffer, raylibDll, "rlReadShaderBuffer")
@@ -772,7 +772,7 @@ func ComputeShaderDispatch(groupX uint32, groupY uint32, groupZ uint32) {
 
 // LoadShaderBuffer loads a shader storage buffer object (SSBO)
 func LoadShaderBuffer(size uint32, data unsafe.Pointer, usageHint int32) uint32 {
-	rlLoadShaderBuffer(size, data, usageHint)
+	return rlLoadShaderBuffer(size, data, usageHint)
 }
 
 // UnloadShaderBuffer - Unload shader storage buffer object (SSBO)
