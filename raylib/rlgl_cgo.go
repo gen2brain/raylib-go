@@ -9,7 +9,7 @@ import "C"
 import (
 	"unsafe"
 )
-rlLoadComputeShaderProgram
+
 // SetMatrixProjection - Set a custom projection matrix (replaces internal projection matrix)
 func SetMatrixProjection(proj Matrix) {
 	cproj := proj.cptr()
