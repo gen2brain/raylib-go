@@ -9,7 +9,7 @@ import "C"
 import (
 	"unsafe"
 )
-
+rlLoadComputeShaderProgram
 // SetMatrixProjection - Set a custom projection matrix (replaces internal projection matrix)
 func SetMatrixProjection(proj Matrix) {
 	cproj := proj.cptr()
@@ -668,9 +668,9 @@ func SetUniformSampler(locIndex int32, textureId uint32) {
 }
 
 // LoadComputeShaderProgram -
-func LoadComputeShaderProgram(shaderID uint) uint {
+func LoadComputeShaderProgram(shaderID uint32) uint32 {
 	cshaderID := C.uint(shaderID)
-	return uint(C.rlLoadComputeShaderProgram(cshaderID))
+	return uint32(C.rlLoadComputeShaderProgram(cshaderID))
 }
 
 // ComputeShaderDispatch - Dispatch compute shader (equivalent to *draw* for graphics pilepine)
