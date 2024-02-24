@@ -63,6 +63,18 @@ func LoadFontEx(fileName string, fontSize int32, fontChars []rune) Font {
 	return v
 }
 
+// LoadFontEx - Load Font from file with extended parameter - number of runes to load
+func LoadFontExByRunesNumber(fileName string, fontSize int32, runesNumber int32) Font {
+	ccharsCount := (C.int)(runesNumber)
+	cfileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(cfileName))
+	cfontSize := (C.int)(fontSize)
+
+	ret := C.LoadFontEx(cfileName, cfontSize, nil, ccharsCount)
+	v := newFontFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // LoadFontFromImage - Loads an Image font file (XNA style)
 func LoadFontFromImage(image Image, key color.RGBA, firstChar int32) Font {
 	cimage := image.cptr()
