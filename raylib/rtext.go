@@ -47,7 +47,7 @@ func LoadFont(fileName string) Font {
 }
 
 // LoadFontEx - Load Font from file with extended parameters
-func LoadFontEx(fileName string, fontSize int32, fontChars []rune) Font {
+func LoadFontEx(fileName string, fontSize int32, fontChars []rune, runesNumber ...int32) Font {
 	var cfontChars *C.int
 	var ccharsCount C.int
 
@@ -57,6 +57,11 @@ func LoadFontEx(fileName string, fontSize int32, fontChars []rune) Font {
 	if fontChars != nil {
 		cfontChars = (*C.int)(unsafe.Pointer(&fontChars[0]))
 		ccharsCount = (C.int)(len(fontChars))
+	}
+	if fontChars == nil {
+		if len(runesNumber) > 0 {
+			ccharsCount = (C.int)(runesNumber[0])
+		}
 	}
 	ret := C.LoadFontEx(cfileName, cfontSize, cfontChars, ccharsCount)
 	v := newFontFromPointer(unsafe.Pointer(&ret))

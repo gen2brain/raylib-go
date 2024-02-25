@@ -2829,9 +2829,12 @@ func LoadFont(fileName string) Font {
 }
 
 // LoadFontEx - Load font from file with extended parameters, use NULL for codepoints and 0 for codepointCount to load the default character setFont
-func LoadFontEx(fileName string, fontSize int32, codepoints []rune) Font {
+func LoadFontEx(fileName string, fontSize int32, codepoints []rune, runesNumber ...int32) Font {
 	var font Font
 	codepointCount := int32(len(codepoints))
+	if len(runesNumber) > 0 {
+		codepointCount = int32(runesNumber[0])
+	}
 	loadFontEx(uintptr(unsafe.Pointer(&font)), fileName, fontSize, codepoints, codepointCount)
 	return font
 }
