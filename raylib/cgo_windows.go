@@ -23,8 +23,12 @@ package rl
 #include "external/glfw/src/egl_context.c"
 #include "external/glfw/src/osmesa_context.c"
 
+GLFWbool _glfwConnectNull(int platformID, _GLFWplatform* platform) {
+	return GLFW_TRUE;
+}
+
 #cgo windows LDFLAGS: -lgdi32 -lwinmm -lole32
-#cgo windows CFLAGS: -D_GLFW_WIN32 -Iexternal -Iexternal/glfw/include -Iexternal/glfw/deps/mingw -DPLATFORM_DESKTOP -Wno-stringop-overflow
+#cgo windows CFLAGS: -Iexternal -Iexternal/glfw/include -DPLATFORM_DESKTOP -D_GLFW_WIN32 -Wno-stringop-overflow
 
 #cgo windows,!es2,!es3 LDFLAGS: -lopengl32
 
