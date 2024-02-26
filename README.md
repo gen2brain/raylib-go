@@ -15,23 +15,11 @@ It is also possible to use raylib-go without cgo (Windows only; see requirements
 
 ##### Ubuntu
 
-###### X11
-
-    apt-get install libgl1-mesa-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev
-
-###### Wayland
-
-    apt-get install libgl1-mesa-dev libwayland-dev libxkbcommon-dev
+    apt-get install libgl1-mesa-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev libwayland-dev libxkbcommon-dev
 
 ##### Fedora
 
-###### X11
-
-    dnf install mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel
-
-###### Wayland
-
-    dnf install mesa-libGL-devel wayland-devel libxkbcommon-devel
+    dnf install mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel wayland-devel libxkbcommon-devel
 
 ##### macOS
 
@@ -67,7 +55,6 @@ It is also possible build the dll yourself. You can find more infos at [raylib's
 
 * `drm` - build for Linux native DRM mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM)
 * `sdl` - build for SDL backend instead of internal GLFW (PLATFORM_DESKTOP_SDL)
-* `wayland` - build against Wayland libraries (internal GLFW)
 * `noaudio` - disables audio functions
 * `opengl43` - uses OpenGL 4.3 backend
 * `opengl21` - uses OpenGL 2.1 backend (default is 3.3 on desktop)
