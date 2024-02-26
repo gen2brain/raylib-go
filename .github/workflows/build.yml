@@ -16,7 +16,7 @@ jobs:
       uses: actions/checkout@v3
     - name: Install package
       run: |
-        sudo apt-get update -y; sudo apt-get -y install libxi-dev libxinerama-dev libxcursor-dev libxrandr-dev libgl1-mesa-dev
+        sudo apt-get update -y; sudo apt-get -y install libxi-dev libxinerama-dev libxcursor-dev libxrandr-dev libgl1-mesa-dev libwayland-dev libxkbcommon-dev
       if: runner.os == 'Linux'
     - name: Build
       run: go build ./...
@@ -78,26 +78,6 @@ jobs:
         sudo apt-get update -y; sudo apt-get -y install libgl1-mesa-dev libsdl2-dev
     - name: Build
       run: go build -tags sdl
-      working-directory: raylib
-
-  test-wayland:
-    strategy:
-      matrix:
-        go-version: [1.21.x]
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-    - name: Install Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: ${{ matrix.go-version }}
-    - name: Checkout code
-      uses: actions/checkout@v3
-    - name: Install package
-      run: |
-        sudo apt-get update -y; sudo apt-get -y install libgl1-mesa-dev libwayland-dev libxkbcommon-dev
-    - name: Build
-      run: go build -tags wayland
       working-directory: raylib
 
   test-examples:
