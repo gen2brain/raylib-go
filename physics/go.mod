@@ -1,8 +1,8 @@
-module github.com/yatagarasu25/raylib-go/physics
+module github.com/gen2brain/raylib-go/physics
 
 go 1.21
 
-require github.com/yatagarasu25/raylib-go/raylib v0.0.0-20231118125650-a1c890e8cbfc
+require github.com/gen2brain/raylib-go/raylib v0.0.0-20231118125650-a1c890e8cbfc
 
 require (
 	github.com/ebitengine/purego v0.5.0 // indirect

@@ -575,6 +575,10 @@ func NewRectangle(x, y, width, height float32) Rectangle {
 	return Rectangle{x, y, width, height}
 }
 
+func (r *Rectangle) Delta(x, y, width, height float32) Rectangle {
+	return Rectangle{float32(r.X + x), float32(r.Y + y), float32(r.Width + width), float32(r.Height + height)}
+}
+
 // ToInt32 converts rectangle to int32 variant
 func (r *Rectangle) ToInt32() RectangleInt32 {
 	rect := RectangleInt32{}
