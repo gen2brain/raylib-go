@@ -34,8 +34,11 @@ GLFWbool _glfwConnectNull(int platformID, _GLFWplatform* platform) {
 	return GLFW_TRUE;
 }
 
-#cgo linux CFLAGS: -Iexternal/glfw/include -DPLATFORM_DESKTOP -D_GLFW_WAYLAND -D_GLFW_X11 -Wno-stringop-overflow
+#cgo linux CFLAGS: -Iexternal/glfw/include -DPLATFORM_DESKTOP -Wno-stringop-overflow
 #cgo linux LDFLAGS: -lm -pthread -ldl -lrt -lwayland-client -lwayland-cursor -lwayland-egl -lxkbcommon
+
+#cgo linux,x11 CFLAGS: -D_GLFW_X11
+#cgo linux,!x11 CFLAGS: -D_GLFW_X11 -D_GLFW_WAYLAND
 
 #cgo linux,!es2,!es3 LDFLAGS: -lGL
 
