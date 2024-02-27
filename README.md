@@ -61,6 +61,7 @@ It is also possible build the dll yourself. You can find more infos at [raylib's
 * `opengl11` - uses OpenGL 1.1 backend (pseudo OpenGL 1.1 style)
 * `es2` - uses OpenGL ES 2.0 backend (can be used to link against [Google's ANGLE](https://github.com/google/angle))
 * `es3` - experimental support for OpenGL ES 3.0
+* `x11` - force X11 compatibility mode on Wayland
 
 ### Documentation
 
