@@ -20,6 +20,10 @@ func init() {
 	runtime.LockOSThread()
 }
 
+type CoordinateT interface {
+	int | int32 | int64 | float32 | float64
+}
+
 // Wave type, defines audio wave data
 type Wave struct {
 	// Number of samples

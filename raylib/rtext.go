@@ -126,14 +126,14 @@ func UnloadFont(font Font) {
 }
 
 // DrawFPS - Shows current FPS
-func DrawFPS(posX int32, posY int32) {
+func DrawFPS[PT CoordinateT](posX PT, posY PT) {
 	cposX := (C.int)(posX)
 	cposY := (C.int)(posY)
 	C.DrawFPS(cposX, cposY)
 }
 
 // DrawText - Draw text (using default font)
-func DrawText(text string, posX int32, posY int32, fontSize int32, col color.RGBA) {
+func DrawText[PT CoordinateT](text string, posX PT, posY PT, fontSize int32, col color.RGBA) {
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
 	cposX := (C.int)(posX)
