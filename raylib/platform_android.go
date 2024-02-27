@@ -11,8 +11,8 @@ package rl
 
 extern void android_init();
 
-extern AAssetManager* asset_manager;
-extern const char* internal_storage_path;
+static AAssetManager* asset_manager;
+static const char* internal_storage_path;
 */
 import "C"
 
