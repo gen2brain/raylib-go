@@ -575,8 +575,8 @@ type Rectangle struct {
 }
 
 // NewRectangle - Returns new Rectangle
-func NewRectangle(x, y, width, height float32) Rectangle {
-	return Rectangle{x, y, width, height}
+func NewRectangle[XT, YT, WT, HT CoordinateT](x XT, y YT, width WT, height HT) Rectangle {
+	return Rectangle{float32(x), float32(y), float32(width), float32(height)}
 }
 
 func (r *Rectangle) Delta(x, y, width, height float32) Rectangle {

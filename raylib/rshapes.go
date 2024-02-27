@@ -18,7 +18,7 @@ func SetShapesTexture(texture Texture2D, source Rectangle) {
 }
 
 // DrawPixel - Draw a pixel
-func DrawPixel(posX, posY int32, col color.RGBA) {
+func DrawPixel[XT, YT CoordinateT](posX XT, posY YT, col color.RGBA) {
 	cposX := (C.int)(posX)
 	cposY := (C.int)(posY)
 	ccolor := colorCptr(col)
@@ -33,7 +33,7 @@ func DrawPixelV(position Vector2, col color.RGBA) {
 }
 
 // DrawLine - Draw a line
-func DrawLine(startPosX, startPosY, endPosX, endPosY int32, col color.RGBA) {
+func DrawLine[SXT, SYT, EXT, EYT CoordinateT](startPosX SXT, startPosY SYT, endPosX EXT, endPosY EYT, col color.RGBA) {
 	cstartPosX := (C.int)(startPosX)
 	cstartPosY := (C.int)(startPosY)
 	cendPosX := (C.int)(endPosX)
