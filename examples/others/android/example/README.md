@@ -33,16 +33,11 @@ To build apk export path to Android SDK, point to location where you unpacked ar
 
     export ANDROID_HOME=/opt/android-sdk
 
-And build apk with ant:
-
-    cd android
-    ant clean debug
-
-Or with gradle:
+And build apk:
 
     ./gradlew assembleDebug
 
-If everything is successfully built apk can be found in bin/ directory or in the android/build/outputs in case `gradle` is used.
+If everything is successfully built apk can be found in the android/build/outputs.
 
 
 For aarch64/arm64 replace `arm-linux-androideabi` with `aarch64-linux-android`, set GOARCH to arm64 and use minimum `ANDROID_API=21`.

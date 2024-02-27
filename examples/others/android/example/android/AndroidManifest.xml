@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" 
-        package="com.github.gen2brain.raylib.go" 
         android:versionCode="1" 
         android:versionName="1.0">
 
-    <uses-sdk android:minSdkVersion="16" android:targetSdkVersion="27" />
+    <uses-sdk android:minSdkVersion="16" android:targetSdkVersion="34" />
     <uses-feature android:glEsVersion="0x00020000" android:required="true" />
 
     <!-- We do not have Java code. Therefore android:hasCode is set to false. -->
@@ -15,6 +14,7 @@
 
         <!-- Our activity is the built-in NativeActivity framework class. -->
         <activity android:name="android.app.NativeActivity"
+                android:exported="true"
                 android:configChanges="orientation|keyboardHidden|screenSize"
                 android:screenOrientation="landscape"
                 android:clearTaskOnLaunch="true">
