@@ -1899,8 +1899,8 @@ func SetShapesTexture(texture Texture2D, source Rectangle) {
 }
 
 // DrawPixel - Draw a pixel
-func DrawPixel(posX int32, posY int32, col color.RGBA) {
-	drawPixel(posX, posY, *(*uintptr)(unsafe.Pointer(&col)))
+func DrawPixel[XT, YT CoordinateT](posX XT, posY YT, col color.RGBA) {
+	drawPixel(int32(posX), int32(posY), *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawPixelV - Draw a pixel (Vector version)
@@ -1909,8 +1909,8 @@ func DrawPixelV(position Vector2, col color.RGBA) {
 }
 
 // DrawLine - Draw a line
-func DrawLine(startPosX int32, startPosY int32, endPosX int32, endPosY int32, col color.RGBA) {
-	drawLine(startPosX, startPosY, endPosX, endPosY, *(*uintptr)(unsafe.Pointer(&col)))
+func DrawLine[SXT, SYT, EXT, EYT CoordinateT](startPosX SXT, startPosY SYT, endPosX EXT, endPosY EYT, col color.RGBA) {
+	drawLine(int32(startPosX), int32(startPosY), int32(endPosX), int32(endPosY), *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawLineV - Draw a line (using gl lines)
@@ -2888,13 +2888,13 @@ func UnloadFont(font Font) {
 }
 
 // DrawFPS - Draw current FPS
-func DrawFPS(posX int32, posY int32) {
-	drawFPS(posX, posY)
+func DrawFPS[XT, YT CoordinateT](posX XT, posY YT) {
+	drawFPS(int32(posX), int32(posY))
 }
 
 // DrawText - Draw text (using default font)
-func DrawText(text string, posX int32, posY int32, fontSize int32, col color.RGBA) {
-	drawText(text, posX, posY, fontSize, *(*uintptr)(unsafe.Pointer(&col)))
+func DrawText[XT, YT CoordinateT](text string, posX XT, posY YT, fontSize int32, col color.RGBA) {
+	drawText(text, int32(posX), int32(posY), fontSize, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawTextEx - Draw text using font and additional parameters
