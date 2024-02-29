@@ -1,7 +1,7 @@
 package rl
 
 /*
-#include "utils_log.h"
+#include "cgo_utils_log.h"
 */
 import "C"
 

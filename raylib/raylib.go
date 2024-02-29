@@ -165,20 +165,6 @@ type AudioProcessor struct {
 	Prev    *AudioProcessor
 }
 
-// AutomationEvent - Automation event
-type AutomationEvent struct {
-	Frame  uint32
-	Type   uint32
-	Params [4]int32
-}
-
-// AutomationEventList - Automation event list
-type AutomationEventList struct {
-	Capacity uint32
-	Count    uint32
-	Events   *AutomationEvent
-}
-
 // CameraMode type
 type CameraMode int32
 
