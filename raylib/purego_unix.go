@@ -1,33 +1,35 @@
-//go:build !cgo && windows
-// +build !cgo,windows
+//go:build !cgo && (darwin || openbsd || freebsd || linux)
 
 package rl
 
 import (
 	"fmt"
+	"runtime"
 	"unsafe"
 
 	"github.com/ebitengine/purego"
-	"golang.org/x/sys/windows"
-)
-
-const (
-	libname = "raylib.dll"
+	"golang.org/x/sys/unix"
 )
 
 // loadLibrary loads the raylib dll and panics on error
 func loadLibrary() uintptr {
-	handle, err := windows.LoadLibrary(libname)
+	libname := "raylib.so"
+	switch runtime.GOOS {
+	case "darwin":
+		libname = "raylib.dylib"
+	}
+
+	handle, err := purego.Dlopen(libname, purego.RTLD_NOW|purego.RTLD_GLOBAL)
 	if err != nil {
 		panic(fmt.Errorf("cannot load library %s: %w", libname, err))
 	}
 
-	proc, err := windows.GetProcAddress(handle, "raylib_version")
+	proc, err := purego.Dlsym(handle, "raylib_version")
 	if err != nil {
 		panic(err)
 	}
 
-	version := windows.BytePtrToString(**(***byte)(unsafe.Pointer(&proc)))
+	version := unix.BytePtrToString(**(***byte)(unsafe.Pointer(&proc)))
 	if version != requiredVersion {
 		panic(fmt.Errorf("version %s of %s doesn't match the required version %s", version, libname, requiredVersion))
 	}
@@ -37,7 +39,7 @@ func loadLibrary() uintptr {
 
 func traceLogCallbackWrapper(fn TraceLogCallbackFun) uintptr {
 	return purego.NewCallback(func(logLevel int32, text *byte) uintptr {
-		fn(int(logLevel), windows.BytePtrToString(text))
+		fn(int(logLevel), unix.BytePtrToString(text))
 		return 0
 	})
 }
