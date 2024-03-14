@@ -1,5 +1,5 @@
-//go:build !cgo && windows
-// +build !cgo,windows
+//go:build !cgo
+// +build !cgo
 
 package rl
 
