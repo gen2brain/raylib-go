@@ -50,7 +50,6 @@
 #include <android/window.h>             // Required for: AWINDOW_FLAG_FULLSCREEN definition and others
 //#include <android/sensor.h>           // Required for: Android sensors functions (accelerometer, gyroscope, light...)
 #include <jni.h>                        // Required for: JNIEnv and JavaVM [Used in OpenURL()]
-
 #include <EGL/egl.h>                    // Native platform windowing system interface
 
 //----------------------------------------------------------------------------------
@@ -132,6 +131,11 @@ void android_main(struct android_app *app)
 struct android_app *GetAndroidApp(void)
 {
     return platform.app;
+}
+
+extern struct ANativeActivity *GetANativeActivity(void)
+{
+    return platform.app->activity;
 }
 
 //----------------------------------------------------------------------------------
