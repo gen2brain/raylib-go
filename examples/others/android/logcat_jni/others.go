@@ -1,7 +1,3 @@
 //go:build !android
-
 package main
-
-func temp() {
-
-}
+func temp() {}
