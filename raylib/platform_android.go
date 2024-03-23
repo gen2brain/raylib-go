@@ -7,12 +7,16 @@ package rl
 #include "raylib.h"
 #include <stdlib.h>
 #include <android/asset_manager.h>
+#include <android/native_activity.h>
 #include <android_native_app_glue.h>
 
 extern void android_init();
+extern struct ANativeActivity *GetANativeActivity(void);
 
 static AAssetManager* asset_manager;
-static const char* internal_storage_path;
+static const char* getInternalStoragePath(){
+	return GetANativeActivity()->internalDataPath;
+}
 */
 import "C"
 
@@ -133,5 +137,5 @@ func (a *asset) Close() error {
 }
 
 func getInternalStoragePath() string {
-	return C.GoString(C.internal_storage_path)
+	return C.GoString(C.getInternalStoragePath())
 }
