@@ -15,7 +15,7 @@ static char* getJNI(uintptr_t *vmp, uintptr_t* envp, uintptr_t* ctx, int* attach
 	JNIEnv* env;
 	struct ANativeActivity * activity = GetANativeActivity();
 	*attachedp = 0;
-    JavaVM* vm = activity->vm;
+        JavaVM* vm = activity->vm;
 	switch ((*vm)->GetEnv(vm, (void**)&env, JNI_VERSION_1_6)) {
 	case JNI_OK:
 		break;
@@ -62,6 +62,10 @@ static void unlockJNI(uintptr_t vmp) {
 const char * getInternalStoragePathMy(){
 	return GetANativeActivity()->internalDataPath;
 }
+
+const char * getExternalStoragePathMy(){
+	return GetANativeActivity()->externalDataPath;
+}
 */
 import "C"
 import (
@@ -73,6 +77,7 @@ import (
 
 func doSpecific() {
 	fmt.Println("calling GetANativeActivity()->internalDataPath: ", C.GoString(C.getInternalStoragePathMy())) // this is only example to show how work GetANativeActivity()
+	fmt.Println("calling GetANativeActivity()->externalDataPath: ", C.GoString(C.getExternalStoragePathMy()))
 	// fmt.Println("calling rl.HomeDir(): ", rl.HomeDir()) // this work too
 	err := RunOnJVM(func(vm, env, ctx uintptr) error {
 		// do anything with jni
@@ -83,7 +88,7 @@ func doSpecific() {
 	}
 }
 
-func RunOnJVM(fn func(vm, env, ctx uintptr) error) error {
+func RunOnJVM(fn func(vm, env, ctx uintptr) error) error { // this is show how get to C pointer to JNIEnv*,JavaVM* and class of activity  
 	if fn == nil {
 		return errors.New("fn is nil")
 	}
