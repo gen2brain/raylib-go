@@ -128,14 +128,9 @@ void android_main(struct android_app *app)
 }
 
 // NOTE: Add this to header (if apps really need it)
-struct android_app *GetAndroidApp(void)
+extern struct android_app *GetAndroidApp(void)
 {
     return platform.app;
-}
-
-extern struct ANativeActivity *GetANativeActivity(void)
-{
-    return platform.app->activity;
 }
 
 //----------------------------------------------------------------------------------
