@@ -7,15 +7,14 @@ package rl
 #include "raylib.h"
 #include <stdlib.h>
 #include <android/asset_manager.h>
-#include <android/native_activity.h>
 #include <android_native_app_glue.h>
 
 extern void android_init();
-extern struct ANativeActivity *GetANativeActivity(void);
+extern struct android_app *GetAndroidApp(void);
 
 static AAssetManager* asset_manager;
 static const char* getInternalStoragePath(){
-	return GetANativeActivity()->internalDataPath;
+	return GetAndroidApp()->activity->internalDataPath;
 }
 */
 import "C"
