@@ -10,10 +10,11 @@ package rl
 #include <android/native_activity.h>
 #include <android_native_app_glue.h>
 
-extern void android_init();
 extern struct ANativeActivity *GetANativeActivity(void);
-static AAssetManager* asset_manager;
 
+static AAssetManager* getAssetManager(){
+	return GetANativeActivity()->assetManager;
+}
 static const char* getInternalStoragePath(){
 	return GetANativeActivity()->internalDataPath;
 }
@@ -37,7 +38,6 @@ func InitWindow(width int32, height int32, title string) {
 	defer C.free(unsafe.Pointer(ctitle))
 
 	C.InitWindow(cwidth, cheight, ctitle)
-	C.android_init()
 }
 
 // SetCallbackFunc - Sets callback function
@@ -102,7 +102,7 @@ func OpenAsset(name string) (Asset, error) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
-	a := &asset{C.AAssetManager_open(C.asset_manager, cname, C.AASSET_MODE_UNKNOWN)}
+	a := &asset{C.AAssetManager_open(C.getAssetManager(), cname, C.AASSET_MODE_UNKNOWN)}
 
 	if a.ptr == nil {
 		return nil, fmt.Errorf("asset file could not be opened")
