@@ -375,6 +375,12 @@ func ScrollPanel(bounds rl.Rectangle, text string, content rl.Rectangle, scroll 
 	cview.y = C.float(view.Y)
 	cview.width = C.float(view.Width)
 	cview.height = C.float(view.Height)
+	defer func() {
+		view.X = float32(cview.x)
+		view.Y = float32(cview.y)
+		view.Width = float32(cview.width)
+		view.Height = float32(cview.height)
+	}()
 
 	res := C.GuiScrollPanel(cbounds, ctext, ccontent, &cscroll, &cview)
 
