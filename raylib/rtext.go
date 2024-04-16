@@ -155,6 +155,20 @@ func DrawTextEx(font Font, text string, position Vector2, fontSize float32, spac
 	C.DrawTextEx(*cfont, ctext, *cposition, cfontSize, cspacing, *ctint)
 }
 
+// DrawTextPro - Draw text using Font and pro parameters (rotation)
+func DrawTextPro(font Font, text string, position Vector2, origin Vector2, rotation, fontSize float32, spacing float32, tint color.RGBA) {
+	cfont := font.cptr()
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+	cposition := position.cptr()
+	crotation := (C.float)(rotation)
+	corigin := origin.cptr()
+	cfontSize := (C.float)(fontSize)
+	cspacing := (C.float)(spacing)
+	ctint := colorCptr(tint)
+	C.DrawTextPro(cfont, ctext, cposition, corigin, crotation, cfontSize, cspacing, ctint)
+}
+
 // SetTextLineSpacing - Set vertical line spacing when drawing with line-breaks
 func SetTextLineSpacing(spacing int) {
 	cspacing := (C.int)(spacing)
