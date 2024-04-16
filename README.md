@@ -21,6 +21,10 @@ It is also possible to use raylib-go without cgo (Windows only; see requirements
 
     dnf install mesa-libGL-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel wayland-devel libxkbcommon-devel
 
+##### NixOS
+
+    nix-shell -p libGL xorg.libXi xorg.libXcursor xorg.libXrandr xorg.libXinerama wayland libxkbcommon
+
 ##### macOS
 
 On macOS you need Xcode or Command Line Tools for Xcode.
