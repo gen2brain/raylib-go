@@ -166,7 +166,7 @@ func DrawTextPro(font Font, text string, position Vector2, origin Vector2, rotat
 	cfontSize := (C.float)(fontSize)
 	cspacing := (C.float)(spacing)
 	ctint := colorCptr(tint)
-	C.DrawTextPro(cfont, ctext, cposition, corigin, crotation, cfontSize, cspacing, ctint)
+	C.DrawTextPro(*cfont, ctext, *cposition, *corigin, crotation, cfontSize, cspacing, *ctint)
 }
 
 // SetTextLineSpacing - Set vertical line spacing when drawing with line-breaks
