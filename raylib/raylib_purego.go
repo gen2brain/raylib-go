@@ -230,11 +230,11 @@ var drawSplineSegmentBasis func(p1 uintptr, p2 uintptr, p3 uintptr, p4 uintptr, 
 var drawSplineSegmentCatmullRom func(p1 uintptr, p2 uintptr, p3 uintptr, p4 uintptr, thick float32, col uintptr)
 var drawSplineSegmentBezierQuadratic func(p1 uintptr, c2 uintptr, p3 uintptr, thick float32, col uintptr)
 var drawSplineSegmentBezierCubic func(p1 uintptr, c2 uintptr, c3 uintptr, p4 uintptr, thick float32, col uintptr)
-var getSplinePointLinear func(startPos uintptr, endPos uintptr, t float32) Vector2
-var getSplinePointBasis func(p1 uintptr, p2 uintptr, p3 uintptr, p4 uintptr, t float32) Vector2
-var getSplinePointCatmullRom func(p1 uintptr, p2 uintptr, p3 uintptr, p4 uintptr, t float32) Vector2
-var getSplinePointBezierQuad func(p1 uintptr, c2 uintptr, p3 uintptr, t float32) Vector2
-var getSplinePointBezierCubic func(p1 uintptr, c2 uintptr, c3 uintptr, p4 uintptr, t float32) Vector2
+var getSplinePointLinear func(startPos uintptr, endPos uintptr, t float32) uintptr
+var getSplinePointBasis func(p1 uintptr, p2 uintptr, p3 uintptr, p4 uintptr, t float32) uintptr
+var getSplinePointCatmullRom func(p1 uintptr, p2 uintptr, p3 uintptr, p4 uintptr, t float32) uintptr
+var getSplinePointBezierQuad func(p1 uintptr, c2 uintptr, p3 uintptr, t float32) uintptr
+var getSplinePointBezierCubic func(p1 uintptr, c2 uintptr, c3 uintptr, p4 uintptr, t float32) uintptr
 var checkCollisionRecs func(rec1 uintptr, rec2 uintptr) bool
 var checkCollisionCircles func(center1 uintptr, radius1 float32, center2 uintptr, radius2 float32) bool
 var checkCollisionCircleRec func(center uintptr, radius float32, rec uintptr) bool
