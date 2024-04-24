@@ -1492,6 +1492,11 @@ func GetFPS() int32 {
 	return getFPS()
 }
 
+// Custom frame control functions
+// NOTE: SwapScreenBuffer and PollInputEvents are intended for advanced users that want full control over the frame processing
+// By default EndDrawing() does this job: draws everything + SwapScreenBuffer() + manage frame timing + PollInputEvents()
+// To avoid that behaviour and control frame processes manually you must recompile raylib with SUPPORT_CUSTOM_FRAME_CONTROL enabled in config.h
+
 // SwapScreenBuffer - Swap back buffer with front buffer (screen drawing)
 func SwapScreenBuffer() {
 	swapScreenBuffer()
