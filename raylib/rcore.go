@@ -702,6 +702,22 @@ func GetTime() float64 {
 	return v
 }
 
+// Custom frame control functions
+// NOTE: SwapScreenBuffer and PollInputEvents are intended for advanced users that want full control over the frame processing
+// By default EndDrawing() does this job: draws everything + SwapScreenBuffer() + manage frame timing + PollInputEvents()
+// To avoid that behaviour and control frame processes manually you can either enable in config.h: SUPPORT_CUSTOM_FRAME_CONTROL
+// or add CGO_CFLAGS="-DSUPPORT_CUSTOM_FRAME_CONTROL=1" to your build
+
+// SwapScreenBuffer - Swap back buffer to front buffer
+func SwapScreenBuffer() {
+	C.SwapScreenBuffer()
+}
+
+// Register all input events
+func PollInputEvents() {
+	C.PollInputEvents()
+}
+
 // Fade - Returns color with alpha applied, alpha goes from 0.0f to 1.0f
 func Fade(col color.RGBA, alpha float32) color.RGBA {
 	ccolor := colorCptr(col)
