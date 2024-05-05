@@ -718,6 +718,12 @@ func PollInputEvents() {
 	C.PollInputEvents()
 }
 
+// WaitTime - Wait for some time (halt program execution)
+func WaitTime(seconds float64) {
+	cseconds := (C.double)(seconds)
+	C.WaitTime(cseconds)
+}
+
 // Fade - Returns color with alpha applied, alpha goes from 0.0f to 1.0f
 func Fade(col color.RGBA, alpha float32) color.RGBA {
 	ccolor := colorCptr(col)
