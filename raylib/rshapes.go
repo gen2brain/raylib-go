@@ -276,9 +276,8 @@ func DrawRectangleRoundedLines(rec Rectangle, roundness float32, segments, lineT
 	crec := rec.cptr()
 	croundness := (C.float)(roundness)
 	csegments := (C.int)(segments)
-	clineThick := (C.float)(lineThick)
 	ccolor := colorCptr(col)
-	C.DrawRectangleRoundedLines(*crec, croundness, csegments, clineThick, *ccolor)
+	C.DrawRectangleRoundedLines(*crec, croundness, csegments, *ccolor)
 }
 
 // DrawTriangle - Draw a color-filled triangle

@@ -1,6 +1,6 @@
 /**********************************************************************************************
 *
-*   raylib v5.0 - A simple and easy-to-use library to enjoy videogames programming (www.raylib.com)
+*   raylib v5.1-dev - A simple and easy-to-use library to enjoy videogames programming (www.raylib.com)
 *
 *   FEATURES:
 *       - NO external dependencies, all required libraries included with raylib
@@ -57,7 +57,7 @@
 *   raylib is licensed under an unmodified zlib/libpng license, which is an OSI-certified,
 *   BSD-like license that allows static linking with closed source software:
 *
-*   Copyright (c) 2013-2023 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2013-2024 Ramon Santamaria (@raysan5)
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -82,20 +82,25 @@
 #include <stdarg.h>     // Required for: va_list - Only used by TraceLogCallback
 
 #define RAYLIB_VERSION_MAJOR 5
-#define RAYLIB_VERSION_MINOR 0
+#define RAYLIB_VERSION_MINOR 1
 #define RAYLIB_VERSION_PATCH 0
-#define RAYLIB_VERSION  "5.0"
+#define RAYLIB_VERSION  "5.1-dev"
 
-// Function specifiers in case library is build/used as a shared library (Windows)
+// Function specifiers in case library is build/used as a shared library
 // NOTE: Microsoft specifiers to tell compiler that symbols are imported/exported from a .dll
+// NOTE: visibility("default") attribute makes symbols "visible" when compiled with -fvisibility=hidden
 #if defined(_WIN32)
+    #if defined(__TINYC__)
+        #define __declspec(x) __attribute__((x))
+    #endif
     #if defined(BUILD_LIBTYPE_SHARED)
-        #if defined(__TINYC__)
-            #define __declspec(x) __attribute__((x))
-        #endif
         #define RLAPI __declspec(dllexport)     // We are building the library as a Win32 shared library (.dll)
     #elif defined(USE_LIBTYPE_SHARED)
         #define RLAPI __declspec(dllimport)     // We are using the library as a Win32 shared library (.dll)
+    #endif
+#else
+    #if defined(BUILD_LIBTYPE_SHARED)
+        #define RLAPI __attribute__((visibility("default"))) // We are building as a Unix shared library (.so/.dylib)
     #endif
 #endif
 
@@ -479,7 +484,6 @@ typedef struct VrDeviceInfo {
     int vResolution;                // Vertical resolution in pixels
     float hScreenSize;              // Horizontal size in meters
     float vScreenSize;              // Vertical size in meters
-    float vScreenCenter;            // Screen center in meters
     float eyeToScreenDistance;      // Distance between eye and display in meters
     float lensSeparationDistance;   // Lens separation distance in meters
     float interpupillaryDistance;   // IPD (distance between pupils) in meters
@@ -673,7 +677,7 @@ typedef enum {
     KEY_KP_EQUAL        = 336,      // Key: Keypad =
     // Android key buttons
     KEY_BACK            = 4,        // Key: Android back button
-    KEY_MENU            = 82,       // Key: Android menu button
+    KEY_MENU            = 5,        // Key: Android menu button
     KEY_VOLUME_UP       = 24,       // Key: Android volume up button
     KEY_VOLUME_DOWN     = 25        // Key: Android volume down button
 } KeyboardKey;
@@ -717,12 +721,12 @@ typedef enum {
     GAMEPAD_BUTTON_LEFT_FACE_DOWN,      // Gamepad left DPAD down button
     GAMEPAD_BUTTON_LEFT_FACE_LEFT,      // Gamepad left DPAD left button
     GAMEPAD_BUTTON_RIGHT_FACE_UP,       // Gamepad right button up (i.e. PS3: Triangle, Xbox: Y)
-    GAMEPAD_BUTTON_RIGHT_FACE_RIGHT,    // Gamepad right button right (i.e. PS3: Square, Xbox: X)
+    GAMEPAD_BUTTON_RIGHT_FACE_RIGHT,    // Gamepad right button right (i.e. PS3: Circle, Xbox: B)
     GAMEPAD_BUTTON_RIGHT_FACE_DOWN,     // Gamepad right button down (i.e. PS3: Cross, Xbox: A)
-    GAMEPAD_BUTTON_RIGHT_FACE_LEFT,     // Gamepad right button left (i.e. PS3: Circle, Xbox: B)
+    GAMEPAD_BUTTON_RIGHT_FACE_LEFT,     // Gamepad right button left (i.e. PS3: Square, Xbox: X)
     GAMEPAD_BUTTON_LEFT_TRIGGER_1,      // Gamepad top/back trigger left (first), it could be a trailing button
     GAMEPAD_BUTTON_LEFT_TRIGGER_2,      // Gamepad top/back trigger left (second), it could be a trailing button
-    GAMEPAD_BUTTON_RIGHT_TRIGGER_1,     // Gamepad top/back trigger right (one), it could be a trailing button
+    GAMEPAD_BUTTON_RIGHT_TRIGGER_1,     // Gamepad top/back trigger right (first), it could be a trailing button
     GAMEPAD_BUTTON_RIGHT_TRIGGER_2,     // Gamepad top/back trigger right (second), it could be a trailing button
     GAMEPAD_BUTTON_MIDDLE_LEFT,         // Gamepad center buttons, left one (i.e. PS3: Select)
     GAMEPAD_BUTTON_MIDDLE,              // Gamepad center buttons, middle one (i.e. PS3: PS, Xbox: XBOX)
@@ -909,11 +913,11 @@ typedef enum {
 
 // Camera system modes
 typedef enum {
-    CAMERA_CUSTOM = 0,              // Custom camera
-    CAMERA_FREE,                    // Free camera
-    CAMERA_ORBITAL,                 // Orbital camera
-    CAMERA_FIRST_PERSON,            // First person camera
-    CAMERA_THIRD_PERSON             // Third person camera
+    CAMERA_CUSTOM = 0,              // Camera custom, controlled by user (UpdateCamera() does nothing)
+    CAMERA_FREE,                    // Camera free mode
+    CAMERA_ORBITAL,                 // Camera orbital, around target, zoom supported
+    CAMERA_FIRST_PERSON,            // Camera first person
+    CAMERA_THIRD_PERSON             // Camera third person
 } CameraMode;
 
 // Camera projection
@@ -1045,13 +1049,15 @@ RLAPI void SetShaderValueTexture(Shader shader, int locIndex, Texture2D texture)
 RLAPI void UnloadShader(Shader shader);                                    // Unload shader from GPU memory (VRAM)
 
 // Screen-space-related functions
-RLAPI Ray GetMouseRay(Vector2 mousePosition, Camera camera);      // Get a ray trace from mouse position
-RLAPI Matrix GetCameraMatrix(Camera camera);                      // Get camera transform matrix (view matrix)
-RLAPI Matrix GetCameraMatrix2D(Camera2D camera);                  // Get camera 2d transform matrix
-RLAPI Vector2 GetWorldToScreen(Vector3 position, Camera camera);  // Get the screen space position for a 3d world space position
-RLAPI Vector2 GetScreenToWorld2D(Vector2 position, Camera2D camera); // Get the world space position for a 2d camera screen space position
+#define GetMouseRay GetScreenToWorldRay     // Compatibility hack for previous raylib versions
+RLAPI Ray GetScreenToWorldRay(Vector2 position, Camera camera);         // Get a ray trace from screen position (i.e mouse)
+RLAPI Ray GetScreenToWorldRayEx(Vector2 position, Camera camera, int width, int height); // Get a ray trace from screen position (i.e mouse) in a viewport
+RLAPI Vector2 GetWorldToScreen(Vector3 position, Camera camera);        // Get the screen space position for a 3d world space position
 RLAPI Vector2 GetWorldToScreenEx(Vector3 position, Camera camera, int width, int height); // Get size position for a 3d world space position
-RLAPI Vector2 GetWorldToScreen2D(Vector2 position, Camera2D camera); // Get the screen space position for a 2d camera world space position
+RLAPI Vector2 GetWorldToScreen2D(Vector2 position, Camera2D camera);    // Get the screen space position for a 2d camera world space position
+RLAPI Vector2 GetScreenToWorld2D(Vector2 position, Camera2D camera);    // Get the world space position for a 2d camera screen space position
+RLAPI Matrix GetCameraMatrix(Camera camera);                            // Get camera transform matrix (view matrix)
+RLAPI Matrix GetCameraMatrix2D(Camera2D camera);                        // Get camera 2d transform matrix
 
 // Timing-related functions
 RLAPI void SetTargetFPS(int fps);                                 // Set target FPS (maximum)
@@ -1134,7 +1140,7 @@ RLAPI unsigned char *DecodeDataBase64(const unsigned char *data, int *outputSize
 
 // Automation events functionality
 RLAPI AutomationEventList LoadAutomationEventList(const char *fileName);                // Load automation events list from file, NULL for empty list, capacity = MAX_AUTOMATION_EVENTS
-RLAPI void UnloadAutomationEventList(AutomationEventList *list);                        // Unload automation events list from file
+RLAPI void UnloadAutomationEventList(AutomationEventList list);                        // Unload automation events list from file
 RLAPI bool ExportAutomationEventList(AutomationEventList list, const char *fileName);   // Export automation events list as text file
 RLAPI void SetAutomationEventList(AutomationEventList *list);                           // Set automation event list to record to
 RLAPI void SetAutomationEventBaseFrame(int frame);                                      // Set automation event internal base frame to start recording
@@ -1157,16 +1163,17 @@ RLAPI int GetCharPressed(void);                               // Get char presse
 RLAPI void SetExitKey(int key);                               // Set a custom key to exit program (default is ESC)
 
 // Input-related functions: gamepads
-RLAPI bool IsGamepadAvailable(int gamepad);                   // Check if a gamepad is available
-RLAPI const char *GetGamepadName(int gamepad);                // Get gamepad internal name id
-RLAPI bool IsGamepadButtonPressed(int gamepad, int button);   // Check if a gamepad button has been pressed once
-RLAPI bool IsGamepadButtonDown(int gamepad, int button);      // Check if a gamepad button is being pressed
-RLAPI bool IsGamepadButtonReleased(int gamepad, int button);  // Check if a gamepad button has been released once
-RLAPI bool IsGamepadButtonUp(int gamepad, int button);        // Check if a gamepad button is NOT being pressed
-RLAPI int GetGamepadButtonPressed(void);                      // Get the last gamepad button pressed
-RLAPI int GetGamepadAxisCount(int gamepad);                   // Get gamepad axis count for a gamepad
-RLAPI float GetGamepadAxisMovement(int gamepad, int axis);    // Get axis movement value for a gamepad axis
-RLAPI int SetGamepadMappings(const char *mappings);           // Set internal gamepad mappings (SDL_GameControllerDB)
+RLAPI bool IsGamepadAvailable(int gamepad);                                        // Check if a gamepad is available
+RLAPI const char *GetGamepadName(int gamepad);                                     // Get gamepad internal name id
+RLAPI bool IsGamepadButtonPressed(int gamepad, int button);                        // Check if a gamepad button has been pressed once
+RLAPI bool IsGamepadButtonDown(int gamepad, int button);                           // Check if a gamepad button is being pressed
+RLAPI bool IsGamepadButtonReleased(int gamepad, int button);                       // Check if a gamepad button has been released once
+RLAPI bool IsGamepadButtonUp(int gamepad, int button);                             // Check if a gamepad button is NOT being pressed
+RLAPI int GetGamepadButtonPressed(void);                                           // Get the last gamepad button pressed
+RLAPI int GetGamepadAxisCount(int gamepad);                                        // Get gamepad axis count for a gamepad
+RLAPI float GetGamepadAxisMovement(int gamepad, int axis);                         // Get axis movement value for a gamepad axis
+RLAPI int SetGamepadMappings(const char *mappings);                                // Set internal gamepad mappings (SDL_GameControllerDB)
+RLAPI void SetGamepadVibration(int gamepad, float leftMotor, float rightMotor);    // Set gamepad vibration for both motors
 
 // Input-related functions: mouse
 RLAPI bool IsMouseButtonPressed(int button);                  // Check if a mouse button has been pressed once
@@ -1216,6 +1223,8 @@ RLAPI void UpdateCameraPro(Camera *camera, Vector3 movement, Vector3 rotation, f
 // NOTE: It can be useful when using basic shapes and one single font,
 // defining a font char white rectangle would allow drawing everything in a single draw call
 RLAPI void SetShapesTexture(Texture2D texture, Rectangle source);       // Set texture and rectangle to be used on shapes drawing
+RLAPI Texture2D GetShapesTexture(void);                                 // Get texture that is used for shapes drawing
+RLAPI Rectangle GetShapesTextureRectangle(void);                        // Get texture source rectangle that is used for shapes drawing
 
 // Basic shapes drawing functions
 RLAPI void DrawPixel(int posX, int posY, Color color);                                                   // Draw a pixel
@@ -1246,7 +1255,8 @@ RLAPI void DrawRectangleGradientEx(Rectangle rec, Color col1, Color col2, Color 
 RLAPI void DrawRectangleLines(int posX, int posY, int width, int height, Color color);                   // Draw rectangle outline
 RLAPI void DrawRectangleLinesEx(Rectangle rec, float lineThick, Color color);                            // Draw rectangle outline with extended parameters
 RLAPI void DrawRectangleRounded(Rectangle rec, float roundness, int segments, Color color);              // Draw rectangle with rounded edges
-RLAPI void DrawRectangleRoundedLines(Rectangle rec, float roundness, int segments, float lineThick, Color color); // Draw rectangle with rounded edges outline
+RLAPI void DrawRectangleRoundedLines(Rectangle rec, float roundness, int segments, Color color);         // Draw rectangle lines with rounded edges
+RLAPI void DrawRectangleRoundedLinesEx(Rectangle rec, float roundness, int segments, float lineThick, Color color); // Draw rectangle with rounded edges outline
 RLAPI void DrawTriangle(Vector2 v1, Vector2 v2, Vector2 v3, Color color);                                // Draw a color-filled triangle (vertex in counter-clockwise order!)
 RLAPI void DrawTriangleLines(Vector2 v1, Vector2 v2, Vector2 v3, Color color);                           // Draw triangle outline (vertex in counter-clockwise order!)
 RLAPI void DrawTriangleFan(Vector2 *points, int pointCount, Color color);                                // Draw a triangle fan defined by points (first vertex is the center)
@@ -1296,6 +1306,7 @@ RLAPI Image LoadImage(const char *fileName);                                    
 RLAPI Image LoadImageRaw(const char *fileName, int width, int height, int format, int headerSize);       // Load image from RAW file data
 RLAPI Image LoadImageSvg(const char *fileNameOrString, int width, int height);                           // Load image from SVG file data or string with specified size
 RLAPI Image LoadImageAnim(const char *fileName, int *frames);                                            // Load image sequence from file (frames appended to image.data)
+RLAPI Image LoadImageAnimFromMemory(const char *fileType, const unsigned char *fileData, int dataSize, int *frames); // Load image sequence from memory buffer
 RLAPI Image LoadImageFromMemory(const char *fileType, const unsigned char *fileData, int dataSize);      // Load image from memory buffer, fileType refers to extension: i.e. '.png'
 RLAPI Image LoadImageFromTexture(Texture2D texture);                                                     // Load image from GPU texture data
 RLAPI Image LoadImageFromScreen(void);                                                                   // Load image from screen buffer and (screenshot)
@@ -1329,6 +1340,7 @@ RLAPI void ImageAlphaClear(Image *image, Color color, float threshold);         
 RLAPI void ImageAlphaMask(Image *image, Image alphaMask);                                                // Apply alpha mask to image
 RLAPI void ImageAlphaPremultiply(Image *image);                                                          // Premultiply alpha channel
 RLAPI void ImageBlurGaussian(Image *image, int blurSize);                                                // Apply Gaussian blur using a box blur approximation
+RLAPI void ImageKernelConvolution(Image *image, float* kernel, int kernelSize);                         // Apply Custom Square image convolution kernel
 RLAPI void ImageResize(Image *image, int newWidth, int newHeight);                                       // Resize image (Bicubic scaling algorithm)
 RLAPI void ImageResizeNN(Image *image, int newWidth,int newHeight);                                      // Resize image (Nearest-Neighbor scaling algorithm)
 RLAPI void ImageResizeCanvas(Image *image, int newWidth, int newHeight, int offsetX, int offsetY, Color fill);  // Resize canvas and fill with color
@@ -1398,8 +1410,9 @@ RLAPI void DrawTexturePro(Texture2D texture, Rectangle source, Rectangle dest, V
 RLAPI void DrawTextureNPatch(Texture2D texture, NPatchInfo nPatchInfo, Rectangle dest, Vector2 origin, float rotation, Color tint); // Draws a texture (or part of it) that stretches or shrinks nicely
 
 // Color/pixel related functions
+RLAPI bool ColorIsEqual(Color col1, Color col2);                            // Check if two colors are equal
 RLAPI Color Fade(Color color, float alpha);                                 // Get color with alpha applied, alpha goes from 0.0f to 1.0f
-RLAPI int ColorToInt(Color color);                                          // Get hexadecimal value for a Color
+RLAPI int ColorToInt(Color color);                                          // Get hexadecimal value for a Color (0xRRGGBBAA)
 RLAPI Vector4 ColorNormalize(Color color);                                  // Get Color normalized as float [0..1]
 RLAPI Color ColorFromNormalized(Vector4 normalized);                        // Get Color from normalized values [0..1]
 RLAPI Vector3 ColorToHSV(Color color);                                      // Get HSV values for a Color, hue [0..360], saturation/value [0..1]
@@ -1465,7 +1478,7 @@ RLAPI bool TextIsEqual(const char *text1, const char *text2);                   
 RLAPI unsigned int TextLength(const char *text);                                            // Get text length, checks for '\0' ending
 RLAPI const char *TextFormat(const char *text, ...);                                        // Text formatting with variables (sprintf() style)
 RLAPI const char *TextSubtext(const char *text, int position, int length);                  // Get a piece of a text string
-RLAPI char *TextReplace(char *text, const char *replace, const char *by);                   // Replace text string (WARNING: memory must be freed!)
+RLAPI char *TextReplace(const char *text, const char *replace, const char *by);             // Replace text string (WARNING: memory must be freed!)
 RLAPI char *TextInsert(const char *text, const char *insert, int position);                 // Insert text in a position (WARNING: memory must be freed!)
 RLAPI const char *TextJoin(const char **textList, int count, const char *delimiter);        // Join text strings with delimiter
 RLAPI const char **TextSplit(const char *text, char delimiter, int *count);                 // Split text into multiple strings
@@ -1475,6 +1488,7 @@ RLAPI const char *TextToUpper(const char *text);                      // Get upp
 RLAPI const char *TextToLower(const char *text);                      // Get lower case version of provided string
 RLAPI const char *TextToPascal(const char *text);                     // Get Pascal case notation version of provided string
 RLAPI int TextToInteger(const char *text);                            // Get integer value from text (negative values not supported)
+RLAPI float TextToFloat(const char *text);                            // Get float value from text (negative values not supported)
 
 //------------------------------------------------------------------------------------
 // Basic 3d Shapes Drawing Functions (Module: models)
@@ -1530,9 +1544,10 @@ RLAPI void UpdateMeshBuffer(Mesh mesh, int index, const void *data, int dataSize
 RLAPI void UnloadMesh(Mesh mesh);                                                           // Unload mesh data from CPU and GPU
 RLAPI void DrawMesh(Mesh mesh, Material material, Matrix transform);                        // Draw a 3d mesh with material and transform
 RLAPI void DrawMeshInstanced(Mesh mesh, Material material, const Matrix *transforms, int instances); // Draw multiple mesh instances with material and different transforms
-RLAPI bool ExportMesh(Mesh mesh, const char *fileName);                                     // Export mesh data to file, returns true on success
 RLAPI BoundingBox GetMeshBoundingBox(Mesh mesh);                                            // Compute mesh bounding box limits
 RLAPI void GenMeshTangents(Mesh *mesh);                                                     // Compute mesh tangents
+RLAPI bool ExportMesh(Mesh mesh, const char *fileName);                                     // Export mesh data to file, returns true on success
+RLAPI bool ExportMeshAsCode(Mesh mesh, const char *fileName);                               // Export mesh as code file (.h) defining multiple arrays of vertex attributes
 
 // Mesh generation functions
 RLAPI Mesh GenMeshPoly(int sides, float radius);                                            // Generate polygonal mesh
@@ -1649,10 +1664,10 @@ RLAPI void SetAudioStreamPan(AudioStream stream, float pan);          // Set pan
 RLAPI void SetAudioStreamBufferSizeDefault(int size);                 // Default size for new audio streams
 RLAPI void SetAudioStreamCallback(AudioStream stream, AudioCallback callback); // Audio thread callback to request new data
 
-RLAPI void AttachAudioStreamProcessor(AudioStream stream, AudioCallback processor); // Attach audio stream processor to stream, receives the samples as <float>s
+RLAPI void AttachAudioStreamProcessor(AudioStream stream, AudioCallback processor); // Attach audio stream processor to stream, receives the samples as 'float'
 RLAPI void DetachAudioStreamProcessor(AudioStream stream, AudioCallback processor); // Detach audio stream processor from stream
 
-RLAPI void AttachAudioMixedProcessor(AudioCallback processor); // Attach audio stream processor to the entire audio pipeline, receives the samples as <float>s
+RLAPI void AttachAudioMixedProcessor(AudioCallback processor); // Attach audio stream processor to the entire audio pipeline, receives the samples as 'float'
 RLAPI void DetachAudioMixedProcessor(AudioCallback processor); // Detach audio stream processor from the entire audio pipeline
 
 #if defined(__cplusplus)

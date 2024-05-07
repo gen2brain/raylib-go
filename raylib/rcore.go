@@ -920,7 +920,7 @@ func LoadAutomationEventList(fileName string) AutomationEventList {
 
 // UnloadAutomationEventList - Unload automation events list from file
 func UnloadAutomationEventList(list *AutomationEventList) {
-	C.UnloadAutomationEventList(list.cptr())
+	C.UnloadAutomationEventList(*list.cptr())
 }
 
 // ExportAutomationEventList - Export automation events list as text file
