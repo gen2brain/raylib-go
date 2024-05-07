@@ -217,6 +217,11 @@ func ToggleFullscreen() {
 	C.ToggleFullscreen()
 }
 
+// ToggleBorderlessWindowed - Borderless fullscreen toggle (only PLATFORM_DESKTOP)
+func ToggleBorderlessWindowed() {
+	C.ToggleBorderlessWindowed()
+}
+
 // MaximizeWindow - Set window state: maximized, if resizable
 func MaximizeWindow() {
 	C.MaximizeWindow()
