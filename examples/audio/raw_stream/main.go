@@ -18,13 +18,13 @@ const (
 
 func main() {
 	rl.InitWindow(800, 450, "raylib [audio] example - raw audio streaming")
-
+	position := rl.NewVector2(0, 0)
 	rl.InitAudioDevice()
 
 	// Init raw audio stream (sample rate: <maxSamples>, sample size: 32bit-float, channels: 1-mono)
 	stream := rl.LoadAudioStream(maxSamples, 32, 1)
 
-	//// Fill create sine wave to play
+	//// Create sine wave to play
 	data := make([]float32, maxSamples)
 
 	for i := 0; i < maxSamples; i++ {
@@ -32,18 +32,13 @@ func main() {
 		data[i] = float32(math.Sin(float64((2 * rl.Pi * f * t))))
 	}
 
-	// NOTE: The buffer can only be updated when it has been processed, so there is clipping in the time between
-	// buffer exhaustion and next load.
+	// NOTE: The buffer can only be updated when it has been processed.  Time between buffer processing and next load and causes clipping
 	rl.PlayAudioStream(stream)
 
-	position := rl.NewVector2(0, 0)
-
 	startTime := time.Now()
-
 	rl.SetTargetFPS(targetFPS)
 
 	for !rl.WindowShouldClose() {
-
 		// Refill audio stream if buffer is processed
 		if rl.IsAudioStreamProcessed(stream) {
 			elapsedTime := time.Since(startTime).Seconds()
@@ -52,18 +47,13 @@ func main() {
 
 			if nextSampleIndex > maxSamples {
 				nextSampleIndex = maxSamplesPerUpdate - (maxSamples - currentSampleIndex)
-				samplesToWrite := append(data[currentSampleIndex:], data[:nextSampleIndex]...)
-				rl.UpdateAudioStream(stream, samplesToWrite)
+				rl.UpdateAudioStream(stream, append(data[currentSampleIndex:], data[:nextSampleIndex]...))
 			} else {
-				samplesToWrite := data[currentSampleIndex:nextSampleIndex]
-				rl.UpdateAudioStream(stream, samplesToWrite)
+				rl.UpdateAudioStream(stream, data[currentSampleIndex:nextSampleIndex])
 			}
-
-			fmt.Printf("Writing samples from %d to %d \n", currentSampleIndex, nextSampleIndex)
 		}
 
 		rl.BeginDrawing()
-
 		rl.ClearBackground(rl.RayWhite)
 		rl.DrawText(fmt.Sprintf("%d Hz SINE WAVE SHOULD BE PLAYING!", f), 200, 140, 20, rl.LightGray)
 
