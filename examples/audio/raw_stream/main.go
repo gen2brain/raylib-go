@@ -10,7 +10,7 @@ import (
 
 const (
 	nSamples   = 44000 * 10
-	sampleRate = 44000
+	sampleRate = 6000
 	bufferSize = nSamples
 	frequency  = 440
 	targetFPS  = 240
