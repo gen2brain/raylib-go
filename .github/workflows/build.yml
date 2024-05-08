@@ -43,7 +43,6 @@ jobs:
 
   test-drm:
     strategy:
-      fail-fast: false
       matrix:
         go-version: [1.21.x]
         os: [ubuntu-latest]
@@ -64,7 +63,6 @@ jobs:
 
   test-sdl:
     strategy:
-      fail-fast: false
       matrix:
         go-version: [1.21.x]
         os: [ubuntu-latest]
@@ -107,7 +105,6 @@ jobs:
 
   test-examples:
     strategy:
-      fail-fast: false
       matrix:
         go-version: [1.21.x]
         os: [ubuntu-latest]
