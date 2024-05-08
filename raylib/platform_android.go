@@ -116,6 +116,7 @@ func (a *asset) Read(p []byte) (n int, err error) {
 	if n == 0 && len(p) > 0 {
 		return 0, io.EOF
 	}
+
 	return n, nil
 }
 
@@ -124,11 +125,13 @@ func (a *asset) Seek(offset int64, whence int) (int64, error) {
 	if off == -1 {
 		return 0, fmt.Errorf("bad result for offset=%d, whence=%d", offset, whence)
 	}
+
 	return int64(off), nil
 }
 
 func (a *asset) Close() error {
 	C.AAsset_close(a.ptr)
+
 	return nil
 }
 

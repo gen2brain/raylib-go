@@ -1,5 +1,5 @@
-//go:build linux && drm && !rgfw && !sdl && !android
-// +build linux,drm,!rgfw,!sdl,!android
+//go:build rgfw && !sdl && !drm && !android
+// +build rgfw,!sdl,!drm,!android
 
 package rl
 
@@ -27,7 +27,6 @@ func InitWindow(width int32, height int32, title string) {
 
 // SetCallbackFunc - Sets callback function
 func SetCallbackFunc(func()) {
-	return
 }
 
 // ShowCursor - Shows cursor
@@ -44,6 +43,7 @@ func HideCursor() {
 func IsCursorHidden() bool {
 	ret := C.IsCursorHidden()
 	v := bool(ret)
+
 	return v
 }
 
@@ -51,6 +51,7 @@ func IsCursorHidden() bool {
 func IsCursorOnScreen() bool {
 	ret := C.IsCursorOnScreen()
 	v := bool(ret)
+
 	return v
 }
 
@@ -66,17 +67,28 @@ func DisableCursor() {
 
 // IsFileDropped - Check if a file have been dropped into window
 func IsFileDropped() bool {
-	return false
+	ret := C.IsFileDropped()
+	v := bool(ret)
+
+	return v
 }
 
 // LoadDroppedFiles - Load dropped filepaths
-func LoadDroppedFiles() (files []string) {
-	return
+func LoadDroppedFiles() []string {
+	ret := C.LoadDroppedFiles()
+	defer C.UnloadDroppedFiles(ret)
+
+	tmpslice := (*[1 << 24]*C.char)(unsafe.Pointer(ret.paths))[:ret.count:ret.count]
+	gostrings := make([]string, ret.count)
+	for i, s := range tmpslice {
+		gostrings[i] = C.GoString(s)
+	}
+
+	return gostrings
 }
 
 // UnloadDroppedFiles - Unload dropped filepaths
 func UnloadDroppedFiles() {
-	return
 }
 
 // OpenAsset - Open asset
@@ -85,5 +97,6 @@ func OpenAsset(name string) (Asset, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return f, nil
 }

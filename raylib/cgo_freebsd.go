@@ -1,5 +1,5 @@
-//go:build freebsd && !linux && !drm && !sdl && !android
-// +build freebsd,!linux,!drm,!sdl,!android
+//go:build freebsd && !linux && !rgfw && !drm && !sdl && !android
+// +build freebsd,!linux,!rgfw,!drm,!sdl,!android
 
 package rl
 

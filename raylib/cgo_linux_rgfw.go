@@ -1,12 +1,12 @@
-//go:build linux && sdl && !rgfw && !drm && !android
-// +build linux,sdl,!rgfw,!drm,!android
+//go:build linux && rgfw && !drm && !sdl && !android
+// +build linux,rgfw,!drm,!sdl,!android
 
 package rl
 
 /*
 #cgo linux,!es2 LDFLAGS: -lm
-#cgo linux CFLAGS: -DPLATFORM_DESKTOP_SDL -Wno-stringop-overflow
-#cgo linux pkg-config: sdl2
+#cgo linux CFLAGS: -DPLATFORM_DESKTOP_RGFW -Wno-builtin-declaration-mismatch -Wno-discarded-qualifiers -Wno-int-conversion
+#cgo linux LDFLAGS: -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor -lm -lpthread -ldl -lrt
 
 #cgo linux,!es2,!es3 LDFLAGS: -lGL
 

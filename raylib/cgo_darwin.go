@@ -1,5 +1,5 @@
-//go:build darwin && !sdl
-// +build darwin,!sdl
+//go:build darwin && !rgfw && !sdl
+// +build darwin,!rgfw,!sdl
 
 package rl
 

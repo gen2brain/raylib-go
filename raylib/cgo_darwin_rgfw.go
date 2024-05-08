@@ -1,12 +1,11 @@
-//go:build darwin && sdl && !rgfw
-// +build darwin,sdl,!rgfw
+//go:build darwin && rgfw && !sdl
+// +build darwin,rgfw,!sdl
 
 package rl
 
 /*
-#cgo darwin LDFLAGS: -framework Cocoa -framework IOKit -framework CoreVideo -framework CoreFoundation
-#cgo darwin CFLAGS: -x objective-c -Wno-deprecated-declarations -Wno-implicit-const-int-float-conversion -DPLATFORM_DESKTOP_SDL
-#cgo darwin pkg-config: sdl2
+#cgo darwin LDFLAGS: -framework Foundation -framework AppKit -framework CoreVideo
+#cgo darwin CFLAGS: -x objective-c -Wno-deprecated-declarations -Wno-implicit-const-int-float-conversion -DPLATFORM_DESKTOP_RGFW
 
 #cgo darwin,!es2,!es3 LDFLAGS: -framework OpenGL
 
