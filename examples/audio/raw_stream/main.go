@@ -1,14 +1,19 @@
 package main
 
 import (
+	"fmt"
 	"math"
+	"time"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 const (
-	maxSamples          = 22050
-	maxSamplesPerUpdate = 4096
+	maxSamples          = 6000
+	sampleRate          = 6000
+	maxSamplesPerUpdate = 1600
+	f                   = 440
+	targetFPS           = 240
 )
 
 func main() {
@@ -16,56 +21,56 @@ func main() {
 
 	rl.InitAudioDevice()
 
-	// Init raw audio stream (sample rate: 22050, sample size: 32bit-float, channels: 1-mono)
-	stream := rl.LoadAudioStream(22050, 32, 1)
+	// Init raw audio stream (sample rate: <maxSamples>, sample size: 32bit-float, channels: 1-mono)
+	stream := rl.LoadAudioStream(maxSamples, 32, 1)
 
-	//// Fill audio stream with some samples (sine wave)
+	//// Fill create sine wave to play
 	data := make([]float32, maxSamples)
 
 	for i := 0; i < maxSamples; i++ {
-		data[i] = float32(math.Sin(float64((2*rl.Pi*float32(i))/2) * rl.Deg2rad))
+		t := float32(i) / float32(maxSamples)
+		data[i] = float32(math.Sin(float64((2 * rl.Pi * f * t))))
 	}
 
-	// NOTE: The generated MAX_SAMPLES do not fit to close a perfect loop
-	// for that reason, there is a clip everytime audio stream is looped
+	// NOTE: The buffer can only be updated when it has been processed, so there is clipping in the time between
+	// buffer exhaustion and next load.
 	rl.PlayAudioStream(stream)
-
-	totalSamples := int32(maxSamples)
-	samplesLeft := int32(totalSamples)
 
 	position := rl.NewVector2(0, 0)
 
-	rl.SetTargetFPS(30)
+	startTime := time.Now()
+
+	rl.SetTargetFPS(targetFPS)
 
 	for !rl.WindowShouldClose() {
-		// Refill audio stream if required
+
+		// Refill audio stream if buffer is processed
 		if rl.IsAudioStreamProcessed(stream) {
-			numSamples := int32(0)
-			if samplesLeft >= maxSamplesPerUpdate {
-				numSamples = maxSamplesPerUpdate
+			elapsedTime := time.Since(startTime).Seconds()
+			currentSampleIndex := int(math.Mod(elapsedTime*float64(sampleRate), float64(maxSamples)))
+			nextSampleIndex := currentSampleIndex + maxSamplesPerUpdate
+
+			if nextSampleIndex > maxSamples {
+				nextSampleIndex = maxSamplesPerUpdate - (maxSamples - currentSampleIndex)
+				samplesToWrite := append(data[currentSampleIndex:], data[:nextSampleIndex]...)
+				rl.UpdateAudioStream(stream, samplesToWrite)
 			} else {
-				numSamples = samplesLeft
+				samplesToWrite := data[currentSampleIndex:nextSampleIndex]
+				rl.UpdateAudioStream(stream, samplesToWrite)
 			}
 
-			rl.UpdateAudioStream(stream, data[totalSamples-samplesLeft:])
-
-			samplesLeft -= numSamples
-
-			// Reset samples feeding (loop audio)
-			if samplesLeft <= 0 {
-				samplesLeft = totalSamples
-			}
+			fmt.Printf("Writing samples from %d to %d \n", currentSampleIndex, nextSampleIndex)
 		}
 
 		rl.BeginDrawing()
 
 		rl.ClearBackground(rl.RayWhite)
-		rl.DrawText("SINE WAVE SHOULD BE PLAYING!", 240, 140, 20, rl.LightGray)
+		rl.DrawText(fmt.Sprintf("%d Hz SINE WAVE SHOULD BE PLAYING!", f), 200, 140, 20, rl.LightGray)
 
 		// NOTE: Draw a part of the sine wave (only screen width)
 		for i := 0; i < int(rl.GetScreenWidth()); i++ {
 			position.X = float32(i)
-			position.Y = 250 + 50*data[i]
+			position.Y = 250 + 10*data[i]
 
 			rl.DrawPixelV(position, rl.Red)
 		}
