@@ -41,7 +41,7 @@ Put the raylib.dll into the root folder of your project or copy it into `C:\Wind
 
 As of November 15, 2023, raylib 5.0 is the required version.
 
-It is also possible build the dll yourself. You can find more infos at [raylib's wiki](https://github.com/raysan5/raylib/wiki/Working-on-Windows).
+It is also possible to build the DLL yourself. You can find more info at [raylib's wiki](https://github.com/raysan5/raylib/wiki/Working-on-Windows).
 
 ##### Android
 
@@ -54,14 +54,15 @@ It is also possible build the dll yourself. You can find more infos at [raylib's
 ### Build tags
 
 * `drm` - build for Linux native DRM mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM)
-* `sdl` - build for SDL backend instead of internal GLFW (PLATFORM_DESKTOP_SDL)
+* `sdl` - build for [SDL](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL)
+* `rgfw` - build for [RGFW](https://github.com/ColleagueRiley/RGFW) backend (PLATFORM_DESKTOP_RGFW)
 * `noaudio` - disables audio functions
 * `opengl43` - uses OpenGL 4.3 backend
 * `opengl21` - uses OpenGL 2.1 backend (default is 3.3 on desktop)
 * `opengl11` - uses OpenGL 1.1 backend (pseudo OpenGL 1.1 style)
 * `es2` - uses OpenGL ES 2.0 backend (can be used to link against [Google's ANGLE](https://github.com/google/angle))
 * `es3` - experimental support for OpenGL ES 3.0
-* `x11` - force X11 compatibility mode on Wayland
+* `x11` - force X11 compatibility mode on Wayland (PLATFORM_DESKTOP/GLFW)
 
 ### Documentation
 
