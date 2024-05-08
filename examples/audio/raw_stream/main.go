@@ -11,7 +11,7 @@ import (
 const (
 	nSamples          = 6000
 	sampleRate        = 6000
-	nSamplesPerUpdate = 1600
+	nSamplesPerUpdate = 1400
 	frequency         = 440
 	targetFPS         = 240
 )
