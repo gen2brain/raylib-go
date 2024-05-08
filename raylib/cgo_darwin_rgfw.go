@@ -5,7 +5,8 @@ package rl
 
 /*
 #cgo darwin LDFLAGS: -framework Foundation -framework AppKit -framework CoreVideo
-#cgo darwin CFLAGS: -x objective-c -Wno-deprecated-declarations -Wno-implicit-const-int-float-conversion -DPLATFORM_DESKTOP_RGFW
+#cgo darwin CFLAGS: -x objective-c -DPLATFORM_DESKTOP_RGFW -Wno-deprecated-declarations -Wno-implicit-const-int-float-conversion
+#cgo darwin CFLAGS: -Wno-incompatible-pointer-types -Wno-incompatible-function-pointer-types -Wno-incompatible-pointer-types-discards-qualifiers -Wno-macro-redefined
 
 #cgo darwin,!es2,!es3 LDFLAGS: -framework OpenGL
 
