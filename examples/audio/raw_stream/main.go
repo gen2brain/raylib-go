@@ -9,16 +9,19 @@ import (
 )
 
 const (
-	nSamples          = 6000
-	sampleRate        = 6000
-	nSamplesPerUpdate = 1400
-	frequency         = 440
-	targetFPS         = 240
+	nSamples   = 44000 * 10
+	sampleRate = 44000
+	bufferSize = nSamples
+	frequency  = 440
+	targetFPS  = 240
 )
 
 func main() {
 	rl.InitWindow(800, 450, "raylib [audio] example - raw audio streaming")
 	position := rl.NewVector2(0, 0)
+
+	rl.SetAudioStreamBufferSizeDefault(bufferSize)
+
 	rl.InitAudioDevice()
 
 	// Init raw audio stream (sample rate: <nSamples>, sample size: 32bit-float, channels: 1-mono)
@@ -43,10 +46,10 @@ func main() {
 		if rl.IsAudioStreamProcessed(stream) {
 			elapsedTime := time.Since(startTime).Seconds()
 			currentSampleIndex := int(math.Mod(elapsedTime*float64(sampleRate), float64(nSamples)))
-			nextSampleIndex := currentSampleIndex + nSamplesPerUpdate
+			nextSampleIndex := currentSampleIndex + bufferSize
 
 			if nextSampleIndex > nSamples {
-				nextSampleIndex = nSamplesPerUpdate - (nSamples - currentSampleIndex)
+				nextSampleIndex = bufferSize - (nSamples - currentSampleIndex)
 				rl.UpdateAudioStream(stream, append(data[currentSampleIndex:], data[:nextSampleIndex]...))
 			} else {
 				rl.UpdateAudioStream(stream, data[currentSampleIndex:nextSampleIndex])
