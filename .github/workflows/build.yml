@@ -55,7 +55,7 @@ jobs:
       uses: actions/checkout@v3
     - name: Install package
       run: |
-        sudo apt-get update -y; sudo apt-get -y install libegl1-mesa-dev libdrm-dev
+        sudo apt-get update -y; sudo apt-get -y install libegl1-mesa-dev libdrm-dev libgbm-dev
     - name: Build
       run: go build -tags drm
       working-directory: raylib
