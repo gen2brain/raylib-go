@@ -1,71 +1,69 @@
 package main
 
 import (
+	"fmt"
 	"math"
+	"time"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 const (
-	maxSamples          = 22050
-	maxSamplesPerUpdate = 4096
+	nSamples   = 44000 * 10
+	sampleRate = 6000
+	bufferSize = nSamples
+	frequency  = 440
+	targetFPS  = 240
 )
 
 func main() {
 	rl.InitWindow(800, 450, "raylib [audio] example - raw audio streaming")
+	position := rl.NewVector2(0, 0)
+
+	rl.SetAudioStreamBufferSizeDefault(bufferSize)
 
 	rl.InitAudioDevice()
 
-	// Init raw audio stream (sample rate: 22050, sample size: 32bit-float, channels: 1-mono)
-	stream := rl.LoadAudioStream(22050, 32, 1)
+	// Init raw audio stream (sample rate: <nSamples>, sample size: 32bit-float, channels: 1-mono)
+	stream := rl.LoadAudioStream(nSamples, 32, 1)
 
-	//// Fill audio stream with some samples (sine wave)
-	data := make([]float32, maxSamples)
+	//// Create sine wave to play
+	data := make([]float32, nSamples)
 
-	for i := 0; i < maxSamples; i++ {
-		data[i] = float32(math.Sin(float64((2*rl.Pi*float32(i))/2) * rl.Deg2rad))
+	for i := 0; i < nSamples; i++ {
+		t := float32(i) / float32(nSamples)
+		data[i] = float32(math.Sin(float64((2 * rl.Pi * frequency * t))))
 	}
 
-	// NOTE: The generated MAX_SAMPLES do not fit to close a perfect loop
-	// for that reason, there is a clip everytime audio stream is looped
+	// NOTE: The buffer can only be updated when it has been processed.  Time between buffer processing and next load and causes clipping
 	rl.PlayAudioStream(stream)
 
-	totalSamples := int32(maxSamples)
-	samplesLeft := int32(totalSamples)
-
-	position := rl.NewVector2(0, 0)
-
-	rl.SetTargetFPS(30)
+	startTime := time.Now()
+	rl.SetTargetFPS(targetFPS)
 
 	for !rl.WindowShouldClose() {
-		// Refill audio stream if required
+		// Refill audio stream if buffer is processed
 		if rl.IsAudioStreamProcessed(stream) {
-			numSamples := int32(0)
-			if samplesLeft >= maxSamplesPerUpdate {
-				numSamples = maxSamplesPerUpdate
+			elapsedTime := time.Since(startTime).Seconds()
+			currentSampleIndex := int(math.Mod(elapsedTime*float64(sampleRate), float64(nSamples)))
+			nextSampleIndex := currentSampleIndex + bufferSize
+
+			if nextSampleIndex > nSamples {
+				nextSampleIndex = bufferSize - (nSamples - currentSampleIndex)
+				rl.UpdateAudioStream(stream, append(data[currentSampleIndex:], data[:nextSampleIndex]...))
 			} else {
-				numSamples = samplesLeft
-			}
-
-			rl.UpdateAudioStream(stream, data[totalSamples-samplesLeft:])
-
-			samplesLeft -= numSamples
-
-			// Reset samples feeding (loop audio)
-			if samplesLeft <= 0 {
-				samplesLeft = totalSamples
+				rl.UpdateAudioStream(stream, data[currentSampleIndex:nextSampleIndex])
 			}
 		}
 
 		rl.BeginDrawing()
-
 		rl.ClearBackground(rl.RayWhite)
-		rl.DrawText("SINE WAVE SHOULD BE PLAYING!", 240, 140, 20, rl.LightGray)
+		rl.DrawText(fmt.Sprintf("%d Hz SINE WAVE SHOULD BE PLAYING!", frequency), 200, 140, 20, rl.LightGray)
 
 		// NOTE: Draw a part of the sine wave (only screen width)
 		for i := 0; i < int(rl.GetScreenWidth()); i++ {
 			position.X = float32(i)
-			position.Y = 250 + 50*data[i]
+			position.Y = 250 + 10*data[i*nSamples/int(20*rl.GetScreenWidth())]
 
 			rl.DrawPixelV(position, rl.Red)
 		}
