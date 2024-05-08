@@ -12,7 +12,7 @@ const (
 	maxSamples          = 6000
 	sampleRate          = 6000
 	maxSamplesPerUpdate = 1600
-	f                   = 440
+	frequency           = 440
 	targetFPS           = 240
 )
 
@@ -29,7 +29,7 @@ func main() {
 
 	for i := 0; i < maxSamples; i++ {
 		t := float32(i) / float32(maxSamples)
-		data[i] = float32(math.Sin(float64((2 * rl.Pi * f * t))))
+		data[i] = float32(math.Sin(float64((2 * rl.Pi * frequency * t))))
 	}
 
 	// NOTE: The buffer can only be updated when it has been processed.  Time between buffer processing and next load and causes clipping
@@ -55,7 +55,7 @@ func main() {
 
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.RayWhite)
-		rl.DrawText(fmt.Sprintf("%d Hz SINE WAVE SHOULD BE PLAYING!", f), 200, 140, 20, rl.LightGray)
+		rl.DrawText(fmt.Sprintf("%d Hz SINE WAVE SHOULD BE PLAYING!", frequency), 200, 140, 20, rl.LightGray)
 
 		// NOTE: Draw a part of the sine wave (only screen width)
 		for i := 0; i < int(rl.GetScreenWidth()); i++ {
