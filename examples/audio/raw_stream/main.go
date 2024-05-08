@@ -63,7 +63,7 @@ func main() {
 		// NOTE: Draw a part of the sine wave (only screen width)
 		for i := 0; i < int(rl.GetScreenWidth()); i++ {
 			position.X = float32(i)
-			position.Y = 250 + 10*data[i]
+			position.Y = 250 + 10*data[i*nSamples/int(20*rl.GetScreenWidth())]
 
 			rl.DrawPixelV(position, rl.Red)
 		}
