@@ -53,7 +53,7 @@ It is also possible to build the DLL yourself. You can find more info at [raylib
 
 ### Build tags
 
-* `drm` - build for Linux native DRM mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM)
+* `drm` - build for Linux native [DRM](https://en.wikipedia.org/wiki/Direct_Rendering_Manager) mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM)
 * `sdl` - build for [SDL](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL)
 * `rgfw` - build for [RGFW](https://github.com/ColleagueRiley/RGFW) backend (PLATFORM_DESKTOP_RGFW)
 * `noaudio` - disables audio functions
