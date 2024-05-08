@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	maxSamples          = 6000
-	sampleRate          = 6000
-	maxSamplesPerUpdate = 1600
-	frequency           = 440
-	targetFPS           = 240
+	nSamples          = 6000
+	sampleRate        = 6000
+	nSamplesPerUpdate = 1600
+	frequency         = 440
+	targetFPS         = 240
 )
 
 func main() {
@@ -21,14 +21,14 @@ func main() {
 	position := rl.NewVector2(0, 0)
 	rl.InitAudioDevice()
 
-	// Init raw audio stream (sample rate: <maxSamples>, sample size: 32bit-float, channels: 1-mono)
-	stream := rl.LoadAudioStream(maxSamples, 32, 1)
+	// Init raw audio stream (sample rate: <nSamples>, sample size: 32bit-float, channels: 1-mono)
+	stream := rl.LoadAudioStream(nSamples, 32, 1)
 
 	//// Create sine wave to play
-	data := make([]float32, maxSamples)
+	data := make([]float32, nSamples)
 
-	for i := 0; i < maxSamples; i++ {
-		t := float32(i) / float32(maxSamples)
+	for i := 0; i < nSamples; i++ {
+		t := float32(i) / float32(nSamples)
 		data[i] = float32(math.Sin(float64((2 * rl.Pi * frequency * t))))
 	}
 
@@ -42,11 +42,11 @@ func main() {
 		// Refill audio stream if buffer is processed
 		if rl.IsAudioStreamProcessed(stream) {
 			elapsedTime := time.Since(startTime).Seconds()
-			currentSampleIndex := int(math.Mod(elapsedTime*float64(sampleRate), float64(maxSamples)))
-			nextSampleIndex := currentSampleIndex + maxSamplesPerUpdate
+			currentSampleIndex := int(math.Mod(elapsedTime*float64(sampleRate), float64(nSamples)))
+			nextSampleIndex := currentSampleIndex + nSamplesPerUpdate
 
-			if nextSampleIndex > maxSamples {
-				nextSampleIndex = maxSamplesPerUpdate - (maxSamples - currentSampleIndex)
+			if nextSampleIndex > nSamples {
+				nextSampleIndex = nSamplesPerUpdate - (nSamples - currentSampleIndex)
 				rl.UpdateAudioStream(stream, append(data[currentSampleIndex:], data[:nextSampleIndex]...))
 			} else {
 				rl.UpdateAudioStream(stream, data[currentSampleIndex:nextSampleIndex])
