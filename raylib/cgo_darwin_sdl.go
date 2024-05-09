@@ -5,7 +5,7 @@ package rl
 
 /*
 #cgo darwin LDFLAGS: -framework Cocoa -framework IOKit -framework CoreVideo -framework CoreFoundation
-#cgo darwin CFLAGS: -x objective-c -Wno-deprecated-declarations -Wno-implicit-const-int-float-conversion -DPLATFORM_DESKTOP_SDL
+#cgo darwin CFLAGS: -Wno-deprecated-declarations -Wno-implicit-const-int-float-conversion -DPLATFORM_DESKTOP_SDL
 #cgo darwin pkg-config: sdl2
 
 #cgo darwin,!es2,!es3 LDFLAGS: -framework OpenGL
