@@ -61,14 +61,10 @@ void CloseWindow(void);
 #define _XTYPEDEF_FONT
 #define RGFW_IMPLEMENTATION
 
-#if defined(_WIN32)
-
 #define WIN32_LEAN_AND_MEAN
 #define Rectangle rectangle_win32
 #define CloseWindow CloseWindow_win32
 #define ShowCursor __imp_ShowCursor
-
-#endif // _WIN32
 
 #define Point NSPOINT
 #define Size NSSIZE
@@ -79,11 +75,11 @@ __declspec(dllimport) int __stdcall  MultiByteToWideChar(unsigned int CodePage, 
 
 #include "../external/RGFW.h"
 #undef DrawText
+#undef Rectangle
 #undef ShowCursor
 #undef CloseWindow
 #undef Point
 #undef Size
-#undef Rectangle
 
 #define Rectangle struct Rectangle
 void CloseWindow(void);

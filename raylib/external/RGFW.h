@@ -130,16 +130,12 @@ extern "C" {
 	
 #define RGFW_WINDOWS
 
-#if defined(_WIN32)
-#ifndef WIN32
+#if defined(_WIN32) && !defined(WIN32)
 #define WIN32
-#endif
 #endif
 
 #if defined(_WIN64)
-#ifndef WIN64
-#define WIN64
-#endif
+//#define WIN64
 #define _AMD64_
 #undef _X86_
 #else
@@ -893,13 +889,13 @@ typedef struct { i32 x, y; } RGFW_vector;
 	typedef void NSApplication;
 	typedef void NSScreen;
 	typedef void NSEvent;
-	//typedef void NSString;
+	typedef void NSString;
 	typedef void NSOpenGLContext;
 	typedef void NSPasteboard;
 	typedef void NSColor;
-	//typedef void NSArray;
+	typedef void NSArray;
 	typedef void NSImageRep;
-	//typedef void NSImage;
+	typedef void NSImage;
 	typedef void NSOpenGLView;
 
 
@@ -997,29 +993,29 @@ typedef struct { i32 x, y; } RGFW_vector;
 	/* Creates an Objective-C method (SEL) from a regular C function with the option to set the register name.*/
 #define si_func_to_SEL_with_name(class_name, register_name, function) si_impl_func_to_SEL_with_name(class_name, register_name":", function)
 
-	//NSRect NSMakeRect(double x, double y, double width, double height) {
-		//NSRect r;
-		//r.origin.x = x;
-		//r.origin.y = y;
-		//r.size.width = width;
-		//r.size.height = height;
+	NSRect NSMakeRect(double x, double y, double width, double height) {
+		NSRect r;
+		r.origin.x = x;
+		r.origin.y = y;
+		r.size.width = width;
+		r.size.height = height;
 
-		//return r;
-	//}
+		return r;
+	}
 
-	//NSPoint NSMakePoint(double x, double y) {
-		//NSPoint point;
-		//point.x = x;
-		//point.y = y;
-		//return point;
-	//}
+	NSPoint NSMakePoint(double x, double y) {
+		NSPoint point;
+		point.x = x;
+		point.y = y;
+		return point;
+	}
 
-	//NSSize NSMakeSize(double w, double h) {
-		//NSSize size;
-		//size.width = w;
-		//size.height = h;
-		//return size;
-	//}
+	NSSize NSMakeSize(double w, double h) {
+		NSSize size;
+		size.width = w;
+		size.height = h;
+		return size;
+	}
 
 	void* si_array_init(void* allocator, size_t sizeof_element, size_t count) {
 		void* array = si_array_init_reserve(sizeof_element, count);
@@ -6078,7 +6074,7 @@ static HMODULE wglinstance = NULL;
 	}
 
 	void RGFW_sleep(u32 ms) {
-#if !defined(_MSC_VER) && !defined(__MINGW32__)
+#ifndef RGFW_WINDOWS
 		struct timespec time;
 		time.tv_sec = 0;
 		time.tv_nsec = ms * 1000;
