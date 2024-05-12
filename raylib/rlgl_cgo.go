@@ -90,6 +90,11 @@ func Scalef(x float32, y float32, z float32) {
 	C.rlScalef(cx, cy, cz)
 }
 
+// MultMatrix - Multiply the current matrix by another matrix
+func MultMatrix(m Matrix) {
+	C.rlMultMatrixf(MatrixToFloat(m))
+}
+
 // Frustum .
 func Frustum(left float64, right float64, bottom float64, top float64, znear float64, zfar float64) {
 	cleft := C.double(left)
