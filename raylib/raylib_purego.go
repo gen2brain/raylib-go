@@ -1581,8 +1581,6 @@ func MemFree(ptr unsafe.Pointer) {
 }
 
 // SetTraceLogCallback - Set custom trace log
-//
-// REVIEW NEEDED! 2023-11-15 JupiterRider: The argument list paramter isn't impelmented yet.
 func SetTraceLogCallback(fn TraceLogCallbackFun) {
 	setTraceLogCallback(traceLogCallbackWrapper(fn))
 }
