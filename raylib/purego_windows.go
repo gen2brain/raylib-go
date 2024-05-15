@@ -5,6 +5,7 @@ package rl
 
 import (
 	"fmt"
+	"syscall"
 	"unsafe"
 
 	"github.com/ebitengine/purego"
@@ -15,6 +16,15 @@ const (
 	libname         = "raylib.dll"
 	requiredVersion = "5.0"
 )
+
+var wvsprintfA uintptr
+
+func init() {
+	handle, err := windows.LoadLibrary("user32.dll")
+	if err == nil {
+		wvsprintfA, _ = windows.GetProcAddress(handle, "wvsprintfA")
+	}
+}
 
 // loadLibrary loads the raylib dll and panics on error
 func loadLibrary() uintptr {
@@ -37,7 +47,14 @@ func loadLibrary() uintptr {
 }
 
 func traceLogCallbackWrapper(fn TraceLogCallbackFun) uintptr {
-	return purego.NewCallback(func(logLevel int32, text *byte) uintptr {
+	return purego.NewCallback(func(logLevel int32, text *byte, args unsafe.Pointer) uintptr {
+		if wvsprintfA != 0 {
+			var buffer [1024]byte // Max size is 1024 (see https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-wvsprintfa)
+			_, _, errno := syscall.SyscallN(wvsprintfA, uintptr(unsafe.Pointer(&buffer[0])), uintptr(unsafe.Pointer(text)), uintptr(args))
+			if errno == 0 {
+				text = &buffer[0]
+			}
+		}
 		fn(int(logLevel), windows.BytePtrToString(text))
 		return 0
 	})

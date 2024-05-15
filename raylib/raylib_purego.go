@@ -4,6 +4,7 @@
 package rl
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"os"
@@ -121,7 +122,7 @@ var unloadRandomSequence func(sequence *int32)
 var takeScreenshot func(fileName string)
 var setConfigFlags func(flags uint32)
 var openURL func(url string)
-var traceLog func(logLevel int32, text string, args ...any)
+var traceLog func(logLevel int32, text string)
 var setTraceLogLevel func(logLevel int32)
 var memAlloc func(size uint32) unsafe.Pointer
 var memRealloc func(ptr unsafe.Pointer, size uint32) unsafe.Pointer
@@ -1556,7 +1557,7 @@ func OpenURL(url string) {
 
 // TraceLog - Show trace log messages (LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERROR...)
 func TraceLog(logLevel TraceLogLevel, text string, args ...any) {
-	traceLog(int32(logLevel), text, args...)
+	traceLog(int32(logLevel), fmt.Sprintf(text, args...))
 }
 
 // SetTraceLogLevel - Set the current threshold (minimum) log level
@@ -1580,8 +1581,6 @@ func MemFree(ptr unsafe.Pointer) {
 }
 
 // SetTraceLogCallback - Set custom trace log
-//
-// REVIEW NEEDED! 2023-11-15 JupiterRider: The argument list paramter isn't impelmented yet.
 func SetTraceLogCallback(fn TraceLogCallbackFun) {
 	setTraceLogCallback(traceLogCallbackWrapper(fn))
 }
