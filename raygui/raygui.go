@@ -308,8 +308,11 @@ func WindowBox(bounds rl.Rectangle, title string) bool {
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
-	ctitle := C.CString(title)
-	defer C.free(unsafe.Pointer(ctitle))
+	var ctitle *C.char
+	if len(title) > 0 {
+		ctitle = C.CString(title)
+		defer C.free(unsafe.Pointer(ctitle))
+	}
 	return C.GuiWindowBox(cbounds, ctitle) != 0
 }
 
@@ -320,8 +323,11 @@ func GroupBox(bounds rl.Rectangle, text string) {
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	C.GuiGroupBox(cbounds, ctext)
 }
 
@@ -332,8 +338,11 @@ func Line(bounds rl.Rectangle, text string) {
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	C.GuiLine(cbounds, ctext)
 }
 
@@ -344,8 +353,11 @@ func Panel(bounds rl.Rectangle, text string) {
 	cbounds.height = C.float(bounds.Height)
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	C.GuiPanel(cbounds, ctext)
 }
 
@@ -356,8 +368,11 @@ func ScrollPanel(bounds rl.Rectangle, text string, content rl.Rectangle, scroll 
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	var ccontent C.struct_Rectangle
 	ccontent.x = C.float(content.X)
 	ccontent.y = C.float(content.Y)
@@ -409,8 +424,11 @@ func Label(bounds rl.Rectangle, text string) {
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	C.GuiLabel(cbounds, ctext)
 }
 
@@ -421,8 +439,11 @@ func Button(bounds rl.Rectangle, text string) bool {
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	return C.GuiButton(cbounds, ctext) != 0
 }
 
@@ -433,8 +454,11 @@ func LabelButton(bounds rl.Rectangle, text string) bool {
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	return C.GuiLabelButton(cbounds, ctext) != 0
 }
 
@@ -445,8 +469,11 @@ func Toggle(bounds rl.Rectangle, text string, active bool) bool {
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	cactive := C.bool(active)
 	C.GuiToggle(cbounds, ctext, &cactive)
 	return bool(cactive)
@@ -459,8 +486,11 @@ func ToggleGroup(bounds rl.Rectangle, text string, active int32) int32 {
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	cactive := C.int(active)
 	C.GuiToggleGroup(cbounds, ctext, &cactive)
 	return int32(cactive)
@@ -473,8 +503,11 @@ func ToggleSlider(bounds rl.Rectangle, text string, active int32) int32 {
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	cactive := C.int(active)
 	C.GuiToggleSlider(cbounds, ctext, &cactive)
 	return int32(cactive)
@@ -487,8 +520,11 @@ func CheckBox(bounds rl.Rectangle, text string, checked bool) bool {
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	cchecked := C.bool(checked)
 	C.GuiCheckBox(cbounds, ctext, &cchecked)
 	return bool(cchecked)
@@ -501,8 +537,11 @@ func ComboBox(bounds rl.Rectangle, text string, active int32) int32 {
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	cactive := C.int(active)
 	C.GuiComboBox(cbounds, ctext, &cactive)
 	return int32(cactive)
@@ -515,8 +554,11 @@ func Spinner(bounds rl.Rectangle, text string, value *int32, minValue, maxValue 
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 
 	if value == nil {
 		value = new(int32)
@@ -541,10 +583,19 @@ func Slider(bounds rl.Rectangle, textLeft string, textRight string, value float3
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctextLeft := C.CString(textLeft)
-	defer C.free(unsafe.Pointer(ctextLeft))
-	ctextRight := C.CString(textRight)
-	defer C.free(unsafe.Pointer(ctextRight))
+
+	var ctextLeft *C.char
+	if len(textLeft) > 0 {
+		ctextLeft = C.CString(textLeft)
+		defer C.free(unsafe.Pointer(ctextLeft))
+	}
+
+	var ctextRight *C.char
+	if len(textRight) > 0 {
+		ctextRight = C.CString(textRight)
+		defer C.free(unsafe.Pointer(ctextRight))
+	}
+
 	cvalue := C.float(value)
 	cminValue := C.float(minValue)
 	cmaxValue := C.float(maxValue)
@@ -559,10 +610,19 @@ func SliderBar(bounds rl.Rectangle, textLeft string, textRight string, value flo
 	cbounds.height = C.float(bounds.Height)
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
-	ctextLeft := C.CString(textLeft)
-	defer C.free(unsafe.Pointer(ctextLeft))
-	ctextRight := C.CString(textRight)
-	defer C.free(unsafe.Pointer(ctextRight))
+
+	var ctextLeft *C.char
+	if len(textLeft) > 0 {
+		ctextLeft = C.CString(textLeft)
+		defer C.free(unsafe.Pointer(ctextLeft))
+	}
+
+	var ctextRight *C.char
+	if len(textRight) > 0 {
+		ctextRight = C.CString(textRight)
+		defer C.free(unsafe.Pointer(ctextRight))
+	}
+
 	cvalue := C.float(value)
 	cminValue := C.float(minValue)
 	cmaxValue := C.float(maxValue)
@@ -577,10 +637,19 @@ func ProgressBar(bounds rl.Rectangle, textLeft string, textRight string, value f
 	cbounds.height = C.float(bounds.Height)
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
-	ctextLeft := C.CString(textLeft)
-	defer C.free(unsafe.Pointer(ctextLeft))
-	ctextRight := C.CString(textRight)
-	defer C.free(unsafe.Pointer(ctextRight))
+
+	var ctextLeft *C.char
+	if len(textLeft) > 0 {
+		ctextLeft = C.CString(textLeft)
+		defer C.free(unsafe.Pointer(ctextLeft))
+	}
+
+	var ctextRight *C.char
+	if len(textRight) > 0 {
+		ctextRight = C.CString(textRight)
+		defer C.free(unsafe.Pointer(ctextRight))
+	}
+
 	cvalue := C.float(value)
 	cminValue := C.float(minValue)
 	cmaxValue := C.float(maxValue)
@@ -595,8 +664,11 @@ func StatusBar(bounds rl.Rectangle, text string) {
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	C.GuiStatusBar(cbounds, ctext)
 }
 
@@ -607,8 +679,11 @@ func DummyRec(bounds rl.Rectangle, text string) {
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	C.GuiDummyRec(cbounds, ctext)
 }
 
@@ -619,8 +694,11 @@ func Grid(bounds rl.Rectangle, text string, spacing float32, subdivs int32, mous
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
 	cbounds.x = C.float(bounds.X)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	cspacing := C.float(spacing)
 	csubdivs := C.int(subdivs)
 	var cmouseCell C.struct_Vector2
@@ -639,8 +717,11 @@ func ListView(bounds rl.Rectangle, text string, scrollIndex *int32, active int32
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 
 	if scrollIndex == nil {
 		scrollIndex = new(int32)
@@ -663,10 +744,16 @@ func MessageBox(bounds rl.Rectangle, title string, message string, buttons strin
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctitle := C.CString(title)
-	defer C.free(unsafe.Pointer(ctitle))
-	cmessage := C.CString(message)
-	defer C.free(unsafe.Pointer(cmessage))
+	var ctitle *C.char
+	if len(title) > 0 {
+		ctitle = C.CString(title)
+		defer C.free(unsafe.Pointer(ctitle))
+	}
+	var cmessage *C.char
+	if len(message) > 0 {
+		cmessage = C.CString(message)
+		defer C.free(unsafe.Pointer(cmessage))
+	}
 	cbuttons := C.CString(buttons)
 	defer C.free(unsafe.Pointer(cbuttons))
 	return int32(C.GuiMessageBox(cbounds, ctitle, cmessage, cbuttons))
@@ -679,8 +766,11 @@ func ColorPicker(bounds rl.Rectangle, text string, color rl.Color) rl.Color {
 	cbounds.height = C.float(bounds.Height)
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	var ccolor C.struct_Color
 	ccolor.r = C.uchar(color.R)
 	ccolor.g = C.uchar(color.G)
@@ -702,8 +792,11 @@ func ColorPanel(bounds rl.Rectangle, text string, color rl.Color) rl.Color {
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	var ccolor C.struct_Color
 	ccolor.b = C.uchar(color.B)
 	ccolor.a = C.uchar(color.A)
@@ -725,8 +818,11 @@ func ColorBarAlpha(bounds rl.Rectangle, text string, alpha float32) float32 {
 	cbounds.height = C.float(bounds.Height)
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	calpha := C.float(alpha)
 	C.GuiColorBarAlpha(cbounds, ctext, &calpha)
 	return float32(calpha)
@@ -739,8 +835,11 @@ func ColorBarHue(bounds rl.Rectangle, text string, value float32) float32 {
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	cvalue := C.float(value)
 	C.GuiColorBarHue(cbounds, ctext, &cvalue)
 	return float32(cvalue)
@@ -754,8 +853,11 @@ func ColorPickerHSV(bounds rl.Rectangle, text string, colorHSV *rl.Vector3) int3
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
 
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 
 	var ccolorHSV C.struct_Vector3
 	ccolorHSV.x = C.float(colorHSV.X)
@@ -778,8 +880,11 @@ func ColorPanelHSV(bounds rl.Rectangle, text string, colorHSV *rl.Vector3) int32
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
 
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 
 	var ccolorHSV C.struct_Vector3
 	ccolorHSV.x = C.float(colorHSV.X)
@@ -801,8 +906,11 @@ func DropdownBox(bounds rl.Rectangle, text string, active *int32, editMode bool)
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 
 	if active == nil {
 		active = new(int32)
@@ -824,8 +932,11 @@ func ValueBox(bounds rl.Rectangle, text string, value *int32, minValue, maxValue
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 
 	if value == nil {
 		value = new(int32)
@@ -1162,11 +1273,17 @@ func TextInputBox(bounds rl.Rectangle, title, message, buttons string, text *str
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
 
-	ctitle := C.CString(title)
-	defer C.free(unsafe.Pointer(ctitle))
+	var ctitle *C.char
+	if len(title) > 0 {
+		ctitle = C.CString(title)
+		defer C.free(unsafe.Pointer(ctitle))
+	}
 
-	cmessage := C.CString(message)
-	defer C.free(unsafe.Pointer(cmessage))
+	var cmessage *C.char
+	if len(message) > 0 {
+		cmessage = C.CString(message)
+		defer C.free(unsafe.Pointer(cmessage))
+	}
 
 	cbuttons := C.CString(buttons)
 	defer C.free(unsafe.Pointer(cbuttons))
