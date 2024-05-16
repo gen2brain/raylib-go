@@ -356,8 +356,11 @@ func ScrollPanel(bounds rl.Rectangle, text string, content rl.Rectangle, scroll 
 	cbounds.y = C.float(bounds.Y)
 	cbounds.width = C.float(bounds.Width)
 	cbounds.height = C.float(bounds.Height)
-	ctext := C.CString(text)
-	defer C.free(unsafe.Pointer(ctext))
+	var ctext *C.char
+	if len(text) > 0 {
+		ctext = C.CString(text)
+		defer C.free(unsafe.Pointer(ctext))
+	}
 	var ccontent C.struct_Rectangle
 	ccontent.x = C.float(content.X)
 	ccontent.y = C.float(content.Y)
