@@ -970,7 +970,7 @@ func TextBox(bounds rl.Rectangle, text *string, textSize int, editMode bool) boo
 	}
 	ctext := (*C.char)(unsafe.Pointer(&bs[0]))
 	defer func() {
-		*text = strings.TrimSpace(strings.Trim(string(bs), "\x00"))
+		*text = strings.Trim(string(bs), "\x00")
 		// no need : C.free(unsafe.Pointer(ctext))
 	}()
 
