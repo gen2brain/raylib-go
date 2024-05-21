@@ -16,7 +16,7 @@ var rlLoadIdentity func()
 var rlTranslatef func(x float32, y float32, z float32)
 var rlRotatef func(angle float32, x float32, y float32, z float32)
 var rlScalef func(x float32, y float32, z float32)
-var rlMultMatrix func(m []float32)
+var rlMultMatrix func(m *float32)
 var rlFrustum func(left float64, right float64, bottom float64, top float64, znear float64, zfar float64)
 var rlOrtho func(left float64, right float64, bottom float64, top float64, znear float64, zfar float64)
 var rlViewport func(x int32, y int32, width int32, height int32)
@@ -298,6 +298,12 @@ func Rotatef(angle float32, x float32, y float32, z float32) {
 // Scalef - Multiply the current matrix by a scaling matrix
 func Scalef(x float32, y float32, z float32) {
 	rlScalef(x, y, z)
+}
+
+// MultMatrix - Multiply the current matrix by another matrix
+func MultMatrix(m Matrix) {
+	f := MatrixToFloat(m)
+	rlMultMatrixf(unsafe.Pointer(&f[0]))
 }
 
 // Frustum .
