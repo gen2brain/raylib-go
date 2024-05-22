@@ -103,6 +103,25 @@ jobs:
       run: go build -tags rgfw
       working-directory: raylib
 
+  test-purego:
+    strategy:
+      matrix:
+        go-version: [1.21.x]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Build
+      run: go build
+      working-directory: raylib
+      env:
+        GOOS: windows
+
   test-examples:
     strategy:
       matrix:
