@@ -8,6 +8,7 @@ package raygui
 import "C"
 
 import (
+	"image/color"
 	"strings"
 	"unsafe"
 
@@ -1380,4 +1381,16 @@ func GetFont() rl.Font {
 	ret := C.GuiGetFont()
 	ptr := unsafe.Pointer(&ret)
 	return *(*rl.Font)(ptr)
+}
+
+// LoadIcons - load raygui icons file (.rgi) into internal icons data
+func LoadIcons(fileName string, loadIconsName bool) {
+	cfileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(cfileName))
+	C.GuiLoadIcons(cfileName, C.bool(loadIconsName))
+}
+
+// DrawIcon - draw icon using pixel size at specified position
+func DrawIcon(iconId, posX, posY, pixelSize int32, col color.RGBA) {
+	C.GuiDrawIcon(C.int(iconId), C.int(posX), C.int(posY), C.int(pixelSize), *(*C.Color)(unsafe.Pointer(&col)))
 }
