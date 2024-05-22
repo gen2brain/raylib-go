@@ -303,7 +303,7 @@ func Scalef(x float32, y float32, z float32) {
 // MultMatrix - Multiply the current matrix by another matrix
 func MultMatrix(m Matrix) {
 	f := MatrixToFloat(m)
-	rlMultMatrixf(unsafe.Pointer(&f[0]))
+	rlMultMatrix(unsafe.Pointer(&f[0]))
 }
 
 // Frustum .
