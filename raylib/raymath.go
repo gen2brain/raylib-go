@@ -1360,6 +1360,30 @@ func MatrixToFloatV(mat Matrix) [16]float32 {
 	return result
 }
 
+// MatrixToFloat - Converts Matrix to float32 slice
+func MatrixToFloat(mat Matrix) []float32 {
+	data := make([]float32, 16)
+
+	data[0] = mat.M0
+	data[1] = mat.M4
+	data[2] = mat.M8
+	data[3] = mat.M12
+	data[4] = mat.M1
+	data[5] = mat.M5
+	data[6] = mat.M9
+	data[7] = mat.M13
+	data[8] = mat.M2
+	data[9] = mat.M6
+	data[10] = mat.M10
+	data[11] = mat.M14
+	data[12] = mat.M3
+	data[13] = mat.M7
+	data[14] = mat.M11
+	data[15] = mat.M15
+
+	return data
+}
+
 // QuaternionAdd - Add two quaternions
 func QuaternionAdd(q1 Quaternion, q2 Quaternion) Quaternion {
 	var result = Quaternion{X: q1.X + q2.X, Y: q1.Y + q2.Y, Z: q1.Z + q2.Z, W: q1.W + q2.W}
