@@ -34,6 +34,10 @@ func newBundle(name string, rType *ffi.Type, aTypes ...*ffi.Type) *bundle {
 	return b
 }
 
+func (b *bundle) call(rValue unsafe.Pointer, aValues ...unsafe.Pointer) {
+	ffi.Call(&b.cif, b.sym, rValue, aValues...)
+}
+
 var (
 	// raylibDll is the pointer to the shared library
 	raylibDll uintptr
@@ -67,38 +71,38 @@ func InitWindow(width int32, height int32, title string) {
 	if err != nil {
 		panic(err)
 	}
-	ffi.Call(&initWindow.cif, initWindow.sym, nil, unsafe.Pointer(&width), unsafe.Pointer(&height), unsafe.Pointer(&ctitle))
+	initWindow.call(nil, unsafe.Pointer(&width), unsafe.Pointer(&height), unsafe.Pointer(&ctitle))
 }
 
 // CloseWindow - Close window and unload OpenGL context
 func CloseWindow() {
-	ffi.Call(&closeWindow.cif, closeWindow.sym, nil)
+	closeWindow.call(nil)
 }
 
 // WindowShouldClose - Check if application should close (KEY_ESCAPE pressed or windows close icon clicked)
 func WindowShouldClose() bool {
 	var close uint32
-	ffi.Call(&windowShouldClose.cif, windowShouldClose.sym, unsafe.Pointer(&close))
+	windowShouldClose.call(unsafe.Pointer(&close))
 	return close != 0
 }
 
 // ClearBackground - Set background color (framebuffer clear color)
 func ClearBackground(col color.RGBA) {
-	ffi.Call(&clearBackground.cif, clearBackground.sym, nil, unsafe.Pointer(&col))
+	clearBackground.call(nil, unsafe.Pointer(&col))
 }
 
 // BeginDrawing - Setup canvas (framebuffer) to start drawing
 func BeginDrawing() {
-	ffi.Call(&beginDrawing.cif, beginDrawing.sym, nil)
+	beginDrawing.call(nil)
 }
 
 // EndDrawing - End canvas drawing and swap buffers (double buffering)
 func EndDrawing() {
-	ffi.Call(&endDrawing.cif, endDrawing.sym, nil)
+	endDrawing.call(nil)
 }
 
 // SetTraceLogCallback - Set custom trace log
 func SetTraceLogCallback(fn TraceLogCallbackFun) {
 	callback := traceLogCallbackWrapper(fn)
-	ffi.Call(&setTraceLogCallback.cif, setTraceLogCallback.sym, nil, unsafe.Pointer(&callback))
+	setTraceLogCallback.call(nil, unsafe.Pointer(&callback))
 }
