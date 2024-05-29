@@ -50,9 +50,6 @@ func loadLibrary() uintptr {
 		panic(fmt.Errorf("version %s of %s doesn't match the required version %s", version, libname, requiredVersion))
 	}
 
-	//DEBUG
-	fmt.Println(version)
-
 	return uintptr(handle)
 }
 
