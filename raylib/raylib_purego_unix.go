@@ -3,6 +3,7 @@
 package rl
 
 import (
+	"image/color"
 	"unsafe"
 
 	"github.com/ebitengine/purego"
@@ -41,6 +42,10 @@ var (
 var (
 	initWindow          *bundle
 	closeWindow         *bundle
+	windowShouldClose   *bundle
+	clearBackground     *bundle
+	beginDrawing        *bundle
+	endDrawing          *bundle
 	setTraceLogCallback *bundle
 )
 
@@ -49,6 +54,10 @@ func init() {
 
 	initWindow = newBundle("InitWindow", &ffi.TypeVoid, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypePointer)
 	closeWindow = newBundle("CloseWindow", &ffi.TypeVoid)
+	windowShouldClose = newBundle("WindowShouldClose", &ffi.TypeUint32)
+	clearBackground = newBundle("ClearBackground", &ffi.TypeVoid, &typeColor)
+	beginDrawing = newBundle("BeginDrawing", &ffi.TypeVoid)
+	endDrawing = newBundle("EndDrawing", &ffi.TypeVoid)
 	setTraceLogCallback = newBundle("SetTraceLogCallback", &ffi.TypeVoid, &ffi.TypePointer)
 }
 
@@ -64,6 +73,28 @@ func InitWindow(width int32, height int32, title string) {
 // CloseWindow - Close window and unload OpenGL context
 func CloseWindow() {
 	ffi.Call(&closeWindow.cif, closeWindow.sym, nil)
+}
+
+// WindowShouldClose - Check if application should close (KEY_ESCAPE pressed or windows close icon clicked)
+func WindowShouldClose() bool {
+	var close uint32
+	ffi.Call(&windowShouldClose.cif, windowShouldClose.sym, unsafe.Pointer(&close))
+	return close != 0
+}
+
+// ClearBackground - Set background color (framebuffer clear color)
+func ClearBackground(col color.RGBA) {
+	ffi.Call(&clearBackground.cif, clearBackground.sym, nil, unsafe.Pointer(&col))
+}
+
+// BeginDrawing - Setup canvas (framebuffer) to start drawing
+func BeginDrawing() {
+	ffi.Call(&beginDrawing.cif, beginDrawing.sym, nil)
+}
+
+// EndDrawing - End canvas drawing and swap buffers (double buffering)
+func EndDrawing() {
+	ffi.Call(&endDrawing.cif, endDrawing.sym, nil)
 }
 
 // SetTraceLogCallback - Set custom trace log
