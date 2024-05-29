@@ -49,7 +49,7 @@ func loadLibrary() uintptr {
 func traceLogCallbackWrapper(fn TraceLogCallbackFun) uintptr {
 	return purego.NewCallback(func(logLevel int32, text *byte, args unsafe.Pointer) uintptr {
 		if wvsprintfA != 0 {
-			var buffer [1024]byte // Max size is 1024 (see https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-wvsprintfa)
+			var buffer [256]byte // As defined in utils.c from raylib
 			_, _, errno := syscall.SyscallN(wvsprintfA, uintptr(unsafe.Pointer(&buffer[0])), uintptr(unsafe.Pointer(text)), uintptr(args))
 			if errno == 0 {
 				text = &buffer[0]
