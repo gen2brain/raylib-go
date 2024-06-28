@@ -1090,8 +1090,8 @@ const (
 // Image type, bpp always RGBA (32bit)
 // NOTE: Data stored in CPU memory (RAM)
 type Image struct {
-	// Image raw data
-	data unsafe.Pointer
+	// Image raw Data
+	Data unsafe.Pointer
 	// Image base width
 	Width int32
 	// Image base height
