@@ -246,14 +246,6 @@ func UpdateTexture(texture Texture2D, pixels []color.RGBA) {
 	C.UpdateTexture(*ctexture, cpixels)
 }
 
-// UpdateTexture - Update GPU texture with new data
-// NOTE: pixels data must match texture.format
-func UpdateTextureUnsafe(texture Texture2D, pixels unsafe.Pointer) {
-	ctexture := texture.cptr()
-	cpixels := pixels
-	C.UpdateTexture(*ctexture, cpixels)
-}
-
 // UpdateTextureRec - Update GPU texture rectangle with new data
 func UpdateTextureRec(texture Texture2D, rec Rectangle, pixels []color.RGBA) {
 	ctexture := texture.cptr()

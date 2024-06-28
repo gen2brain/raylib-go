@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 	"unsafe"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
@@ -30,12 +31,12 @@ func main() {
 	// WARNING: It's not recommended to use this technique for sprites animation,
 	// use spritesheets instead, like illustrated in textures_sprite_anim example
 	var texScarfyAnim rl.Texture2D = rl.LoadTextureFromImage(imScarfyAnim)
+	var texScarfyAnimSize int32 = imScarfyAnim.Width * imScarfyAnim.Height
 
 	var nextFrameDataOffset uint32 = 0 // Current byte offset to next frame in image.data
-
-	var currentAnimFrame int32 = 0 // Current animation frame to load and draw
-	var frameDelay int32 = 8       // Frame delay to switch between animation frames
-	var frameCounter int32 = 0     // General frames counter
+	var currentAnimFrame int32 = 0     // Current animation frame to load and draw
+	var frameDelay int32 = 8           // Frame delay to switch between animation frames
+	var frameCounter int32 = 0         // General frames counter
 
 	rl.SetTargetFPS(60) // Set our game to run at 60 frames-per-second
 
@@ -43,6 +44,7 @@ func main() {
 	for !rl.WindowShouldClose() { // Detect window close button or ESC key
 		// Update
 		frameCounter++
+
 		if frameCounter >= frameDelay {
 			// Move to next frame
 			// NOTE: If final frame is reached we return to first frame
@@ -53,11 +55,11 @@ func main() {
 
 			// Get memory offset position for next frame data in image.data
 			nextFrameDataOffset = uint32(imScarfyAnim.Width * imScarfyAnim.Height * int32(4) * currentAnimFrame)
-
 			// Update GPU texture data with next frame image data
 			// WARNING: Data size (frame size) and pixel format must match already created texture
 			// here we needed to make the Data as public
-			rl.UpdateTextureUnsafe(texScarfyAnim, unsafe.Pointer(uintptr(imScarfyAnim.Data)+uintptr(nextFrameDataOffset)))
+			rl.UpdateTexture(texScarfyAnim,
+				unsafe.Slice((*color.RGBA)(unsafe.Pointer(uintptr(imScarfyAnim.Data)+uintptr(nextFrameDataOffset))), texScarfyAnimSize))
 
 			frameCounter = 0
 		}
