@@ -3,7 +3,7 @@
 To compile example to shared library you will need [Android NDK](https://developer.android.com/ndk/downloads/index.html).
 To build Android apk you will need [Android SDK](http://developer.android.com/sdk/index.html#Other).
 
-Export path to Android NDK, point to location where you have unpacked archive:
+Export path to Android NDK, point to location where you have unpacked archive (WARNING: NDK 27 is not supported . See https://github.com/raysan5/raylib/issues/4166):
 
     export ANDROID_NDK_HOME=/opt/android-ndk
 
@@ -41,3 +41,9 @@ If everything is successfully built apk can be found in the android/build/output
 
 
 For aarch64/arm64 replace `arm-linux-androideabi` with `aarch64-linux-android`, set GOARCH to arm64 and use minimum `ANDROID_API=21`.
+
+### Windows 
+
+To build shared libraries on Windows you can inspect the file `androidcompile.bat` by opening it on a text editor, it can then be configured to generate the libraries when running the .bat file
+
+See also [instructions](https://developer.android.com/build/building-cmdline#build_bundle) to build a android app bundle for appstore distribution
