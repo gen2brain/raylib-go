@@ -1,6 +1,6 @@
 module github.com/gen2brain/raylib-go/raylib
 
-go 1.21
+go 1.22
 
 require (
 	github.com/ebitengine/purego v0.7.1
