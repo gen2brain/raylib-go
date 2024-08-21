@@ -1328,7 +1328,7 @@ func EndTextureMode() {
 
 // BeginShaderMode - Begin custom shader drawing
 func BeginShaderMode(shader Shader) {
-	beginShaderMode(*(*uintptr)(unsafe.Pointer(&shader)))
+	beginShaderMode(uintptr(unsafe.Pointer(&shader)))
 }
 
 // EndShaderMode - End custom shader drawing (use default shader)
