@@ -11,6 +11,7 @@ import (
 	"unsafe"
 
 	"github.com/ebitengine/purego"
+	"golang.org/x/sys/windows"
 )
 
 var (
@@ -91,8 +92,8 @@ var beginVrStereoMode func(config uintptr)
 var endVrStereoMode func()
 var loadVrStereoConfig func(config uintptr, device uintptr)
 var unloadVrStereoConfig func(config uintptr)
-var loadShader func(shader uintptr, vsFileName string, fsFileName string)
-var loadShaderFromMemory func(shader uintptr, vsCode string, fsCode string)
+var loadShader func(shader uintptr, vsFileName uintptr, fsFileName uintptr)
+var loadShaderFromMemory func(shader uintptr, vsCode uintptr, fsCode uintptr)
 var isShaderReady func(shader uintptr) bool
 var getShaderLocation func(shader uintptr, uniformName string) int32
 var getShaderLocationAttrib func(shader uintptr, attribName string) int32
@@ -1328,7 +1329,7 @@ func EndTextureMode() {
 
 // BeginShaderMode - Begin custom shader drawing
 func BeginShaderMode(shader Shader) {
-	beginShaderMode(*(*uintptr)(unsafe.Pointer(&shader)))
+	beginShaderMode(uintptr(unsafe.Pointer(&shader)))
 }
 
 // EndShaderMode - End custom shader drawing (use default shader)
@@ -1377,14 +1378,44 @@ func UnloadVrStereoConfig(config VrStereoConfig) {
 // LoadShader - Load shader from files and bind default locations
 func LoadShader(vsFileName string, fsFileName string) Shader {
 	var shader Shader
-	loadShader(uintptr(unsafe.Pointer(&shader)), vsFileName, fsFileName)
+	var cvsFileName, cfsFileName *byte
+	if vsFileName != "" {
+		var err error
+		cvsFileName, err = windows.BytePtrFromString(vsFileName)
+		if err != nil {
+			panic(err)
+		}
+	}
+	if fsFileName != "" {
+		var err error
+		cfsFileName, err = windows.BytePtrFromString(fsFileName)
+		if err != nil {
+			panic(err)
+		}
+	}
+	loadShader(uintptr(unsafe.Pointer(&shader)), uintptr(unsafe.Pointer(cvsFileName)), uintptr(unsafe.Pointer(cfsFileName)))
 	return shader
 }
 
 // LoadShaderFromMemory - Load shader from code strings and bind default locations
 func LoadShaderFromMemory(vsCode string, fsCode string) Shader {
 	var shader Shader
-	loadShaderFromMemory(uintptr(unsafe.Pointer(&shader)), vsCode, fsCode)
+	var cvsCode, cfsCode *byte
+	if vsCode != "" {
+		var err error
+		cvsCode, err = windows.BytePtrFromString(vsCode)
+		if err != nil {
+			panic(err)
+		}
+	}
+	if fsCode != "" {
+		var err error
+		cfsCode, err = windows.BytePtrFromString(fsCode)
+		if err != nil {
+			panic(err)
+		}
+	}
+	loadShaderFromMemory(uintptr(unsafe.Pointer(&shader)), uintptr(unsafe.Pointer(cvsCode)), uintptr(unsafe.Pointer(cfsCode)))
 	return shader
 }
 
