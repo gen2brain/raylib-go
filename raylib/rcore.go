@@ -1082,7 +1082,7 @@ func SetGamepadMappings(mappings string) int32 {
 }
 
 // IsMouseButtonPressed - Detect if a mouse button has been pressed once
-func IsMouseButtonPressed(button int32) bool {
+func IsMouseButtonPressed(button MouseButton) bool {
 	cbutton := (C.int)(button)
 	ret := C.IsMouseButtonPressed(cbutton)
 	v := bool(ret)
@@ -1090,7 +1090,7 @@ func IsMouseButtonPressed(button int32) bool {
 }
 
 // IsMouseButtonDown - Detect if a mouse button is being pressed
-func IsMouseButtonDown(button int32) bool {
+func IsMouseButtonDown(button MouseButton) bool {
 	cbutton := (C.int)(button)
 	ret := C.IsMouseButtonDown(cbutton)
 	v := bool(ret)
@@ -1098,7 +1098,7 @@ func IsMouseButtonDown(button int32) bool {
 }
 
 // IsMouseButtonReleased - Detect if a mouse button has been released once
-func IsMouseButtonReleased(button int32) bool {
+func IsMouseButtonReleased(button MouseButton) bool {
 	cbutton := (C.int)(button)
 	ret := C.IsMouseButtonReleased(cbutton)
 	v := bool(ret)
@@ -1106,7 +1106,7 @@ func IsMouseButtonReleased(button int32) bool {
 }
 
 // IsMouseButtonUp - Detect if a mouse button is NOT being pressed
-func IsMouseButtonUp(button int32) bool {
+func IsMouseButtonUp(button MouseButton) bool {
 	cbutton := (C.int)(button)
 	ret := C.IsMouseButtonUp(cbutton)
 	v := bool(ret)

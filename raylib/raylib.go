@@ -366,9 +366,11 @@ const (
 	MouseMiddleButton = MouseButtonMiddle
 )
 
+type MouseButton int32
+
 // Mouse Buttons
 const (
-	MouseButtonLeft = iota
+	MouseButtonLeft MouseButton = iota
 	MouseButtonRight
 	MouseButtonMiddle
 	MouseButtonSide
