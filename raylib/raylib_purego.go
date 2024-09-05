@@ -2780,7 +2780,7 @@ func ColorNormalize(col color.RGBA) Vector4 {
 
 // ColorFromNormalized - Get Color from normalized values [0..1]
 func ColorFromNormalized(normalized Vector4) color.RGBA {
-	ret := colorFromNormalized(*(*uintptr)(unsafe.Pointer(&normalized)))
+	ret := colorFromNormalized(uintptr(unsafe.Pointer(&normalized)))
 	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
