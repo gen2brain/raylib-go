@@ -3776,7 +3776,7 @@ func NewImageFromImage(img image.Image) *Image {
 		for x := 0; x < size.X; x++ {
 			col := img.At(x, y)
 			r, g, b, a := col.RGBA()
-			rcolor := NewColor(uint8(r), uint8(g), uint8(b), uint8(a))
+			rcolor := NewColor(uint8(r>>8), uint8(g>>8), uint8(b>>8), uint8(a>>8))
 			ImageDrawPixel(ret, int32(x), int32(y), rcolor)
 		}
 	}
