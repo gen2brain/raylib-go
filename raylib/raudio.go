@@ -16,13 +16,33 @@ static void audioStreamWrapperCallback(void *data, unsigned int frames) {
 static void setAudioStreamCallbackWrapper(AudioStream stream) {
 	SetAudioStreamCallback(stream, audioStreamWrapperCallback);
 }
+
+extern void internalAudioMixedProcessorGo(void *, int);
+
+static void audioMixedProcessorCallback(void *data, unsigned int frames) {
+	internalAudioMixedProcessorGo(data, frames);
+}
+
+static void setAudioMixedProcessorCallbackWrapper() {
+	AttachAudioMixedProcessor(audioMixedProcessorCallback);
+}
+
+static void unsetAudioMixedProcessorCallbackWrapper() {
+	DetachAudioMixedProcessor(audioMixedProcessorCallback);
+}
 */
 import "C"
 import (
+	"reflect"
+	"sync"
 	"unsafe"
 )
 
-var internalAudioStreamCallback AudioCallback
+var (
+	internalAudioStreamCallback AudioCallback
+	audioMixedProcessorsMutex   = sync.RWMutex{}
+	audioMixedProcessors        = []AudioCallback{}
+)
 
 // SetAudioStreamCallback - Audio thread callback to request new data
 func SetAudioStreamCallback(stream AudioStream, callback AudioCallback) {
@@ -34,6 +54,41 @@ func SetAudioStreamCallback(stream AudioStream, callback AudioCallback) {
 func internalAudioStreamCallbackGo(data unsafe.Pointer, frames C.int) {
 	if internalAudioStreamCallback != nil {
 		internalAudioStreamCallback(unsafe.Slice((*float32)(data), frames), int(frames))
+	}
+}
+
+func AttachAudioMixedProcessor(callback AudioCallback) {
+	audioMixedProcessorsMutex.Lock()
+	defer audioMixedProcessorsMutex.Unlock()
+
+	if len(audioMixedProcessors) == 0 {
+		C.setAudioMixedProcessorCallbackWrapper()
+	}
+
+	audioMixedProcessors = append(audioMixedProcessors, callback)
+}
+
+func DetachAudioMixedProcessor(callback AudioCallback) {
+	audioMixedProcessorsMutex.Lock()
+	defer audioMixedProcessorsMutex.Unlock()
+
+	callbackPtr := reflect.ValueOf(callback).Pointer()
+	for i := len(audioMixedProcessors) - 1; i >= 0; i-- {
+		if reflect.ValueOf(audioMixedProcessors[i]).Pointer() == callbackPtr {
+			audioMixedProcessors = append(audioMixedProcessors[:i], audioMixedProcessors[i+1:]...)
+			break
+		}
+	}
+
+	if len(audioMixedProcessors) == 0 {
+		C.unsetAudioMixedProcessorCallbackWrapper()
+	}
+}
+
+//export internalAudioMixedProcessorGo
+func internalAudioMixedProcessorGo(data unsafe.Pointer, frames C.int) {
+	for _, callback := range audioMixedProcessors {
+		callback(unsafe.Slice((*float32)(data), frames), int(frames))
 	}
 }
 
