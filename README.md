@@ -15,7 +15,7 @@ It is also possible to use raylib-go without cgo (Windows only; see requirements
 
 ##### Ubuntu
 
-    apt-get install libgl1-mesa-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev libwayland-dev libxkbcommon-dev
+    apt-get install libgl1-mesa-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev libwayland-dev libxkbcommon-dev build-essential
 
 ##### Fedora
 
