@@ -44,8 +44,6 @@ func main() {
 		rl.DrawText("Free camera default controls:", 20, 20, 10, rl.Black)
 		rl.DrawText("- Mouse Wheel to Zoom in-out", 40, 40, 10, rl.DarkGray)
 		rl.DrawText("- Mouse Wheel Pressed to Pan", 40, 60, 10, rl.DarkGray)
-		rl.DrawText("- Alt + Mouse Wheel Pressed to Rotate", 40, 80, 10, rl.DarkGray)
-		rl.DrawText("- Alt + Ctrl + Mouse Wheel Pressed for Smooth Zoom", 40, 100, 10, rl.DarkGray)
 		rl.DrawText("- Z to zoom to (0, 0, 0)", 40, 120, 10, rl.DarkGray)
 
 		rl.EndDrawing()
