@@ -1218,3 +1218,24 @@ func GetTouchPointCount() int32 {
 	v := (int32)(ret)
 	return v
 }
+
+// BeginVrStereoMode - Begin stereo rendering (requires VR simulator)
+func BeginVrStereoMode(config VrStereoConfig) {
+	C.BeginVrStereoMode(*(*C.VrStereoConfig)(unsafe.Pointer(&config)))
+}
+
+// EndVrStereoMode - End stereo rendering (requires VR simulator)
+func EndVrStereoMode() {
+	C.EndVrStereoMode()
+}
+
+// LoadVrStereoConfig - Load VR stereo config for VR simulator device parameters
+func LoadVrStereoConfig(device VrDeviceInfo) VrStereoConfig {
+	ret := C.LoadVrStereoConfig(*(*C.VrDeviceInfo)(unsafe.Pointer(&device)))
+	return *(*VrStereoConfig)(unsafe.Pointer(&ret))
+}
+
+// UnloadVrStereoConfig - Unload VR stereo config
+func UnloadVrStereoConfig(config VrStereoConfig) {
+	C.UnloadVrStereoConfig(*(*C.VrStereoConfig)(unsafe.Pointer(&config)))
+}
