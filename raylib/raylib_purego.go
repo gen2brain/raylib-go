@@ -1358,10 +1358,14 @@ func EndScissorMode() {
 }
 
 // BeginVrStereoMode - Begin stereo rendering (requires VR simulator)
-func BeginVrStereoMode(config VrStereoConfig) {}
+func BeginVrStereoMode(config VrStereoConfig) {
+	beginVrStereoMode(uintptr(unsafe.Pointer(&config)))
+}
 
 // EndVrStereoMode - End stereo rendering (requires VR simulator)
-func EndVrStereoMode() {}
+func EndVrStereoMode() {
+	endVrStereoMode()
+}
 
 // LoadVrStereoConfig - Load VR stereo config for VR simulator device parameters
 func LoadVrStereoConfig(device VrDeviceInfo) VrStereoConfig {
