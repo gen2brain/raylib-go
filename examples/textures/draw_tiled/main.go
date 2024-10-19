@@ -34,7 +34,7 @@ func main() {
 
 	// NOTE: Textures MUST be loaded after Window initialization (OpenGL context is required)
 	texPattern := rl.LoadTexture("patterns.png")
-	rl.SetTextureFilter(texPattern, rl.TextureFilterNearestMipLinear) // Makes the texture smoother when upscaled
+	rl.SetTextureFilter(texPattern, rl.FilterTrilinear) // Makes the texture smoother when upscaled
 
 	// Coordinates for all patterns inside the texture
 	recPattern := []rl.Rectangle{
