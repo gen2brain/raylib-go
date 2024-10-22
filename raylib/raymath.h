@@ -2524,4 +2524,59 @@ RMAPI int QuaternionEquals(Quaternion p, Quaternion q)
     return result;
 }
 
+// Decompose a transformation matrix into its rotational, translational and scaling components
+RMAPI void MatrixDecompose(Matrix mat, Vector3 *translation, Quaternion *rotation, Vector3 *scale)
+{
+    // Extract translation.
+    translation->x = mat.m12;
+    translation->y = mat.m13;
+    translation->z = mat.m14;
+
+    // Extract upper-left for determinant computation
+    const float a = mat.m0;
+    const float b = mat.m4;
+    const float c = mat.m8;
+    const float d = mat.m1;
+    const float e = mat.m5;
+    const float f = mat.m9;
+    const float g = mat.m2;
+    const float h = mat.m6;
+    const float i = mat.m10;
+    const float A = e*i - f*h;
+    const float B = f*g - d*i;
+    const float C = d*h - e*g;
+
+    // Extract scale
+    const float det = a*A + b*B + c*C;
+    Vector3 abc = { a, b, c };
+    Vector3 def = { d, e, f };
+    Vector3 ghi = { g, h, i };
+
+    float scalex = Vector3Length(abc);
+    float scaley = Vector3Length(def);
+    float scalez = Vector3Length(ghi);
+    Vector3 s = { scalex, scaley, scalez };
+
+    if (det < 0) s = Vector3Negate(s);
+
+    *scale = s;
+
+    // Remove scale from the matrix if it is not close to zero
+    Matrix clone = mat;
+    if (!FloatEquals(det, 0))
+    {
+        clone.m0 /= s.x;
+        clone.m5 /= s.y;
+        clone.m10 /= s.z;
+
+        // Extract rotation
+        *rotation = QuaternionFromMatrix(clone);
+    }
+    else
+    {
+        // Set to identity if close to zero
+        *rotation = QuaternionIdentity();
+    }
+}
+
 #endif  // RAYMATH_H
