@@ -1794,11 +1794,11 @@ func QuaternionEquals(p, q Quaternion) bool {
 }
 
 // MatrixDecompose - Decompose a transformation matrix into its rotational, translational and scaling components
-func MatrixDecompose(mat Matrix, translational *Vector3, rotation *Quaternion, scale *Vector3) {
+func MatrixDecompose(mat Matrix, translation *Vector3, rotation *Quaternion, scale *Vector3) {
 	// Extract translation.
-	translational.X = mat.M12
-	translational.Y = mat.M13
-	translational.Z = mat.M14
+	translation.X = mat.M12
+	translation.Y = mat.M13
+	translation.Z = mat.M14
 
 	// Extract upper-left for determinant computation
 	a := mat.M0
