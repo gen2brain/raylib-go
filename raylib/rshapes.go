@@ -134,6 +134,14 @@ func DrawCircleLines(centerX, centerY int32, radius float32, col color.RGBA) {
 	C.DrawCircleLines(ccenterX, ccenterY, cradius, *ccolor)
 }
 
+// DrawCircleLinesV - Draw circle outline (Vector version)
+func DrawCircleLinesV(center Vector2, radius float32, col color.RGBA) {
+	ccenter := center.cptr()
+	cradius := (C.float)(radius)
+	ccolor := colorCptr(col)
+	C.DrawCircleLinesV(*ccenter, cradius, *ccolor)
+}
+
 // DrawEllipse - Draw ellipse
 func DrawEllipse(centerX, centerY int32, radiusH, radiusV float32, col color.RGBA) {
 	ccenterX := (C.int)(centerX)
