@@ -454,7 +454,7 @@ func CheckErrors() {
 }
 
 // SetBlendMode - Set blending mode
-func SetBlendMode(mode int32) {
+func SetBlendMode(mode BlendMode) {
 	cmode := C.int(mode)
 	C.rlSetBlendMode(cmode)
 }
