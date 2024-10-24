@@ -176,7 +176,14 @@ type AutomationEvent struct {
 type AutomationEventList struct {
 	Capacity uint32
 	Count    uint32
-	Events   *AutomationEvent
+	// Events array (c array)
+	//
+	// Use AutomationEventList.GetEvents instead (go slice)
+	Events *AutomationEvent
+}
+
+func (a *AutomationEventList) GetEvents() []AutomationEvent {
+	return unsafe.Slice(a.Events, a.Count)
 }
 
 // CameraMode type

@@ -597,8 +597,8 @@ func CheckErrors() {
 }
 
 // SetBlendMode - Set blending mode
-func SetBlendMode(mode int32) {
-	rlSetBlendMode(mode)
+func SetBlendMode(mode BlendMode) {
+	rlSetBlendMode(int32(mode))
 }
 
 // SetBlendFactors - Set blending mode factor and equation (using OpenGL factors)
