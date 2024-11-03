@@ -2900,9 +2900,12 @@ func IsFontReady(font Font) bool {
 }
 
 // LoadFontData - Load font data for further use
-func LoadFontData(fileData []byte, fontSize int32, codepoints []rune, typ int32) []GlyphInfo {
+func LoadFontData(fileData []byte, fontSize int32, codepoints []rune, codepointCount, typ int32) []GlyphInfo {
 	dataSize := int32(len(fileData))
-	codepointCount := int32(len(codepoints))
+	// In case no chars count provided, default to 95
+	if codepointCount <= 0 {
+		codepointCount = 95
+	}
 	ret := loadFontData(fileData, dataSize, fontSize, codepoints, codepointCount, typ)
 	return unsafe.Slice(ret, codepointCount)
 }
