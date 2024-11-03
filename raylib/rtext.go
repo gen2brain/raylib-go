@@ -223,3 +223,13 @@ func GetGlyphAtlasRec(font Font, codepoint int32) Rectangle {
 	v := newRectangleFromPointer(unsafe.Pointer(&ret))
 	return v
 }
+
+// GenImageFontAtlas - Generate image font atlas using chars info
+func GenImageFontAtlas(glyphs []GlyphInfo, glyphRecs []*Rectangle, fontSize int32, padding int32, packMethod int32) Image {
+	cglyphs := (*C.GlyphInfo)(unsafe.Pointer(&glyphs[0]))
+	cglyphRecs := (**C.Rectangle)(unsafe.Pointer(&glyphRecs[0]))
+	cglyphCount := C.int(len(glyphs))
+	ret := C.GenImageFontAtlas(cglyphs, cglyphRecs, cglyphCount, C.int(fontSize), C.int(padding), C.int(packMethod))
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return *v
+}
