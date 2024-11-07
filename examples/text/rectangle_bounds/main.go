@@ -38,8 +38,18 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 
 	resizing, wordWrap := false, true
 
-	container := rl.Rectangle{X: 25.0, Y: 25.0, Width: screenWidth - 50.0, Height: screenHeight - 250.0}
-	resizer := rl.Rectangle{X: container.X + container.Width - 17, Y: container.Y + container.Height - 17, Width: 14, Height: 14}
+	container := rl.Rectangle{
+		X:      25.0,
+		Y:      25.0,
+		Width:  screenWidth - 50.0,
+		Height: screenHeight - 250.0,
+	}
+	resizer := rl.Rectangle{
+		X:      container.X + container.Width - 17,
+		Y:      container.Y + container.Height - 17,
+		Width:  14,
+		Height: 14,
+	}
 
 	// Minimum width and height for the container rectangle
 	minWidth := float32(60.0)
@@ -99,14 +109,23 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 		rl.DrawRectangleLinesEx(container, 3, borderColor) // Draw container border
 
 		// Draw text in container (add some padding)
-		DrawTextBoxed(font, text, rl.Rectangle{X: container.X + 4, Y: container.Y + 4, Width: container.Width - 4,
-			Height: container.Height - 4}, 20.0, 2.0, wordWrap, rl.Gray)
+		DrawTextBoxed(font, text, rl.Rectangle{
+			X:      container.X + 4,
+			Y:      container.Y + 4,
+			Width:  container.Width - 4,
+			Height: container.Height - 4,
+		}, 20.0, 2.0, wordWrap, rl.Gray)
 
 		rl.DrawRectangleRec(resizer, borderColor) // Draw the resize box
 
 		// Draw bottom info
 		rl.DrawRectangle(0, screenHeight-54, screenWidth, 54, rl.Gray)
-		rl.DrawRectangleRec(rl.Rectangle{X: 382.0, Y: screenHeight - 34.0, Width: 12.0, Height: 12.0}, rl.Maroon)
+		rl.DrawRectangleRec(rl.Rectangle{
+			X:      382.0,
+			Y:      screenHeight - 34.0,
+			Width:  12.0,
+			Height: 12.0,
+		}, rl.Maroon)
 
 		rl.DrawText("Word Wrap: ", 313, screenHeight-115, 20, rl.Black)
 		if wordWrap {
@@ -138,7 +157,7 @@ func DrawTextBoxed(font rl.Font, text string, rec rl.Rectangle, fontSize, spacin
 func DrawTextBoxedSelectable(font rl.Font, text string, rec rl.Rectangle, fontSize, spacing float32,
 	wordWrap bool, tint rl.Color, selectStart, selectLength int32, selectTint, selectBackTint rl.Color) {
 
-	length := int32(utf8.RuneCountInString(text)) // Total length in bytes of the text, scanned by codepoints in loop
+	length := int32(len(text)) // Total length in bytes of the text, scanned by codepoints in loop
 
 	// TextOffsetY : Offset between lines (on line break '\n')
 	// TextOffsetX : Offset X to next character to draw
@@ -246,8 +265,12 @@ func DrawTextBoxedSelectable(font rl.Font, text string, rec rl.Rectangle, fontSi
 				// Draw selection background
 				isGlyphSelected := false
 				if (selectStart >= 0) && (k >= selectStart) && (k < (selectStart + selectLength)) {
-					rl.DrawRectangleRec(rl.Rectangle{X: rec.X + textOffsetX - 1, Y: rec.Y + textOffsetY, Width: glyphWidth,
-						Height: float32(font.BaseSize) * scaleFactor}, selectBackTint)
+					rl.DrawRectangleRec(rl.Rectangle{
+						X:      rec.X + textOffsetX - 1,
+						Y:      rec.Y + textOffsetY,
+						Width:  glyphWidth,
+						Height: float32(font.BaseSize) * scaleFactor,
+					}, selectBackTint)
 					isGlyphSelected = true
 				}
 
@@ -257,7 +280,10 @@ func DrawTextBoxedSelectable(font rl.Font, text string, rec rl.Rectangle, fontSi
 					if isGlyphSelected {
 						col = selectTint
 					}
-					pos := rl.Vector2{X: rec.X + textOffsetX, Y: rec.Y + textOffsetY}
+					pos := rl.Vector2{
+						X: rec.X + textOffsetX,
+						Y: rec.Y + textOffsetY,
+					}
 					rl.DrawTextEx(font, string(codepoint), pos, fontSize, 0, col)
 				}
 			}
