@@ -237,3 +237,25 @@ func GenImageFontAtlas(glyphs []GlyphInfo, glyphRecs []*Rectangle, fontSize int3
 	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return *v
 }
+
+// DrawTextCodepoint - Draw one character (codepoint)
+func DrawTextCodepoint(font Font, codepoint rune, position Vector2, fontSize float32, tint color.RGBA) {
+	cfont := font.cptr()
+	ccodepoint := (C.int)(codepoint)
+	cposition := position.cptr()
+	cfontSize := (C.float)(fontSize)
+	ctint := colorCptr(tint)
+	C.DrawTextCodepoint(*cfont, ccodepoint, *cposition, cfontSize, *ctint)
+}
+
+// DrawTextCodepoints - Draw multiple character (codepoint)
+func DrawTextCodepoints(font Font, codepoints []rune, position Vector2, fontSize float32, spacing float32, tint color.RGBA) {
+	cfont := font.cptr()
+	ccodepoints := (*C.int)(unsafe.SliceData(codepoints))
+	ccodepointCount := C.int(len(codepoints))
+	cposition := position.cptr()
+	cfontSize := (C.float)(fontSize)
+	cspacing := (C.float)(spacing)
+	ctint := colorCptr(tint)
+	C.DrawTextCodepoints(*cfont, ccodepoints, ccodepointCount, *cposition, cfontSize, cspacing, *ctint)
+}
