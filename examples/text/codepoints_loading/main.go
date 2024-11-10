@@ -42,7 +42,7 @@ func main() {
 
 	// Load font containing all the provided codepoint glyphs
 	// A texture font atlas is automatically generated
-	font := rl.LoadFontEx("resources/DotGothic16-Regular.ttf", 36, codepoints, int32(codepointsCount))
+	font := rl.LoadFontEx("DotGothic16-Regular.ttf", 36, codepoints, int32(codepointsCount))
 
 	// Set bi-linear scale filter for better font scaling
 	rl.SetTextureFilter(font.Texture, rl.FilterBilinear)
