@@ -121,7 +121,7 @@ func main() {
 	light, dark := rl.Maroon, rl.Red
 
 	// Load the alpha discard shader
-	alphaDiscard := rl.LoadShader("", "resources/shaders/glsl330/alpha_discard.fs")
+	alphaDiscard := rl.LoadShader("", "alpha_discard.fs")
 
 	// Array filled with multiple random colors (when multicolor mode is set)
 	var multi [textMaxLayers]rl.Color
