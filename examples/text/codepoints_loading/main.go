@@ -14,6 +14,7 @@ package main
 
 import (
 	"fmt"
+	"slices"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
@@ -35,7 +36,8 @@ func main() {
 	allCodepoints := []rune(text)
 
 	// Removed duplicate codepoints to generate smaller font atlas
-	codepoints := CodepointRemoveDuplicates(allCodepoints)
+	slices.Sort(allCodepoints)
+	codepoints := slices.Compact(allCodepoints)
 	codepointsCount := len(codepoints)
 
 	// Load font containing all the provided codepoint glyphs
@@ -90,19 +92,4 @@ func main() {
 	// De-Initialization
 	rl.UnloadFont(font) // Unload font
 	rl.CloseWindow()    // Close window and OpenGL context
-}
-
-// CodepointRemoveDuplicates removes codepoint duplicates if requested
-func CodepointRemoveDuplicates[T comparable](sliceList []T) []T {
-	allKeys := make(map[T]bool)
-	var list []T
-
-	for _, item := range sliceList {
-		if _, value := allKeys[item]; !value {
-			allKeys[item] = true
-			list = append(list, item)
-		}
-	}
-
-	return list
 }
