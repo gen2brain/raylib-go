@@ -1,20 +1,44 @@
+/*******************************************************************************************
+*
+*   raylib [models] example - Load 3d model with animations and play them
+*
+*   Example originally created with raylib 2.5, last time updated with raylib 3.5
+*
+*   Example contributed by Culacant (@culacant) and reviewed by Ramon Santamaria (@raysan5)
+*
+*   Example licensed under an unmodified zlib/libpng license, which is an OSI-certified,
+*   BSD-like license that allows static linking with closed source software
+*
+*   Copyright (c) 2019-2024 Culacant (@culacant) and Ramon Santamaria (@raysan5)
+*
+********************************************************************************************
+*
+*   NOTE: To export a model from blender, make sure it is not posed, the vertices need to be
+*         in the same position as they would be in edit mode and the scale of your models is
+*         set to 0. Scaling can be done from the export menu.
+*
+********************************************************************************************/
 package main
 
 import (
+	"unsafe"
+
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
-func main() {
-	screenWidth := int32(1280)
-	screenHeight := int32(800)
+const (
+	screenWidth  = 800
+	screenHeight = 450
+)
 
+func main() {
 	rl.InitWindow(screenWidth, screenHeight, "raylib [models] example - model animation")
 
 	camera := rl.Camera{}
-	camera.Position = rl.NewVector3(10.0, 15.0, 10.0)
+	camera.Position = rl.NewVector3(10.0, 10.0, 10.0)
 	camera.Target = rl.NewVector3(0.0, 0.0, 0.0)
 	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)
-	camera.Fovy = 75.0
+	camera.Fovy = 45.0
 	camera.Projection = rl.CameraPerspective
 
 	model := rl.LoadModel("guy.iqm")
@@ -32,7 +56,7 @@ func main() {
 
 	for !rl.WindowShouldClose() {
 
-		rl.UpdateCamera(&camera, rl.CameraOrbital)
+		rl.UpdateCamera(&camera, rl.CameraFirstPerson)
 
 		if rl.IsKeyDown(rl.KeySpace) {
 			animFrameCount++
@@ -43,17 +67,19 @@ func main() {
 			if animFrameCount >= int(animFrameNum) {
 				animFrameCount = 0
 			}
-
 		}
 
 		rl.BeginDrawing()
-
 		rl.ClearBackground(rl.RayWhite)
-
 		rl.BeginMode3D(camera)
 
 		rl.DrawModelEx(model, position, rl.NewVector3(1, 0, 0), -90, rl.NewVector3(1, 1, 1), rl.White)
-
+		// Draw translation cubes
+		for i := int32(0); i < model.BoneCount; i++ {
+			framePose := unsafe.Slice(anims[0].FramePoses, anims[0].FrameCount)
+			trans := unsafe.Slice(framePose[animFrameCount], model.BoneCount)
+			rl.DrawCube(trans[i].Translation, 0.2, 0.2, 0.2, rl.Red)
+		}
 		rl.DrawGrid(10, 1)
 
 		rl.EndMode3D()
@@ -65,6 +91,7 @@ func main() {
 	}
 
 	rl.UnloadModel(model)
+	rl.UnloadModelAnimations(anims)
 	rl.UnloadTexture(texture)
 
 	rl.CloseWindow()
