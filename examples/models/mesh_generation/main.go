@@ -116,11 +116,11 @@ func main() {
 }
 
 func clearCustomMesh(model rl.Model) {
-	// Vertices, Normals and Texcoords of your custom mesh are Go slices.
+	// Vertices, Normals and Texcoords of your CUSTOM mesh are Go slices.
 	// UnloadModel calls UnloadMesh for every mesh and UnloadMesh tries
-	// to free your Go slices. The panic happens, because it cannot free
+	// to free your Go slices. This will panic because it cannot free
 	// Go slices. Free() is a C function and it expects to free C memory
-	// and not a Go slice.
+	// and not a Go slice. So clear the slices manually like this.
 	model.Meshes.Vertices = nil
 	model.Meshes.Normals = nil
 	model.Meshes.Texcoords = nil
