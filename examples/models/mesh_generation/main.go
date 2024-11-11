@@ -105,14 +105,10 @@ func main() {
 	}
 
 	rl.UnloadTexture(texture)
+	// Custom models meshes needs to be
+	// cleared manually
 	clearCustomMesh(models[8])
 	for i := 0; i < numModels; i++ {
-		//if i == 8 {
-		//meshes := unsafe.Slice(models[i].Meshes, models[i].MeshCount)
-		//for m := range meshes {
-		//	rl.UnloadMesh(&meshes[m])
-		//}
-		//}
 		rl.UnloadModel(models[i])
 	}
 
@@ -120,10 +116,11 @@ func main() {
 }
 
 func clearCustomMesh(model rl.Model) {
-	// For some reason the custom model
-	// (id = 8) panics when unloading it.
-	// So we clear the mesh for it manually
-	// here.
+	// Vertices, Normals and Texcoords of your custom mesh are Go slices.
+	// UnloadModel calls UnloadMesh for every mesh and UnloadMesh tries
+	// to free your Go slices. The panic happens, because it cannot free
+	// Go slices. Free() is a C function and it expects to free C memory
+	// and not a Go slice.
 	model.Meshes.Vertices = nil
 	model.Meshes.Normals = nil
 	model.Meshes.Texcoords = nil
