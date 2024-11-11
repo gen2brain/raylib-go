@@ -105,22 +105,28 @@ func main() {
 	}
 
 	rl.UnloadTexture(texture)
-	clearCustomMesh(models)
+	clearCustomMesh(models[8])
 	for i := 0; i < numModels; i++ {
+		//if i == 8 {
+		//meshes := unsafe.Slice(models[i].Meshes, models[i].MeshCount)
+		//for m := range meshes {
+		//	rl.UnloadMesh(&meshes[m])
+		//}
+		//}
 		rl.UnloadModel(models[i])
 	}
 
 	rl.CloseWindow()
 }
 
-func clearCustomMesh(models []rl.Model) {
+func clearCustomMesh(model rl.Model) {
 	// For some reason the custom model
 	// (id = 8) panics when unloading it.
 	// So we clear the mesh for it manually
 	// here.
-	models[8].Meshes.Vertices = nil
-	models[8].Meshes.Normals = nil
-	models[8].Meshes.Texcoords = nil
+	model.Meshes.Vertices = nil
+	model.Meshes.Normals = nil
+	model.Meshes.Texcoords = nil
 }
 
 // GenMeshCustom generates a simple triangle mesh from code
