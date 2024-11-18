@@ -21,14 +21,17 @@ import (
 )
 
 const (
-	screenWidth            = 800
-	screenHeight           = 450
-	sunRadius              = 4.0
-	earthRadius            = 0.6
-	earthOrbitRadius       = 8.0
-	moonRadius             = 0.16
-	moonOrbitRadius        = 1.5
-	rings, slices    int32 = 16, 16
+	screenWidth  = 800
+	screenHeight = 450
+
+	sunRadius   = 4.0
+	earthRadius = 0.6
+	moonRadius  = 0.16
+
+	earthOrbitRadius = 8.0
+	moonOrbitRadius  = 1.5
+
+	rings, slices = 16, 16
 )
 
 func main() {
@@ -122,42 +125,31 @@ func DrawSphereBasic(color rl.Color) {
 	rl.Begin(rl.Triangles)
 	rl.Color4ub(color.R, color.G, color.B, color.A)
 
-	for i := int32(0); i < (rings + 2); i++ {
-		for j := int32(0); j < slices; j++ {
-			ii := float64(i)
-			jj := float64(j)
-
-			x, y, z := getXYZ(ii, jj)
-			rl.Vertex3f(x, y, z)
-
-			x, y, z = getXYZ(ii+1, jj+1)
-			rl.Vertex3f(x, y, z)
-
-			x, y, z = getXYZ(ii+1, jj)
-			rl.Vertex3f(x, y, z)
-
-			x, y, z = getXYZ(ii, jj)
-			rl.Vertex3f(x, y, z)
-
-			x, y, z = getXYZ(ii, jj+1)
-			rl.Vertex3f(x, y, z)
-
-			x, y, z = getXYZ(ii+1, jj+1)
-			rl.Vertex3f(x, y, z)
+	for ring := int32(0); ring < (rings + 2); ring++ {
+		for slice := int32(0); slice < slices; slice++ {
+			rl.Vertex3f(getCoords(ring, slice))
+			rl.Vertex3f(getCoords(ring+1, slice+1))
+			rl.Vertex3f(getCoords(ring+1, slice))
+			rl.Vertex3f(getCoords(ring, slice))
+			rl.Vertex3f(getCoords(ring, slice+1))
+			rl.Vertex3f(getCoords(ring+1, slice+1))
 		}
 	}
 	rl.End()
 }
 
-func getXYZ(i, j float64) (float32, float32, float32) {
+func getCoords(ring, slice int32) (x, y, z float32) {
+	ringF := float64(ring)
+	sliceF := float64(slice)
+
 	// Calculate angels
-	alpha := rl.Deg2rad * (270 + (180/(float64(rings)+1))*i)
-	beta := rl.Deg2rad * (j * 360 / float64(slices))
+	alpha := rl.Deg2rad * (270 + (180/(float64(rings)+1))*ringF)
+	beta := rl.Deg2rad * (sliceF * 360 / float64(slices))
 
 	// Calculate coords
-	x := float32(math.Cos(alpha) * math.Sin(beta))
-	y := float32(math.Sin(alpha))
-	z := float32(math.Cos(alpha) * math.Cos(beta))
+	x = float32(math.Cos(alpha) * math.Sin(beta))
+	y = float32(math.Sin(alpha))
+	z = float32(math.Cos(alpha) * math.Cos(beta))
 
 	return x, y, z
 }
