@@ -561,6 +561,17 @@ func CheckCollisionCircleRec(center Vector2, radius float32, rec Rectangle) bool
 	return v
 }
 
+// CheckCollisionCircleLine - Check if circle collides with a line created betweeen two points [p1] and [p2]
+func CheckCollisionCircleLine(center Vector2, radius float32, p1, p2 Vector2) bool {
+	ccenter := center.cptr()
+	cradius := (C.float)(radius)
+	cp1 := p1.cptr()
+	cp2 := p2.cptr()
+	ret := C.CheckCollisionCircleLine(*ccenter, cradius, *cp1, *cp2)
+	v := bool(ret)
+	return v
+}
+
 // CheckCollisionPointRec - Check if point is inside rectangle
 func CheckCollisionPointRec(point Vector2, rec Rectangle) bool {
 	cpoint := point.cptr()

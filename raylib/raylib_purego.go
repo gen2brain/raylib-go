@@ -247,6 +247,7 @@ var getSplinePointBezierCubic func(p1 uintptr, c2 uintptr, c3 uintptr, p4 uintpt
 var checkCollisionRecs func(rec1 uintptr, rec2 uintptr) bool
 var checkCollisionCircles func(center1 uintptr, radius1 float32, center2 uintptr, radius2 float32) bool
 var checkCollisionCircleRec func(center uintptr, radius float32, rec uintptr) bool
+var checkCollisionCircleLine func(center uintptr, radius float32, p1, p2 uintptr) bool
 var checkCollisionPointRec func(point uintptr, rec uintptr) bool
 var checkCollisionPointCircle func(point uintptr, center uintptr, radius float32) bool
 var checkCollisionPointTriangle func(point uintptr, p1 uintptr, p2 uintptr, p3 uintptr) bool
@@ -751,6 +752,7 @@ func init() {
 	purego.RegisterLibFunc(&checkCollisionRecs, raylibDll, "CheckCollisionRecs")
 	purego.RegisterLibFunc(&checkCollisionCircles, raylibDll, "CheckCollisionCircles")
 	purego.RegisterLibFunc(&checkCollisionCircleRec, raylibDll, "CheckCollisionCircleRec")
+	purego.RegisterLibFunc(&checkCollisionCircleLine, raylibDll, "CheckCollisionCircleLine")
 	purego.RegisterLibFunc(&checkCollisionPointRec, raylibDll, "CheckCollisionPointRec")
 	purego.RegisterLibFunc(&checkCollisionPointCircle, raylibDll, "CheckCollisionPointCircle")
 	purego.RegisterLibFunc(&checkCollisionPointTriangle, raylibDll, "CheckCollisionPointTriangle")
@@ -2281,6 +2283,11 @@ func CheckCollisionCircles(center1 Vector2, radius1 float32, center2 Vector2, ra
 // CheckCollisionCircleRec - Check collision between circle and rectangle
 func CheckCollisionCircleRec(center Vector2, radius float32, rec Rectangle) bool {
 	return checkCollisionCircleRec(*(*uintptr)(unsafe.Pointer(&center)), radius, uintptr(unsafe.Pointer(&rec)))
+}
+
+// CheckCollisionCircleLine - Check if circle collides with a line created betweeen two points [p1] and [p2]
+func CheckCollisionCircleLine(center Vector2, radius float32, p1, p2 Vector2) bool {
+	return checkCollisionCircleLine(*(*uintptr)(unsafe.Pointer(&center)), radius, *(*uintptr)(unsafe.Pointer(&p1)), *(*uintptr)(unsafe.Pointer(&p2)))
 }
 
 // CheckCollisionPointRec - Check if point is inside rectangle
