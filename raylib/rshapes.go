@@ -235,35 +235,35 @@ func DrawRectanglePro(rec Rectangle, origin Vector2, rotation float32, col color
 }
 
 // DrawRectangleGradientV - Draw a vertical-gradient-filled rectangle
-func DrawRectangleGradientV(posX, posY, width, height int32, col1, col2 color.RGBA) {
+func DrawRectangleGradientV(posX, posY, width, height int32, top, bottom color.RGBA) {
 	cposX := (C.int)(posX)
 	cposY := (C.int)(posY)
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
-	ccolor1 := colorCptr(col1)
-	ccolor2 := colorCptr(col2)
-	C.DrawRectangleGradientV(cposX, cposY, cwidth, cheight, *ccolor1, *ccolor2)
+	ctop := colorCptr(top)
+	cbottom := colorCptr(bottom)
+	C.DrawRectangleGradientV(cposX, cposY, cwidth, cheight, *ctop, *cbottom)
 }
 
 // DrawRectangleGradientH - Draw a horizontal-gradient-filled rectangle
-func DrawRectangleGradientH(posX, posY, width, height int32, col1, col2 color.RGBA) {
+func DrawRectangleGradientH(posX, posY, width, height int32, left, right color.RGBA) {
 	cposX := (C.int)(posX)
 	cposY := (C.int)(posY)
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
-	ccolor1 := colorCptr(col1)
-	ccolor2 := colorCptr(col2)
-	C.DrawRectangleGradientH(cposX, cposY, cwidth, cheight, *ccolor1, *ccolor2)
+	cleft := colorCptr(left)
+	cright := colorCptr(right)
+	C.DrawRectangleGradientH(cposX, cposY, cwidth, cheight, *cleft, *cright)
 }
 
 // DrawRectangleGradientEx - Draw a gradient-filled rectangle with custom vertex colors
-func DrawRectangleGradientEx(rec Rectangle, col1, col2, col3, col4 color.RGBA) {
+func DrawRectangleGradientEx(rec Rectangle, topLeft, bottomLeft, topRight, bottomRight color.RGBA) {
 	crec := rec.cptr()
-	ccolor1 := colorCptr(col1)
-	ccolor2 := colorCptr(col2)
-	ccolor3 := colorCptr(col3)
-	ccolor4 := colorCptr(col4)
-	C.DrawRectangleGradientEx(*crec, *ccolor1, *ccolor2, *ccolor3, *ccolor4)
+	ctopLeft := colorCptr(topLeft)
+	cbottomLeft := colorCptr(bottomLeft)
+	ctopRight := colorCptr(topRight)
+	cbottomRight := colorCptr(bottomRight)
+	C.DrawRectangleGradientEx(*crec, *ctopLeft, *cbottomLeft, *ctopRight, *cbottomRight)
 }
 
 // DrawRectangleLines - Draw rectangle outline
