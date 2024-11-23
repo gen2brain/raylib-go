@@ -161,6 +161,7 @@ var getGamepadButtonPressed func() int32
 var getGamepadAxisCount func(gamepad int32) int32
 var getGamepadAxisMovement func(gamepad int32, axis int32) float32
 var setGamepadMappings func(mappings string) int32
+var setGamepadVibration func(gamepad int32, leftMotor, rightMotor, duration float32)
 var isMouseButtonPressed func(button int32) bool
 var isMouseButtonDown func(button int32) bool
 var isMouseButtonReleased func(button int32) bool
@@ -661,6 +662,7 @@ func init() {
 	purego.RegisterLibFunc(&getGamepadAxisCount, raylibDll, "GetGamepadAxisCount")
 	purego.RegisterLibFunc(&getGamepadAxisMovement, raylibDll, "GetGamepadAxisMovement")
 	purego.RegisterLibFunc(&setGamepadMappings, raylibDll, "SetGamepadMappings")
+	purego.RegisterLibFunc(&setGamepadVibration, raylibDll, "SetGamepadVibration")
 	purego.RegisterLibFunc(&isMouseButtonPressed, raylibDll, "IsMouseButtonPressed")
 	purego.RegisterLibFunc(&isMouseButtonDown, raylibDll, "IsMouseButtonDown")
 	purego.RegisterLibFunc(&isMouseButtonReleased, raylibDll, "IsMouseButtonReleased")
@@ -1820,6 +1822,11 @@ func GetGamepadAxisMovement(gamepad int32, axis int32) float32 {
 // SetGamepadMappings - Set internal gamepad mappings (SDL_GameControllerDB)
 func SetGamepadMappings(mappings string) int32 {
 	return setGamepadMappings(mappings)
+}
+
+// SetGamepadVibration - Set gamepad vibration for both motors (duration in seconds)
+func SetGamepadVibration(gamepad int32, leftMotor, rightMotor, duration float32) {
+	setGamepadVibration(gamepad, leftMotor, rightMotor, duration)
 }
 
 // IsMouseButtonPressed - Check if a mouse button has been pressed once

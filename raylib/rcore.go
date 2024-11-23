@@ -1112,6 +1112,11 @@ func SetGamepadMappings(mappings string) int32 {
 	return v
 }
 
+// SetGamepadVibration - Set gamepad vibration for both motors (duration in seconds)
+func SetGamepadVibration(gamepad int32, leftMotor, rightMotor, duration float32) {
+	C.SetGamepadVibration(C.int(gamepad), C.float(leftMotor), C.float(rightMotor), C.float(duration))
+}
+
 // IsMouseButtonPressed - Detect if a mouse button has been pressed once
 func IsMouseButtonPressed(button MouseButton) bool {
 	cbutton := (C.int)(button)
