@@ -122,13 +122,13 @@ func DrawCircleSectorLines(center Vector2, radius, startAngle, endAngle float32,
 }
 
 // DrawCircleGradient - Draw a gradient-filled circle
-func DrawCircleGradient(centerX, centerY int32, radius float32, col1, col2 color.RGBA) {
+func DrawCircleGradient(centerX, centerY int32, radius float32, inner, outer color.RGBA) {
 	ccenterX := (C.int)(centerX)
 	ccenterY := (C.int)(centerY)
 	cradius := (C.float)(radius)
-	ccolor1 := colorCptr(col1)
-	ccolor2 := colorCptr(col2)
-	C.DrawCircleGradient(ccenterX, ccenterY, cradius, *ccolor1, *ccolor2)
+	cinner := colorCptr(inner)
+	couter := colorCptr(outer)
+	C.DrawCircleGradient(ccenterX, ccenterY, cradius, *cinner, *couter)
 }
 
 // DrawCircleV - Draw a color-filled circle (Vector version)

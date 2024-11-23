@@ -202,7 +202,7 @@ var drawLineBezier func(startPos uintptr, endPos uintptr, thick float32, col uin
 var drawCircle func(centerX int32, centerY int32, radius float32, col uintptr)
 var drawCircleSector func(center uintptr, radius float32, startAngle float32, endAngle float32, segments int32, col uintptr)
 var drawCircleSectorLines func(center uintptr, radius float32, startAngle float32, endAngle float32, segments int32, col uintptr)
-var drawCircleGradient func(centerX int32, centerY int32, radius float32, color1 uintptr, color2 uintptr)
+var drawCircleGradient func(centerX int32, centerY int32, radius float32, inner uintptr, outer uintptr)
 var drawCircleV func(center uintptr, radius float32, col uintptr)
 var drawCircleLines func(centerX int32, centerY int32, radius float32, col uintptr)
 var drawCircleLinesV func(center uintptr, radius float32, col uintptr)
@@ -2045,8 +2045,8 @@ func DrawCircleSectorLines(center Vector2, radius float32, startAngle float32, e
 }
 
 // DrawCircleGradient - Draw a gradient-filled circle
-func DrawCircleGradient(centerX int32, centerY int32, radius float32, color1 color.RGBA, color2 color.RGBA) {
-	drawCircleGradient(centerX, centerY, radius, *(*uintptr)(unsafe.Pointer(&color1)), *(*uintptr)(unsafe.Pointer(&color2)))
+func DrawCircleGradient(centerX int32, centerY int32, radius float32, inner color.RGBA, outer color.RGBA) {
+	drawCircleGradient(centerX, centerY, radius, *(*uintptr)(unsafe.Pointer(&inner)), *(*uintptr)(unsafe.Pointer(&outer)))
 }
 
 // DrawCircleV - Draw a color-filled circle (Vector version)
