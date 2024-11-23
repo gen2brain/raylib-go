@@ -1097,7 +1097,6 @@ const (
 	CubemapLayoutLineHorizontal          // Layout is defined by a horizontal line with faces
 	CubemapLayoutCrossThreeByFour        // Layout is defined by a 3x4 cross with cubemap faces
 	CubemapLayoutCrossFourByThree        // Layout is defined by a 4x3 cross with cubemap faces
-	CubemapLayoutPanorama                // Layout is defined by a panorama image (equirrectangular map)
 )
 
 // Image type, bpp always RGBA (32bit)
