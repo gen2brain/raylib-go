@@ -364,7 +364,7 @@ const (
 
 	// Android keys
 	KeyBack       = 4
-	KeyMenu       = 82
+	KeyMenu       = 5
 	KeyVolumeUp   = 24
 	KeyVolumeDown = 25
 
