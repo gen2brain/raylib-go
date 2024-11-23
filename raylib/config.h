@@ -66,10 +66,11 @@
 #define SUPPORT_COMPRESSION_API         1
 // Support automatic generated events, loading and recording of those events when required
 #define SUPPORT_AUTOMATION_EVENTS       1
-// Support custom frame control, only for advance users
+// Support custom frame control, only for advanced users
 // By default EndDrawing() does this job: draws everything + SwapScreenBuffer() + manage frame timing + PollInputEvents()
 // Enabling this flag allows manual control of the frame processes, use at your own risk
 //#define SUPPORT_CUSTOM_FRAME_CONTROL    1
+
 
 // rcore: Configuration values
 //------------------------------------------------------------------------------------
@@ -100,6 +101,8 @@
 // Show OpenGL extensions and capabilities detailed logs on init
 //#define RLGL_SHOW_GL_DETAILS_INFO              1
 
+#define RL_SUPPORT_MESH_GPU_SKINNING           1      // GPU skinning, comment if your GPU does not support more than 8 VBOs
+
 //#define RL_DEFAULT_BATCH_BUFFER_ELEMENTS    4096    // Default internal render batch elements limits
 #define RL_DEFAULT_BATCH_BUFFERS               1      // Default number of batch buffers (multi-buffering)
 #define RL_DEFAULT_BATCH_DRAWCALLS           256      // Default number of batch draw calls (by state changes: mode, texture)
@@ -113,12 +116,17 @@
 #define RL_CULL_DISTANCE_FAR              1000.0      // Default projection matrix far cull distance
 
 // Default shader vertex attribute locations
-#define RL_DEFAULT_SHADER_ATTRIB_LOCATION_POSITION  0
-#define RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD  1
-#define RL_DEFAULT_SHADER_ATTRIB_LOCATION_NORMAL    2
-#define RL_DEFAULT_SHADER_ATTRIB_LOCATION_COLOR     3
-#define RL_DEFAULT_SHADER_ATTRIB_LOCATION_TANGENT   4
-#define RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD2 5
+#define RL_DEFAULT_SHADER_ATTRIB_LOCATION_POSITION    0
+#define RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD    1
+#define RL_DEFAULT_SHADER_ATTRIB_LOCATION_NORMAL      2
+#define RL_DEFAULT_SHADER_ATTRIB_LOCATION_COLOR       3
+#define RL_DEFAULT_SHADER_ATTRIB_LOCATION_TANGENT     4
+#define RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD2   5
+#define RL_DEFAULT_SHADER_ATTRIB_LOCATION_INDICES     6
+#if defined(RL_SUPPORT_MESH_GPU_SKINNING)
+    #define RL_DEFAULT_SHADER_ATTRIB_LOCATION_BONEIDS     7
+    #define RL_DEFAULT_SHADER_ATTRIB_LOCATION_BONEWEIGHTS 8
+#endif
 
 // Default shader vertex attribute names to set location points
 // NOTE: When a new shader is loaded, the following locations are tried to be set for convenience
@@ -170,7 +178,6 @@
 //#define SUPPORT_FILEFORMAT_ASTC     1
 //#define SUPPORT_FILEFORMAT_PKM      1
 //#define SUPPORT_FILEFORMAT_PVR      1
-//#define SUPPORT_FILEFORMAT_SVG      1
 
 // Support image export functionality (.png, .bmp, .tga, .jpg, .qoi)
 #define SUPPORT_IMAGE_EXPORT            1
@@ -225,7 +232,12 @@
 // rmodels: Configuration values
 //------------------------------------------------------------------------------------
 #define MAX_MATERIAL_MAPS              12       // Maximum number of shader maps supported
+
+#ifdef RL_SUPPORT_MESH_GPU_SKINNING
+#define MAX_MESH_VERTEX_BUFFERS         9       // Maximum vertex buffers (VBO) per mesh
+#else
 #define MAX_MESH_VERTEX_BUFFERS         7       // Maximum vertex buffers (VBO) per mesh
+#endif
 
 //------------------------------------------------------------------------------------
 // Module: raudio - Configuration Flags
@@ -260,5 +272,32 @@
 // utils: Configuration values
 //------------------------------------------------------------------------------------
 #define MAX_TRACELOG_MSG_LENGTH       256       // Max length of one trace-log message
+
+
+// Enable partial support for clipboard image, only working on SDL3 or
+// being on both Windows OS + GLFW or Windows OS + RGFW
+#define SUPPORT_CLIPBOARD_IMAGE    1
+
+#if defined(SUPPORT_CLIPBOARD_IMAGE)
+    #ifndef STBI_REQUIRED
+        #define STBI_REQUIRED
+    #endif
+
+    #ifndef SUPPORT_FILEFORMAT_BMP // For clipboard image on Windows
+        #define SUPPORT_FILEFORMAT_BMP 1
+    #endif
+
+    #ifndef SUPPORT_FILEFORMAT_PNG // Wayland uses png for prints, at least it was on 22 LTS ubuntu
+        #define SUPPORT_FILEFORMAT_PNG 1
+    #endif
+
+    #ifndef SUPPORT_FILEFORMAT_JPG
+        #define SUPPORT_FILEFORMAT_JPG 1
+    #endif
+
+    #ifndef SUPPORT_MODULE_RTEXTURES
+        #define SUPPORT_MODULE_RTEXTURES 1
+    #endif
+#endif
 
 #endif // CONFIG_H
