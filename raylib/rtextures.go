@@ -103,17 +103,6 @@ func LoadImageRaw(fileName string, width, height int32, format PixelFormat, head
 	return v
 }
 
-// LoadImageSvg - Load image from SVG file data or string with specified size
-func LoadImageSvg(fileNameOrString string, width, height int32) *Image {
-	cfileNameOrString := C.CString(fileNameOrString)
-	defer C.free(unsafe.Pointer(cfileNameOrString))
-	cwidth := (C.int)(width)
-	cheight := (C.int)(height)
-	ret := C.LoadImageSvg(cfileNameOrString, cwidth, cheight)
-	v := newImageFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // LoadImageAnim - Load image sequence from file (frames appended to image.data)
 func LoadImageAnim(fileName string, frames *int32) *Image {
 	cfileName := C.CString(fileName)

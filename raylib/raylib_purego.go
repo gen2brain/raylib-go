@@ -257,7 +257,6 @@ var checkCollisionPointLine func(point uintptr, p1 uintptr, p2 uintptr, threshol
 var getCollisionRec func(rec uintptr, rec1 uintptr, rec2 uintptr)
 var loadImage func(img uintptr, fileName string)
 var loadImageRaw func(img uintptr, fileName string, width int32, height int32, format int32, headerSize int32)
-var loadImageSvg func(img uintptr, fileNameOrString string, width int32, height int32)
 var loadImageAnim func(img uintptr, fileName string, frames []int32)
 var loadImageFromMemory func(img uintptr, fileType string, fileData []byte, dataSize int32)
 var loadImageFromTexture func(img uintptr, texture uintptr)
@@ -762,7 +761,6 @@ func init() {
 	purego.RegisterLibFunc(&getCollisionRec, raylibDll, "GetCollisionRec")
 	purego.RegisterLibFunc(&loadImage, raylibDll, "LoadImage")
 	purego.RegisterLibFunc(&loadImageRaw, raylibDll, "LoadImageRaw")
-	purego.RegisterLibFunc(&loadImageSvg, raylibDll, "LoadImageSvg")
 	purego.RegisterLibFunc(&loadImageAnim, raylibDll, "LoadImageAnim")
 	purego.RegisterLibFunc(&loadImageFromMemory, raylibDll, "LoadImageFromMemory")
 	purego.RegisterLibFunc(&loadImageFromTexture, raylibDll, "LoadImageFromTexture")
@@ -2339,13 +2337,6 @@ func LoadImage(fileName string) *Image {
 func LoadImageRaw(fileName string, width int32, height int32, format PixelFormat, headerSize int32) *Image {
 	var img Image
 	loadImageRaw(uintptr(unsafe.Pointer(&img)), fileName, width, height, int32(format), headerSize)
-	return &img
-}
-
-// LoadImageSvg - Load image from SVG file data or string with specified size
-func LoadImageSvg(fileNameOrString string, width int32, height int32) *Image {
-	var img Image
-	loadImageSvg(uintptr(unsafe.Pointer(&img)), fileNameOrString, width, height)
 	return &img
 }
 
