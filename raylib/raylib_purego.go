@@ -103,7 +103,6 @@ var setShaderValueV func(shader uintptr, locIndex int32, value []float32, unifor
 var setShaderValueMatrix func(shader uintptr, locIndex int32, mat uintptr)
 var setShaderValueTexture func(shader uintptr, locIndex int32, texture uintptr)
 var unloadShader func(shader uintptr)
-var getMouseRay func(ray uintptr, mousePosition uintptr, camera uintptr)
 var getScreenToWorldRay func(ray uintptr, position uintptr, camera uintptr)
 var getScreenToWorldRayEx func(ray uintptr, position uintptr, camera uintptr, width, height int32)
 var getCameraMatrix func(mat uintptr, camera uintptr)
@@ -607,7 +606,6 @@ func init() {
 	purego.RegisterLibFunc(&setShaderValueMatrix, raylibDll, "SetShaderValueMatrix")
 	purego.RegisterLibFunc(&setShaderValueTexture, raylibDll, "SetShaderValueTexture")
 	purego.RegisterLibFunc(&unloadShader, raylibDll, "UnloadShader")
-	purego.RegisterLibFunc(&getMouseRay, raylibDll, "GetMouseRay")
 	purego.RegisterLibFunc(&getScreenToWorldRay, raylibDll, "GetScreenToWorldRay")
 	purego.RegisterLibFunc(&getScreenToWorldRayEx, raylibDll, "GetScreenToWorldRayEx")
 	purego.RegisterLibFunc(&getCameraMatrix, raylibDll, "GetCameraMatrix")
@@ -1490,9 +1488,7 @@ func UnloadShader(shader Shader) {
 //
 // Deprecated: Use [GetScreenToWorldRay] instead.
 func GetMouseRay(mousePosition Vector2, camera Camera) Ray {
-	var ray Ray
-	getMouseRay(uintptr(unsafe.Pointer(&ray)), *(*uintptr)(unsafe.Pointer(&mousePosition)), uintptr(unsafe.Pointer(&camera)))
-	return ray
+	return GetScreenToWorldRay(mousePosition, camera)
 }
 
 // GetScreenToWorldRay - Get a ray trace from screen position (i.e mouse)

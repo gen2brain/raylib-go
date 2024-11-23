@@ -630,11 +630,7 @@ func UnloadShader(shader Shader) {
 //
 // Deprecated: Use [GetScreenToWorldRay] instead.
 func GetMouseRay(mousePosition Vector2, camera Camera) Ray {
-	cmousePosition := mousePosition.cptr()
-	ccamera := camera.cptr()
-	ret := C.GetMouseRay(*cmousePosition, *ccamera)
-	v := newRayFromPointer(unsafe.Pointer(&ret))
-	return v
+	return GetScreenToWorldRay(mousePosition, camera)
 }
 
 // GetScreenToWorldRay - Get a ray trace from screen position (i.e mouse)
