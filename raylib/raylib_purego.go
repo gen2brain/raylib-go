@@ -65,6 +65,7 @@ var getWindowScaleDPI func() uintptr
 var getMonitorName func(monitor int32) string
 var setClipboardText func(text string)
 var getClipboardText func() string
+var getClipboardImage func(img uintptr)
 var enableEventWaiting func()
 var disableEventWaiting func()
 var showCursor func()
@@ -562,6 +563,7 @@ func init() {
 	purego.RegisterLibFunc(&getMonitorName, raylibDll, "GetMonitorName")
 	purego.RegisterLibFunc(&setClipboardText, raylibDll, "SetClipboardText")
 	purego.RegisterLibFunc(&getClipboardText, raylibDll, "GetClipboardText")
+	purego.RegisterLibFunc(&getClipboardImage, raylibDll, "GetClipboardImage")
 	purego.RegisterLibFunc(&enableEventWaiting, raylibDll, "EnableEventWaiting")
 	purego.RegisterLibFunc(&disableEventWaiting, raylibDll, "DisableEventWaiting")
 	purego.RegisterLibFunc(&showCursor, raylibDll, "ShowCursor")
@@ -1240,6 +1242,15 @@ func SetClipboardText(text string) {
 // GetClipboardText - Get clipboard text content
 func GetClipboardText() string {
 	return getClipboardText()
+}
+
+// GetClipboardImage - Get clipboard image content
+//
+// Only works with SDL3 backend or Windows with RGFW/GLFW
+func GetClipboardImage() Image {
+	var img Image
+	getClipboardImage(uintptr(unsafe.Pointer(&img)))
+	return img
 }
 
 // EnableEventWaiting - Enable waiting for events on EndDrawing(), no automatic event polling
