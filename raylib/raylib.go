@@ -1221,7 +1221,6 @@ type VrDeviceInfo struct {
 	VResolution            int32      // Vertical resolution in pixels
 	HScreenSize            float32    // Horizontal size in meters
 	VScreenSize            float32    // Vertical size in meters
-	VScreenCenter          float32    // Screen center in meters
 	EyeToScreenDistance    float32    // Distance between eye and display in meters
 	LensSeparationDistance float32    // Lens separation distance in meters
 	InterpupillaryDistance float32    // IPD (distance between pupils) in meters
