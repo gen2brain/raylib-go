@@ -220,7 +220,7 @@ var drawRectangleGradientEx func(rec uintptr, topLeft uintptr, bottomLeft uintpt
 var drawRectangleLines func(posX int32, posY int32, width int32, height int32, col uintptr)
 var drawRectangleLinesEx func(rec uintptr, lineThick float32, col uintptr)
 var drawRectangleRounded func(rec uintptr, roundness float32, segments int32, col uintptr)
-var drawRectangleRoundedLines func(rec uintptr, roundness float32, segments int32, lineThick float32, col uintptr)
+var drawRectangleRoundedLines func(rec uintptr, roundness float32, segments int32, col uintptr)
 var drawTriangle func(v1 uintptr, v2 uintptr, v3 uintptr, col uintptr)
 var drawTriangleLines func(v1 uintptr, v2 uintptr, v3 uintptr, col uintptr)
 var drawTriangleFan func(points *Vector2, pointCount int32, col uintptr)
@@ -2134,9 +2134,9 @@ func DrawRectangleRounded(rec Rectangle, roundness float32, segments int32, col 
 	drawRectangleRounded(uintptr(unsafe.Pointer(&rec)), roundness, segments, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
-// DrawRectangleRoundedLines - Draw rectangle with rounded edges outline
-func DrawRectangleRoundedLines(rec Rectangle, roundness float32, segments float32, lineThick float32, col color.RGBA) {
-	drawRectangleRoundedLines(uintptr(unsafe.Pointer(&rec)), roundness, int32(segments), lineThick, *(*uintptr)(unsafe.Pointer(&col)))
+// DrawRectangleRoundedLines - Draw rectangle lines with rounded edges
+func DrawRectangleRoundedLines(rec Rectangle, roundness float32, segments float32, col color.RGBA) {
+	drawRectangleRoundedLines(uintptr(unsafe.Pointer(&rec)), roundness, int32(segments), *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawTriangle - Draw a color-filled triangle (vertex in counter-clockwise order!)
