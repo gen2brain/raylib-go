@@ -1179,7 +1179,7 @@ func GetMonitorCount() int {
 	return int(getMonitorCount())
 }
 
-// GetCurrentMonitor - Get current connected monitor
+// GetCurrentMonitor - Get current monitor where window is placed
 func GetCurrentMonitor() int {
 	return int(getCurrentMonitor())
 }

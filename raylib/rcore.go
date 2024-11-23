@@ -338,7 +338,7 @@ func GetMonitorCount() int {
 	return v
 }
 
-// GetCurrentMonitor - Get current connected monitor
+// GetCurrentMonitor - Get current monitor where window is placed
 func GetCurrentMonitor() int {
 	ret := C.GetCurrentMonitor()
 	v := (int)(ret)
