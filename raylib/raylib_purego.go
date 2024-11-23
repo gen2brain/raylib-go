@@ -95,7 +95,7 @@ var loadVrStereoConfig func(config uintptr, device uintptr)
 var unloadVrStereoConfig func(config uintptr)
 var loadShader func(shader uintptr, vsFileName uintptr, fsFileName uintptr)
 var loadShaderFromMemory func(shader uintptr, vsCode uintptr, fsCode uintptr)
-var isShaderReady func(shader uintptr) bool
+var isShaderValid func(shader uintptr) bool
 var getShaderLocation func(shader uintptr, uniformName string) int32
 var getShaderLocationAttrib func(shader uintptr, attribName string) int32
 var setShaderValue func(shader uintptr, locIndex int32, value []float32, uniformType int32)
@@ -593,7 +593,7 @@ func init() {
 	purego.RegisterLibFunc(&unloadVrStereoConfig, raylibDll, "UnloadVrStereoConfig")
 	purego.RegisterLibFunc(&loadShader, raylibDll, "LoadShader")
 	purego.RegisterLibFunc(&loadShaderFromMemory, raylibDll, "LoadShaderFromMemory")
-	purego.RegisterLibFunc(&isShaderReady, raylibDll, "IsShaderReady")
+	purego.RegisterLibFunc(&isShaderValid, raylibDll, "IsShaderValid")
 	purego.RegisterLibFunc(&getShaderLocation, raylibDll, "GetShaderLocation")
 	purego.RegisterLibFunc(&getShaderLocationAttrib, raylibDll, "GetShaderLocationAttrib")
 	purego.RegisterLibFunc(&setShaderValue, raylibDll, "SetShaderValue")
@@ -1434,9 +1434,9 @@ func LoadShaderFromMemory(vsCode string, fsCode string) Shader {
 	return shader
 }
 
-// IsShaderReady - Check if a shader is ready
-func IsShaderReady(shader Shader) bool {
-	return isShaderReady(uintptr(unsafe.Pointer(&shader)))
+// IsShaderValid - Check if a shader is valid (loaded on GPU)
+func IsShaderValid(shader Shader) bool {
+	return isShaderValid(uintptr(unsafe.Pointer(&shader)))
 }
 
 // GetShaderLocation - Get shader uniform location
