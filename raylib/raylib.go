@@ -411,12 +411,12 @@ const (
 	GamepadButtonLeftFaceDown          // Gamepad left DPAD down button
 	GamepadButtonLeftFaceLeft          // Gamepad left DPAD left button
 	GamepadButtonRightFaceUp           // Gamepad right button up (i.e. PS3: Triangle, Xbox: Y)
-	GamepadButtonRightFaceRight        // Gamepad right button right (i.e. PS3: Square, Xbox: X)
+	GamepadButtonRightFaceRight        // Gamepad right button right (i.e. PS3: Circle, Xbox: B)
 	GamepadButtonRightFaceDown         // Gamepad right button down (i.e. PS3: Cross, Xbox: A)
-	GamepadButtonRightFaceLeft         // Gamepad right button left (i.e. PS3: Circle, Xbox: B)
+	GamepadButtonRightFaceLeft         // Gamepad right button left (i.e. PS3: Square, Xbox: X)
 	GamepadButtonLeftTrigger1          // Gamepad top/back trigger left (first), it could be a trailing button
 	GamepadButtonLeftTrigger2          // Gamepad top/back trigger left (second), it could be a trailing button
-	GamepadButtonRightTrigger1         // Gamepad top/back trigger right (one), it could be a trailing button
+	GamepadButtonRightTrigger1         // Gamepad top/back trigger right (first), it could be a trailing button
 	GamepadButtonRightTrigger2         // Gamepad top/back trigger right (second), it could be a trailing button
 	GamepadButtonMiddleLeft            // Gamepad center buttons, left one (i.e. PS3: Select)
 	GamepadButtonMiddle                // Gamepad center buttons, middle one (i.e. PS3: PS, Xbox: XBOX)
