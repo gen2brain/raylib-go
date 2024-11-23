@@ -795,6 +795,10 @@ type Mesh struct {
 	BoneIds *int32
 	// BoneWeights
 	BoneWeights *float32
+	// Bones animated transformation matrices
+	BoneMatrices *Matrix
+	// Number of bones
+	BoneCount int32
 	// OpenGL Vertex Array Object id
 	VaoID uint32
 	// OpenGL Vertex Buffer Objects id (7 types of vertex data)
