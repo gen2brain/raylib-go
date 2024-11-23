@@ -626,11 +626,33 @@ func UnloadShader(shader Shader) {
 	C.UnloadShader(*cshader)
 }
 
-// GetMouseRay - Returns a ray trace from mouse position
+// GetMouseRay - Get a ray trace from mouse position
+//
+// Deprecated: Use [GetScreenToWorldRay] instead.
 func GetMouseRay(mousePosition Vector2, camera Camera) Ray {
 	cmousePosition := mousePosition.cptr()
 	ccamera := camera.cptr()
 	ret := C.GetMouseRay(*cmousePosition, *ccamera)
+	v := newRayFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetScreenToWorldRay - Get a ray trace from screen position (i.e mouse)
+func GetScreenToWorldRay(position Vector2, camera Camera) Ray {
+	cposition := position.cptr()
+	ccamera := camera.cptr()
+	ret := C.GetMouseRay(*cposition, *ccamera)
+	v := newRayFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetScreenToWorldRayEx - Get a ray trace from screen position (i.e mouse) in a viewport
+func GetScreenToWorldRayEx(position Vector2, camera Camera, width, height int32) Ray {
+	cposition := position.cptr()
+	ccamera := camera.cptr()
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	ret := C.GetMouseRay(*cposition, *ccamera, cwidth, cheight)
 	v := newRayFromPointer(unsafe.Pointer(&ret))
 	return v
 }

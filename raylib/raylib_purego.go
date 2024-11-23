@@ -104,6 +104,8 @@ var setShaderValueMatrix func(shader uintptr, locIndex int32, mat uintptr)
 var setShaderValueTexture func(shader uintptr, locIndex int32, texture uintptr)
 var unloadShader func(shader uintptr)
 var getMouseRay func(ray uintptr, mousePosition uintptr, camera uintptr)
+var getScreenToWorldRay func(ray uintptr, position uintptr, camera uintptr)
+var getScreenToWorldRayEx func(ray uintptr, position uintptr, camera uintptr, width, height int32)
 var getCameraMatrix func(mat uintptr, camera uintptr)
 var getCameraMatrix2D func(mat uintptr, camera uintptr)
 var getWorldToScreen func(position uintptr, camera uintptr) uintptr
@@ -602,6 +604,8 @@ func init() {
 	purego.RegisterLibFunc(&setShaderValueTexture, raylibDll, "SetShaderValueTexture")
 	purego.RegisterLibFunc(&unloadShader, raylibDll, "UnloadShader")
 	purego.RegisterLibFunc(&getMouseRay, raylibDll, "GetMouseRay")
+	purego.RegisterLibFunc(&getScreenToWorldRay, raylibDll, "GetScreenToWorldRay")
+	purego.RegisterLibFunc(&getScreenToWorldRayEx, raylibDll, "GetScreenToWorldRayEx")
 	purego.RegisterLibFunc(&getCameraMatrix, raylibDll, "GetCameraMatrix")
 	purego.RegisterLibFunc(&getCameraMatrix2D, raylibDll, "GetCameraMatrix2D")
 	purego.RegisterLibFunc(&getWorldToScreen, raylibDll, "GetWorldToScreen")
@@ -1475,9 +1479,25 @@ func UnloadShader(shader Shader) {
 }
 
 // GetMouseRay - Get a ray trace from mouse position
+//
+// Deprecated: Use [GetScreenToWorldRay] instead.
 func GetMouseRay(mousePosition Vector2, camera Camera) Ray {
 	var ray Ray
 	getMouseRay(uintptr(unsafe.Pointer(&ray)), *(*uintptr)(unsafe.Pointer(&mousePosition)), uintptr(unsafe.Pointer(&camera)))
+	return ray
+}
+
+// GetScreenToWorldRay - Get a ray trace from screen position (i.e mouse)
+func GetScreenToWorldRay(position Vector2, camera Camera) Ray {
+	var ray Ray
+	getScreenToWorldRay(uintptr(unsafe.Pointer(&ray)), *(*uintptr)(unsafe.Pointer(&position)), uintptr(unsafe.Pointer(&camera)))
+	return ray
+}
+
+// GetScreenToWorldRayEx - Get a ray trace from screen position (i.e mouse) in a viewport
+func GetScreenToWorldRayEx(position Vector2, camera Camera, width, height int32) Ray {
+	var ray Ray
+	getScreenToWorldRayEx(uintptr(unsafe.Pointer(&ray)), *(*uintptr)(unsafe.Pointer(&position)), uintptr(unsafe.Pointer(&camera)), width, height)
 	return ray
 }
 
