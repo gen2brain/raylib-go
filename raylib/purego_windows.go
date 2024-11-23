@@ -14,7 +14,7 @@ import (
 
 const (
 	libname         = "raylib.dll"
-	requiredVersion = "5.0"
+	requiredVersion = "5.5"
 )
 
 var wvsprintfA uintptr
