@@ -139,10 +139,10 @@ func LoadImageFromScreen() *Image {
 	return v
 }
 
-// IsImageReady - Check if an image is ready
-func IsImageReady(image *Image) bool {
+// IsImageValid - Check if an image is valid (data and parameters)
+func IsImageValid(image *Image) bool {
 	cimage := image.cptr()
-	ret := C.IsImageReady(*cimage)
+	ret := C.IsImageValid(*cimage)
 	v := bool(ret)
 	return v
 }

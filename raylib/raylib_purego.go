@@ -261,7 +261,7 @@ var loadImageAnim func(img uintptr, fileName string, frames []int32)
 var loadImageFromMemory func(img uintptr, fileType string, fileData []byte, dataSize int32)
 var loadImageFromTexture func(img uintptr, texture uintptr)
 var loadImageFromScreen func(img uintptr)
-var isImageReady func(image uintptr) bool
+var isImageValid func(image uintptr) bool
 var unloadImage func(image uintptr)
 var exportImage func(image uintptr, fileName string) bool
 var exportImageToMemory func(image uintptr, fileType string, fileSize *int32) *byte
@@ -765,7 +765,7 @@ func init() {
 	purego.RegisterLibFunc(&loadImageFromMemory, raylibDll, "LoadImageFromMemory")
 	purego.RegisterLibFunc(&loadImageFromTexture, raylibDll, "LoadImageFromTexture")
 	purego.RegisterLibFunc(&loadImageFromScreen, raylibDll, "LoadImageFromScreen")
-	purego.RegisterLibFunc(&isImageReady, raylibDll, "IsImageReady")
+	purego.RegisterLibFunc(&isImageValid, raylibDll, "IsImageValid")
 	purego.RegisterLibFunc(&unloadImage, raylibDll, "UnloadImage")
 	purego.RegisterLibFunc(&exportImage, raylibDll, "ExportImage")
 	purego.RegisterLibFunc(&exportImageToMemory, raylibDll, "ExportImageToMemory")
@@ -2368,9 +2368,9 @@ func LoadImageFromScreen() *Image {
 	return &img
 }
 
-// IsImageReady - Check if an image is ready
-func IsImageReady(image *Image) bool {
-	return isImageReady(uintptr(unsafe.Pointer(image)))
+// IsImageValid - Check if an image is valid (data and parameters)
+func IsImageValid(image *Image) bool {
+	return isImageValid(uintptr(unsafe.Pointer(image)))
 }
 
 // UnloadImage - Unload image from CPU memory (RAM)
