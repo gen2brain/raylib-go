@@ -17,6 +17,20 @@ func SetShapesTexture(texture Texture2D, source Rectangle) {
 	C.SetShapesTexture(*ctexture, *csource)
 }
 
+// GetShapesTexture - Get texture that is used for shapes drawing
+func GetShapesTexture() Texture2D {
+	ret := C.GetShapesTexture()
+	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetShapesTextureRectangle - Get texture source rectangle that is used for shapes drawing
+func GetShapesTextureRectangle() Rectangle {
+	ret := C.GetShapesTextureRectangle()
+	v := newRectangleFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // DrawPixel - Draw a pixel
 func DrawPixel(posX, posY int32, col color.RGBA) {
 	cposX := (C.int)(posX)

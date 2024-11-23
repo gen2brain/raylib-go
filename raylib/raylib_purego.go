@@ -190,6 +190,8 @@ var getGestureDragAngle func() float32
 var getGesturePinchVector func() uintptr
 var getGesturePinchAngle func() float32
 var setShapesTexture func(texture uintptr, source uintptr)
+var getShapesTexture func(texture uintptr)
+var getShapesTextureRectangle func(rec uintptr)
 var drawPixel func(posX int32, posY int32, col uintptr)
 var drawPixelV func(position uintptr, col uintptr)
 var drawLine func(startPosX int32, startPosY int32, endPosX int32, endPosY int32, col uintptr)
@@ -691,6 +693,8 @@ func init() {
 	purego.RegisterLibFunc(&getGesturePinchVector, raylibDll, "GetGesturePinchVector")
 	purego.RegisterLibFunc(&getGesturePinchAngle, raylibDll, "GetGesturePinchAngle")
 	purego.RegisterLibFunc(&setShapesTexture, raylibDll, "SetShapesTexture")
+	purego.RegisterLibFunc(&getShapesTexture, raylibDll, "GetShapesTexture")
+	purego.RegisterLibFunc(&getShapesTextureRectangle, raylibDll, "GetShapesTextureRectangle")
 	purego.RegisterLibFunc(&drawPixel, raylibDll, "DrawPixel")
 	purego.RegisterLibFunc(&drawPixelV, raylibDll, "DrawPixelV")
 	purego.RegisterLibFunc(&drawLine, raylibDll, "DrawLine")
@@ -1973,6 +1977,20 @@ func GetGesturePinchAngle() float32 {
 // SetShapesTexture - Set texture and rectangle to be used on shapes drawing
 func SetShapesTexture(texture Texture2D, source Rectangle) {
 	setShapesTexture(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&source)))
+}
+
+// GetShapesTexture - Get texture that is used for shapes drawing
+func GetShapesTexture() Texture2D {
+	var texture Texture2D
+	getShapesTexture(uintptr(unsafe.Pointer(&texture)))
+	return texture
+}
+
+// GetShapesTextureRectangle - Get texture source rectangle that is used for shapes drawing
+func GetShapesTextureRectangle() Rectangle {
+	var rec Rectangle
+	getShapesTextureRectangle(uintptr(unsafe.Pointer(&rec)))
+	return rec
 }
 
 // DrawPixel - Draw a pixel
