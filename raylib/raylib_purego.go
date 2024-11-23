@@ -214,9 +214,9 @@ var drawRectangle func(posX int32, posY int32, width int32, height int32, col ui
 var drawRectangleV func(position uintptr, size uintptr, col uintptr)
 var drawRectangleRec func(rec uintptr, col uintptr)
 var drawRectanglePro func(rec uintptr, origin uintptr, rotation float32, col uintptr)
-var drawRectangleGradientV func(posX int32, posY int32, width int32, height int32, color1 uintptr, color2 uintptr)
-var drawRectangleGradientH func(posX int32, posY int32, width int32, height int32, color1 uintptr, color2 uintptr)
-var drawRectangleGradientEx func(rec uintptr, col1 uintptr, col2 uintptr, col3 uintptr, col4 uintptr)
+var drawRectangleGradientV func(posX int32, posY int32, width int32, height int32, top uintptr, bottom uintptr)
+var drawRectangleGradientH func(posX int32, posY int32, width int32, height int32, left uintptr, right uintptr)
+var drawRectangleGradientEx func(rec uintptr, topLeft uintptr, bottomLeft uintptr, topRight uintptr, bottomRight uintptr)
 var drawRectangleLines func(posX int32, posY int32, width int32, height int32, col uintptr)
 var drawRectangleLinesEx func(rec uintptr, lineThick float32, col uintptr)
 var drawRectangleRounded func(rec uintptr, roundness float32, segments int32, col uintptr)
@@ -2105,18 +2105,18 @@ func DrawRectanglePro(rec Rectangle, origin Vector2, rotation float32, col color
 }
 
 // DrawRectangleGradientV - Draw a vertical-gradient-filled rectangle
-func DrawRectangleGradientV(posX int32, posY int32, width int32, height int32, color1 color.RGBA, color2 color.RGBA) {
-	drawRectangleGradientV(posX, posY, width, height, *(*uintptr)(unsafe.Pointer(&color1)), *(*uintptr)(unsafe.Pointer(&color2)))
+func DrawRectangleGradientV(posX int32, posY int32, width int32, height int32, top color.RGBA, bottom color.RGBA) {
+	drawRectangleGradientV(posX, posY, width, height, *(*uintptr)(unsafe.Pointer(&top)), *(*uintptr)(unsafe.Pointer(&bottom)))
 }
 
 // DrawRectangleGradientH - Draw a horizontal-gradient-filled rectangle
-func DrawRectangleGradientH(posX int32, posY int32, width int32, height int32, color1 color.RGBA, color2 color.RGBA) {
-	drawRectangleGradientH(posX, posY, width, height, *(*uintptr)(unsafe.Pointer(&color1)), *(*uintptr)(unsafe.Pointer(&color2)))
+func DrawRectangleGradientH(posX int32, posY int32, width int32, height int32, left color.RGBA, right color.RGBA) {
+	drawRectangleGradientH(posX, posY, width, height, *(*uintptr)(unsafe.Pointer(&left)), *(*uintptr)(unsafe.Pointer(&right)))
 }
 
 // DrawRectangleGradientEx - Draw a gradient-filled rectangle with custom vertex colors
-func DrawRectangleGradientEx(rec Rectangle, col1 color.RGBA, col2 color.RGBA, col3 color.RGBA, col4 color.RGBA) {
-	drawRectangleGradientEx(uintptr(unsafe.Pointer(&rec)), *(*uintptr)(unsafe.Pointer(&col1)), *(*uintptr)(unsafe.Pointer(&col2)), *(*uintptr)(unsafe.Pointer(&col3)), *(*uintptr)(unsafe.Pointer(&col4)))
+func DrawRectangleGradientEx(rec Rectangle, topLeft color.RGBA, bottomLeft color.RGBA, topRight color.RGBA, bottomRight color.RGBA) {
+	drawRectangleGradientEx(uintptr(unsafe.Pointer(&rec)), *(*uintptr)(unsafe.Pointer(&topLeft)), *(*uintptr)(unsafe.Pointer(&bottomLeft)), *(*uintptr)(unsafe.Pointer(&topRight)), *(*uintptr)(unsafe.Pointer(&bottomRight)))
 }
 
 // DrawRectangleLines - Draw rectangle outline
