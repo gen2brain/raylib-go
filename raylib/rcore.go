@@ -637,7 +637,7 @@ func GetMouseRay(mousePosition Vector2, camera Camera) Ray {
 func GetScreenToWorldRay(position Vector2, camera Camera) Ray {
 	cposition := position.cptr()
 	ccamera := camera.cptr()
-	ret := C.GetMouseRay(*cposition, *ccamera)
+	ret := C.GetScreenToWorldRay(*cposition, *ccamera)
 	v := newRayFromPointer(unsafe.Pointer(&ret))
 	return v
 }
@@ -648,7 +648,7 @@ func GetScreenToWorldRayEx(position Vector2, camera Camera, width, height int32)
 	ccamera := camera.cptr()
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
-	ret := C.GetMouseRay(*cposition, *ccamera, cwidth, cheight)
+	ret := C.GetScreenToWorldRayEx(*cposition, *ccamera, cwidth, cheight)
 	v := newRayFromPointer(unsafe.Pointer(&ret))
 	return v
 }
