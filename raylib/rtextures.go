@@ -104,22 +104,22 @@ func LoadImageRaw(fileName string, width, height int32, format PixelFormat, head
 }
 
 // LoadImageAnim - Load image sequence from file (frames appended to image.data)
-func LoadImageAnim(fileName string, frames []int32) *Image {
+func LoadImageAnim(fileName string, frames *int32) *Image {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
-	cframes := (*C.int)(unsafe.Pointer(&frames[0]))
+	cframes := (*C.int)(frames)
 	ret := C.LoadImageAnim(cfileName, cframes)
 	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
 
 // LoadImageAnimFromMemory - Load image sequence from memory buffer
-func LoadImageAnimFromMemory(fileType string, fileData []byte, dataSize int32, frames []int32) *Image {
+func LoadImageAnimFromMemory(fileType string, fileData []byte, dataSize int32, frames *int32) *Image {
 	cfileType := C.CString(fileType)
 	defer C.free(unsafe.Pointer(cfileType))
 	cfileData := (*C.uchar)(unsafe.Pointer(&fileData[0]))
 	cdataSize := (C.int)(dataSize)
-	cframes := (*C.int)(unsafe.Pointer(&frames[0]))
+	cframes := (*C.int)(frames)
 	ret := C.LoadImageAnimFromMemory(cfileType, cfileData, cdataSize, cframes)
 	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
