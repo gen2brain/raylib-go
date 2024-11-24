@@ -257,6 +257,7 @@ var getCollisionRec func(rec uintptr, rec1 uintptr, rec2 uintptr)
 var loadImage func(img uintptr, fileName string)
 var loadImageRaw func(img uintptr, fileName string, width int32, height int32, format int32, headerSize int32)
 var loadImageAnim func(img uintptr, fileName string, frames []int32)
+var loadImageAnimFromMemory func(img uintptr, fileType string, fileData []byte, dataSize int32, frames []int32)
 var loadImageFromMemory func(img uintptr, fileType string, fileData []byte, dataSize int32)
 var loadImageFromTexture func(img uintptr, texture uintptr)
 var loadImageFromScreen func(img uintptr)
@@ -760,6 +761,7 @@ func init() {
 	purego.RegisterLibFunc(&loadImage, raylibDll, "LoadImage")
 	purego.RegisterLibFunc(&loadImageRaw, raylibDll, "LoadImageRaw")
 	purego.RegisterLibFunc(&loadImageAnim, raylibDll, "LoadImageAnim")
+	purego.RegisterLibFunc(&loadImageAnimFromMemory, raylibDll, "LoadImageAnimFromMemory")
 	purego.RegisterLibFunc(&loadImageFromMemory, raylibDll, "LoadImageFromMemory")
 	purego.RegisterLibFunc(&loadImageFromTexture, raylibDll, "LoadImageFromTexture")
 	purego.RegisterLibFunc(&loadImageFromScreen, raylibDll, "LoadImageFromScreen")
@@ -2340,6 +2342,13 @@ func LoadImageRaw(fileName string, width int32, height int32, format PixelFormat
 func LoadImageAnim(fileName string, frames []int32) *Image {
 	var img Image
 	loadImageAnim(uintptr(unsafe.Pointer(&img)), fileName, frames)
+	return &img
+}
+
+// LoadImageAnimFromMemory - Load image sequence from memory buffer
+func LoadImageAnimFromMemory(fileType string, fileData []byte, dataSize int32, frames []int32) *Image {
+	var img Image
+	loadImageAnimFromMemory(uintptr(unsafe.Pointer(&img)), fileType, fileData, dataSize, frames)
 	return &img
 }
 

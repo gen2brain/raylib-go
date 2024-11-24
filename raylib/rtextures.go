@@ -113,6 +113,18 @@ func LoadImageAnim(fileName string, frames *int32) *Image {
 	return v
 }
 
+// LoadImageAnimFromMemory - Load image sequence from memory buffer
+func LoadImageAnimFromMemory(fileType string, fileData []byte, dataSize int32, frames []int32) *Image {
+	cfileType := C.CString(fileType)
+	defer C.free(unsafe.Pointer(cfileType))
+	cfileData := (*C.uchar)(unsafe.Pointer(&fileData[0]))
+	cdataSize := (C.int)(dataSize)
+	cframes := (*C.int)(unsafe.Pointer(&frames[0]))
+	ret := C.LoadImageAnimFromMemory(cfileType, cfileData, cdataSize, cframes)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // LoadImageFromMemory - Load image from memory buffer, fileType refers to extension: i.e. ".png"
 func LoadImageFromMemory(fileType string, fileData []byte, dataSize int32) *Image {
 	cfileType := C.CString(fileType)
