@@ -765,7 +765,7 @@ func Fade(col color.RGBA, alpha float32) color.RGBA {
 	return v
 }
 
-// ColorToInt - Returns hexadecimal value for a Color
+// ColorToInt - Get hexadecimal value for a Color (0xRRGGBBAA)
 func ColorToInt(col color.RGBA) int32 {
 	ccolor := colorCptr(col)
 	ret := C.ColorToInt(*ccolor)

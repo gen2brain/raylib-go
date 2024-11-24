@@ -2896,7 +2896,7 @@ func Fade(col color.RGBA, alpha float32) color.RGBA {
 	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
-// ColorToInt - Get hexadecimal value for a Color
+// ColorToInt - Get hexadecimal value for a Color (0xRRGGBBAA)
 func ColorToInt(col color.RGBA) int32 {
 	return colorToInt(*(*uintptr)(unsafe.Pointer(&col)))
 }
