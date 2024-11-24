@@ -551,6 +551,16 @@ func ImageDrawLineV(dst *Image, start, end Vector2, col color.RGBA) {
 	C.ImageDrawLineV(cdst, *cstart, *cend, *ccolor)
 }
 
+// ImageDrawLineEx - Draw a line defining thickness within an image
+func ImageDrawLineEx(dst *Image, start, end Vector2, thick int32, col color.RGBA) {
+	cdst := dst.cptr()
+	cstart := start.cptr()
+	cend := end.cptr()
+	cthick := C.int(thick)
+	ccolor := colorCptr(col)
+	C.ImageDrawLineEx(cdst, *cstart, *cend, cthick, *ccolor)
+}
+
 // ImageDrawCircle - Draw a filled circle within an image
 func ImageDrawCircle(dst *Image, centerX, centerY, radius int32, col color.RGBA) {
 	cdst := dst.cptr()

@@ -315,6 +315,7 @@ var imageDrawPixel func(dst *Image, posX int32, posY int32, col uintptr)
 var imageDrawPixelV func(dst *Image, position uintptr, col uintptr)
 var imageDrawLine func(dst *Image, startPosX int32, startPosY int32, endPosX int32, endPosY int32, col uintptr)
 var imageDrawLineV func(dst *Image, start uintptr, end uintptr, col uintptr)
+var imageDrawLineEx func(dst *Image, start uintptr, end uintptr, thick int32, col uintptr)
 var imageDrawCircle func(dst *Image, centerX int32, centerY int32, radius int32, col uintptr)
 var imageDrawCircleV func(dst *Image, center uintptr, radius int32, col uintptr)
 var imageDrawCircleLines func(dst *Image, centerX int32, centerY int32, radius int32, col uintptr)
@@ -821,6 +822,7 @@ func init() {
 	purego.RegisterLibFunc(&imageDrawPixelV, raylibDll, "ImageDrawPixelV")
 	purego.RegisterLibFunc(&imageDrawLine, raylibDll, "ImageDrawLine")
 	purego.RegisterLibFunc(&imageDrawLineV, raylibDll, "ImageDrawLineV")
+	purego.RegisterLibFunc(&imageDrawLineEx, raylibDll, "ImageDrawLineEx")
 	purego.RegisterLibFunc(&imageDrawCircle, raylibDll, "ImageDrawCircle")
 	purego.RegisterLibFunc(&imageDrawCircleV, raylibDll, "ImageDrawCircleV")
 	purego.RegisterLibFunc(&imageDrawCircleLines, raylibDll, "ImageDrawCircleLines")
@@ -2683,8 +2685,13 @@ func ImageDrawLine(dst *Image, startPosX int32, startPosY int32, endPosX int32, 
 }
 
 // ImageDrawLineV - Draw line within an image (Vector version)
-func ImageDrawLineV(dst *Image, start Vector2, end Vector2, col color.RGBA) {
+func ImageDrawLineV(dst *Image, start, end Vector2, col color.RGBA) {
 	imageDrawLineV(dst, *(*uintptr)(unsafe.Pointer(&start)), *(*uintptr)(unsafe.Pointer(&end)), *(*uintptr)(unsafe.Pointer(&col)))
+}
+
+// ImageDrawLineEx - Draw a line defining thickness within an image
+func ImageDrawLineEx(dst *Image, start, end Vector2, thick int32, col color.RGBA) {
+	imageDrawLineEx(dst, *(*uintptr)(unsafe.Pointer(&start)), *(*uintptr)(unsafe.Pointer(&end)), thick, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // ImageDrawCircle - Draw a filled circle within an image
