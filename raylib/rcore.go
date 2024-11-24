@@ -435,7 +435,7 @@ func GetClipboardText() string {
 func GetClipboardImage() Image {
 	ret := C.GetClipboardImage()
 	v := newImageFromPointer(unsafe.Pointer(&ret))
-	return v
+	return *v
 }
 
 // EnableEventWaiting - Enable waiting for events on EndDrawing(), no automatic event polling
