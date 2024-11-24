@@ -490,7 +490,7 @@ var setSoundVolume func(sound uintptr, volume float32)
 var setSoundPitch func(sound uintptr, pitch float32)
 var setSoundPan func(sound uintptr, pan float32)
 var waveCopy func(copy uintptr, wave uintptr)
-var waveCrop func(wave *Wave, initSample int32, finalSample int32)
+var waveCrop func(wave *Wave, initFrame int32, finalFrame int32)
 var waveFormat func(wave *Wave, sampleRate int32, sampleSize int32, channels int32)
 var loadWaveSamples func(wave uintptr) *float32
 var unloadWaveSamples func(samples []float32)
@@ -3701,9 +3701,9 @@ func WaveCopy(wave Wave) Wave {
 	return copy
 }
 
-// WaveCrop - Crop a wave to defined samples range
-func WaveCrop(wave *Wave, initSample int32, finalSample int32) {
-	waveCrop(wave, initSample, finalSample)
+// WaveCrop - Crop a wave to defined frames range
+func WaveCrop(wave *Wave, initFrame int32, finalFrame int32) {
+	waveCrop(wave, initFrame, finalFrame)
 }
 
 // WaveFormat - Convert wave data to desired format

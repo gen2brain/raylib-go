@@ -315,12 +315,12 @@ func WaveCopy(wave Wave) Wave {
 	return v
 }
 
-// WaveCrop - Crop a wave to defined samples range
-func WaveCrop(wave Wave, initSample int32, finalSample int32) {
+// WaveCrop - Crop a wave to defined frames range
+func WaveCrop(wave Wave, initFrame int32, finalFrame int32) {
 	cwave := wave.cptr()
-	cinitSample := (C.int)(initSample)
-	cfinalSample := (C.int)(finalSample)
-	C.WaveCrop(cwave, cinitSample, cfinalSample)
+	cinitFrame := (C.int)(initFrame)
+	cfinalFrame := (C.int)(finalFrame)
+	C.WaveCrop(cwave, cinitFrame, cfinalFrame)
 }
 
 // LoadWaveSamples - Get samples data from wave as a floats array
