@@ -412,7 +412,7 @@ var drawRay func(ray uintptr, col uintptr)
 var drawGrid func(slices int32, spacing float32)
 var loadModel func(model uintptr, fileName string)
 var loadModelFromMesh func(model uintptr, mesh uintptr)
-var isModelReady func(model uintptr) bool
+var isModelValid func(model uintptr) bool
 var unloadModel func(model uintptr)
 var getModelBoundingBox func(boundingBox uintptr, model uintptr)
 var drawModel func(model uintptr, position uintptr, scale float32, tint uintptr)
@@ -925,7 +925,7 @@ func init() {
 	purego.RegisterLibFunc(&drawGrid, raylibDll, "DrawGrid")
 	purego.RegisterLibFunc(&loadModel, raylibDll, "LoadModel")
 	purego.RegisterLibFunc(&loadModelFromMesh, raylibDll, "LoadModelFromMesh")
-	purego.RegisterLibFunc(&isModelReady, raylibDll, "IsModelReady")
+	purego.RegisterLibFunc(&isModelValid, raylibDll, "IsModelValid")
 	purego.RegisterLibFunc(&unloadModel, raylibDll, "UnloadModel")
 	purego.RegisterLibFunc(&getModelBoundingBox, raylibDll, "GetModelBoundingBox")
 	purego.RegisterLibFunc(&drawModel, raylibDll, "DrawModel")
@@ -3249,9 +3249,9 @@ func LoadModelFromMesh(mesh Mesh) Model {
 	return model
 }
 
-// IsModelReady - Check if a model is ready
-func IsModelReady(model Model) bool {
-	return isModelReady(uintptr(unsafe.Pointer(&model)))
+// IsModelValid - Check if a model is valid (loaded in GPU, VAO/VBOs)
+func IsModelValid(model Model) bool {
+	return isModelValid(uintptr(unsafe.Pointer(&model)))
 }
 
 // UnloadModel - Unload model (including meshes) from memory (RAM and/or VRAM)

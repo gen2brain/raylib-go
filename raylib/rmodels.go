@@ -269,10 +269,10 @@ func LoadModelFromMesh(data Mesh) Model {
 	return v
 }
 
-// IsModelReady - Check if a model is ready
-func IsModelReady(model Model) bool {
+// IsModelValid - Check if a model is valid (loaded in GPU, VAO/VBOs)
+func IsModelValid(model Model) bool {
 	cmodel := model.cptr()
-	ret := C.IsModelReady(*cmodel)
+	ret := C.IsModelValid(*cmodel)
 	v := bool(ret)
 	return v
 }
