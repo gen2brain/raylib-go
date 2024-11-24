@@ -372,7 +372,7 @@ var loadFont func(font uintptr, fileName string)
 var loadFontEx func(font uintptr, fileName string, fontSize int32, codepoints []int32, codepointCount int32)
 var loadFontFromImage func(font uintptr, image uintptr, key uintptr, firstChar int32)
 var loadFontFromMemory func(font uintptr, fileType string, fileData []byte, dataSize int32, fontSize int32, codepoints []int32, codepointCount int32)
-var isFontReady func(font uintptr) bool
+var isFontValid func(font uintptr) bool
 var loadFontData func(fileData []byte, dataSize int32, fontSize int32, codepoints []int32, codepointCount int32, _type int32) *GlyphInfo
 var genImageFontAtlas func(image uintptr, glyphs *GlyphInfo, glyphRecs []*Rectangle, glyphCount int32, fontSize int32, padding int32, packMethod int32)
 var unloadFontData func(glyphs *GlyphInfo, glyphCount int32)
@@ -885,7 +885,7 @@ func init() {
 	purego.RegisterLibFunc(&loadFontEx, raylibDll, "LoadFontEx")
 	purego.RegisterLibFunc(&loadFontFromImage, raylibDll, "LoadFontFromImage")
 	purego.RegisterLibFunc(&loadFontFromMemory, raylibDll, "LoadFontFromMemory")
-	purego.RegisterLibFunc(&isFontReady, raylibDll, "IsFontReady")
+	purego.RegisterLibFunc(&isFontValid, raylibDll, "IsFontValid")
 	purego.RegisterLibFunc(&loadFontData, raylibDll, "LoadFontData")
 	purego.RegisterLibFunc(&genImageFontAtlas, raylibDll, "GenImageFontAtlas")
 	purego.RegisterLibFunc(&unloadFontData, raylibDll, "UnloadFontData")
@@ -3028,9 +3028,9 @@ func LoadFontFromMemory(fileType string, fileData []byte, fontSize int32, codepo
 	return font
 }
 
-// IsFontReady - Check if a font is ready
-func IsFontReady(font Font) bool {
-	return isFontReady(uintptr(unsafe.Pointer(&font)))
+// IsFontValid - Check if a font is valid (font data loaded, WARNING: GPU texture not checked)
+func IsFontValid(font Font) bool {
+	return isFontValid(uintptr(unsafe.Pointer(&font)))
 }
 
 // LoadFontData - Load font data for further use
