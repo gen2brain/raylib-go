@@ -496,7 +496,7 @@ var loadWaveSamples func(wave uintptr) *float32
 var unloadWaveSamples func(samples []float32)
 var loadMusicStream func(music uintptr, fileName string)
 var loadMusicStreamFromMemory func(sound uintptr, fileType string, data []byte, dataSize int32)
-var isMusicReady func(music uintptr) bool
+var isMusicValid func(music uintptr) bool
 var unloadMusicStream func(music uintptr)
 var playMusicStream func(music uintptr)
 var isMusicStreamPlaying func(music uintptr) bool
@@ -1012,7 +1012,7 @@ func init() {
 	purego.RegisterLibFunc(&unloadWaveSamples, raylibDll, "UnloadWaveSamples")
 	purego.RegisterLibFunc(&loadMusicStream, raylibDll, "LoadMusicStream")
 	purego.RegisterLibFunc(&loadMusicStreamFromMemory, raylibDll, "LoadMusicStreamFromMemory")
-	purego.RegisterLibFunc(&isMusicReady, raylibDll, "IsMusicReady")
+	purego.RegisterLibFunc(&isMusicValid, raylibDll, "IsMusicValid")
 	purego.RegisterLibFunc(&unloadMusicStream, raylibDll, "UnloadMusicStream")
 	purego.RegisterLibFunc(&playMusicStream, raylibDll, "PlayMusicStream")
 	purego.RegisterLibFunc(&isMusicStreamPlaying, raylibDll, "IsMusicStreamPlaying")
@@ -3736,9 +3736,9 @@ func LoadMusicStreamFromMemory(fileType string, data []byte, dataSize int32) Mus
 	return music
 }
 
-// IsMusicReady - Checks if a music stream is ready
-func IsMusicReady(music Music) bool {
-	return isMusicReady(uintptr(unsafe.Pointer(&music)))
+// IsMusicValid - Checks if a music stream is valid (context and buffers initialized)
+func IsMusicValid(music Music) bool {
+	return isMusicValid(uintptr(unsafe.Pointer(&music)))
 }
 
 // UnloadMusicStream - Unload music stream

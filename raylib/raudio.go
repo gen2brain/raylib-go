@@ -356,10 +356,10 @@ func LoadMusicStreamFromMemory(fileType string, fileData []byte, dataSize int32)
 	return v
 }
 
-// IsMusicReady - Checks if a music stream is ready
-func IsMusicReady(music Music) bool {
+// IsMusicValid - Checks if a music stream is valid (context and buffers initialized)
+func IsMusicValid(music Music) bool {
 	cmusic := *(*C.Music)(unsafe.Pointer(&music))
-	ret := C.IsMusicReady(cmusic)
+	ret := C.IsMusicValid(cmusic)
 	v := bool(ret)
 	return v
 }
