@@ -176,10 +176,10 @@ func LoadWaveFromMemory(fileType string, fileData []byte, dataSize int32) Wave {
 	return v
 }
 
-// IsWaveReady - Checks if wave data is ready
-func IsWaveReady(wave Wave) bool {
+// IsWaveValid - Checks if wave data is valid (data loaded and parameters)
+func IsWaveValid(wave Wave) bool {
 	cwave := wave.cptr()
-	ret := C.IsWaveReady(*cwave)
+	ret := C.IsWaveValid(*cwave)
 	v := bool(ret)
 	return v
 }

@@ -471,7 +471,7 @@ var setMasterVolume func(volume float32)
 var getMasterVolume func() float32
 var loadWave func(wave uintptr, fileName string)
 var loadWaveFromMemory func(wave uintptr, fileType string, fileData []byte, dataSize int32)
-var isWaveReady func(wave uintptr) bool
+var isWaveValid func(wave uintptr) bool
 var loadSound func(sound uintptr, fileName string)
 var loadSoundFromWave func(sound uintptr, wave uintptr)
 var loadSoundAlias func(sound uintptr, source uintptr)
@@ -987,7 +987,7 @@ func init() {
 	purego.RegisterLibFunc(&getMasterVolume, raylibDll, "GetMasterVolume")
 	purego.RegisterLibFunc(&loadWave, raylibDll, "LoadWave")
 	purego.RegisterLibFunc(&loadWaveFromMemory, raylibDll, "LoadWaveFromMemory")
-	purego.RegisterLibFunc(&isWaveReady, raylibDll, "IsWaveReady")
+	purego.RegisterLibFunc(&isWaveValid, raylibDll, "IsWaveValid")
 	purego.RegisterLibFunc(&loadSound, raylibDll, "LoadSound")
 	purego.RegisterLibFunc(&loadSoundFromWave, raylibDll, "LoadSoundFromWave")
 	purego.RegisterLibFunc(&loadSoundAlias, raylibDll, "LoadSoundAlias")
@@ -3598,9 +3598,9 @@ func LoadWaveFromMemory(fileType string, fileData []byte, dataSize int32) Wave {
 	return wave
 }
 
-// IsWaveReady - Checks if wave data is ready
-func IsWaveReady(wave Wave) bool {
-	return isWaveReady(uintptr(unsafe.Pointer(&wave)))
+// IsWaveValid - Checks if wave data is valid (data loaded and parameters)
+func IsWaveValid(wave Wave) bool {
+	return isWaveValid(uintptr(unsafe.Pointer(&wave)))
 }
 
 // LoadSound - Load sound from file
