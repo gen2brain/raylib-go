@@ -324,6 +324,11 @@ var imageDrawRectangle func(dst *Image, posX int32, posY int32, width int32, hei
 var imageDrawRectangleV func(dst *Image, position uintptr, size uintptr, col uintptr)
 var imageDrawRectangleRec func(dst *Image, rec uintptr, col uintptr)
 var imageDrawRectangleLines func(dst *Image, rec uintptr, thick int32, col uintptr)
+var imageDrawTriangle func(dst *Image, v1, v2, v3 uintptr, col uintptr)
+var imageDrawTriangleEx func(dst *Image, v1, v2, v3 uintptr, c1, c2, c3 uintptr)
+var imageDrawTriangleLines func(dst *Image, v1, v2, v3 uintptr, col uintptr)
+var imageDrawTriangleFan func(dst *Image, points *Vector2, pointCount int32, col uintptr)
+var imageDrawTriangleStrip func(dst *Image, points *Vector2, pointCount int32, col uintptr)
 var imageDraw func(dst *Image, src uintptr, srcRec uintptr, dstRec uintptr, tint uintptr)
 var imageDrawText func(dst *Image, text string, posX int32, posY int32, fontSize int32, col uintptr)
 var imageDrawTextEx func(dst *Image, font uintptr, text string, position uintptr, fontSize float32, spacing float32, tint uintptr)
@@ -831,6 +836,11 @@ func init() {
 	purego.RegisterLibFunc(&imageDrawRectangleV, raylibDll, "ImageDrawRectangleV")
 	purego.RegisterLibFunc(&imageDrawRectangleRec, raylibDll, "ImageDrawRectangleRec")
 	purego.RegisterLibFunc(&imageDrawRectangleLines, raylibDll, "ImageDrawRectangleLines")
+	purego.RegisterLibFunc(&imageDrawTriangle, raylibDll, "ImageDrawTriangle")
+	purego.RegisterLibFunc(&imageDrawTriangleEx, raylibDll, "ImageDrawTriangleEx")
+	purego.RegisterLibFunc(&imageDrawTriangleLines, raylibDll, "ImageDrawTriangleLines")
+	purego.RegisterLibFunc(&imageDrawTriangleFan, raylibDll, "ImageDrawTriangleFan")
+	purego.RegisterLibFunc(&imageDrawTriangleStrip, raylibDll, "ImageDrawTriangleStrip")
 	purego.RegisterLibFunc(&imageDraw, raylibDll, "ImageDraw")
 	purego.RegisterLibFunc(&imageDrawText, raylibDll, "ImageDrawText")
 	purego.RegisterLibFunc(&imageDrawTextEx, raylibDll, "ImageDrawTextEx")
@@ -2732,6 +2742,33 @@ func ImageDrawRectangleRec(dst *Image, rec Rectangle, col color.RGBA) {
 // ImageDrawRectangleLines - Draw rectangle lines within an image
 func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int, col color.RGBA) {
 	imageDrawRectangleLines(dst, uintptr(unsafe.Pointer(&rec)), int32(thick), *(*uintptr)(unsafe.Pointer(&col)))
+}
+
+// ImageDrawTriangle - Draw triangle within an image
+func ImageDrawTriangle(dst *Image, v1, v2, v3 Vector2, col color.RGBA) {
+	imageDrawTriangle(dst, *(*uintptr)(unsafe.Pointer(&v1)), *(*uintptr)(unsafe.Pointer(&v2)), *(*uintptr)(unsafe.Pointer(&v3)), *(*uintptr)(unsafe.Pointer(&col)))
+}
+
+// ImageDrawTriangleEx - Draw triangle with interpolated colors within an image
+func ImageDrawTriangleEx(dst *Image, v1, v2, v3 Vector2, c1, c2, c3 color.RGBA) {
+	imageDrawTriangleEx(dst, *(*uintptr)(unsafe.Pointer(&v1)), *(*uintptr)(unsafe.Pointer(&v2)), *(*uintptr)(unsafe.Pointer(&v3)), *(*uintptr)(unsafe.Pointer(&c1)), *(*uintptr)(unsafe.Pointer(&c2)), *(*uintptr)(unsafe.Pointer(&c3)))
+}
+
+// ImageDrawTriangleLines - Draw triangle outline within an image
+func ImageDrawTriangleLines(dst *Image, v1, v2, v3 Vector2, col color.RGBA) {
+	imageDrawTriangleLines(dst, *(*uintptr)(unsafe.Pointer(&v1)), *(*uintptr)(unsafe.Pointer(&v2)), *(*uintptr)(unsafe.Pointer(&v3)), *(*uintptr)(unsafe.Pointer(&col)))
+}
+
+// ImageDrawTriangleFan - Draw a triangle fan defined by points within an image (first vertex is the center)
+func ImageDrawTriangleFan(dst *Image, points []Vector2, col color.RGBA) {
+	pointCount := int32(len(points))
+	imageDrawTriangleFan(dst, (unsafe.SliceData(points)), pointCount, *(*uintptr)(unsafe.Pointer(&col)))
+}
+
+// ImageDrawTriangleStrip - Draw a triangle strip defined by points within an image
+func ImageDrawTriangleStrip(dst *Image, points []Vector2, col color.RGBA) {
+	pointCount := int32(len(points))
+	imageDrawTriangleStrip(dst, (unsafe.SliceData(points)), pointCount, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // ImageDraw - Draw a source image within a destination image (tint applied to source)

@@ -645,6 +645,56 @@ func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int, col color.RGB
 	C.ImageDrawRectangleLines(cdst, *crec, cthick, *ccolor)
 }
 
+// ImageDrawTriangle - Draw triangle within an image
+func ImageDrawTriangle(dst *Image, v1, v2, v3 Vector2, col color.RGBA) {
+	cdst := dst.cptr()
+	cv1 := v1.cptr()
+	cv2 := v2.cptr()
+	cv3 := v3.cptr()
+	ccol := colorCptr(col)
+	C.ImageDrawTriangle(cdst, *cv1, *cv2, *cv3, *ccol)
+}
+
+// ImageDrawTriangleEx - Draw triangle with interpolated colors within an image
+func ImageDrawTriangleEx(dst *Image, v1, v2, v3 Vector2, c1, c2, c3 color.RGBA) {
+	cdst := dst.cptr()
+	cv1 := v1.cptr()
+	cv2 := v2.cptr()
+	cv3 := v3.cptr()
+	cc1 := colorCptr(c1)
+	cc2 := colorCptr(c2)
+	cc3 := colorCptr(c3)
+	C.ImageDrawTriangleEx(cdst, *cv1, *cv2, *cv3, *cc1, *cc2, *cc3)
+}
+
+// ImageDrawTriangleLines - Draw triangle outline within an image
+func ImageDrawTriangleLines(dst *Image, v1, v2, v3 Vector2, col color.RGBA) {
+	cdst := dst.cptr()
+	cv1 := v1.cptr()
+	cv2 := v2.cptr()
+	cv3 := v3.cptr()
+	ccol := colorCptr(col)
+	C.ImageDrawTriangleLines(cdst, *cv1, *cv2, *cv3, *ccol)
+}
+
+// ImageDrawTriangleFan - Draw a triangle fan defined by points within an image (first vertex is the center)
+func ImageDrawTriangleFan(dst *Image, points []Vector2, col color.RGBA) {
+	cdst := dst.cptr()
+	cpoints := (*C.Vector2)(unsafe.Pointer(&points[0]))
+	pointCount := C.int(len(points))
+	ccol := colorCptr(col)
+	C.ImageDrawTriangleFan(cdst, cpoints, pointCount, *ccol)
+}
+
+// ImageDrawTriangleStrip - Draw a triangle strip defined by points within an image
+func ImageDrawTriangleStrip(dst *Image, points []Vector2, col color.RGBA) {
+	cdst := dst.cptr()
+	cpoints := (*C.Vector2)(unsafe.Pointer(&points[0]))
+	pointCount := C.int(len(points))
+	ccol := colorCptr(col)
+	C.ImageDrawTriangleStrip(cdst, cpoints, pointCount, *ccol)
+}
+
 // ImageDrawRectangleRec - Draw rectangle within an image
 func ImageDrawRectangleRec(dst *Image, rec Rectangle, col color.RGBA) {
 	cdst := dst.cptr()
