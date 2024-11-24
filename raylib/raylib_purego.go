@@ -452,6 +452,7 @@ var setMaterialTexture func(material *Material, mapType int32, texture uintptr)
 var setModelMeshMaterial func(model *Model, meshId int32, materialId int32)
 var loadModelAnimations func(fileName string, animCount *int32) *ModelAnimation
 var updateModelAnimation func(model uintptr, anim uintptr, frame int32)
+var updateModelAnimationBones func(model uintptr, anim uintptr, frame int32)
 var unloadModelAnimation func(anim uintptr)
 var unloadModelAnimations func(animations *ModelAnimation, animCount int32)
 var isModelAnimationValid func(model uintptr, anim uintptr) bool
@@ -967,6 +968,7 @@ func init() {
 	purego.RegisterLibFunc(&setModelMeshMaterial, raylibDll, "SetModelMeshMaterial")
 	purego.RegisterLibFunc(&loadModelAnimations, raylibDll, "LoadModelAnimations")
 	purego.RegisterLibFunc(&updateModelAnimation, raylibDll, "UpdateModelAnimation")
+	purego.RegisterLibFunc(&updateModelAnimationBones, raylibDll, "UpdateModelAnimationBones")
 	purego.RegisterLibFunc(&unloadModelAnimation, raylibDll, "UnloadModelAnimation")
 	purego.RegisterLibFunc(&unloadModelAnimations, raylibDll, "UnloadModelAnimations")
 	purego.RegisterLibFunc(&isModelAnimationValid, raylibDll, "IsModelAnimationValid")
@@ -3481,9 +3483,14 @@ func LoadModelAnimations(fileName string) []ModelAnimation {
 	return unsafe.Slice(ret, animCount)
 }
 
-// UpdateModelAnimation - Update model animation pose
+// UpdateModelAnimation - Update model animation pose (CPU)
 func UpdateModelAnimation(model Model, anim ModelAnimation, frame int32) {
 	updateModelAnimation(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&anim)), frame)
+}
+
+// UpdateModelAnimationBones - Update model animation mesh bone matrices (GPU skinning)
+func UpdateModelAnimationBones(model Model, anim ModelAnimation, frame int32) {
+	updateModelAnimationBones(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&anim)), frame)
 }
 
 // UnloadModelAnimation - Unload animation data

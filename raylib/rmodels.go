@@ -605,12 +605,20 @@ func LoadModelAnimations(fileName string) []ModelAnimation {
 	return v
 }
 
-// UpdateModelAnimation - Update model animation pose
+// UpdateModelAnimation - Update model animation pose (CPU)
 func UpdateModelAnimation(model Model, anim ModelAnimation, frame int32) {
 	cmodel := model.cptr()
 	canim := anim.cptr()
 	cframe := (C.int)(frame)
 	C.UpdateModelAnimation(*cmodel, *canim, cframe)
+}
+
+// UpdateModelAnimationBones - Update model animation mesh bone matrices (GPU skinning)
+func UpdateModelAnimationBones(model Model, anim ModelAnimation, frame int32) {
+	cmodel := model.cptr()
+	canim := anim.cptr()
+	cframe := (C.int)(frame)
+	C.UpdateModelAnimationBones(*cmodel, *canim, cframe)
 }
 
 // UnloadModelAnimation - Unload animation data
