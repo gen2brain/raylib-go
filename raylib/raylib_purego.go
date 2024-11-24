@@ -336,7 +336,7 @@ var loadTexture func(texture uintptr, fileName string)
 var loadTextureFromImage func(texture uintptr, image uintptr)
 var loadTextureCubemap func(texture uintptr, image uintptr, layout int32)
 var loadRenderTexture func(texture uintptr, width int32, height int32)
-var isTextureReady func(texture uintptr) bool
+var isTextureValid func(texture uintptr) bool
 var unloadTexture func(texture uintptr)
 var isRenderTextureReady func(target uintptr) bool
 var unloadRenderTexture func(target uintptr)
@@ -848,7 +848,7 @@ func init() {
 	purego.RegisterLibFunc(&loadTextureFromImage, raylibDll, "LoadTextureFromImage")
 	purego.RegisterLibFunc(&loadTextureCubemap, raylibDll, "LoadTextureCubemap")
 	purego.RegisterLibFunc(&loadRenderTexture, raylibDll, "LoadRenderTexture")
-	purego.RegisterLibFunc(&isTextureReady, raylibDll, "IsTextureReady")
+	purego.RegisterLibFunc(&isTextureValid, raylibDll, "IsTextureValid")
 	purego.RegisterLibFunc(&unloadTexture, raylibDll, "UnloadTexture")
 	purego.RegisterLibFunc(&isRenderTextureReady, raylibDll, "IsRenderTextureReady")
 	purego.RegisterLibFunc(&unloadRenderTexture, raylibDll, "UnloadRenderTexture")
@@ -2815,9 +2815,9 @@ func LoadRenderTexture(width int32, height int32) RenderTexture2D {
 	return texture
 }
 
-// IsTextureReady - Check if a texture is ready
-func IsTextureReady(texture Texture2D) bool {
-	return isTextureReady(uintptr(unsafe.Pointer(&texture)))
+// IsTextureValid - Check if a texture is valid (loaded in GPU)
+func IsTextureValid(texture Texture2D) bool {
+	return isTextureValid(uintptr(unsafe.Pointer(&texture)))
 }
 
 // UnloadTexture - Unload texture from GPU memory (VRAM)

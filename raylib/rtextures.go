@@ -200,10 +200,10 @@ func UnloadImage(image *Image) {
 	C.UnloadImage(*cimage)
 }
 
-// IsTextureReady - Check if a texture is ready
-func IsTextureReady(texture Texture2D) bool {
+// IsTextureValid - Check if a texture is valid (loaded in GPU)
+func IsTextureValid(texture Texture2D) bool {
 	ctexture := texture.cptr()
-	ret := C.IsTextureReady(*ctexture)
+	ret := C.IsTextureValid(*ctexture)
 	v := bool(ret)
 	return v
 }
