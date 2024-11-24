@@ -287,6 +287,7 @@ var imageAlphaClear func(image *Image, col uintptr, threshold float32)
 var imageAlphaMask func(image *Image, alphaMask uintptr)
 var imageAlphaPremultiply func(image *Image)
 var imageBlurGaussian func(image *Image, blurSize int32)
+var imageKernelConvolution func(image *Image, kernel []float32, kernelSize int32)
 var imageResize func(image *Image, newWidth int32, newHeight int32)
 var imageResizeNN func(image *Image, newWidth int32, newHeight int32)
 var imageResizeCanvas func(image *Image, newWidth int32, newHeight int32, offsetX int32, offsetY int32, fill uintptr)
@@ -792,6 +793,7 @@ func init() {
 	purego.RegisterLibFunc(&imageAlphaMask, raylibDll, "ImageAlphaMask")
 	purego.RegisterLibFunc(&imageAlphaPremultiply, raylibDll, "ImageAlphaPremultiply")
 	purego.RegisterLibFunc(&imageBlurGaussian, raylibDll, "ImageBlurGaussian")
+	purego.RegisterLibFunc(&imageKernelConvolution, raylibDll, "ImageKernelConvolution")
 	purego.RegisterLibFunc(&imageResize, raylibDll, "ImageResize")
 	purego.RegisterLibFunc(&imageResizeNN, raylibDll, "ImageResizeNN")
 	purego.RegisterLibFunc(&imageResizeCanvas, raylibDll, "ImageResizeCanvas")
@@ -2533,6 +2535,11 @@ func ImageAlphaPremultiply(image *Image) {
 // ImageBlurGaussian - Apply Gaussian blur using a box blur approximation
 func ImageBlurGaussian(image *Image, blurSize int32) {
 	imageBlurGaussian(image, blurSize)
+}
+
+// ImageKernelConvolution - Apply custom square convolution kernel to image
+func ImageKernelConvolution(image *Image, kernel []float32) {
+	imageKernelConvolution(image, kernel, int32(len(kernel)))
 }
 
 // ImageResize - Resize image (Bicubic scaling algorithm)

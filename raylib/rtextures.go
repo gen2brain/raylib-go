@@ -381,6 +381,13 @@ func ImageBlurGaussian(image *Image, blurSize int32) {
 	C.ImageBlurGaussian(cimage, cblurSize)
 }
 
+// ImageKernelConvolution - Apply custom square convolution kernel to image
+func ImageKernelConvolution(image *Image, kernel []float32) {
+	cimage := image.cptr()
+	ckernel := (*C.float)(unsafe.Pointer(&kernel[0]))
+	C.ImageKernelConvolution(cimage, ckernel, C.int(len(kernel)))
+}
+
 // ImageResize - Resize an image (bilinear filtering)
 func ImageResize(image *Image, newWidth, newHeight int32) {
 	cimage := image.cptr()
