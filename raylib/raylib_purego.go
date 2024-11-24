@@ -475,7 +475,7 @@ var isWaveValid func(wave uintptr) bool
 var loadSound func(sound uintptr, fileName string)
 var loadSoundFromWave func(sound uintptr, wave uintptr)
 var loadSoundAlias func(sound uintptr, source uintptr)
-var isSoundReady func(sound uintptr) bool
+var isSoundValid func(sound uintptr) bool
 var updateSound func(sound uintptr, data []byte, sampleCount int32)
 var unloadWave func(wave uintptr)
 var unloadSound func(sound uintptr)
@@ -991,7 +991,7 @@ func init() {
 	purego.RegisterLibFunc(&loadSound, raylibDll, "LoadSound")
 	purego.RegisterLibFunc(&loadSoundFromWave, raylibDll, "LoadSoundFromWave")
 	purego.RegisterLibFunc(&loadSoundAlias, raylibDll, "LoadSoundAlias")
-	purego.RegisterLibFunc(&isSoundReady, raylibDll, "IsSoundReady")
+	purego.RegisterLibFunc(&isSoundValid, raylibDll, "IsSoundValid")
 	purego.RegisterLibFunc(&updateSound, raylibDll, "UpdateSound")
 	purego.RegisterLibFunc(&unloadWave, raylibDll, "UnloadWave")
 	purego.RegisterLibFunc(&unloadSound, raylibDll, "UnloadSound")
@@ -3624,9 +3624,9 @@ func LoadSoundAlias(source Sound) Sound {
 	return sound
 }
 
-// IsSoundReady - Checks if a sound is ready
-func IsSoundReady(sound Sound) bool {
-	return isSoundReady(uintptr(unsafe.Pointer(&sound)))
+// IsSoundValid - Checks if a sound is valid (data loaded and buffers initialized)
+func IsSoundValid(sound Sound) bool {
+	return isSoundValid(uintptr(unsafe.Pointer(&sound)))
 }
 
 // UpdateSound - Update sound buffer with new data

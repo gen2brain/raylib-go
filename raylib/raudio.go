@@ -209,10 +209,10 @@ func LoadSoundAlias(source Sound) Sound {
 	return v
 }
 
-// IsSoundReady - Checks if a sound is ready
-func IsSoundReady(sound Sound) bool {
+// IsSoundValid - Checks if a sound is valid (data loaded and buffers initialized)
+func IsSoundValid(sound Sound) bool {
 	csound := sound.cptr()
-	ret := C.IsSoundReady(*csound)
+	ret := C.IsSoundValid(*csound)
 	v := bool(ret)
 	return v
 }
