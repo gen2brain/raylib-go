@@ -446,7 +446,7 @@ var genMeshHeightmap func(mesh uintptr, heightmap uintptr, size uintptr)
 var genMeshCubicmap func(mesh uintptr, cubicmap uintptr, cubeSize uintptr)
 var loadMaterials func(fileName string, materialCount *int32) *Material
 var loadMaterialDefault func(material uintptr)
-var isMaterialReady func(material uintptr) bool
+var isMaterialValid func(material uintptr) bool
 var unloadMaterial func(material uintptr)
 var setMaterialTexture func(material *Material, mapType int32, texture uintptr)
 var setModelMeshMaterial func(model *Model, meshId int32, materialId int32)
@@ -961,7 +961,7 @@ func init() {
 	purego.RegisterLibFunc(&genMeshCubicmap, raylibDll, "GenMeshCubicmap")
 	purego.RegisterLibFunc(&loadMaterials, raylibDll, "LoadMaterials")
 	purego.RegisterLibFunc(&loadMaterialDefault, raylibDll, "LoadMaterialDefault")
-	purego.RegisterLibFunc(&isMaterialReady, raylibDll, "IsMaterialReady")
+	purego.RegisterLibFunc(&isMaterialValid, raylibDll, "IsMaterialValid")
 	purego.RegisterLibFunc(&unloadMaterial, raylibDll, "UnloadMaterial")
 	purego.RegisterLibFunc(&setMaterialTexture, raylibDll, "SetMaterialTexture")
 	purego.RegisterLibFunc(&setModelMeshMaterial, raylibDll, "SetModelMeshMaterial")
@@ -3454,9 +3454,9 @@ func LoadMaterialDefault() Material {
 	return material
 }
 
-// IsMaterialReady - Check if a material is ready
-func IsMaterialReady(material Material) bool {
-	return isMaterialReady(uintptr(unsafe.Pointer(&material)))
+// IsMaterialValid - Check if a material is valid (shader assigned, map textures loaded in GPU)
+func IsMaterialValid(material Material) bool {
+	return isMaterialValid(uintptr(unsafe.Pointer(&material)))
 }
 
 // UnloadMaterial - Unload material from GPU memory (VRAM)

@@ -565,10 +565,10 @@ func LoadMaterialDefault() Material {
 	return v
 }
 
-// IsMaterialReady - Check if a material is ready
-func IsMaterialReady(material Material) bool {
+// IsMaterialValid - Check if a material is valid (shader assigned, map textures loaded in GPU)
+func IsMaterialValid(material Material) bool {
 	cmaterial := material.cptr()
-	ret := C.IsMaterialReady(*cmaterial)
+	ret := C.IsMaterialValid(*cmaterial)
 	v := bool(ret)
 	return v
 }
