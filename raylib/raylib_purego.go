@@ -420,7 +420,7 @@ var drawModelEx func(model uintptr, position uintptr, rotationAxis uintptr, rota
 var drawModelWires func(model uintptr, position uintptr, scale float32, tint uintptr)
 var drawModelWiresEx func(model uintptr, position uintptr, rotationAxis uintptr, rotationAngle float32, scale uintptr, tint uintptr)
 var drawBoundingBox func(box uintptr, col uintptr)
-var drawBillboard func(camera uintptr, texture uintptr, position uintptr, size float32, tint uintptr)
+var drawBillboard func(camera uintptr, texture uintptr, position uintptr, scale float32, tint uintptr)
 var drawBillboardRec func(camera uintptr, texture uintptr, source uintptr, position uintptr, size uintptr, tint uintptr)
 var drawBillboardPro func(camera uintptr, texture uintptr, source uintptr, position uintptr, up uintptr, size uintptr, origin uintptr, rotation float32, tint uintptr)
 var uploadMesh func(mesh *Mesh, dynamic bool)
@@ -3292,8 +3292,8 @@ func DrawBoundingBox(box BoundingBox, col color.RGBA) {
 }
 
 // DrawBillboard - Draw a billboard texture
-func DrawBillboard(camera Camera, texture Texture2D, position Vector3, size float32, tint color.RGBA) {
-	drawBillboard(uintptr(unsafe.Pointer(&camera)), uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&position)), size, *(*uintptr)(unsafe.Pointer(&tint)))
+func DrawBillboard(camera Camera, texture Texture2D, position Vector3, scale float32, tint color.RGBA) {
+	drawBillboard(uintptr(unsafe.Pointer(&camera)), uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&position)), scale, *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // DrawBillboardRec - Draw a billboard texture defined by source

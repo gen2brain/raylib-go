@@ -339,13 +339,13 @@ func DrawBoundingBox(box BoundingBox, col color.RGBA) {
 }
 
 // DrawBillboard - Draw a billboard texture
-func DrawBillboard(camera Camera, texture Texture2D, center Vector3, size float32, tint color.RGBA) {
+func DrawBillboard(camera Camera, texture Texture2D, center Vector3, scale float32, tint color.RGBA) {
 	ccamera := camera.cptr()
 	ctexture := texture.cptr()
 	ccenter := center.cptr()
-	csize := (C.float)(size)
+	cscale := (C.float)(scale)
 	ctint := colorCptr(tint)
-	C.DrawBillboard(*ccamera, *ctexture, *ccenter, csize, *ctint)
+	C.DrawBillboard(*ccamera, *ctexture, *ccenter, cscale, *ctint)
 }
 
 // DrawBillboardRec - Draw a billboard texture defined by sourceRec
