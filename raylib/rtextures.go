@@ -214,10 +214,10 @@ func UnloadTexture(texture Texture2D) {
 	C.UnloadTexture(*ctexture)
 }
 
-// IsRenderTextureReady - Check if a render texture is ready
-func IsRenderTextureReady(target RenderTexture2D) bool {
+// IsRenderTextureValid - Check if a render texture is valid (loaded in GPU)
+func IsRenderTextureValid(target RenderTexture2D) bool {
 	ctarget := target.cptr()
-	ret := C.IsRenderTextureReady(*ctarget)
+	ret := C.IsRenderTextureValid(*ctarget)
 	v := bool(ret)
 	return v
 }
