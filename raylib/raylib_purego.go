@@ -276,6 +276,7 @@ var genImageCellular func(image uintptr, width int32, height int32, tileSize int
 var genImageText func(image uintptr, width int32, height int32, text string)
 var imageCopy func(retImage uintptr, image uintptr)
 var imageFromImage func(retImage uintptr, image uintptr, rec uintptr)
+var imageFromChannel func(retImage uintptr, image uintptr, selectedChannel int32)
 var imageText func(retImage uintptr, text string, fontSize int32, col uintptr)
 var imageTextEx func(retImage uintptr, font uintptr, text string, fontSize float32, spacing float32, tint uintptr)
 var imageFormat func(image *Image, newFormat int32)
@@ -780,6 +781,7 @@ func init() {
 	purego.RegisterLibFunc(&genImageText, raylibDll, "GenImageText")
 	purego.RegisterLibFunc(&imageCopy, raylibDll, "ImageCopy")
 	purego.RegisterLibFunc(&imageFromImage, raylibDll, "ImageFromImage")
+	purego.RegisterLibFunc(&imageFromChannel, raylibDll, "ImageFromChannel")
 	purego.RegisterLibFunc(&imageText, raylibDll, "ImageText")
 	purego.RegisterLibFunc(&imageTextEx, raylibDll, "ImageTextEx")
 	purego.RegisterLibFunc(&imageFormat, raylibDll, "ImageFormat")
@@ -2469,6 +2471,13 @@ func ImageCopy(image *Image) *Image {
 func ImageFromImage(image Image, rec Rectangle) Image {
 	var retImage Image
 	imageFromImage(uintptr(unsafe.Pointer(&retImage)), uintptr(unsafe.Pointer(&image)), uintptr(unsafe.Pointer(&rec)))
+	return retImage
+}
+
+// ImageFromChannel - Create an image from a selected channel of another image (GRAYSCALE)
+func ImageFromChannel(image Image, selectedChannel int32) Image {
+	var retImage Image
+	imageFromChannel(uintptr(unsafe.Pointer(&retImage)), uintptr(unsafe.Pointer(&image)), selectedChannel)
 	return retImage
 }
 

@@ -292,6 +292,15 @@ func ImageFromImage(image Image, rec Rectangle) Image {
 	return *v
 }
 
+// ImageFromChannel - Create an image from a selected channel of another image (GRAYSCALE)
+func ImageFromChannel(image Image, selectedChannel int32) Image {
+	cimage := image.cptr()
+	cselectedChannel := C.int(selectedChannel)
+	ret := C.ImageFromChannel(*cimage, cselectedChannel)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return *v
+}
+
 // ImageText - Create an image from text (default font)
 func ImageText(text string, fontSize int32, col color.RGBA) *Image {
 	ctext := C.CString(text)
