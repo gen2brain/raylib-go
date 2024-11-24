@@ -462,10 +462,10 @@ func LoadAudioStream(sampleRate uint32, sampleSize uint32, channels uint32) Audi
 	return v
 }
 
-// IsAudioStreamReady - Checks if an audio stream is ready
-func IsAudioStreamReady(stream AudioStream) bool {
+// IsAudioStreamValid - Checks if an audio stream is valid (buffers initialized)
+func IsAudioStreamValid(stream AudioStream) bool {
 	cstream := stream.cptr()
-	ret := C.IsAudioStreamReady(*cstream)
+	ret := C.IsAudioStreamValid(*cstream)
 	v := bool(ret)
 	return v
 }

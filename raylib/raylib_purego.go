@@ -511,7 +511,7 @@ var setMusicPan func(music uintptr, pan float32)
 var getMusicTimeLength func(music uintptr) float32
 var getMusicTimePlayed func(music uintptr) float32
 var loadAudioStream func(audioStream uintptr, sampleRate uint32, sampleSize uint32, channels uint32)
-var isAudioStreamReady func(stream uintptr) bool
+var isAudioStreamValid func(stream uintptr) bool
 var unloadAudioStream func(stream uintptr)
 var updateAudioStream func(stream uintptr, data []float32, frameCount int32)
 var isAudioStreamProcessed func(stream uintptr) bool
@@ -1027,7 +1027,7 @@ func init() {
 	purego.RegisterLibFunc(&getMusicTimeLength, raylibDll, "GetMusicTimeLength")
 	purego.RegisterLibFunc(&getMusicTimePlayed, raylibDll, "GetMusicTimePlayed")
 	purego.RegisterLibFunc(&loadAudioStream, raylibDll, "LoadAudioStream")
-	purego.RegisterLibFunc(&isAudioStreamReady, raylibDll, "IsAudioStreamReady")
+	purego.RegisterLibFunc(&isAudioStreamValid, raylibDll, "IsAudioStreamValid")
 	purego.RegisterLibFunc(&unloadAudioStream, raylibDll, "UnloadAudioStream")
 	purego.RegisterLibFunc(&updateAudioStream, raylibDll, "UpdateAudioStream")
 	purego.RegisterLibFunc(&isAudioStreamProcessed, raylibDll, "IsAudioStreamProcessed")
@@ -3813,9 +3813,9 @@ func LoadAudioStream(sampleRate uint32, sampleSize uint32, channels uint32) Audi
 	return audioStream
 }
 
-// IsAudioStreamReady - Checks if an audio stream is ready
-func IsAudioStreamReady(stream AudioStream) bool {
-	return isAudioStreamReady(uintptr(unsafe.Pointer(&stream)))
+// IsAudioStreamValid - Checks if an audio stream is valid (buffers initialized)
+func IsAudioStreamValid(stream AudioStream) bool {
+	return isAudioStreamValid(uintptr(unsafe.Pointer(&stream)))
 }
 
 // UnloadAudioStream - Unload audio stream and free memory
