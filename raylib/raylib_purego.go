@@ -362,6 +362,7 @@ var colorBrightness func(col uintptr, factor float32) uintptr
 var colorContrast func(col uintptr, contrast float32) uintptr
 var colorAlpha func(col uintptr, alpha float32) uintptr
 var colorAlphaBlend func(dst uintptr, src uintptr, tint uintptr) uintptr
+var colorLerp func(col1, col2 uintptr, factor float32) uintptr
 var getColor func(hexValue uint32) uintptr
 var getPixelColor func(srcPtr unsafe.Pointer, format int32) uintptr
 var setPixelColor func(dstPtr unsafe.Pointer, col uintptr, format int32)
@@ -874,6 +875,7 @@ func init() {
 	purego.RegisterLibFunc(&colorContrast, raylibDll, "ColorContrast")
 	purego.RegisterLibFunc(&colorAlpha, raylibDll, "ColorAlpha")
 	purego.RegisterLibFunc(&colorAlphaBlend, raylibDll, "ColorAlphaBlend")
+	purego.RegisterLibFunc(&colorLerp, raylibDll, "ColorLerp")
 	purego.RegisterLibFunc(&getColor, raylibDll, "GetColor")
 	purego.RegisterLibFunc(&getPixelColor, raylibDll, "GetPixelColor")
 	purego.RegisterLibFunc(&setPixelColor, raylibDll, "SetPixelColor")
@@ -2954,6 +2956,12 @@ func ColorAlpha(col color.RGBA, alpha float32) color.RGBA {
 // ColorAlphaBlend - Get src alpha-blended into dst color with tint
 func ColorAlphaBlend(dst color.RGBA, src color.RGBA, tint color.RGBA) color.RGBA {
 	ret := colorAlphaBlend(*(*uintptr)(unsafe.Pointer(&dst)), *(*uintptr)(unsafe.Pointer(&src)), *(*uintptr)(unsafe.Pointer(&tint)))
+	return *(*color.RGBA)(unsafe.Pointer(&ret))
+}
+
+// ColorLerp - Get color lerp interpolation between two colors, factor [0.0f..1.0f]
+func ColorLerp(col1, col2 color.RGBA, factor float32) color.RGBA {
+	ret := colorLerp(*(*uintptr)(unsafe.Pointer(&col1)), *(*uintptr)(unsafe.Pointer(&col2)), factor)
 	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 

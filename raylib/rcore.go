@@ -853,6 +853,15 @@ func ColorAlphaBlend(src, dst, tint color.RGBA) color.RGBA {
 	return v
 }
 
+// ColorLerp - Get color lerp interpolation between two colors, factor [0.0f..1.0f]
+func ColorLerp(col1, col2 color.RGBA, factor float32) color.RGBA {
+	ccol1 := colorCptr(col1)
+	ccol2 := colorCptr(col2)
+	ret := C.ColorLerp(*ccol1, *ccol2, C.float(factor))
+	v := newColorFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // GetColor - Returns a Color struct from hexadecimal value
 func GetColor(hexValue uint) color.RGBA {
 	chexValue := (C.uint)(hexValue)
