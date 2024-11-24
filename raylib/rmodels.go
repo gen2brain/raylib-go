@@ -331,6 +331,26 @@ func DrawModelWiresEx(model Model, position Vector3, rotationAxis Vector3, rotat
 	C.DrawModelWiresEx(*cmodel, *cposition, *crotationAxis, crotationAngle, *cscale, *ctint)
 }
 
+// DrawModelPoints - Draw a model as points
+func DrawModelPoints(model Model, position Vector3, scale float32, tint color.RGBA) {
+	cmodel := model.cptr()
+	cposition := position.cptr()
+	cscale := (C.float)(scale)
+	ctint := colorCptr(tint)
+	C.DrawModelPoints(*cmodel, *cposition, cscale, *ctint)
+}
+
+// DrawModelPointsEx - Draw a model as points with extended parameters
+func DrawModelPointsEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint color.RGBA) {
+	cmodel := model.cptr()
+	cposition := position.cptr()
+	crotationAxis := rotationAxis.cptr()
+	crotationAngle := (C.float)(rotationAngle)
+	cscale := scale.cptr()
+	ctint := colorCptr(tint)
+	C.DrawModelPointsEx(*cmodel, *cposition, *crotationAxis, crotationAngle, *cscale, *ctint)
+}
+
 // DrawBoundingBox - Draw bounding box (wires)
 func DrawBoundingBox(box BoundingBox, col color.RGBA) {
 	cbox := box.cptr()

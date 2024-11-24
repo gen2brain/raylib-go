@@ -419,6 +419,8 @@ var drawModel func(model uintptr, position uintptr, scale float32, tint uintptr)
 var drawModelEx func(model uintptr, position uintptr, rotationAxis uintptr, rotationAngle float32, scale uintptr, tint uintptr)
 var drawModelWires func(model uintptr, position uintptr, scale float32, tint uintptr)
 var drawModelWiresEx func(model uintptr, position uintptr, rotationAxis uintptr, rotationAngle float32, scale uintptr, tint uintptr)
+var drawModelPoints func(model uintptr, position uintptr, scale float32, tint uintptr)
+var drawModelPointsEx func(model uintptr, position uintptr, rotationAxis uintptr, rotationAngle float32, scale uintptr, tint uintptr)
 var drawBoundingBox func(box uintptr, col uintptr)
 var drawBillboard func(camera uintptr, texture uintptr, position uintptr, scale float32, tint uintptr)
 var drawBillboardRec func(camera uintptr, texture uintptr, source uintptr, position uintptr, size uintptr, tint uintptr)
@@ -932,6 +934,8 @@ func init() {
 	purego.RegisterLibFunc(&drawModelEx, raylibDll, "DrawModelEx")
 	purego.RegisterLibFunc(&drawModelWires, raylibDll, "DrawModelWires")
 	purego.RegisterLibFunc(&drawModelWiresEx, raylibDll, "DrawModelWiresEx")
+	purego.RegisterLibFunc(&drawModelPoints, raylibDll, "DrawModelPoints")
+	purego.RegisterLibFunc(&drawModelPointsEx, raylibDll, "DrawModelPointsEx")
 	purego.RegisterLibFunc(&drawBoundingBox, raylibDll, "DrawBoundingBox")
 	purego.RegisterLibFunc(&drawBillboard, raylibDll, "DrawBillboard")
 	purego.RegisterLibFunc(&drawBillboardRec, raylibDll, "DrawBillboardRec")
@@ -3284,6 +3288,16 @@ func DrawModelWires(model Model, position Vector3, scale float32, tint color.RGB
 // DrawModelWiresEx - Draw a model wires (with texture if set) with extended parameters
 func DrawModelWiresEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint color.RGBA) {
 	drawModelWiresEx(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&position)), uintptr(unsafe.Pointer(&rotationAxis)), rotationAngle, uintptr(unsafe.Pointer(&scale)), *(*uintptr)(unsafe.Pointer(&tint)))
+}
+
+// DrawModelPoints - Draw a model as points
+func DrawModelPoints(model Model, position Vector3, scale float32, tint color.RGBA) {
+	drawModelPoints(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&position)), scale, *(*uintptr)(unsafe.Pointer(&tint)))
+}
+
+// DrawModelPointsEx - Draw a model as points with extended parameters
+func DrawModelPointsEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint color.RGBA) {
+	drawModelPointsEx(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&position)), uintptr(unsafe.Pointer(&rotationAxis)), rotationAngle, uintptr(unsafe.Pointer(&scale)), *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // DrawBoundingBox - Draw bounding box (wires)
