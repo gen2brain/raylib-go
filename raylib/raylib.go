@@ -729,14 +729,31 @@ type ShaderUniformDataType int32
 
 // ShaderUniformDataType enumeration
 const (
+	// Shader uniform type: float
 	ShaderUniformFloat ShaderUniformDataType = iota
+	// Shader uniform type: vec2 (2 float)
 	ShaderUniformVec2
+	// Shader uniform type: vec3 (3 float)
 	ShaderUniformVec3
+	// Shader uniform type: vec4 (4 float)
 	ShaderUniformVec4
+	// Shader uniform type: int
 	ShaderUniformInt
+	// Shader uniform type: ivec2 (2 int)
 	ShaderUniformIvec2
+	// Shader uniform type: ivec2 (3 int)
 	ShaderUniformIvec3
+	// Shader uniform type: ivec2 (4 int)
 	ShaderUniformIvec4
+	// Shader uniform type: unsigned int
+	ShaderUniformUint
+	// Shader uniform type: uivec2 (2 unsigned int)
+	ShaderUniformUivec2
+	// Shader uniform type: uivec3 (3 unsigned int)
+	ShaderUniformUivec3
+	// Shader uniform type: uivec4 (4 unsigned int)
+	ShaderUniformUivec4
+	// Shader uniform type: sampler2d
 	ShaderUniformSampler2d
 )
 
