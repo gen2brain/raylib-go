@@ -267,7 +267,8 @@ static GamepadButton AndroidTranslateGamepadButton(int button);                 
 
 // To allow easier porting to android, we allow the user to define a
 // main function which we call from android_main, defined by ourselves
-extern int main(int argc, char *argv[]);
+//extern int main(int argc, char *argv[]);
+extern void android_run();
 
 // Android main function
 void android_main(struct android_app *app)
@@ -275,8 +276,9 @@ void android_main(struct android_app *app)
     char arg0[] = "raylib";     // NOTE: argv[] are mutable
     platform.app = app;
 
+    (void)android_run();
     // NOTE: Return from main is ignored
-    (void)main(1, (char *[]) { arg0, NULL });
+    //(void)main(1, (char *[]) { arg0, NULL });
 
     // Request to end the native activity
     ANativeActivity_finish(app->activity);
