@@ -54,6 +54,8 @@ var rlEnableFramebuffer func(id uint32)
 var rlDisableFramebuffer func()
 var rlGetActiveFramebuffer func() uint32
 var rlActiveDrawBuffers func(count int32)
+var rlBlitFramebuffer func(srcX, srcY, srcWidth, srcHeight, dstX, dstY, dstWidth, dstHeight, bufferMask int32)
+var rlBindFramebuffer func(target, framebuffer uint32)
 var rlEnableColorBlend func()
 var rlDisableColorBlend func()
 var rlEnableDepthTest func()
@@ -181,6 +183,8 @@ func initRlglPurego() {
 	purego.RegisterLibFunc(&rlDisableFramebuffer, raylibDll, "rlDisableFramebuffer")
 	purego.RegisterLibFunc(&rlGetActiveFramebuffer, raylibDll, "rlGetActiveFramebuffer")
 	purego.RegisterLibFunc(&rlActiveDrawBuffers, raylibDll, "rlActiveDrawBuffers")
+	purego.RegisterLibFunc(&rlBlitFramebuffer, raylibDll, "rlBlitFramebuffer")
+	purego.RegisterLibFunc(&rlBindFramebuffer, raylibDll, "rlBindFramebuffer")
 	purego.RegisterLibFunc(&rlEnableColorBlend, raylibDll, "rlEnableColorBlend")
 	purego.RegisterLibFunc(&rlDisableColorBlend, raylibDll, "rlDisableColorBlend")
 	purego.RegisterLibFunc(&rlEnableDepthTest, raylibDll, "rlEnableDepthTest")
@@ -497,6 +501,16 @@ func GetActiveFramebuffer() uint32 {
 // ActiveDrawBuffers - Activate multiple draw color buffers
 func ActiveDrawBuffers(count int32) {
 	rlActiveDrawBuffers(count)
+}
+
+// BlitFramebuffer - Blit active framebuffer to main framebuffer
+func BlitFramebuffer(srcX, srcY, srcWidth, srcHeight, dstX, dstY, dstWidth, dstHeight, bufferMask int32) {
+	rlBlitFramebuffer(srcX, srcY, srcWidth, srcHeight, dstX, dstY, dstWidth, dstHeight, bufferMask)
+}
+
+// BindFramebuffer - Bind framebuffer (FBO)
+func BindFramebuffer(target, framebuffer uint32) {
+	rlBindFramebuffer(target, framebuffer)
 }
 
 // EnableColorBlend - Enable color blending

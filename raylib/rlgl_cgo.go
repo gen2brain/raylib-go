@@ -340,6 +340,16 @@ func ActiveDrawBuffers(count int32) {
 	C.rlActiveDrawBuffers(ccount)
 }
 
+// BlitFramebuffer - Blit active framebuffer to main framebuffer
+func BlitFramebuffer(srcX, srcY, srcWidth, srcHeight, dstX, dstY, dstWidth, dstHeight, bufferMask int32) {
+	C.rlBlitFramebuffer(C.int(srcX), C.int(srcY), C.int(srcWidth), C.int(srcHeight), C.int(dstX), C.int(dstY), C.int(dstWidth), C.int(dstHeight), C.int(bufferMask))
+}
+
+// BindFramebuffer - Bind framebuffer (FBO)
+func BindFramebuffer(target, framebuffer uint32) {
+	C.rlBindFramebuffer(C.uint(target), C.uint(framebuffer))
+}
+
 // EnableColorBlend - Enable color blending
 func EnableColorBlend() {
 	C.rlEnableColorBlend()
