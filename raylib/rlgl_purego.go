@@ -64,6 +64,7 @@ var rlEnableDepthMask func()
 var rlDisableDepthMask func()
 var rlEnableBackfaceCulling func()
 var rlDisableBackfaceCulling func()
+var rlColorMask func(r, g, b, a bool)
 var rlSetCullFace func(mode int32)
 var rlEnableScissorTest func()
 var rlDisableScissorTest func()
@@ -193,6 +194,7 @@ func initRlglPurego() {
 	purego.RegisterLibFunc(&rlDisableDepthMask, raylibDll, "rlDisableDepthMask")
 	purego.RegisterLibFunc(&rlEnableBackfaceCulling, raylibDll, "rlEnableBackfaceCulling")
 	purego.RegisterLibFunc(&rlDisableBackfaceCulling, raylibDll, "rlDisableBackfaceCulling")
+	purego.RegisterLibFunc(&rlColorMask, raylibDll, "rlColorMask")
 	purego.RegisterLibFunc(&rlSetCullFace, raylibDll, "rlSetCullFace")
 	purego.RegisterLibFunc(&rlEnableScissorTest, raylibDll, "rlEnableScissorTest")
 	purego.RegisterLibFunc(&rlDisableScissorTest, raylibDll, "rlDisableScissorTest")
@@ -551,6 +553,11 @@ func EnableBackfaceCulling() {
 // DisableBackfaceCulling - Disable backface culling
 func DisableBackfaceCulling() {
 	rlDisableBackfaceCulling()
+}
+
+// ColorMask - Color mask control
+func ColorMask(r, g, b, a bool) {
+	rlColorMask(r, g, b, a)
 }
 
 // SetCullFace - Set face culling mode

@@ -390,6 +390,11 @@ func DisableBackfaceCulling() {
 	C.rlDisableBackfaceCulling()
 }
 
+// ColorMask - Color mask control
+func ColorMask(r, g, b, a bool) {
+	C.rlColorMask(C.bool(r), C.bool(g), C.bool(b), C.bool(a))
+}
+
 // SetCullFace - Set face culling mode
 func SetCullFace(mode int32) {
 	cmode := C.int(mode)
