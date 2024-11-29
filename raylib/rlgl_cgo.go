@@ -127,6 +127,23 @@ func Viewport(x int32, y int32, width int32, height int32) {
 	C.rlViewport(cx, cy, cwidth, cheight)
 }
 
+// SetClipPlanes - Set clip planes distances
+func SetClipPlanes(nearPlane, farPlane float64) {
+	C.rlSetClipPlanes(C.double(nearPlane), C.double(farPlane))
+}
+
+// GetCullDistanceNear - Get cull plane distance near
+func GetCullDistanceNear() float64 {
+	ret := C.rlGetCullDistanceNear()
+	return float64(ret)
+}
+
+// GetCullDistanceFar - Get cull plane distance far
+func GetCullDistanceFar() float64 {
+	ret := C.rlGetCullDistanceFar()
+	return float64(ret)
+}
+
 // Begin - Initialize drawing mode (how to organize vertex)
 func Begin(mode int32) {
 	cmode := C.int(mode)

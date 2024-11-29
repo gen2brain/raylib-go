@@ -20,6 +20,9 @@ var rlMultMatrixf func(matf *float32)
 var rlFrustum func(left float64, right float64, bottom float64, top float64, znear float64, zfar float64)
 var rlOrtho func(left float64, right float64, bottom float64, top float64, znear float64, zfar float64)
 var rlViewport func(x int32, y int32, width int32, height int32)
+var rlSetClipPlanes func(float64, float64)
+var rlGetCullDistanceNear func() float64
+var rlGetCullDistanceFar func() float64
 var rlBegin func(mode int32)
 var rlEnd func()
 var rlVertex2i func(x int32, y int32)
@@ -143,6 +146,9 @@ func initRlglPurego() {
 	purego.RegisterLibFunc(&rlFrustum, raylibDll, "rlFrustum")
 	purego.RegisterLibFunc(&rlOrtho, raylibDll, "rlOrtho")
 	purego.RegisterLibFunc(&rlViewport, raylibDll, "rlViewport")
+	purego.RegisterLibFunc(&rlSetClipPlanes, raylibDll, "rlSetClipPlanes")
+	purego.RegisterLibFunc(&rlGetCullDistanceNear, raylibDll, "rlGetCullDistanceNear")
+	purego.RegisterLibFunc(&rlGetCullDistanceFar, raylibDll, "rlGetCullDistanceFar")
 	purego.RegisterLibFunc(&rlBegin, raylibDll, "rlBegin")
 	purego.RegisterLibFunc(&rlEnd, raylibDll, "rlEnd")
 	purego.RegisterLibFunc(&rlVertex2i, raylibDll, "rlVertex2i")
@@ -319,6 +325,21 @@ func Ortho(left float64, right float64, bottom float64, top float64, znear float
 // Viewport - Set the viewport area
 func Viewport(x int32, y int32, width int32, height int32) {
 	rlViewport(x, y, width, height)
+}
+
+// SetClipPlanes - Set clip planes distances
+func SetClipPlanes(nearPlane, farPlane float64) {
+	rlSetClipPlanes(nearPlane, farPlane)
+}
+
+// GetCullDistanceNear - Get cull plane distance near
+func GetCullDistanceNear() float64 {
+	return rlGetCullDistanceNear()
+}
+
+// GetCullDistanceFar - Get cull plane distance far
+func GetCullDistanceFar() float64 {
+	return rlGetCullDistanceFar()
 }
 
 // Begin - Initialize drawing mode (how to organize vertex)
