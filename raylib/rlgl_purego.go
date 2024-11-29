@@ -52,6 +52,7 @@ var rlEnableShader func(id uint32)
 var rlDisableShader func()
 var rlEnableFramebuffer func(id uint32)
 var rlDisableFramebuffer func()
+var rlGetActiveFramebuffer func() uint32
 var rlActiveDrawBuffers func(count int32)
 var rlEnableColorBlend func()
 var rlDisableColorBlend func()
@@ -178,6 +179,7 @@ func initRlglPurego() {
 	purego.RegisterLibFunc(&rlDisableShader, raylibDll, "rlDisableShader")
 	purego.RegisterLibFunc(&rlEnableFramebuffer, raylibDll, "rlEnableFramebuffer")
 	purego.RegisterLibFunc(&rlDisableFramebuffer, raylibDll, "rlDisableFramebuffer")
+	purego.RegisterLibFunc(&rlGetActiveFramebuffer, raylibDll, "rlGetActiveFramebuffer")
 	purego.RegisterLibFunc(&rlActiveDrawBuffers, raylibDll, "rlActiveDrawBuffers")
 	purego.RegisterLibFunc(&rlEnableColorBlend, raylibDll, "rlEnableColorBlend")
 	purego.RegisterLibFunc(&rlDisableColorBlend, raylibDll, "rlDisableColorBlend")
@@ -485,6 +487,11 @@ func EnableFramebuffer(id uint32) {
 // DisableFramebuffer - Disable render texture (fbo), return to default framebuffer
 func DisableFramebuffer() {
 	rlDisableFramebuffer()
+}
+
+// GetActiveFramebuffer - Get the currently active render texture (fbo), 0 for default framebuffer
+func GetActiveFramebuffer() uint32 {
+	return rlGetActiveFramebuffer()
 }
 
 // ActiveDrawBuffers - Activate multiple draw color buffers

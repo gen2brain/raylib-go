@@ -329,6 +329,11 @@ func DisableFramebuffer() {
 	C.rlDisableFramebuffer()
 }
 
+// GetActiveFramebuffer - Get the currently active render texture (fbo), 0 for default framebuffer
+func GetActiveFramebuffer() uint32 {
+	return uint32(C.rlGetActiveFramebuffer())
+}
+
 // ActiveDrawBuffers - Activate multiple draw color buffers
 func ActiveDrawBuffers(count int32) {
 	ccount := C.int(count)
