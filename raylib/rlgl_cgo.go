@@ -701,6 +701,23 @@ func GetLocationAttrib(shaderId uint32, attribName string) int32 {
 	return int32(C.rlGetLocationAttrib(cshaderId, cattribName))
 }
 
+// SetUniform - Set shader value uniform
+func SetUniform(locIndex int32, value []float32, uniformType int32) {
+	C.rlSetUniform(C.int(locIndex), unsafe.Pointer(unsafe.SliceData(value)), C.int(uniformType), C.int((len(value))))
+}
+
+// SetUniformMatrix - Set shader value matrix
+func SetUniformMatrix(locIndex int32, mat Matrix) {
+	cmat := (*C.Matrix)(unsafe.Pointer(&mat))
+	C.rlSetUniformMatrix(C.int(locIndex), *cmat)
+}
+
+// SetUniformMatrices - Set shader value matrices
+func SetUniformMatrices(locIndex int32, mat []Matrix) {
+	cmat := (*C.Matrix)(unsafe.Pointer(unsafe.SliceData(mat)))
+	C.rlSetUniformMatrices(C.int(locIndex), cmat, C.int(len(mat)))
+}
+
 // SetUniformSampler - Set shader value sampler
 func SetUniformSampler(locIndex int32, textureId uint32) {
 	clocIndex := C.int(locIndex)

@@ -115,6 +115,9 @@ var rlLoadShaderProgram func(vShaderId uint32, fShaderId uint32) uint32
 var rlUnloadShaderProgram func(id uint32)
 var rlGetLocationUniform func(shaderId uint32, uniformName string) int32
 var rlGetLocationAttrib func(shaderId uint32, attribName string) int32
+var rlSetUniform func(locIndex int32, value unsafe.Pointer, uniformType, count int32)
+var rlSetUniformMatrix func(locIndex int32, mat uintptr)
+var rlSetUniformMatrices func(locIndex int32, mat *Matrix, count int32)
 var rlSetUniformSampler func(locIndex int32, textureId uint32)
 var rlLoadComputeShaderProgram func(shaderID uint32) uint32
 var rlComputeShaderDispatch func(groupX uint32, groupY uint32, groupZ uint32)
@@ -245,6 +248,9 @@ func initRlglPurego() {
 	purego.RegisterLibFunc(&rlUnloadShaderProgram, raylibDll, "rlUnloadShaderProgram")
 	purego.RegisterLibFunc(&rlGetLocationUniform, raylibDll, "rlGetLocationUniform")
 	purego.RegisterLibFunc(&rlGetLocationAttrib, raylibDll, "rlGetLocationAttrib")
+	purego.RegisterLibFunc(&rlSetUniform, raylibDll, "rlSetUniform")
+	purego.RegisterLibFunc(&rlSetUniformMatrix, raylibDll, "rlSetUniformMatrix")
+	purego.RegisterLibFunc(&rlSetUniformMatrices, raylibDll, "rlSetUniformMatrices")
 	purego.RegisterLibFunc(&rlSetUniformSampler, raylibDll, "rlSetUniformSampler")
 	purego.RegisterLibFunc(&rlLoadComputeShaderProgram, raylibDll, "rlLoadComputeShaderProgram")
 	purego.RegisterLibFunc(&rlComputeShaderDispatch, raylibDll, "rlComputeShaderDispatch")
@@ -810,6 +816,21 @@ func GetLocationUniform(shaderId uint32, uniformName string) int32 {
 // GetLocationAttrib - Get shader location attribute
 func GetLocationAttrib(shaderId uint32, attribName string) int32 {
 	return rlGetLocationAttrib(shaderId, attribName)
+}
+
+// SetUniform - Set shader value uniform
+func SetUniform(locIndex int32, value []float32, uniformType int32) {
+	rlSetUniform(locIndex, unsafe.Pointer(unsafe.SliceData(value)), uniformType, int32(len(value)))
+}
+
+// SetUniformMatrix - Set shader value matrix
+func SetUniformMatrix(locIndex int32, mat Matrix) {
+	rlSetUniformMatrix(locIndex, uintptr(unsafe.Pointer(&mat)))
+}
+
+// SetUniformMatrices - Set shader value matrices
+func SetUniformMatrices(locIndex int32, mat []Matrix) {
+	rlSetUniformMatrices(locIndex, unsafe.SliceData(mat), int32(len(mat)))
 }
 
 // SetUniformSampler - Set shader value sampler
