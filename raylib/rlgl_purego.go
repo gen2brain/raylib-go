@@ -105,7 +105,7 @@ var rlLoadVertexArray func() uint32
 var rlUnloadVertexBuffer func(vboId uint32)
 var rlSetVertexAttributeDivisor func(index uint32, divisor int32)
 var rlLoadTextureDepth func(width int32, height int32, useRenderBuffer bool) uint32
-var rlLoadFramebuffer func(width int32, height int32) uint32
+var rlLoadFramebuffer func() uint32
 var rlFramebufferAttach func(fboId uint32, texId uint32, attachType int32, texType int32, mipLevel int32)
 var rlFramebufferComplete func(id uint32) bool
 var rlUnloadFramebuffer func(id uint32)
@@ -763,8 +763,8 @@ func LoadTextureDepth(width, height int32, useRenderBuffer bool) {
 }
 
 // LoadFramebuffer - Load an empty framebuffer
-func LoadFramebuffer(width int32, height int32) uint32 {
-	return rlLoadFramebuffer(width, height)
+func LoadFramebuffer() uint32 {
+	return rlLoadFramebuffer()
 }
 
 // FramebufferAttach - Attach texture/renderbuffer to a framebuffer

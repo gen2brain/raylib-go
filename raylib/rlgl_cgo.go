@@ -629,7 +629,7 @@ func LoadTextureDepth(width, height int32, useRenderBuffer bool) {
 }
 
 // LoadFramebuffer - Load an empty framebuffer
-func LoadFramebuffer(width int32, height int32) uint32 {
+func LoadFramebuffer() uint32 {
 	return uint32(C.rlLoadFramebuffer())
 }
 
