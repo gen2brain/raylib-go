@@ -92,10 +92,10 @@ func LoadFontFromMemory(fileType string, fileData []byte, fontSize int32, codepo
 	return v
 }
 
-// IsFontReady - Check if a font is ready
-func IsFontReady(font Font) bool {
+// IsFontValid - Check if a font is valid (font data loaded, WARNING: GPU texture not checked)
+func IsFontValid(font Font) bool {
 	cfont := font.cptr()
-	ret := C.IsFontReady(*cfont)
+	ret := C.IsFontValid(*cfont)
 	v := bool(ret)
 	return v
 }

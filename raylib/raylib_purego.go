@@ -65,6 +65,7 @@ var getWindowScaleDPI func() uintptr
 var getMonitorName func(monitor int32) string
 var setClipboardText func(text string)
 var getClipboardText func() string
+var getClipboardImage func(img uintptr)
 var enableEventWaiting func()
 var disableEventWaiting func()
 var showCursor func()
@@ -94,7 +95,7 @@ var loadVrStereoConfig func(config uintptr, device uintptr)
 var unloadVrStereoConfig func(config uintptr)
 var loadShader func(shader uintptr, vsFileName uintptr, fsFileName uintptr)
 var loadShaderFromMemory func(shader uintptr, vsCode uintptr, fsCode uintptr)
-var isShaderReady func(shader uintptr) bool
+var isShaderValid func(shader uintptr) bool
 var getShaderLocation func(shader uintptr, uniformName string) int32
 var getShaderLocationAttrib func(shader uintptr, attribName string) int32
 var setShaderValue func(shader uintptr, locIndex int32, value []float32, uniformType int32)
@@ -102,7 +103,8 @@ var setShaderValueV func(shader uintptr, locIndex int32, value []float32, unifor
 var setShaderValueMatrix func(shader uintptr, locIndex int32, mat uintptr)
 var setShaderValueTexture func(shader uintptr, locIndex int32, texture uintptr)
 var unloadShader func(shader uintptr)
-var getMouseRay func(ray uintptr, mousePosition uintptr, camera uintptr)
+var getScreenToWorldRay func(ray uintptr, position uintptr, camera uintptr)
+var getScreenToWorldRayEx func(ray uintptr, position uintptr, camera uintptr, width, height int32)
 var getCameraMatrix func(mat uintptr, camera uintptr)
 var getCameraMatrix2D func(mat uintptr, camera uintptr)
 var getWorldToScreen func(position uintptr, camera uintptr) uintptr
@@ -158,6 +160,7 @@ var getGamepadButtonPressed func() int32
 var getGamepadAxisCount func(gamepad int32) int32
 var getGamepadAxisMovement func(gamepad int32, axis int32) float32
 var setGamepadMappings func(mappings string) int32
+var setGamepadVibration func(gamepad int32, leftMotor, rightMotor, duration float32)
 var isMouseButtonPressed func(button int32) bool
 var isMouseButtonDown func(button int32) bool
 var isMouseButtonReleased func(button int32) bool
@@ -186,6 +189,8 @@ var getGestureDragAngle func() float32
 var getGesturePinchVector func() uintptr
 var getGesturePinchAngle func() float32
 var setShapesTexture func(texture uintptr, source uintptr)
+var getShapesTexture func(texture uintptr)
+var getShapesTextureRectangle func(rec uintptr)
 var drawPixel func(posX int32, posY int32, col uintptr)
 var drawPixelV func(position uintptr, col uintptr)
 var drawLine func(startPosX int32, startPosY int32, endPosX int32, endPosY int32, col uintptr)
@@ -196,7 +201,7 @@ var drawLineBezier func(startPos uintptr, endPos uintptr, thick float32, col uin
 var drawCircle func(centerX int32, centerY int32, radius float32, col uintptr)
 var drawCircleSector func(center uintptr, radius float32, startAngle float32, endAngle float32, segments int32, col uintptr)
 var drawCircleSectorLines func(center uintptr, radius float32, startAngle float32, endAngle float32, segments int32, col uintptr)
-var drawCircleGradient func(centerX int32, centerY int32, radius float32, color1 uintptr, color2 uintptr)
+var drawCircleGradient func(centerX int32, centerY int32, radius float32, inner uintptr, outer uintptr)
 var drawCircleV func(center uintptr, radius float32, col uintptr)
 var drawCircleLines func(centerX int32, centerY int32, radius float32, col uintptr)
 var drawCircleLinesV func(center uintptr, radius float32, col uintptr)
@@ -208,13 +213,14 @@ var drawRectangle func(posX int32, posY int32, width int32, height int32, col ui
 var drawRectangleV func(position uintptr, size uintptr, col uintptr)
 var drawRectangleRec func(rec uintptr, col uintptr)
 var drawRectanglePro func(rec uintptr, origin uintptr, rotation float32, col uintptr)
-var drawRectangleGradientV func(posX int32, posY int32, width int32, height int32, color1 uintptr, color2 uintptr)
-var drawRectangleGradientH func(posX int32, posY int32, width int32, height int32, color1 uintptr, color2 uintptr)
-var drawRectangleGradientEx func(rec uintptr, col1 uintptr, col2 uintptr, col3 uintptr, col4 uintptr)
+var drawRectangleGradientV func(posX int32, posY int32, width int32, height int32, top uintptr, bottom uintptr)
+var drawRectangleGradientH func(posX int32, posY int32, width int32, height int32, left uintptr, right uintptr)
+var drawRectangleGradientEx func(rec uintptr, topLeft uintptr, bottomLeft uintptr, topRight uintptr, bottomRight uintptr)
 var drawRectangleLines func(posX int32, posY int32, width int32, height int32, col uintptr)
 var drawRectangleLinesEx func(rec uintptr, lineThick float32, col uintptr)
 var drawRectangleRounded func(rec uintptr, roundness float32, segments int32, col uintptr)
-var drawRectangleRoundedLines func(rec uintptr, roundness float32, segments int32, lineThick float32, col uintptr)
+var drawRectangleRoundedLines func(rec uintptr, roundness float32, segments int32, col uintptr)
+var drawRectangleRoundedLinesEx func(rec uintptr, roundness float32, segments int32, lineThick float32, col uintptr)
 var drawTriangle func(v1 uintptr, v2 uintptr, v3 uintptr, col uintptr)
 var drawTriangleLines func(v1 uintptr, v2 uintptr, v3 uintptr, col uintptr)
 var drawTriangleFan func(points *Vector2, pointCount int32, col uintptr)
@@ -240,6 +246,7 @@ var getSplinePointBezierCubic func(p1 uintptr, c2 uintptr, c3 uintptr, p4 uintpt
 var checkCollisionRecs func(rec1 uintptr, rec2 uintptr) bool
 var checkCollisionCircles func(center1 uintptr, radius1 float32, center2 uintptr, radius2 float32) bool
 var checkCollisionCircleRec func(center uintptr, radius float32, rec uintptr) bool
+var checkCollisionCircleLine func(center uintptr, radius float32, p1, p2 uintptr) bool
 var checkCollisionPointRec func(point uintptr, rec uintptr) bool
 var checkCollisionPointCircle func(point uintptr, center uintptr, radius float32) bool
 var checkCollisionPointTriangle func(point uintptr, p1 uintptr, p2 uintptr, p3 uintptr) bool
@@ -249,12 +256,12 @@ var checkCollisionPointLine func(point uintptr, p1 uintptr, p2 uintptr, threshol
 var getCollisionRec func(rec uintptr, rec1 uintptr, rec2 uintptr)
 var loadImage func(img uintptr, fileName string)
 var loadImageRaw func(img uintptr, fileName string, width int32, height int32, format int32, headerSize int32)
-var loadImageSvg func(img uintptr, fileNameOrString string, width int32, height int32)
-var loadImageAnim func(img uintptr, fileName string, frames []int32)
+var loadImageAnim func(img uintptr, fileName string, frames *int32)
+var loadImageAnimFromMemory func(img uintptr, fileType string, fileData []byte, dataSize int32, frames *int32)
 var loadImageFromMemory func(img uintptr, fileType string, fileData []byte, dataSize int32)
 var loadImageFromTexture func(img uintptr, texture uintptr)
 var loadImageFromScreen func(img uintptr)
-var isImageReady func(image uintptr) bool
+var isImageValid func(image uintptr) bool
 var unloadImage func(image uintptr)
 var exportImage func(image uintptr, fileName string) bool
 var exportImageToMemory func(image uintptr, fileType string, fileSize *int32) *byte
@@ -269,6 +276,7 @@ var genImageCellular func(image uintptr, width int32, height int32, tileSize int
 var genImageText func(image uintptr, width int32, height int32, text string)
 var imageCopy func(retImage uintptr, image uintptr)
 var imageFromImage func(retImage uintptr, image uintptr, rec uintptr)
+var imageFromChannel func(retImage uintptr, image uintptr, selectedChannel int32)
 var imageText func(retImage uintptr, text string, fontSize int32, col uintptr)
 var imageTextEx func(retImage uintptr, font uintptr, text string, fontSize float32, spacing float32, tint uintptr)
 var imageFormat func(image *Image, newFormat int32)
@@ -279,6 +287,7 @@ var imageAlphaClear func(image *Image, col uintptr, threshold float32)
 var imageAlphaMask func(image *Image, alphaMask uintptr)
 var imageAlphaPremultiply func(image *Image)
 var imageBlurGaussian func(image *Image, blurSize int32)
+var imageKernelConvolution func(image *Image, kernel []float32, kernelSize int32)
 var imageResize func(image *Image, newWidth int32, newHeight int32)
 var imageResizeNN func(image *Image, newWidth int32, newHeight int32)
 var imageResizeCanvas func(image *Image, newWidth int32, newHeight int32, offsetX int32, offsetY int32, fill uintptr)
@@ -306,6 +315,7 @@ var imageDrawPixel func(dst *Image, posX int32, posY int32, col uintptr)
 var imageDrawPixelV func(dst *Image, position uintptr, col uintptr)
 var imageDrawLine func(dst *Image, startPosX int32, startPosY int32, endPosX int32, endPosY int32, col uintptr)
 var imageDrawLineV func(dst *Image, start uintptr, end uintptr, col uintptr)
+var imageDrawLineEx func(dst *Image, start uintptr, end uintptr, thick int32, col uintptr)
 var imageDrawCircle func(dst *Image, centerX int32, centerY int32, radius int32, col uintptr)
 var imageDrawCircleV func(dst *Image, center uintptr, radius int32, col uintptr)
 var imageDrawCircleLines func(dst *Image, centerX int32, centerY int32, radius int32, col uintptr)
@@ -314,6 +324,11 @@ var imageDrawRectangle func(dst *Image, posX int32, posY int32, width int32, hei
 var imageDrawRectangleV func(dst *Image, position uintptr, size uintptr, col uintptr)
 var imageDrawRectangleRec func(dst *Image, rec uintptr, col uintptr)
 var imageDrawRectangleLines func(dst *Image, rec uintptr, thick int32, col uintptr)
+var imageDrawTriangle func(dst *Image, v1, v2, v3 uintptr, col uintptr)
+var imageDrawTriangleEx func(dst *Image, v1, v2, v3 uintptr, c1, c2, c3 uintptr)
+var imageDrawTriangleLines func(dst *Image, v1, v2, v3 uintptr, col uintptr)
+var imageDrawTriangleFan func(dst *Image, points *Vector2, pointCount int32, col uintptr)
+var imageDrawTriangleStrip func(dst *Image, points *Vector2, pointCount int32, col uintptr)
 var imageDraw func(dst *Image, src uintptr, srcRec uintptr, dstRec uintptr, tint uintptr)
 var imageDrawText func(dst *Image, text string, posX int32, posY int32, fontSize int32, col uintptr)
 var imageDrawTextEx func(dst *Image, font uintptr, text string, position uintptr, fontSize float32, spacing float32, tint uintptr)
@@ -321,9 +336,9 @@ var loadTexture func(texture uintptr, fileName string)
 var loadTextureFromImage func(texture uintptr, image uintptr)
 var loadTextureCubemap func(texture uintptr, image uintptr, layout int32)
 var loadRenderTexture func(texture uintptr, width int32, height int32)
-var isTextureReady func(texture uintptr) bool
+var isTextureValid func(texture uintptr) bool
 var unloadTexture func(texture uintptr)
-var isRenderTextureReady func(target uintptr) bool
+var isRenderTextureValid func(target uintptr) bool
 var unloadRenderTexture func(target uintptr)
 var updateTexture func(texture uintptr, pixels *color.RGBA)
 var updateTextureRec func(texture uintptr, rec uintptr, pixels *color.RGBA)
@@ -347,6 +362,7 @@ var colorBrightness func(col uintptr, factor float32) uintptr
 var colorContrast func(col uintptr, contrast float32) uintptr
 var colorAlpha func(col uintptr, alpha float32) uintptr
 var colorAlphaBlend func(dst uintptr, src uintptr, tint uintptr) uintptr
+var colorLerp func(col1, col2 uintptr, factor float32) uintptr
 var getColor func(hexValue uint32) uintptr
 var getPixelColor func(srcPtr unsafe.Pointer, format int32) uintptr
 var setPixelColor func(dstPtr unsafe.Pointer, col uintptr, format int32)
@@ -356,7 +372,7 @@ var loadFont func(font uintptr, fileName string)
 var loadFontEx func(font uintptr, fileName string, fontSize int32, codepoints []int32, codepointCount int32)
 var loadFontFromImage func(font uintptr, image uintptr, key uintptr, firstChar int32)
 var loadFontFromMemory func(font uintptr, fileType string, fileData []byte, dataSize int32, fontSize int32, codepoints []int32, codepointCount int32)
-var isFontReady func(font uintptr) bool
+var isFontValid func(font uintptr) bool
 var loadFontData func(fileData []byte, dataSize int32, fontSize int32, codepoints []int32, codepointCount int32, _type int32) *GlyphInfo
 var genImageFontAtlas func(image uintptr, glyphs *GlyphInfo, glyphRecs []*Rectangle, glyphCount int32, fontSize int32, padding int32, packMethod int32)
 var unloadFontData func(glyphs *GlyphInfo, glyphCount int32)
@@ -396,15 +412,17 @@ var drawRay func(ray uintptr, col uintptr)
 var drawGrid func(slices int32, spacing float32)
 var loadModel func(model uintptr, fileName string)
 var loadModelFromMesh func(model uintptr, mesh uintptr)
-var isModelReady func(model uintptr) bool
+var isModelValid func(model uintptr) bool
 var unloadModel func(model uintptr)
 var getModelBoundingBox func(boundingBox uintptr, model uintptr)
 var drawModel func(model uintptr, position uintptr, scale float32, tint uintptr)
 var drawModelEx func(model uintptr, position uintptr, rotationAxis uintptr, rotationAngle float32, scale uintptr, tint uintptr)
 var drawModelWires func(model uintptr, position uintptr, scale float32, tint uintptr)
 var drawModelWiresEx func(model uintptr, position uintptr, rotationAxis uintptr, rotationAngle float32, scale uintptr, tint uintptr)
+var drawModelPoints func(model uintptr, position uintptr, scale float32, tint uintptr)
+var drawModelPointsEx func(model uintptr, position uintptr, rotationAxis uintptr, rotationAngle float32, scale uintptr, tint uintptr)
 var drawBoundingBox func(box uintptr, col uintptr)
-var drawBillboard func(camera uintptr, texture uintptr, position uintptr, size float32, tint uintptr)
+var drawBillboard func(camera uintptr, texture uintptr, position uintptr, scale float32, tint uintptr)
 var drawBillboardRec func(camera uintptr, texture uintptr, source uintptr, position uintptr, size uintptr, tint uintptr)
 var drawBillboardPro func(camera uintptr, texture uintptr, source uintptr, position uintptr, up uintptr, size uintptr, origin uintptr, rotation float32, tint uintptr)
 var uploadMesh func(mesh *Mesh, dynamic bool)
@@ -428,12 +446,13 @@ var genMeshHeightmap func(mesh uintptr, heightmap uintptr, size uintptr)
 var genMeshCubicmap func(mesh uintptr, cubicmap uintptr, cubeSize uintptr)
 var loadMaterials func(fileName string, materialCount *int32) *Material
 var loadMaterialDefault func(material uintptr)
-var isMaterialReady func(material uintptr) bool
+var isMaterialValid func(material uintptr) bool
 var unloadMaterial func(material uintptr)
 var setMaterialTexture func(material *Material, mapType int32, texture uintptr)
 var setModelMeshMaterial func(model *Model, meshId int32, materialId int32)
 var loadModelAnimations func(fileName string, animCount *int32) *ModelAnimation
 var updateModelAnimation func(model uintptr, anim uintptr, frame int32)
+var updateModelAnimationBones func(model uintptr, anim uintptr, frame int32)
 var unloadModelAnimation func(anim uintptr)
 var unloadModelAnimations func(animations *ModelAnimation, animCount int32)
 var isModelAnimationValid func(model uintptr, anim uintptr) bool
@@ -452,11 +471,11 @@ var setMasterVolume func(volume float32)
 var getMasterVolume func() float32
 var loadWave func(wave uintptr, fileName string)
 var loadWaveFromMemory func(wave uintptr, fileType string, fileData []byte, dataSize int32)
-var isWaveReady func(wave uintptr) bool
+var isWaveValid func(wave uintptr) bool
 var loadSound func(sound uintptr, fileName string)
 var loadSoundFromWave func(sound uintptr, wave uintptr)
 var loadSoundAlias func(sound uintptr, source uintptr)
-var isSoundReady func(sound uintptr) bool
+var isSoundValid func(sound uintptr) bool
 var updateSound func(sound uintptr, data []byte, sampleCount int32)
 var unloadWave func(wave uintptr)
 var unloadSound func(sound uintptr)
@@ -471,13 +490,13 @@ var setSoundVolume func(sound uintptr, volume float32)
 var setSoundPitch func(sound uintptr, pitch float32)
 var setSoundPan func(sound uintptr, pan float32)
 var waveCopy func(copy uintptr, wave uintptr)
-var waveCrop func(wave *Wave, initSample int32, finalSample int32)
+var waveCrop func(wave *Wave, initFrame int32, finalFrame int32)
 var waveFormat func(wave *Wave, sampleRate int32, sampleSize int32, channels int32)
 var loadWaveSamples func(wave uintptr) *float32
 var unloadWaveSamples func(samples []float32)
 var loadMusicStream func(music uintptr, fileName string)
 var loadMusicStreamFromMemory func(sound uintptr, fileType string, data []byte, dataSize int32)
-var isMusicReady func(music uintptr) bool
+var isMusicValid func(music uintptr) bool
 var unloadMusicStream func(music uintptr)
 var playMusicStream func(music uintptr)
 var isMusicStreamPlaying func(music uintptr) bool
@@ -492,7 +511,7 @@ var setMusicPan func(music uintptr, pan float32)
 var getMusicTimeLength func(music uintptr) float32
 var getMusicTimePlayed func(music uintptr) float32
 var loadAudioStream func(audioStream uintptr, sampleRate uint32, sampleSize uint32, channels uint32)
-var isAudioStreamReady func(stream uintptr) bool
+var isAudioStreamValid func(stream uintptr) bool
 var unloadAudioStream func(stream uintptr)
 var updateAudioStream func(stream uintptr, data []float32, frameCount int32)
 var isAudioStreamProcessed func(stream uintptr) bool
@@ -562,6 +581,7 @@ func init() {
 	purego.RegisterLibFunc(&getMonitorName, raylibDll, "GetMonitorName")
 	purego.RegisterLibFunc(&setClipboardText, raylibDll, "SetClipboardText")
 	purego.RegisterLibFunc(&getClipboardText, raylibDll, "GetClipboardText")
+	purego.RegisterLibFunc(&getClipboardImage, raylibDll, "GetClipboardImage")
 	purego.RegisterLibFunc(&enableEventWaiting, raylibDll, "EnableEventWaiting")
 	purego.RegisterLibFunc(&disableEventWaiting, raylibDll, "DisableEventWaiting")
 	purego.RegisterLibFunc(&showCursor, raylibDll, "ShowCursor")
@@ -591,7 +611,7 @@ func init() {
 	purego.RegisterLibFunc(&unloadVrStereoConfig, raylibDll, "UnloadVrStereoConfig")
 	purego.RegisterLibFunc(&loadShader, raylibDll, "LoadShader")
 	purego.RegisterLibFunc(&loadShaderFromMemory, raylibDll, "LoadShaderFromMemory")
-	purego.RegisterLibFunc(&isShaderReady, raylibDll, "IsShaderReady")
+	purego.RegisterLibFunc(&isShaderValid, raylibDll, "IsShaderValid")
 	purego.RegisterLibFunc(&getShaderLocation, raylibDll, "GetShaderLocation")
 	purego.RegisterLibFunc(&getShaderLocationAttrib, raylibDll, "GetShaderLocationAttrib")
 	purego.RegisterLibFunc(&setShaderValue, raylibDll, "SetShaderValue")
@@ -599,7 +619,8 @@ func init() {
 	purego.RegisterLibFunc(&setShaderValueMatrix, raylibDll, "SetShaderValueMatrix")
 	purego.RegisterLibFunc(&setShaderValueTexture, raylibDll, "SetShaderValueTexture")
 	purego.RegisterLibFunc(&unloadShader, raylibDll, "UnloadShader")
-	purego.RegisterLibFunc(&getMouseRay, raylibDll, "GetMouseRay")
+	purego.RegisterLibFunc(&getScreenToWorldRay, raylibDll, "GetScreenToWorldRay")
+	purego.RegisterLibFunc(&getScreenToWorldRayEx, raylibDll, "GetScreenToWorldRayEx")
 	purego.RegisterLibFunc(&getCameraMatrix, raylibDll, "GetCameraMatrix")
 	purego.RegisterLibFunc(&getCameraMatrix2D, raylibDll, "GetCameraMatrix2D")
 	purego.RegisterLibFunc(&getWorldToScreen, raylibDll, "GetWorldToScreen")
@@ -655,6 +676,7 @@ func init() {
 	purego.RegisterLibFunc(&getGamepadAxisCount, raylibDll, "GetGamepadAxisCount")
 	purego.RegisterLibFunc(&getGamepadAxisMovement, raylibDll, "GetGamepadAxisMovement")
 	purego.RegisterLibFunc(&setGamepadMappings, raylibDll, "SetGamepadMappings")
+	purego.RegisterLibFunc(&setGamepadVibration, raylibDll, "SetGamepadVibration")
 	purego.RegisterLibFunc(&isMouseButtonPressed, raylibDll, "IsMouseButtonPressed")
 	purego.RegisterLibFunc(&isMouseButtonDown, raylibDll, "IsMouseButtonDown")
 	purego.RegisterLibFunc(&isMouseButtonReleased, raylibDll, "IsMouseButtonReleased")
@@ -683,6 +705,8 @@ func init() {
 	purego.RegisterLibFunc(&getGesturePinchVector, raylibDll, "GetGesturePinchVector")
 	purego.RegisterLibFunc(&getGesturePinchAngle, raylibDll, "GetGesturePinchAngle")
 	purego.RegisterLibFunc(&setShapesTexture, raylibDll, "SetShapesTexture")
+	purego.RegisterLibFunc(&getShapesTexture, raylibDll, "GetShapesTexture")
+	purego.RegisterLibFunc(&getShapesTextureRectangle, raylibDll, "GetShapesTextureRectangle")
 	purego.RegisterLibFunc(&drawPixel, raylibDll, "DrawPixel")
 	purego.RegisterLibFunc(&drawPixelV, raylibDll, "DrawPixelV")
 	purego.RegisterLibFunc(&drawLine, raylibDll, "DrawLine")
@@ -712,6 +736,7 @@ func init() {
 	purego.RegisterLibFunc(&drawRectangleLinesEx, raylibDll, "DrawRectangleLinesEx")
 	purego.RegisterLibFunc(&drawRectangleRounded, raylibDll, "DrawRectangleRounded")
 	purego.RegisterLibFunc(&drawRectangleRoundedLines, raylibDll, "DrawRectangleRoundedLines")
+	purego.RegisterLibFunc(&drawRectangleRoundedLinesEx, raylibDll, "DrawRectangleRoundedLinesEx")
 	purego.RegisterLibFunc(&drawTriangle, raylibDll, "DrawTriangle")
 	purego.RegisterLibFunc(&drawTriangleLines, raylibDll, "DrawTriangleLines")
 	purego.RegisterLibFunc(&drawTriangleFan, raylibDll, "DrawTriangleFan")
@@ -737,6 +762,7 @@ func init() {
 	purego.RegisterLibFunc(&checkCollisionRecs, raylibDll, "CheckCollisionRecs")
 	purego.RegisterLibFunc(&checkCollisionCircles, raylibDll, "CheckCollisionCircles")
 	purego.RegisterLibFunc(&checkCollisionCircleRec, raylibDll, "CheckCollisionCircleRec")
+	purego.RegisterLibFunc(&checkCollisionCircleLine, raylibDll, "CheckCollisionCircleLine")
 	purego.RegisterLibFunc(&checkCollisionPointRec, raylibDll, "CheckCollisionPointRec")
 	purego.RegisterLibFunc(&checkCollisionPointCircle, raylibDll, "CheckCollisionPointCircle")
 	purego.RegisterLibFunc(&checkCollisionPointTriangle, raylibDll, "CheckCollisionPointTriangle")
@@ -746,12 +772,12 @@ func init() {
 	purego.RegisterLibFunc(&getCollisionRec, raylibDll, "GetCollisionRec")
 	purego.RegisterLibFunc(&loadImage, raylibDll, "LoadImage")
 	purego.RegisterLibFunc(&loadImageRaw, raylibDll, "LoadImageRaw")
-	purego.RegisterLibFunc(&loadImageSvg, raylibDll, "LoadImageSvg")
 	purego.RegisterLibFunc(&loadImageAnim, raylibDll, "LoadImageAnim")
+	purego.RegisterLibFunc(&loadImageAnimFromMemory, raylibDll, "LoadImageAnimFromMemory")
 	purego.RegisterLibFunc(&loadImageFromMemory, raylibDll, "LoadImageFromMemory")
 	purego.RegisterLibFunc(&loadImageFromTexture, raylibDll, "LoadImageFromTexture")
 	purego.RegisterLibFunc(&loadImageFromScreen, raylibDll, "LoadImageFromScreen")
-	purego.RegisterLibFunc(&isImageReady, raylibDll, "IsImageReady")
+	purego.RegisterLibFunc(&isImageValid, raylibDll, "IsImageValid")
 	purego.RegisterLibFunc(&unloadImage, raylibDll, "UnloadImage")
 	purego.RegisterLibFunc(&exportImage, raylibDll, "ExportImage")
 	purego.RegisterLibFunc(&exportImageToMemory, raylibDll, "ExportImageToMemory")
@@ -766,6 +792,7 @@ func init() {
 	purego.RegisterLibFunc(&genImageText, raylibDll, "GenImageText")
 	purego.RegisterLibFunc(&imageCopy, raylibDll, "ImageCopy")
 	purego.RegisterLibFunc(&imageFromImage, raylibDll, "ImageFromImage")
+	purego.RegisterLibFunc(&imageFromChannel, raylibDll, "ImageFromChannel")
 	purego.RegisterLibFunc(&imageText, raylibDll, "ImageText")
 	purego.RegisterLibFunc(&imageTextEx, raylibDll, "ImageTextEx")
 	purego.RegisterLibFunc(&imageFormat, raylibDll, "ImageFormat")
@@ -776,6 +803,7 @@ func init() {
 	purego.RegisterLibFunc(&imageAlphaMask, raylibDll, "ImageAlphaMask")
 	purego.RegisterLibFunc(&imageAlphaPremultiply, raylibDll, "ImageAlphaPremultiply")
 	purego.RegisterLibFunc(&imageBlurGaussian, raylibDll, "ImageBlurGaussian")
+	purego.RegisterLibFunc(&imageKernelConvolution, raylibDll, "ImageKernelConvolution")
 	purego.RegisterLibFunc(&imageResize, raylibDll, "ImageResize")
 	purego.RegisterLibFunc(&imageResizeNN, raylibDll, "ImageResizeNN")
 	purego.RegisterLibFunc(&imageResizeCanvas, raylibDll, "ImageResizeCanvas")
@@ -803,6 +831,7 @@ func init() {
 	purego.RegisterLibFunc(&imageDrawPixelV, raylibDll, "ImageDrawPixelV")
 	purego.RegisterLibFunc(&imageDrawLine, raylibDll, "ImageDrawLine")
 	purego.RegisterLibFunc(&imageDrawLineV, raylibDll, "ImageDrawLineV")
+	purego.RegisterLibFunc(&imageDrawLineEx, raylibDll, "ImageDrawLineEx")
 	purego.RegisterLibFunc(&imageDrawCircle, raylibDll, "ImageDrawCircle")
 	purego.RegisterLibFunc(&imageDrawCircleV, raylibDll, "ImageDrawCircleV")
 	purego.RegisterLibFunc(&imageDrawCircleLines, raylibDll, "ImageDrawCircleLines")
@@ -811,6 +840,11 @@ func init() {
 	purego.RegisterLibFunc(&imageDrawRectangleV, raylibDll, "ImageDrawRectangleV")
 	purego.RegisterLibFunc(&imageDrawRectangleRec, raylibDll, "ImageDrawRectangleRec")
 	purego.RegisterLibFunc(&imageDrawRectangleLines, raylibDll, "ImageDrawRectangleLines")
+	purego.RegisterLibFunc(&imageDrawTriangle, raylibDll, "ImageDrawTriangle")
+	purego.RegisterLibFunc(&imageDrawTriangleEx, raylibDll, "ImageDrawTriangleEx")
+	purego.RegisterLibFunc(&imageDrawTriangleLines, raylibDll, "ImageDrawTriangleLines")
+	purego.RegisterLibFunc(&imageDrawTriangleFan, raylibDll, "ImageDrawTriangleFan")
+	purego.RegisterLibFunc(&imageDrawTriangleStrip, raylibDll, "ImageDrawTriangleStrip")
 	purego.RegisterLibFunc(&imageDraw, raylibDll, "ImageDraw")
 	purego.RegisterLibFunc(&imageDrawText, raylibDll, "ImageDrawText")
 	purego.RegisterLibFunc(&imageDrawTextEx, raylibDll, "ImageDrawTextEx")
@@ -818,9 +852,9 @@ func init() {
 	purego.RegisterLibFunc(&loadTextureFromImage, raylibDll, "LoadTextureFromImage")
 	purego.RegisterLibFunc(&loadTextureCubemap, raylibDll, "LoadTextureCubemap")
 	purego.RegisterLibFunc(&loadRenderTexture, raylibDll, "LoadRenderTexture")
-	purego.RegisterLibFunc(&isTextureReady, raylibDll, "IsTextureReady")
+	purego.RegisterLibFunc(&isTextureValid, raylibDll, "IsTextureValid")
 	purego.RegisterLibFunc(&unloadTexture, raylibDll, "UnloadTexture")
-	purego.RegisterLibFunc(&isRenderTextureReady, raylibDll, "IsRenderTextureReady")
+	purego.RegisterLibFunc(&isRenderTextureValid, raylibDll, "IsRenderTextureValid")
 	purego.RegisterLibFunc(&unloadRenderTexture, raylibDll, "UnloadRenderTexture")
 	purego.RegisterLibFunc(&updateTexture, raylibDll, "UpdateTexture")
 	purego.RegisterLibFunc(&updateTextureRec, raylibDll, "UpdateTextureRec")
@@ -844,6 +878,7 @@ func init() {
 	purego.RegisterLibFunc(&colorContrast, raylibDll, "ColorContrast")
 	purego.RegisterLibFunc(&colorAlpha, raylibDll, "ColorAlpha")
 	purego.RegisterLibFunc(&colorAlphaBlend, raylibDll, "ColorAlphaBlend")
+	purego.RegisterLibFunc(&colorLerp, raylibDll, "ColorLerp")
 	purego.RegisterLibFunc(&getColor, raylibDll, "GetColor")
 	purego.RegisterLibFunc(&getPixelColor, raylibDll, "GetPixelColor")
 	purego.RegisterLibFunc(&setPixelColor, raylibDll, "SetPixelColor")
@@ -853,7 +888,7 @@ func init() {
 	purego.RegisterLibFunc(&loadFontEx, raylibDll, "LoadFontEx")
 	purego.RegisterLibFunc(&loadFontFromImage, raylibDll, "LoadFontFromImage")
 	purego.RegisterLibFunc(&loadFontFromMemory, raylibDll, "LoadFontFromMemory")
-	purego.RegisterLibFunc(&isFontReady, raylibDll, "IsFontReady")
+	purego.RegisterLibFunc(&isFontValid, raylibDll, "IsFontValid")
 	purego.RegisterLibFunc(&loadFontData, raylibDll, "LoadFontData")
 	purego.RegisterLibFunc(&genImageFontAtlas, raylibDll, "GenImageFontAtlas")
 	purego.RegisterLibFunc(&unloadFontData, raylibDll, "UnloadFontData")
@@ -893,13 +928,15 @@ func init() {
 	purego.RegisterLibFunc(&drawGrid, raylibDll, "DrawGrid")
 	purego.RegisterLibFunc(&loadModel, raylibDll, "LoadModel")
 	purego.RegisterLibFunc(&loadModelFromMesh, raylibDll, "LoadModelFromMesh")
-	purego.RegisterLibFunc(&isModelReady, raylibDll, "IsModelReady")
+	purego.RegisterLibFunc(&isModelValid, raylibDll, "IsModelValid")
 	purego.RegisterLibFunc(&unloadModel, raylibDll, "UnloadModel")
 	purego.RegisterLibFunc(&getModelBoundingBox, raylibDll, "GetModelBoundingBox")
 	purego.RegisterLibFunc(&drawModel, raylibDll, "DrawModel")
 	purego.RegisterLibFunc(&drawModelEx, raylibDll, "DrawModelEx")
 	purego.RegisterLibFunc(&drawModelWires, raylibDll, "DrawModelWires")
 	purego.RegisterLibFunc(&drawModelWiresEx, raylibDll, "DrawModelWiresEx")
+	purego.RegisterLibFunc(&drawModelPoints, raylibDll, "DrawModelPoints")
+	purego.RegisterLibFunc(&drawModelPointsEx, raylibDll, "DrawModelPointsEx")
 	purego.RegisterLibFunc(&drawBoundingBox, raylibDll, "DrawBoundingBox")
 	purego.RegisterLibFunc(&drawBillboard, raylibDll, "DrawBillboard")
 	purego.RegisterLibFunc(&drawBillboardRec, raylibDll, "DrawBillboardRec")
@@ -925,12 +962,13 @@ func init() {
 	purego.RegisterLibFunc(&genMeshCubicmap, raylibDll, "GenMeshCubicmap")
 	purego.RegisterLibFunc(&loadMaterials, raylibDll, "LoadMaterials")
 	purego.RegisterLibFunc(&loadMaterialDefault, raylibDll, "LoadMaterialDefault")
-	purego.RegisterLibFunc(&isMaterialReady, raylibDll, "IsMaterialReady")
+	purego.RegisterLibFunc(&isMaterialValid, raylibDll, "IsMaterialValid")
 	purego.RegisterLibFunc(&unloadMaterial, raylibDll, "UnloadMaterial")
 	purego.RegisterLibFunc(&setMaterialTexture, raylibDll, "SetMaterialTexture")
 	purego.RegisterLibFunc(&setModelMeshMaterial, raylibDll, "SetModelMeshMaterial")
 	purego.RegisterLibFunc(&loadModelAnimations, raylibDll, "LoadModelAnimations")
 	purego.RegisterLibFunc(&updateModelAnimation, raylibDll, "UpdateModelAnimation")
+	purego.RegisterLibFunc(&updateModelAnimationBones, raylibDll, "UpdateModelAnimationBones")
 	purego.RegisterLibFunc(&unloadModelAnimation, raylibDll, "UnloadModelAnimation")
 	purego.RegisterLibFunc(&unloadModelAnimations, raylibDll, "UnloadModelAnimations")
 	purego.RegisterLibFunc(&isModelAnimationValid, raylibDll, "IsModelAnimationValid")
@@ -949,11 +987,11 @@ func init() {
 	purego.RegisterLibFunc(&getMasterVolume, raylibDll, "GetMasterVolume")
 	purego.RegisterLibFunc(&loadWave, raylibDll, "LoadWave")
 	purego.RegisterLibFunc(&loadWaveFromMemory, raylibDll, "LoadWaveFromMemory")
-	purego.RegisterLibFunc(&isWaveReady, raylibDll, "IsWaveReady")
+	purego.RegisterLibFunc(&isWaveValid, raylibDll, "IsWaveValid")
 	purego.RegisterLibFunc(&loadSound, raylibDll, "LoadSound")
 	purego.RegisterLibFunc(&loadSoundFromWave, raylibDll, "LoadSoundFromWave")
 	purego.RegisterLibFunc(&loadSoundAlias, raylibDll, "LoadSoundAlias")
-	purego.RegisterLibFunc(&isSoundReady, raylibDll, "IsSoundReady")
+	purego.RegisterLibFunc(&isSoundValid, raylibDll, "IsSoundValid")
 	purego.RegisterLibFunc(&updateSound, raylibDll, "UpdateSound")
 	purego.RegisterLibFunc(&unloadWave, raylibDll, "UnloadWave")
 	purego.RegisterLibFunc(&unloadSound, raylibDll, "UnloadSound")
@@ -974,7 +1012,7 @@ func init() {
 	purego.RegisterLibFunc(&unloadWaveSamples, raylibDll, "UnloadWaveSamples")
 	purego.RegisterLibFunc(&loadMusicStream, raylibDll, "LoadMusicStream")
 	purego.RegisterLibFunc(&loadMusicStreamFromMemory, raylibDll, "LoadMusicStreamFromMemory")
-	purego.RegisterLibFunc(&isMusicReady, raylibDll, "IsMusicReady")
+	purego.RegisterLibFunc(&isMusicValid, raylibDll, "IsMusicValid")
 	purego.RegisterLibFunc(&unloadMusicStream, raylibDll, "UnloadMusicStream")
 	purego.RegisterLibFunc(&playMusicStream, raylibDll, "PlayMusicStream")
 	purego.RegisterLibFunc(&isMusicStreamPlaying, raylibDll, "IsMusicStreamPlaying")
@@ -989,7 +1027,7 @@ func init() {
 	purego.RegisterLibFunc(&getMusicTimeLength, raylibDll, "GetMusicTimeLength")
 	purego.RegisterLibFunc(&getMusicTimePlayed, raylibDll, "GetMusicTimePlayed")
 	purego.RegisterLibFunc(&loadAudioStream, raylibDll, "LoadAudioStream")
-	purego.RegisterLibFunc(&isAudioStreamReady, raylibDll, "IsAudioStreamReady")
+	purego.RegisterLibFunc(&isAudioStreamValid, raylibDll, "IsAudioStreamValid")
 	purego.RegisterLibFunc(&unloadAudioStream, raylibDll, "UnloadAudioStream")
 	purego.RegisterLibFunc(&updateAudioStream, raylibDll, "UpdateAudioStream")
 	purego.RegisterLibFunc(&isAudioStreamProcessed, raylibDll, "IsAudioStreamProcessed")
@@ -1179,7 +1217,7 @@ func GetMonitorCount() int {
 	return int(getMonitorCount())
 }
 
-// GetCurrentMonitor - Get current connected monitor
+// GetCurrentMonitor - Get current monitor where window is placed
 func GetCurrentMonitor() int {
 	return int(getCurrentMonitor())
 }
@@ -1240,6 +1278,15 @@ func SetClipboardText(text string) {
 // GetClipboardText - Get clipboard text content
 func GetClipboardText() string {
 	return getClipboardText()
+}
+
+// GetClipboardImage - Get clipboard image content
+//
+// Only works with SDL3 backend or Windows with RGFW/GLFW
+func GetClipboardImage() Image {
+	var img Image
+	getClipboardImage(uintptr(unsafe.Pointer(&img)))
+	return img
 }
 
 // EnableEventWaiting - Enable waiting for events on EndDrawing(), no automatic event polling
@@ -1423,9 +1470,9 @@ func LoadShaderFromMemory(vsCode string, fsCode string) Shader {
 	return shader
 }
 
-// IsShaderReady - Check if a shader is ready
-func IsShaderReady(shader Shader) bool {
-	return isShaderReady(uintptr(unsafe.Pointer(&shader)))
+// IsShaderValid - Check if a shader is valid (loaded on GPU)
+func IsShaderValid(shader Shader) bool {
+	return isShaderValid(uintptr(unsafe.Pointer(&shader)))
 }
 
 // GetShaderLocation - Get shader uniform location
@@ -1464,9 +1511,23 @@ func UnloadShader(shader Shader) {
 }
 
 // GetMouseRay - Get a ray trace from mouse position
+//
+// Deprecated: Use [GetScreenToWorldRay] instead.
 func GetMouseRay(mousePosition Vector2, camera Camera) Ray {
+	return GetScreenToWorldRay(mousePosition, camera)
+}
+
+// GetScreenToWorldRay - Get a ray trace from screen position (i.e mouse)
+func GetScreenToWorldRay(position Vector2, camera Camera) Ray {
 	var ray Ray
-	getMouseRay(uintptr(unsafe.Pointer(&ray)), *(*uintptr)(unsafe.Pointer(&mousePosition)), uintptr(unsafe.Pointer(&camera)))
+	getScreenToWorldRay(uintptr(unsafe.Pointer(&ray)), *(*uintptr)(unsafe.Pointer(&position)), uintptr(unsafe.Pointer(&camera)))
+	return ray
+}
+
+// GetScreenToWorldRayEx - Get a ray trace from screen position (i.e mouse) in a viewport
+func GetScreenToWorldRayEx(position Vector2, camera Camera, width, height int32) Ray {
+	var ray Ray
+	getScreenToWorldRayEx(uintptr(unsafe.Pointer(&ray)), *(*uintptr)(unsafe.Pointer(&position)), uintptr(unsafe.Pointer(&camera)), width, height)
 	return ray
 }
 
@@ -1791,6 +1852,11 @@ func SetGamepadMappings(mappings string) int32 {
 	return setGamepadMappings(mappings)
 }
 
+// SetGamepadVibration - Set gamepad vibration for both motors (duration in seconds)
+func SetGamepadVibration(gamepad int32, leftMotor, rightMotor, duration float32) {
+	setGamepadVibration(gamepad, leftMotor, rightMotor, duration)
+}
+
 // IsMouseButtonPressed - Check if a mouse button has been pressed once
 func IsMouseButtonPressed(button MouseButton) bool {
 	return isMouseButtonPressed(int32(button))
@@ -1937,6 +2003,20 @@ func SetShapesTexture(texture Texture2D, source Rectangle) {
 	setShapesTexture(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&source)))
 }
 
+// GetShapesTexture - Get texture that is used for shapes drawing
+func GetShapesTexture() Texture2D {
+	var texture Texture2D
+	getShapesTexture(uintptr(unsafe.Pointer(&texture)))
+	return texture
+}
+
+// GetShapesTextureRectangle - Get texture source rectangle that is used for shapes drawing
+func GetShapesTextureRectangle() Rectangle {
+	var rec Rectangle
+	getShapesTextureRectangle(uintptr(unsafe.Pointer(&rec)))
+	return rec
+}
+
 // DrawPixel - Draw a pixel
 func DrawPixel(posX int32, posY int32, col color.RGBA) {
 	drawPixel(posX, posY, *(*uintptr)(unsafe.Pointer(&col)))
@@ -1989,8 +2069,8 @@ func DrawCircleSectorLines(center Vector2, radius float32, startAngle float32, e
 }
 
 // DrawCircleGradient - Draw a gradient-filled circle
-func DrawCircleGradient(centerX int32, centerY int32, radius float32, color1 color.RGBA, color2 color.RGBA) {
-	drawCircleGradient(centerX, centerY, radius, *(*uintptr)(unsafe.Pointer(&color1)), *(*uintptr)(unsafe.Pointer(&color2)))
+func DrawCircleGradient(centerX int32, centerY int32, radius float32, inner color.RGBA, outer color.RGBA) {
+	drawCircleGradient(centerX, centerY, radius, *(*uintptr)(unsafe.Pointer(&inner)), *(*uintptr)(unsafe.Pointer(&outer)))
 }
 
 // DrawCircleV - Draw a color-filled circle (Vector version)
@@ -2049,18 +2129,18 @@ func DrawRectanglePro(rec Rectangle, origin Vector2, rotation float32, col color
 }
 
 // DrawRectangleGradientV - Draw a vertical-gradient-filled rectangle
-func DrawRectangleGradientV(posX int32, posY int32, width int32, height int32, color1 color.RGBA, color2 color.RGBA) {
-	drawRectangleGradientV(posX, posY, width, height, *(*uintptr)(unsafe.Pointer(&color1)), *(*uintptr)(unsafe.Pointer(&color2)))
+func DrawRectangleGradientV(posX int32, posY int32, width int32, height int32, top color.RGBA, bottom color.RGBA) {
+	drawRectangleGradientV(posX, posY, width, height, *(*uintptr)(unsafe.Pointer(&top)), *(*uintptr)(unsafe.Pointer(&bottom)))
 }
 
 // DrawRectangleGradientH - Draw a horizontal-gradient-filled rectangle
-func DrawRectangleGradientH(posX int32, posY int32, width int32, height int32, color1 color.RGBA, color2 color.RGBA) {
-	drawRectangleGradientH(posX, posY, width, height, *(*uintptr)(unsafe.Pointer(&color1)), *(*uintptr)(unsafe.Pointer(&color2)))
+func DrawRectangleGradientH(posX int32, posY int32, width int32, height int32, left color.RGBA, right color.RGBA) {
+	drawRectangleGradientH(posX, posY, width, height, *(*uintptr)(unsafe.Pointer(&left)), *(*uintptr)(unsafe.Pointer(&right)))
 }
 
 // DrawRectangleGradientEx - Draw a gradient-filled rectangle with custom vertex colors
-func DrawRectangleGradientEx(rec Rectangle, col1 color.RGBA, col2 color.RGBA, col3 color.RGBA, col4 color.RGBA) {
-	drawRectangleGradientEx(uintptr(unsafe.Pointer(&rec)), *(*uintptr)(unsafe.Pointer(&col1)), *(*uintptr)(unsafe.Pointer(&col2)), *(*uintptr)(unsafe.Pointer(&col3)), *(*uintptr)(unsafe.Pointer(&col4)))
+func DrawRectangleGradientEx(rec Rectangle, topLeft color.RGBA, bottomLeft color.RGBA, topRight color.RGBA, bottomRight color.RGBA) {
+	drawRectangleGradientEx(uintptr(unsafe.Pointer(&rec)), *(*uintptr)(unsafe.Pointer(&topLeft)), *(*uintptr)(unsafe.Pointer(&bottomLeft)), *(*uintptr)(unsafe.Pointer(&topRight)), *(*uintptr)(unsafe.Pointer(&bottomRight)))
 }
 
 // DrawRectangleLines - Draw rectangle outline
@@ -2078,9 +2158,14 @@ func DrawRectangleRounded(rec Rectangle, roundness float32, segments int32, col 
 	drawRectangleRounded(uintptr(unsafe.Pointer(&rec)), roundness, segments, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
-// DrawRectangleRoundedLines - Draw rectangle with rounded edges outline
-func DrawRectangleRoundedLines(rec Rectangle, roundness float32, segments float32, lineThick float32, col color.RGBA) {
-	drawRectangleRoundedLines(uintptr(unsafe.Pointer(&rec)), roundness, int32(segments), lineThick, *(*uintptr)(unsafe.Pointer(&col)))
+// DrawRectangleRoundedLines - Draw rectangle lines with rounded edges
+func DrawRectangleRoundedLines(rec Rectangle, roundness float32, segments int32, col color.RGBA) {
+	drawRectangleRoundedLines(uintptr(unsafe.Pointer(&rec)), roundness, segments, *(*uintptr)(unsafe.Pointer(&col)))
+}
+
+// DrawRectangleRoundedLinesEx - Draw rectangle with rounded edges outline
+func DrawRectangleRoundedLinesEx(rec Rectangle, roundness float32, segments int32, lineThick float32, col color.RGBA) {
+	drawRectangleRoundedLinesEx(uintptr(unsafe.Pointer(&rec)), roundness, segments, lineThick, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawTriangle - Draw a color-filled triangle (vertex in counter-clockwise order!)
@@ -2220,6 +2305,11 @@ func CheckCollisionCircleRec(center Vector2, radius float32, rec Rectangle) bool
 	return checkCollisionCircleRec(*(*uintptr)(unsafe.Pointer(&center)), radius, uintptr(unsafe.Pointer(&rec)))
 }
 
+// CheckCollisionCircleLine - Check if circle collides with a line created betweeen two points [p1] and [p2]
+func CheckCollisionCircleLine(center Vector2, radius float32, p1, p2 Vector2) bool {
+	return checkCollisionCircleLine(*(*uintptr)(unsafe.Pointer(&center)), radius, *(*uintptr)(unsafe.Pointer(&p1)), *(*uintptr)(unsafe.Pointer(&p2)))
+}
+
 // CheckCollisionPointRec - Check if point is inside rectangle
 func CheckCollisionPointRec(point Vector2, rec Rectangle) bool {
 	return checkCollisionPointRec(*(*uintptr)(unsafe.Pointer(&point)), uintptr(unsafe.Pointer(&rec)))
@@ -2272,17 +2362,17 @@ func LoadImageRaw(fileName string, width int32, height int32, format PixelFormat
 	return &img
 }
 
-// LoadImageSvg - Load image from SVG file data or string with specified size
-func LoadImageSvg(fileNameOrString string, width int32, height int32) *Image {
+// LoadImageAnim - Load image sequence from file (frames appended to image.data)
+func LoadImageAnim(fileName string, frames *int32) *Image {
 	var img Image
-	loadImageSvg(uintptr(unsafe.Pointer(&img)), fileNameOrString, width, height)
+	loadImageAnim(uintptr(unsafe.Pointer(&img)), fileName, frames)
 	return &img
 }
 
-// LoadImageAnim - Load image sequence from file (frames appended to image.data)
-func LoadImageAnim(fileName string, frames []int32) *Image {
+// LoadImageAnimFromMemory - Load image sequence from memory buffer
+func LoadImageAnimFromMemory(fileType string, fileData []byte, dataSize int32, frames *int32) *Image {
 	var img Image
-	loadImageAnim(uintptr(unsafe.Pointer(&img)), fileName, frames)
+	loadImageAnimFromMemory(uintptr(unsafe.Pointer(&img)), fileType, fileData, dataSize, frames)
 	return &img
 }
 
@@ -2307,9 +2397,9 @@ func LoadImageFromScreen() *Image {
 	return &img
 }
 
-// IsImageReady - Check if an image is ready
-func IsImageReady(image *Image) bool {
-	return isImageReady(uintptr(unsafe.Pointer(image)))
+// IsImageValid - Check if an image is valid (data and parameters)
+func IsImageValid(image *Image) bool {
+	return isImageValid(uintptr(unsafe.Pointer(image)))
 }
 
 // UnloadImage - Unload image from CPU memory (RAM)
@@ -2406,6 +2496,13 @@ func ImageFromImage(image Image, rec Rectangle) Image {
 	return retImage
 }
 
+// ImageFromChannel - Create an image from a selected channel of another image (GRAYSCALE)
+func ImageFromChannel(image Image, selectedChannel int32) Image {
+	var retImage Image
+	imageFromChannel(uintptr(unsafe.Pointer(&retImage)), uintptr(unsafe.Pointer(&image)), selectedChannel)
+	return retImage
+}
+
 // ImageText - Create an image from text (default font)
 func ImageText(text string, fontSize int32, col color.RGBA) Image {
 	var retImage Image
@@ -2458,6 +2555,11 @@ func ImageAlphaPremultiply(image *Image) {
 // ImageBlurGaussian - Apply Gaussian blur using a box blur approximation
 func ImageBlurGaussian(image *Image, blurSize int32) {
 	imageBlurGaussian(image, blurSize)
+}
+
+// ImageKernelConvolution - Apply custom square convolution kernel to image
+func ImageKernelConvolution(image *Image, kernel []float32) {
+	imageKernelConvolution(image, kernel, int32(len(kernel)))
 }
 
 // ImageResize - Resize image (Bicubic scaling algorithm)
@@ -2601,8 +2703,13 @@ func ImageDrawLine(dst *Image, startPosX int32, startPosY int32, endPosX int32, 
 }
 
 // ImageDrawLineV - Draw line within an image (Vector version)
-func ImageDrawLineV(dst *Image, start Vector2, end Vector2, col color.RGBA) {
+func ImageDrawLineV(dst *Image, start, end Vector2, col color.RGBA) {
 	imageDrawLineV(dst, *(*uintptr)(unsafe.Pointer(&start)), *(*uintptr)(unsafe.Pointer(&end)), *(*uintptr)(unsafe.Pointer(&col)))
+}
+
+// ImageDrawLineEx - Draw a line defining thickness within an image
+func ImageDrawLineEx(dst *Image, start, end Vector2, thick int32, col color.RGBA) {
+	imageDrawLineEx(dst, *(*uintptr)(unsafe.Pointer(&start)), *(*uintptr)(unsafe.Pointer(&end)), thick, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // ImageDrawCircle - Draw a filled circle within an image
@@ -2643,6 +2750,33 @@ func ImageDrawRectangleRec(dst *Image, rec Rectangle, col color.RGBA) {
 // ImageDrawRectangleLines - Draw rectangle lines within an image
 func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int, col color.RGBA) {
 	imageDrawRectangleLines(dst, uintptr(unsafe.Pointer(&rec)), int32(thick), *(*uintptr)(unsafe.Pointer(&col)))
+}
+
+// ImageDrawTriangle - Draw triangle within an image
+func ImageDrawTriangle(dst *Image, v1, v2, v3 Vector2, col color.RGBA) {
+	imageDrawTriangle(dst, *(*uintptr)(unsafe.Pointer(&v1)), *(*uintptr)(unsafe.Pointer(&v2)), *(*uintptr)(unsafe.Pointer(&v3)), *(*uintptr)(unsafe.Pointer(&col)))
+}
+
+// ImageDrawTriangleEx - Draw triangle with interpolated colors within an image
+func ImageDrawTriangleEx(dst *Image, v1, v2, v3 Vector2, c1, c2, c3 color.RGBA) {
+	imageDrawTriangleEx(dst, *(*uintptr)(unsafe.Pointer(&v1)), *(*uintptr)(unsafe.Pointer(&v2)), *(*uintptr)(unsafe.Pointer(&v3)), *(*uintptr)(unsafe.Pointer(&c1)), *(*uintptr)(unsafe.Pointer(&c2)), *(*uintptr)(unsafe.Pointer(&c3)))
+}
+
+// ImageDrawTriangleLines - Draw triangle outline within an image
+func ImageDrawTriangleLines(dst *Image, v1, v2, v3 Vector2, col color.RGBA) {
+	imageDrawTriangleLines(dst, *(*uintptr)(unsafe.Pointer(&v1)), *(*uintptr)(unsafe.Pointer(&v2)), *(*uintptr)(unsafe.Pointer(&v3)), *(*uintptr)(unsafe.Pointer(&col)))
+}
+
+// ImageDrawTriangleFan - Draw a triangle fan defined by points within an image (first vertex is the center)
+func ImageDrawTriangleFan(dst *Image, points []Vector2, col color.RGBA) {
+	pointCount := int32(len(points))
+	imageDrawTriangleFan(dst, (unsafe.SliceData(points)), pointCount, *(*uintptr)(unsafe.Pointer(&col)))
+}
+
+// ImageDrawTriangleStrip - Draw a triangle strip defined by points within an image
+func ImageDrawTriangleStrip(dst *Image, points []Vector2, col color.RGBA) {
+	pointCount := int32(len(points))
+	imageDrawTriangleStrip(dst, (unsafe.SliceData(points)), pointCount, *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // ImageDraw - Draw a source image within a destination image (tint applied to source)
@@ -2689,9 +2823,9 @@ func LoadRenderTexture(width int32, height int32) RenderTexture2D {
 	return texture
 }
 
-// IsTextureReady - Check if a texture is ready
-func IsTextureReady(texture Texture2D) bool {
-	return isTextureReady(uintptr(unsafe.Pointer(&texture)))
+// IsTextureValid - Check if a texture is valid (loaded in GPU)
+func IsTextureValid(texture Texture2D) bool {
+	return isTextureValid(uintptr(unsafe.Pointer(&texture)))
 }
 
 // UnloadTexture - Unload texture from GPU memory (VRAM)
@@ -2699,9 +2833,9 @@ func UnloadTexture(texture Texture2D) {
 	unloadTexture(uintptr(unsafe.Pointer(&texture)))
 }
 
-// IsRenderTextureReady - Check if a render texture is ready
-func IsRenderTextureReady(target RenderTexture2D) bool {
-	return isRenderTextureReady(uintptr(unsafe.Pointer(&target)))
+// IsRenderTextureValid - Check if a render texture is valid (loaded in GPU)
+func IsRenderTextureValid(target RenderTexture2D) bool {
+	return isRenderTextureValid(uintptr(unsafe.Pointer(&target)))
 }
 
 // UnloadRenderTexture - Unload render texture from GPU memory (VRAM)
@@ -2770,7 +2904,7 @@ func Fade(col color.RGBA, alpha float32) color.RGBA {
 	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
-// ColorToInt - Get hexadecimal value for a Color
+// ColorToInt - Get hexadecimal value for a Color (0xRRGGBBAA)
 func ColorToInt(col color.RGBA) int32 {
 	return colorToInt(*(*uintptr)(unsafe.Pointer(&col)))
 }
@@ -2828,6 +2962,12 @@ func ColorAlpha(col color.RGBA, alpha float32) color.RGBA {
 // ColorAlphaBlend - Get src alpha-blended into dst color with tint
 func ColorAlphaBlend(dst color.RGBA, src color.RGBA, tint color.RGBA) color.RGBA {
 	ret := colorAlphaBlend(*(*uintptr)(unsafe.Pointer(&dst)), *(*uintptr)(unsafe.Pointer(&src)), *(*uintptr)(unsafe.Pointer(&tint)))
+	return *(*color.RGBA)(unsafe.Pointer(&ret))
+}
+
+// ColorLerp - Get color lerp interpolation between two colors, factor [0.0f..1.0f]
+func ColorLerp(col1, col2 color.RGBA, factor float32) color.RGBA {
+	ret := colorLerp(*(*uintptr)(unsafe.Pointer(&col1)), *(*uintptr)(unsafe.Pointer(&col2)), factor)
 	return *(*color.RGBA)(unsafe.Pointer(&ret))
 }
 
@@ -2894,9 +3034,9 @@ func LoadFontFromMemory(fileType string, fileData []byte, fontSize int32, codepo
 	return font
 }
 
-// IsFontReady - Check if a font is ready
-func IsFontReady(font Font) bool {
-	return isFontReady(uintptr(unsafe.Pointer(&font)))
+// IsFontValid - Check if a font is valid (font data loaded, WARNING: GPU texture not checked)
+func IsFontValid(font Font) bool {
+	return isFontValid(uintptr(unsafe.Pointer(&font)))
 }
 
 // LoadFontData - Load font data for further use
@@ -3115,9 +3255,9 @@ func LoadModelFromMesh(mesh Mesh) Model {
 	return model
 }
 
-// IsModelReady - Check if a model is ready
-func IsModelReady(model Model) bool {
-	return isModelReady(uintptr(unsafe.Pointer(&model)))
+// IsModelValid - Check if a model is valid (loaded in GPU, VAO/VBOs)
+func IsModelValid(model Model) bool {
+	return isModelValid(uintptr(unsafe.Pointer(&model)))
 }
 
 // UnloadModel - Unload model (including meshes) from memory (RAM and/or VRAM)
@@ -3152,14 +3292,24 @@ func DrawModelWiresEx(model Model, position Vector3, rotationAxis Vector3, rotat
 	drawModelWiresEx(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&position)), uintptr(unsafe.Pointer(&rotationAxis)), rotationAngle, uintptr(unsafe.Pointer(&scale)), *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
+// DrawModelPoints - Draw a model as points
+func DrawModelPoints(model Model, position Vector3, scale float32, tint color.RGBA) {
+	drawModelPoints(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&position)), scale, *(*uintptr)(unsafe.Pointer(&tint)))
+}
+
+// DrawModelPointsEx - Draw a model as points with extended parameters
+func DrawModelPointsEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint color.RGBA) {
+	drawModelPointsEx(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&position)), uintptr(unsafe.Pointer(&rotationAxis)), rotationAngle, uintptr(unsafe.Pointer(&scale)), *(*uintptr)(unsafe.Pointer(&tint)))
+}
+
 // DrawBoundingBox - Draw bounding box (wires)
 func DrawBoundingBox(box BoundingBox, col color.RGBA) {
 	drawBoundingBox(uintptr(unsafe.Pointer(&box)), *(*uintptr)(unsafe.Pointer(&col)))
 }
 
 // DrawBillboard - Draw a billboard texture
-func DrawBillboard(camera Camera, texture Texture2D, position Vector3, size float32, tint color.RGBA) {
-	drawBillboard(uintptr(unsafe.Pointer(&camera)), uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&position)), size, *(*uintptr)(unsafe.Pointer(&tint)))
+func DrawBillboard(camera Camera, texture Texture2D, position Vector3, scale float32, tint color.RGBA) {
+	drawBillboard(uintptr(unsafe.Pointer(&camera)), uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&position)), scale, *(*uintptr)(unsafe.Pointer(&tint)))
 }
 
 // DrawBillboardRec - Draw a billboard texture defined by source
@@ -3306,9 +3456,9 @@ func LoadMaterialDefault() Material {
 	return material
 }
 
-// IsMaterialReady - Check if a material is ready
-func IsMaterialReady(material Material) bool {
-	return isMaterialReady(uintptr(unsafe.Pointer(&material)))
+// IsMaterialValid - Check if a material is valid (shader assigned, map textures loaded in GPU)
+func IsMaterialValid(material Material) bool {
+	return isMaterialValid(uintptr(unsafe.Pointer(&material)))
 }
 
 // UnloadMaterial - Unload material from GPU memory (VRAM)
@@ -3333,9 +3483,14 @@ func LoadModelAnimations(fileName string) []ModelAnimation {
 	return unsafe.Slice(ret, animCount)
 }
 
-// UpdateModelAnimation - Update model animation pose
+// UpdateModelAnimation - Update model animation pose (CPU)
 func UpdateModelAnimation(model Model, anim ModelAnimation, frame int32) {
 	updateModelAnimation(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&anim)), frame)
+}
+
+// UpdateModelAnimationBones - Update model animation mesh bone matrices (GPU skinning)
+func UpdateModelAnimationBones(model Model, anim ModelAnimation, frame int32) {
+	updateModelAnimationBones(uintptr(unsafe.Pointer(&model)), uintptr(unsafe.Pointer(&anim)), frame)
 }
 
 // UnloadModelAnimation - Unload animation data
@@ -3443,9 +3598,9 @@ func LoadWaveFromMemory(fileType string, fileData []byte, dataSize int32) Wave {
 	return wave
 }
 
-// IsWaveReady - Checks if wave data is ready
-func IsWaveReady(wave Wave) bool {
-	return isWaveReady(uintptr(unsafe.Pointer(&wave)))
+// IsWaveValid - Checks if wave data is valid (data loaded and parameters)
+func IsWaveValid(wave Wave) bool {
+	return isWaveValid(uintptr(unsafe.Pointer(&wave)))
 }
 
 // LoadSound - Load sound from file
@@ -3469,9 +3624,9 @@ func LoadSoundAlias(source Sound) Sound {
 	return sound
 }
 
-// IsSoundReady - Checks if a sound is ready
-func IsSoundReady(sound Sound) bool {
-	return isSoundReady(uintptr(unsafe.Pointer(&sound)))
+// IsSoundValid - Checks if a sound is valid (data loaded and buffers initialized)
+func IsSoundValid(sound Sound) bool {
+	return isSoundValid(uintptr(unsafe.Pointer(&sound)))
 }
 
 // UpdateSound - Update sound buffer with new data
@@ -3546,9 +3701,9 @@ func WaveCopy(wave Wave) Wave {
 	return copy
 }
 
-// WaveCrop - Crop a wave to defined samples range
-func WaveCrop(wave *Wave, initSample int32, finalSample int32) {
-	waveCrop(wave, initSample, finalSample)
+// WaveCrop - Crop a wave to defined frames range
+func WaveCrop(wave *Wave, initFrame int32, finalFrame int32) {
+	waveCrop(wave, initFrame, finalFrame)
 }
 
 // WaveFormat - Convert wave data to desired format
@@ -3581,9 +3736,9 @@ func LoadMusicStreamFromMemory(fileType string, data []byte, dataSize int32) Mus
 	return music
 }
 
-// IsMusicReady - Checks if a music stream is ready
-func IsMusicReady(music Music) bool {
-	return isMusicReady(uintptr(unsafe.Pointer(&music)))
+// IsMusicValid - Checks if a music stream is valid (context and buffers initialized)
+func IsMusicValid(music Music) bool {
+	return isMusicValid(uintptr(unsafe.Pointer(&music)))
 }
 
 // UnloadMusicStream - Unload music stream
@@ -3658,9 +3813,9 @@ func LoadAudioStream(sampleRate uint32, sampleSize uint32, channels uint32) Audi
 	return audioStream
 }
 
-// IsAudioStreamReady - Checks if an audio stream is ready
-func IsAudioStreamReady(stream AudioStream) bool {
-	return isAudioStreamReady(uintptr(unsafe.Pointer(&stream)))
+// IsAudioStreamValid - Checks if an audio stream is valid (buffers initialized)
+func IsAudioStreamValid(stream AudioStream) bool {
+	return isAudioStreamValid(uintptr(unsafe.Pointer(&stream)))
 }
 
 // UnloadAudioStream - Unload audio stream and free memory

@@ -103,23 +103,24 @@ func LoadImageRaw(fileName string, width, height int32, format PixelFormat, head
 	return v
 }
 
-// LoadImageSvg - Load image from SVG file data or string with specified size
-func LoadImageSvg(fileNameOrString string, width, height int32) *Image {
-	cfileNameOrString := C.CString(fileNameOrString)
-	defer C.free(unsafe.Pointer(cfileNameOrString))
-	cwidth := (C.int)(width)
-	cheight := (C.int)(height)
-	ret := C.LoadImageSvg(cfileNameOrString, cwidth, cheight)
-	v := newImageFromPointer(unsafe.Pointer(&ret))
-	return v
-}
-
 // LoadImageAnim - Load image sequence from file (frames appended to image.data)
 func LoadImageAnim(fileName string, frames *int32) *Image {
 	cfileName := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfileName))
 	cframes := (*C.int)(frames)
 	ret := C.LoadImageAnim(cfileName, cframes)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// LoadImageAnimFromMemory - Load image sequence from memory buffer
+func LoadImageAnimFromMemory(fileType string, fileData []byte, dataSize int32, frames *int32) *Image {
+	cfileType := C.CString(fileType)
+	defer C.free(unsafe.Pointer(cfileType))
+	cfileData := (*C.uchar)(unsafe.Pointer(&fileData[0]))
+	cdataSize := (C.int)(dataSize)
+	cframes := (*C.int)(frames)
+	ret := C.LoadImageAnimFromMemory(cfileType, cfileData, cdataSize, cframes)
 	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return v
 }
@@ -150,10 +151,10 @@ func LoadImageFromScreen() *Image {
 	return v
 }
 
-// IsImageReady - Check if an image is ready
-func IsImageReady(image *Image) bool {
+// IsImageValid - Check if an image is valid (data and parameters)
+func IsImageValid(image *Image) bool {
 	cimage := image.cptr()
-	ret := C.IsImageReady(*cimage)
+	ret := C.IsImageValid(*cimage)
 	v := bool(ret)
 	return v
 }
@@ -199,10 +200,10 @@ func UnloadImage(image *Image) {
 	C.UnloadImage(*cimage)
 }
 
-// IsTextureReady - Check if a texture is ready
-func IsTextureReady(texture Texture2D) bool {
+// IsTextureValid - Check if a texture is valid (loaded in GPU)
+func IsTextureValid(texture Texture2D) bool {
 	ctexture := texture.cptr()
-	ret := C.IsTextureReady(*ctexture)
+	ret := C.IsTextureValid(*ctexture)
 	v := bool(ret)
 	return v
 }
@@ -213,10 +214,10 @@ func UnloadTexture(texture Texture2D) {
 	C.UnloadTexture(*ctexture)
 }
 
-// IsRenderTextureReady - Check if a render texture is ready
-func IsRenderTextureReady(target RenderTexture2D) bool {
+// IsRenderTextureValid - Check if a render texture is valid (loaded in GPU)
+func IsRenderTextureValid(target RenderTexture2D) bool {
 	ctarget := target.cptr()
-	ret := C.IsRenderTextureReady(*ctarget)
+	ret := C.IsRenderTextureValid(*ctarget)
 	v := bool(ret)
 	return v
 }
@@ -287,6 +288,15 @@ func ImageFromImage(image Image, rec Rectangle) Image {
 	cimage := image.cptr()
 	crec := rec.cptr()
 	ret := C.ImageFromImage(*cimage, *crec)
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return *v
+}
+
+// ImageFromChannel - Create an image from a selected channel of another image (GRAYSCALE)
+func ImageFromChannel(image Image, selectedChannel int32) Image {
+	cimage := image.cptr()
+	cselectedChannel := C.int(selectedChannel)
+	ret := C.ImageFromChannel(*cimage, cselectedChannel)
 	v := newImageFromPointer(unsafe.Pointer(&ret))
 	return *v
 }
@@ -369,6 +379,13 @@ func ImageBlurGaussian(image *Image, blurSize int32) {
 	cimage := image.cptr()
 	cblurSize := C.int(blurSize)
 	C.ImageBlurGaussian(cimage, cblurSize)
+}
+
+// ImageKernelConvolution - Apply custom square convolution kernel to image
+func ImageKernelConvolution(image *Image, kernel []float32) {
+	cimage := image.cptr()
+	ckernel := (*C.float)(unsafe.Pointer(&kernel[0]))
+	C.ImageKernelConvolution(cimage, ckernel, C.int(len(kernel)))
 }
 
 // ImageResize - Resize an image (bilinear filtering)
@@ -534,6 +551,16 @@ func ImageDrawLineV(dst *Image, start, end Vector2, col color.RGBA) {
 	C.ImageDrawLineV(cdst, *cstart, *cend, *ccolor)
 }
 
+// ImageDrawLineEx - Draw a line defining thickness within an image
+func ImageDrawLineEx(dst *Image, start, end Vector2, thick int32, col color.RGBA) {
+	cdst := dst.cptr()
+	cstart := start.cptr()
+	cend := end.cptr()
+	cthick := C.int(thick)
+	ccolor := colorCptr(col)
+	C.ImageDrawLineEx(cdst, *cstart, *cend, cthick, *ccolor)
+}
+
 // ImageDrawCircle - Draw a filled circle within an image
 func ImageDrawCircle(dst *Image, centerX, centerY, radius int32, col color.RGBA) {
 	cdst := dst.cptr()
@@ -616,6 +643,56 @@ func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int, col color.RGB
 	cthick := (C.int)(thick)
 	ccolor := colorCptr(col)
 	C.ImageDrawRectangleLines(cdst, *crec, cthick, *ccolor)
+}
+
+// ImageDrawTriangle - Draw triangle within an image
+func ImageDrawTriangle(dst *Image, v1, v2, v3 Vector2, col color.RGBA) {
+	cdst := dst.cptr()
+	cv1 := v1.cptr()
+	cv2 := v2.cptr()
+	cv3 := v3.cptr()
+	ccol := colorCptr(col)
+	C.ImageDrawTriangle(cdst, *cv1, *cv2, *cv3, *ccol)
+}
+
+// ImageDrawTriangleEx - Draw triangle with interpolated colors within an image
+func ImageDrawTriangleEx(dst *Image, v1, v2, v3 Vector2, c1, c2, c3 color.RGBA) {
+	cdst := dst.cptr()
+	cv1 := v1.cptr()
+	cv2 := v2.cptr()
+	cv3 := v3.cptr()
+	cc1 := colorCptr(c1)
+	cc2 := colorCptr(c2)
+	cc3 := colorCptr(c3)
+	C.ImageDrawTriangleEx(cdst, *cv1, *cv2, *cv3, *cc1, *cc2, *cc3)
+}
+
+// ImageDrawTriangleLines - Draw triangle outline within an image
+func ImageDrawTriangleLines(dst *Image, v1, v2, v3 Vector2, col color.RGBA) {
+	cdst := dst.cptr()
+	cv1 := v1.cptr()
+	cv2 := v2.cptr()
+	cv3 := v3.cptr()
+	ccol := colorCptr(col)
+	C.ImageDrawTriangleLines(cdst, *cv1, *cv2, *cv3, *ccol)
+}
+
+// ImageDrawTriangleFan - Draw a triangle fan defined by points within an image (first vertex is the center)
+func ImageDrawTriangleFan(dst *Image, points []Vector2, col color.RGBA) {
+	cdst := dst.cptr()
+	cpoints := (*C.Vector2)(unsafe.Pointer(&points[0]))
+	pointCount := C.int(len(points))
+	ccol := colorCptr(col)
+	C.ImageDrawTriangleFan(cdst, cpoints, pointCount, *ccol)
+}
+
+// ImageDrawTriangleStrip - Draw a triangle strip defined by points within an image
+func ImageDrawTriangleStrip(dst *Image, points []Vector2, col color.RGBA) {
+	cdst := dst.cptr()
+	cpoints := (*C.Vector2)(unsafe.Pointer(&points[0]))
+	pointCount := C.int(len(points))
+	ccol := colorCptr(col)
+	C.ImageDrawTriangleStrip(cdst, cpoints, pointCount, *ccol)
 }
 
 // ImageDrawRectangleRec - Draw rectangle within an image

@@ -338,7 +338,7 @@ func GetMonitorCount() int {
 	return v
 }
 
-// GetCurrentMonitor - Get current connected monitor
+// GetCurrentMonitor - Get current monitor where window is placed
 func GetCurrentMonitor() int {
 	ret := C.GetCurrentMonitor()
 	v := (int)(ret)
@@ -427,6 +427,15 @@ func GetClipboardText() string {
 	ret := C.GetClipboardText()
 	v := C.GoString(ret)
 	return v
+}
+
+// GetClipboardImage - Get clipboard image content
+//
+// Only works with SDL3 backend or Windows with GLFW/RGFW
+func GetClipboardImage() Image {
+	ret := C.GetClipboardImage()
+	v := newImageFromPointer(unsafe.Pointer(&ret))
+	return *v
 }
 
 // EnableEventWaiting - Enable waiting for events on EndDrawing(), no automatic event polling
@@ -546,10 +555,10 @@ func LoadShaderFromMemory(vsCode string, fsCode string) Shader {
 	return v
 }
 
-// IsShaderReady - Check if a shader is ready
-func IsShaderReady(shader Shader) bool {
+// IsShaderValid - Check if a shader is valid (loaded on GPU)
+func IsShaderValid(shader Shader) bool {
 	cshader := shader.cptr()
-	ret := C.IsShaderReady(*cshader)
+	ret := C.IsShaderValid(*cshader)
 	v := bool(ret)
 	return v
 }
@@ -617,11 +626,29 @@ func UnloadShader(shader Shader) {
 	C.UnloadShader(*cshader)
 }
 
-// GetMouseRay - Returns a ray trace from mouse position
+// GetMouseRay - Get a ray trace from mouse position
+//
+// Deprecated: Use [GetScreenToWorldRay] instead.
 func GetMouseRay(mousePosition Vector2, camera Camera) Ray {
-	cmousePosition := mousePosition.cptr()
+	return GetScreenToWorldRay(mousePosition, camera)
+}
+
+// GetScreenToWorldRay - Get a ray trace from screen position (i.e mouse)
+func GetScreenToWorldRay(position Vector2, camera Camera) Ray {
+	cposition := position.cptr()
 	ccamera := camera.cptr()
-	ret := C.GetMouseRay(*cmousePosition, *ccamera)
+	ret := C.GetScreenToWorldRay(*cposition, *ccamera)
+	v := newRayFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetScreenToWorldRayEx - Get a ray trace from screen position (i.e mouse) in a viewport
+func GetScreenToWorldRayEx(position Vector2, camera Camera, width, height int32) Ray {
+	cposition := position.cptr()
+	ccamera := camera.cptr()
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	ret := C.GetScreenToWorldRayEx(*cposition, *ccamera, cwidth, cheight)
 	v := newRayFromPointer(unsafe.Pointer(&ret))
 	return v
 }
@@ -738,7 +765,7 @@ func Fade(col color.RGBA, alpha float32) color.RGBA {
 	return v
 }
 
-// ColorToInt - Returns hexadecimal value for a Color
+// ColorToInt - Get hexadecimal value for a Color (0xRRGGBBAA)
 func ColorToInt(col color.RGBA) int32 {
 	ccolor := colorCptr(col)
 	ret := C.ColorToInt(*ccolor)
@@ -822,6 +849,15 @@ func ColorAlphaBlend(src, dst, tint color.RGBA) color.RGBA {
 	cdst := colorCptr(dst)
 	ctint := colorCptr(tint)
 	ret := C.ColorAlphaBlend(*csrc, *cdst, *ctint)
+	v := newColorFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// ColorLerp - Get color lerp interpolation between two colors, factor [0.0f..1.0f]
+func ColorLerp(col1, col2 color.RGBA, factor float32) color.RGBA {
+	ccol1 := colorCptr(col1)
+	ccol2 := colorCptr(col2)
+	ret := C.ColorLerp(*ccol1, *ccol2, C.float(factor))
 	v := newColorFromPointer(unsafe.Pointer(&ret))
 	return v
 }
@@ -1079,6 +1115,11 @@ func SetGamepadMappings(mappings string) int32 {
 	ret := C.SetGamepadMappings(cmappings)
 	v := (int32)(ret)
 	return v
+}
+
+// SetGamepadVibration - Set gamepad vibration for both motors (duration in seconds)
+func SetGamepadVibration(gamepad int32, leftMotor, rightMotor, duration float32) {
+	C.SetGamepadVibration(C.int(gamepad), C.float(leftMotor), C.float(rightMotor), C.float(duration))
 }
 
 // IsMouseButtonPressed - Detect if a mouse button has been pressed once

@@ -17,6 +17,20 @@ func SetShapesTexture(texture Texture2D, source Rectangle) {
 	C.SetShapesTexture(*ctexture, *csource)
 }
 
+// GetShapesTexture - Get texture that is used for shapes drawing
+func GetShapesTexture() Texture2D {
+	ret := C.GetShapesTexture()
+	v := newTexture2DFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
+// GetShapesTextureRectangle - Get texture source rectangle that is used for shapes drawing
+func GetShapesTextureRectangle() Rectangle {
+	ret := C.GetShapesTextureRectangle()
+	v := newRectangleFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // DrawPixel - Draw a pixel
 func DrawPixel(posX, posY int32, col color.RGBA) {
 	cposX := (C.int)(posX)
@@ -108,13 +122,13 @@ func DrawCircleSectorLines(center Vector2, radius, startAngle, endAngle float32,
 }
 
 // DrawCircleGradient - Draw a gradient-filled circle
-func DrawCircleGradient(centerX, centerY int32, radius float32, col1, col2 color.RGBA) {
+func DrawCircleGradient(centerX, centerY int32, radius float32, inner, outer color.RGBA) {
 	ccenterX := (C.int)(centerX)
 	ccenterY := (C.int)(centerY)
 	cradius := (C.float)(radius)
-	ccolor1 := colorCptr(col1)
-	ccolor2 := colorCptr(col2)
-	C.DrawCircleGradient(ccenterX, ccenterY, cradius, *ccolor1, *ccolor2)
+	cinner := colorCptr(inner)
+	couter := colorCptr(outer)
+	C.DrawCircleGradient(ccenterX, ccenterY, cradius, *cinner, *couter)
 }
 
 // DrawCircleV - Draw a color-filled circle (Vector version)
@@ -221,35 +235,35 @@ func DrawRectanglePro(rec Rectangle, origin Vector2, rotation float32, col color
 }
 
 // DrawRectangleGradientV - Draw a vertical-gradient-filled rectangle
-func DrawRectangleGradientV(posX, posY, width, height int32, col1, col2 color.RGBA) {
+func DrawRectangleGradientV(posX, posY, width, height int32, top, bottom color.RGBA) {
 	cposX := (C.int)(posX)
 	cposY := (C.int)(posY)
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
-	ccolor1 := colorCptr(col1)
-	ccolor2 := colorCptr(col2)
-	C.DrawRectangleGradientV(cposX, cposY, cwidth, cheight, *ccolor1, *ccolor2)
+	ctop := colorCptr(top)
+	cbottom := colorCptr(bottom)
+	C.DrawRectangleGradientV(cposX, cposY, cwidth, cheight, *ctop, *cbottom)
 }
 
 // DrawRectangleGradientH - Draw a horizontal-gradient-filled rectangle
-func DrawRectangleGradientH(posX, posY, width, height int32, col1, col2 color.RGBA) {
+func DrawRectangleGradientH(posX, posY, width, height int32, left, right color.RGBA) {
 	cposX := (C.int)(posX)
 	cposY := (C.int)(posY)
 	cwidth := (C.int)(width)
 	cheight := (C.int)(height)
-	ccolor1 := colorCptr(col1)
-	ccolor2 := colorCptr(col2)
-	C.DrawRectangleGradientH(cposX, cposY, cwidth, cheight, *ccolor1, *ccolor2)
+	cleft := colorCptr(left)
+	cright := colorCptr(right)
+	C.DrawRectangleGradientH(cposX, cposY, cwidth, cheight, *cleft, *cright)
 }
 
 // DrawRectangleGradientEx - Draw a gradient-filled rectangle with custom vertex colors
-func DrawRectangleGradientEx(rec Rectangle, col1, col2, col3, col4 color.RGBA) {
+func DrawRectangleGradientEx(rec Rectangle, topLeft, bottomLeft, topRight, bottomRight color.RGBA) {
 	crec := rec.cptr()
-	ccolor1 := colorCptr(col1)
-	ccolor2 := colorCptr(col2)
-	ccolor3 := colorCptr(col3)
-	ccolor4 := colorCptr(col4)
-	C.DrawRectangleGradientEx(*crec, *ccolor1, *ccolor2, *ccolor3, *ccolor4)
+	ctopLeft := colorCptr(topLeft)
+	cbottomLeft := colorCptr(bottomLeft)
+	ctopRight := colorCptr(topRight)
+	cbottomRight := colorCptr(bottomRight)
+	C.DrawRectangleGradientEx(*crec, *ctopLeft, *cbottomLeft, *ctopRight, *cbottomRight)
 }
 
 // DrawRectangleLines - Draw rectangle outline
@@ -279,13 +293,23 @@ func DrawRectangleRounded(rec Rectangle, roundness float32, segments int32, col 
 	C.DrawRectangleRounded(*crec, croundness, csegments, *ccolor)
 }
 
-// DrawRectangleRoundedLines - Draw rectangle with rounded edges outline
-func DrawRectangleRoundedLines(rec Rectangle, roundness float32, segments, lineThick float32, col color.RGBA) {
+// DrawRectangleRoundedLines - Draw rectangle lines with rounded edges
+func DrawRectangleRoundedLines(rec Rectangle, roundness float32, segments int32, col color.RGBA) {
 	crec := rec.cptr()
 	croundness := (C.float)(roundness)
 	csegments := (C.int)(segments)
 	ccolor := colorCptr(col)
 	C.DrawRectangleRoundedLines(*crec, croundness, csegments, *ccolor)
+}
+
+// DrawRectangleRoundedLinesEx - Draw rectangle with rounded edges outline
+func DrawRectangleRoundedLinesEx(rec Rectangle, roundness float32, segments int32, lineThick float32, col color.RGBA) {
+	crec := rec.cptr()
+	croundness := (C.float)(roundness)
+	csegments := (C.int)(segments)
+	clineThick := (C.float)(lineThick)
+	ccolor := colorCptr(col)
+	C.DrawRectangleRoundedLinesEx(*crec, croundness, csegments, clineThick, *ccolor)
 }
 
 // DrawTriangle - Draw a color-filled triangle
@@ -533,6 +557,17 @@ func CheckCollisionCircleRec(center Vector2, radius float32, rec Rectangle) bool
 	cradius := (C.float)(radius)
 	crec := rec.cptr()
 	ret := C.CheckCollisionCircleRec(*ccenter, cradius, *crec)
+	v := bool(ret)
+	return v
+}
+
+// CheckCollisionCircleLine - Check if circle collides with a line created betweeen two points [p1] and [p2]
+func CheckCollisionCircleLine(center Vector2, radius float32, p1, p2 Vector2) bool {
+	ccenter := center.cptr()
+	cradius := (C.float)(radius)
+	cp1 := p1.cptr()
+	cp2 := p2.cptr()
+	ret := C.CheckCollisionCircleLine(*ccenter, cradius, *cp1, *cp2)
 	v := bool(ret)
 	return v
 }

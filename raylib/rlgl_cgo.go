@@ -127,6 +127,23 @@ func Viewport(x int32, y int32, width int32, height int32) {
 	C.rlViewport(cx, cy, cwidth, cheight)
 }
 
+// SetClipPlanes - Set clip planes distances
+func SetClipPlanes(nearPlane, farPlane float64) {
+	C.rlSetClipPlanes(C.double(nearPlane), C.double(farPlane))
+}
+
+// GetCullDistanceNear - Get cull plane distance near
+func GetCullDistanceNear() float64 {
+	ret := C.rlGetCullDistanceNear()
+	return float64(ret)
+}
+
+// GetCullDistanceFar - Get cull plane distance far
+func GetCullDistanceFar() float64 {
+	ret := C.rlGetCullDistanceFar()
+	return float64(ret)
+}
+
 // Begin - Initialize drawing mode (how to organize vertex)
 func Begin(mode int32) {
 	cmode := C.int(mode)
@@ -312,10 +329,25 @@ func DisableFramebuffer() {
 	C.rlDisableFramebuffer()
 }
 
+// GetActiveFramebuffer - Get the currently active render texture (fbo), 0 for default framebuffer
+func GetActiveFramebuffer() uint32 {
+	return uint32(C.rlGetActiveFramebuffer())
+}
+
 // ActiveDrawBuffers - Activate multiple draw color buffers
 func ActiveDrawBuffers(count int32) {
 	ccount := C.int(count)
 	C.rlActiveDrawBuffers(ccount)
+}
+
+// BlitFramebuffer - Blit active framebuffer to main framebuffer
+func BlitFramebuffer(srcX, srcY, srcWidth, srcHeight, dstX, dstY, dstWidth, dstHeight, bufferMask int32) {
+	C.rlBlitFramebuffer(C.int(srcX), C.int(srcY), C.int(srcWidth), C.int(srcHeight), C.int(dstX), C.int(dstY), C.int(dstWidth), C.int(dstHeight), C.int(bufferMask))
+}
+
+// BindFramebuffer - Bind framebuffer (FBO)
+func BindFramebuffer(target, framebuffer uint32) {
+	C.rlBindFramebuffer(C.uint(target), C.uint(framebuffer))
 }
 
 // EnableColorBlend - Enable color blending
@@ -356,6 +388,11 @@ func EnableBackfaceCulling() {
 // DisableBackfaceCulling - Disable backface culling
 func DisableBackfaceCulling() {
 	C.rlDisableBackfaceCulling()
+}
+
+// ColorMask - Color mask control
+func ColorMask(r, g, b, a bool) {
+	C.rlColorMask(C.bool(r), C.bool(g), C.bool(b), C.bool(a))
 }
 
 // SetCullFace - Set face culling mode
@@ -592,7 +629,7 @@ func LoadTextureDepth(width, height int32, useRenderBuffer bool) {
 }
 
 // LoadFramebuffer - Load an empty framebuffer
-func LoadFramebuffer(width int32, height int32) uint32 {
+func LoadFramebuffer() uint32 {
 	return uint32(C.rlLoadFramebuffer())
 }
 
@@ -662,6 +699,23 @@ func GetLocationAttrib(shaderId uint32, attribName string) int32 {
 	cattribName := C.CString(attribName)
 	defer C.free(unsafe.Pointer(cattribName))
 	return int32(C.rlGetLocationAttrib(cshaderId, cattribName))
+}
+
+// SetUniform - Set shader value uniform
+func SetUniform(locIndex int32, value []float32, uniformType int32) {
+	C.rlSetUniform(C.int(locIndex), unsafe.Pointer(unsafe.SliceData(value)), C.int(uniformType), C.int((len(value))))
+}
+
+// SetUniformMatrix - Set shader value matrix
+func SetUniformMatrix(locIndex int32, mat Matrix) {
+	cmat := (*C.Matrix)(unsafe.Pointer(&mat))
+	C.rlSetUniformMatrix(C.int(locIndex), *cmat)
+}
+
+// SetUniformMatrices - Set shader value matrices
+func SetUniformMatrices(locIndex int32, mat []Matrix) {
+	cmat := (*C.Matrix)(unsafe.Pointer(unsafe.SliceData(mat)))
+	C.rlSetUniformMatrices(C.int(locIndex), cmat, C.int(len(mat)))
 }
 
 // SetUniformSampler - Set shader value sampler

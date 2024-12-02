@@ -364,7 +364,7 @@ const (
 
 	// Android keys
 	KeyBack       = 4
-	KeyMenu       = 82
+	KeyMenu       = 5
 	KeyVolumeUp   = 24
 	KeyVolumeDown = 25
 
@@ -411,12 +411,12 @@ const (
 	GamepadButtonLeftFaceDown          // Gamepad left DPAD down button
 	GamepadButtonLeftFaceLeft          // Gamepad left DPAD left button
 	GamepadButtonRightFaceUp           // Gamepad right button up (i.e. PS3: Triangle, Xbox: Y)
-	GamepadButtonRightFaceRight        // Gamepad right button right (i.e. PS3: Square, Xbox: X)
+	GamepadButtonRightFaceRight        // Gamepad right button right (i.e. PS3: Circle, Xbox: B)
 	GamepadButtonRightFaceDown         // Gamepad right button down (i.e. PS3: Cross, Xbox: A)
-	GamepadButtonRightFaceLeft         // Gamepad right button left (i.e. PS3: Circle, Xbox: B)
+	GamepadButtonRightFaceLeft         // Gamepad right button left (i.e. PS3: Square, Xbox: X)
 	GamepadButtonLeftTrigger1          // Gamepad top/back trigger left (first), it could be a trailing button
 	GamepadButtonLeftTrigger2          // Gamepad top/back trigger left (second), it could be a trailing button
-	GamepadButtonRightTrigger1         // Gamepad top/back trigger right (one), it could be a trailing button
+	GamepadButtonRightTrigger1         // Gamepad top/back trigger right (first), it could be a trailing button
 	GamepadButtonRightTrigger2         // Gamepad top/back trigger right (second), it could be a trailing button
 	GamepadButtonMiddleLeft            // Gamepad center buttons, left one (i.e. PS3: Select)
 	GamepadButtonMiddle                // Gamepad center buttons, middle one (i.e. PS3: PS, Xbox: XBOX)
@@ -729,14 +729,31 @@ type ShaderUniformDataType int32
 
 // ShaderUniformDataType enumeration
 const (
+	// Shader uniform type: float
 	ShaderUniformFloat ShaderUniformDataType = iota
+	// Shader uniform type: vec2 (2 float)
 	ShaderUniformVec2
+	// Shader uniform type: vec3 (3 float)
 	ShaderUniformVec3
+	// Shader uniform type: vec4 (4 float)
 	ShaderUniformVec4
+	// Shader uniform type: int
 	ShaderUniformInt
+	// Shader uniform type: ivec2 (2 int)
 	ShaderUniformIvec2
+	// Shader uniform type: ivec2 (3 int)
 	ShaderUniformIvec3
+	// Shader uniform type: ivec2 (4 int)
 	ShaderUniformIvec4
+	// Shader uniform type: unsigned int
+	ShaderUniformUint
+	// Shader uniform type: uivec2 (2 unsigned int)
+	ShaderUniformUivec2
+	// Shader uniform type: uivec3 (3 unsigned int)
+	ShaderUniformUivec3
+	// Shader uniform type: uivec4 (4 unsigned int)
+	ShaderUniformUivec4
+	// Shader uniform type: sampler2d
 	ShaderUniformSampler2d
 )
 
@@ -795,6 +812,10 @@ type Mesh struct {
 	BoneIds *int32
 	// BoneWeights
 	BoneWeights *float32
+	// Bones animated transformation matrices
+	BoneMatrices *Matrix
+	// Number of bones
+	BoneCount int32
 	// OpenGL Vertex Array Object id
 	VaoID uint32
 	// OpenGL Vertex Buffer Objects id (7 types of vertex data)
@@ -1093,7 +1114,6 @@ const (
 	CubemapLayoutLineHorizontal          // Layout is defined by a horizontal line with faces
 	CubemapLayoutCrossThreeByFour        // Layout is defined by a 3x4 cross with cubemap faces
 	CubemapLayoutCrossFourByThree        // Layout is defined by a 4x3 cross with cubemap faces
-	CubemapLayoutPanorama                // Layout is defined by a panorama image (equirrectangular map)
 )
 
 // Image type, bpp always RGBA (32bit)
@@ -1217,7 +1237,6 @@ type VrDeviceInfo struct {
 	VResolution            int32      // Vertical resolution in pixels
 	HScreenSize            float32    // Horizontal size in meters
 	VScreenSize            float32    // Vertical size in meters
-	VScreenCenter          float32    // Screen center in meters
 	EyeToScreenDistance    float32    // Distance between eye and display in meters
 	LensSeparationDistance float32    // Lens separation distance in meters
 	InterpupillaryDistance float32    // IPD (distance between pupils) in meters

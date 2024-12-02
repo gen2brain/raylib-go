@@ -20,6 +20,9 @@ var rlMultMatrixf func(matf *float32)
 var rlFrustum func(left float64, right float64, bottom float64, top float64, znear float64, zfar float64)
 var rlOrtho func(left float64, right float64, bottom float64, top float64, znear float64, zfar float64)
 var rlViewport func(x int32, y int32, width int32, height int32)
+var rlSetClipPlanes func(float64, float64)
+var rlGetCullDistanceNear func() float64
+var rlGetCullDistanceFar func() float64
 var rlBegin func(mode int32)
 var rlEnd func()
 var rlVertex2i func(x int32, y int32)
@@ -49,7 +52,10 @@ var rlEnableShader func(id uint32)
 var rlDisableShader func()
 var rlEnableFramebuffer func(id uint32)
 var rlDisableFramebuffer func()
+var rlGetActiveFramebuffer func() uint32
 var rlActiveDrawBuffers func(count int32)
+var rlBlitFramebuffer func(srcX, srcY, srcWidth, srcHeight, dstX, dstY, dstWidth, dstHeight, bufferMask int32)
+var rlBindFramebuffer func(target, framebuffer uint32)
 var rlEnableColorBlend func()
 var rlDisableColorBlend func()
 var rlEnableDepthTest func()
@@ -58,6 +64,7 @@ var rlEnableDepthMask func()
 var rlDisableDepthMask func()
 var rlEnableBackfaceCulling func()
 var rlDisableBackfaceCulling func()
+var rlColorMask func(r, g, b, a bool)
 var rlSetCullFace func(mode int32)
 var rlEnableScissorTest func()
 var rlDisableScissorTest func()
@@ -98,7 +105,7 @@ var rlLoadVertexArray func() uint32
 var rlUnloadVertexBuffer func(vboId uint32)
 var rlSetVertexAttributeDivisor func(index uint32, divisor int32)
 var rlLoadTextureDepth func(width int32, height int32, useRenderBuffer bool) uint32
-var rlLoadFramebuffer func(width int32, height int32) uint32
+var rlLoadFramebuffer func() uint32
 var rlFramebufferAttach func(fboId uint32, texId uint32, attachType int32, texType int32, mipLevel int32)
 var rlFramebufferComplete func(id uint32) bool
 var rlUnloadFramebuffer func(id uint32)
@@ -108,6 +115,9 @@ var rlLoadShaderProgram func(vShaderId uint32, fShaderId uint32) uint32
 var rlUnloadShaderProgram func(id uint32)
 var rlGetLocationUniform func(shaderId uint32, uniformName string) int32
 var rlGetLocationAttrib func(shaderId uint32, attribName string) int32
+var rlSetUniform func(locIndex int32, value unsafe.Pointer, uniformType, count int32)
+var rlSetUniformMatrix func(locIndex int32, mat uintptr)
+var rlSetUniformMatrices func(locIndex int32, mat *Matrix, count int32)
 var rlSetUniformSampler func(locIndex int32, textureId uint32)
 var rlLoadComputeShaderProgram func(shaderID uint32) uint32
 var rlComputeShaderDispatch func(groupX uint32, groupY uint32, groupZ uint32)
@@ -143,6 +153,9 @@ func initRlglPurego() {
 	purego.RegisterLibFunc(&rlFrustum, raylibDll, "rlFrustum")
 	purego.RegisterLibFunc(&rlOrtho, raylibDll, "rlOrtho")
 	purego.RegisterLibFunc(&rlViewport, raylibDll, "rlViewport")
+	purego.RegisterLibFunc(&rlSetClipPlanes, raylibDll, "rlSetClipPlanes")
+	purego.RegisterLibFunc(&rlGetCullDistanceNear, raylibDll, "rlGetCullDistanceNear")
+	purego.RegisterLibFunc(&rlGetCullDistanceFar, raylibDll, "rlGetCullDistanceFar")
 	purego.RegisterLibFunc(&rlBegin, raylibDll, "rlBegin")
 	purego.RegisterLibFunc(&rlEnd, raylibDll, "rlEnd")
 	purego.RegisterLibFunc(&rlVertex2i, raylibDll, "rlVertex2i")
@@ -172,7 +185,10 @@ func initRlglPurego() {
 	purego.RegisterLibFunc(&rlDisableShader, raylibDll, "rlDisableShader")
 	purego.RegisterLibFunc(&rlEnableFramebuffer, raylibDll, "rlEnableFramebuffer")
 	purego.RegisterLibFunc(&rlDisableFramebuffer, raylibDll, "rlDisableFramebuffer")
+	purego.RegisterLibFunc(&rlGetActiveFramebuffer, raylibDll, "rlGetActiveFramebuffer")
 	purego.RegisterLibFunc(&rlActiveDrawBuffers, raylibDll, "rlActiveDrawBuffers")
+	purego.RegisterLibFunc(&rlBlitFramebuffer, raylibDll, "rlBlitFramebuffer")
+	purego.RegisterLibFunc(&rlBindFramebuffer, raylibDll, "rlBindFramebuffer")
 	purego.RegisterLibFunc(&rlEnableColorBlend, raylibDll, "rlEnableColorBlend")
 	purego.RegisterLibFunc(&rlDisableColorBlend, raylibDll, "rlDisableColorBlend")
 	purego.RegisterLibFunc(&rlEnableDepthTest, raylibDll, "rlEnableDepthTest")
@@ -181,6 +197,7 @@ func initRlglPurego() {
 	purego.RegisterLibFunc(&rlDisableDepthMask, raylibDll, "rlDisableDepthMask")
 	purego.RegisterLibFunc(&rlEnableBackfaceCulling, raylibDll, "rlEnableBackfaceCulling")
 	purego.RegisterLibFunc(&rlDisableBackfaceCulling, raylibDll, "rlDisableBackfaceCulling")
+	purego.RegisterLibFunc(&rlColorMask, raylibDll, "rlColorMask")
 	purego.RegisterLibFunc(&rlSetCullFace, raylibDll, "rlSetCullFace")
 	purego.RegisterLibFunc(&rlEnableScissorTest, raylibDll, "rlEnableScissorTest")
 	purego.RegisterLibFunc(&rlDisableScissorTest, raylibDll, "rlDisableScissorTest")
@@ -231,6 +248,9 @@ func initRlglPurego() {
 	purego.RegisterLibFunc(&rlUnloadShaderProgram, raylibDll, "rlUnloadShaderProgram")
 	purego.RegisterLibFunc(&rlGetLocationUniform, raylibDll, "rlGetLocationUniform")
 	purego.RegisterLibFunc(&rlGetLocationAttrib, raylibDll, "rlGetLocationAttrib")
+	purego.RegisterLibFunc(&rlSetUniform, raylibDll, "rlSetUniform")
+	purego.RegisterLibFunc(&rlSetUniformMatrix, raylibDll, "rlSetUniformMatrix")
+	purego.RegisterLibFunc(&rlSetUniformMatrices, raylibDll, "rlSetUniformMatrices")
 	purego.RegisterLibFunc(&rlSetUniformSampler, raylibDll, "rlSetUniformSampler")
 	purego.RegisterLibFunc(&rlLoadComputeShaderProgram, raylibDll, "rlLoadComputeShaderProgram")
 	purego.RegisterLibFunc(&rlComputeShaderDispatch, raylibDll, "rlComputeShaderDispatch")
@@ -319,6 +339,21 @@ func Ortho(left float64, right float64, bottom float64, top float64, znear float
 // Viewport - Set the viewport area
 func Viewport(x int32, y int32, width int32, height int32) {
 	rlViewport(x, y, width, height)
+}
+
+// SetClipPlanes - Set clip planes distances
+func SetClipPlanes(nearPlane, farPlane float64) {
+	rlSetClipPlanes(nearPlane, farPlane)
+}
+
+// GetCullDistanceNear - Get cull plane distance near
+func GetCullDistanceNear() float64 {
+	return rlGetCullDistanceNear()
+}
+
+// GetCullDistanceFar - Get cull plane distance far
+func GetCullDistanceFar() float64 {
+	return rlGetCullDistanceFar()
 }
 
 // Begin - Initialize drawing mode (how to organize vertex)
@@ -466,9 +501,24 @@ func DisableFramebuffer() {
 	rlDisableFramebuffer()
 }
 
+// GetActiveFramebuffer - Get the currently active render texture (fbo), 0 for default framebuffer
+func GetActiveFramebuffer() uint32 {
+	return rlGetActiveFramebuffer()
+}
+
 // ActiveDrawBuffers - Activate multiple draw color buffers
 func ActiveDrawBuffers(count int32) {
 	rlActiveDrawBuffers(count)
+}
+
+// BlitFramebuffer - Blit active framebuffer to main framebuffer
+func BlitFramebuffer(srcX, srcY, srcWidth, srcHeight, dstX, dstY, dstWidth, dstHeight, bufferMask int32) {
+	rlBlitFramebuffer(srcX, srcY, srcWidth, srcHeight, dstX, dstY, dstWidth, dstHeight, bufferMask)
+}
+
+// BindFramebuffer - Bind framebuffer (FBO)
+func BindFramebuffer(target, framebuffer uint32) {
+	rlBindFramebuffer(target, framebuffer)
 }
 
 // EnableColorBlend - Enable color blending
@@ -509,6 +559,11 @@ func EnableBackfaceCulling() {
 // DisableBackfaceCulling - Disable backface culling
 func DisableBackfaceCulling() {
 	rlDisableBackfaceCulling()
+}
+
+// ColorMask - Color mask control
+func ColorMask(r, g, b, a bool) {
+	rlColorMask(r, g, b, a)
 }
 
 // SetCullFace - Set face culling mode
@@ -714,8 +769,8 @@ func LoadTextureDepth(width, height int32, useRenderBuffer bool) {
 }
 
 // LoadFramebuffer - Load an empty framebuffer
-func LoadFramebuffer(width int32, height int32) uint32 {
-	return rlLoadFramebuffer(width, height)
+func LoadFramebuffer() uint32 {
+	return rlLoadFramebuffer()
 }
 
 // FramebufferAttach - Attach texture/renderbuffer to a framebuffer
@@ -761,6 +816,21 @@ func GetLocationUniform(shaderId uint32, uniformName string) int32 {
 // GetLocationAttrib - Get shader location attribute
 func GetLocationAttrib(shaderId uint32, attribName string) int32 {
 	return rlGetLocationAttrib(shaderId, attribName)
+}
+
+// SetUniform - Set shader value uniform
+func SetUniform(locIndex int32, value []float32, uniformType int32) {
+	rlSetUniform(locIndex, unsafe.Pointer(unsafe.SliceData(value)), uniformType, int32(len(value)))
+}
+
+// SetUniformMatrix - Set shader value matrix
+func SetUniformMatrix(locIndex int32, mat Matrix) {
+	rlSetUniformMatrix(locIndex, uintptr(unsafe.Pointer(&mat)))
+}
+
+// SetUniformMatrices - Set shader value matrices
+func SetUniformMatrices(locIndex int32, mat []Matrix) {
+	rlSetUniformMatrices(locIndex, unsafe.SliceData(mat), int32(len(mat)))
 }
 
 // SetUniformSampler - Set shader value sampler

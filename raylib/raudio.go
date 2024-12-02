@@ -176,10 +176,10 @@ func LoadWaveFromMemory(fileType string, fileData []byte, dataSize int32) Wave {
 	return v
 }
 
-// IsWaveReady - Checks if wave data is ready
-func IsWaveReady(wave Wave) bool {
+// IsWaveValid - Checks if wave data is valid (data loaded and parameters)
+func IsWaveValid(wave Wave) bool {
 	cwave := wave.cptr()
-	ret := C.IsWaveReady(*cwave)
+	ret := C.IsWaveValid(*cwave)
 	v := bool(ret)
 	return v
 }
@@ -209,10 +209,10 @@ func LoadSoundAlias(source Sound) Sound {
 	return v
 }
 
-// IsSoundReady - Checks if a sound is ready
-func IsSoundReady(sound Sound) bool {
+// IsSoundValid - Checks if a sound is valid (data loaded and buffers initialized)
+func IsSoundValid(sound Sound) bool {
 	csound := sound.cptr()
-	ret := C.IsSoundReady(*csound)
+	ret := C.IsSoundValid(*csound)
 	v := bool(ret)
 	return v
 }
@@ -315,12 +315,12 @@ func WaveCopy(wave Wave) Wave {
 	return v
 }
 
-// WaveCrop - Crop a wave to defined samples range
-func WaveCrop(wave Wave, initSample int32, finalSample int32) {
+// WaveCrop - Crop a wave to defined frames range
+func WaveCrop(wave Wave, initFrame int32, finalFrame int32) {
 	cwave := wave.cptr()
-	cinitSample := (C.int)(initSample)
-	cfinalSample := (C.int)(finalSample)
-	C.WaveCrop(cwave, cinitSample, cfinalSample)
+	cinitFrame := (C.int)(initFrame)
+	cfinalFrame := (C.int)(finalFrame)
+	C.WaveCrop(cwave, cinitFrame, cfinalFrame)
 }
 
 // LoadWaveSamples - Get samples data from wave as a floats array
@@ -356,10 +356,10 @@ func LoadMusicStreamFromMemory(fileType string, fileData []byte, dataSize int32)
 	return v
 }
 
-// IsMusicReady - Checks if a music stream is ready
-func IsMusicReady(music Music) bool {
+// IsMusicValid - Checks if a music stream is valid (context and buffers initialized)
+func IsMusicValid(music Music) bool {
 	cmusic := *(*C.Music)(unsafe.Pointer(&music))
-	ret := C.IsMusicReady(cmusic)
+	ret := C.IsMusicValid(cmusic)
 	v := bool(ret)
 	return v
 }
@@ -462,10 +462,10 @@ func LoadAudioStream(sampleRate uint32, sampleSize uint32, channels uint32) Audi
 	return v
 }
 
-// IsAudioStreamReady - Checks if an audio stream is ready
-func IsAudioStreamReady(stream AudioStream) bool {
+// IsAudioStreamValid - Checks if an audio stream is valid (buffers initialized)
+func IsAudioStreamValid(stream AudioStream) bool {
 	cstream := stream.cptr()
-	ret := C.IsAudioStreamReady(*cstream)
+	ret := C.IsAudioStreamValid(*cstream)
 	v := bool(ret)
 	return v
 }

@@ -54,13 +54,14 @@ const (
 
 // VertexBuffer - Dynamic vertex buffers (position + texcoords + colors + indices arrays)
 type VertexBuffer struct {
-	ElementCount int32
-	Vertices     *float32
-	Texcoords    *float32
-	Colors       *uint8
-	Indices      *uint32
-	VaoId        uint32
-	VboId        [4]uint32
+	ElementCount int32     // Number of elements in the buffer (QUADS)
+	Vertices     *float32  // Vertex position (XYZ - 3 components per vertex) (shader-location = 0)
+	Texcoords    *float32  // Vertex texture coordinates (UV - 2 components per vertex) (shader-location = 1)
+	Normals      *float32  // Vertex normal (XYZ - 3 components per vertex) (shader-location = 2)
+	Colors       *uint8    // Vertex colors (RGBA - 4 components per vertex) (shader-location = 3)
+	Indices      *uint32   // Vertex indices (in case vertex data comes indexed) (6 indices per quad)
+	VaoId        uint32    // OpenGL Vertex Array Object id
+	VboId        [5]uint32 // OpenGL Vertex Buffer Objects id (5 types of vertex data)
 }
 
 // DrawCall - Draw call type

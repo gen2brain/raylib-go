@@ -269,10 +269,10 @@ func LoadModelFromMesh(data Mesh) Model {
 	return v
 }
 
-// IsModelReady - Check if a model is ready
-func IsModelReady(model Model) bool {
+// IsModelValid - Check if a model is valid (loaded in GPU, VAO/VBOs)
+func IsModelValid(model Model) bool {
 	cmodel := model.cptr()
-	ret := C.IsModelReady(*cmodel)
+	ret := C.IsModelValid(*cmodel)
 	v := bool(ret)
 	return v
 }
@@ -331,6 +331,26 @@ func DrawModelWiresEx(model Model, position Vector3, rotationAxis Vector3, rotat
 	C.DrawModelWiresEx(*cmodel, *cposition, *crotationAxis, crotationAngle, *cscale, *ctint)
 }
 
+// DrawModelPoints - Draw a model as points
+func DrawModelPoints(model Model, position Vector3, scale float32, tint color.RGBA) {
+	cmodel := model.cptr()
+	cposition := position.cptr()
+	cscale := (C.float)(scale)
+	ctint := colorCptr(tint)
+	C.DrawModelPoints(*cmodel, *cposition, cscale, *ctint)
+}
+
+// DrawModelPointsEx - Draw a model as points with extended parameters
+func DrawModelPointsEx(model Model, position Vector3, rotationAxis Vector3, rotationAngle float32, scale Vector3, tint color.RGBA) {
+	cmodel := model.cptr()
+	cposition := position.cptr()
+	crotationAxis := rotationAxis.cptr()
+	crotationAngle := (C.float)(rotationAngle)
+	cscale := scale.cptr()
+	ctint := colorCptr(tint)
+	C.DrawModelPointsEx(*cmodel, *cposition, *crotationAxis, crotationAngle, *cscale, *ctint)
+}
+
 // DrawBoundingBox - Draw bounding box (wires)
 func DrawBoundingBox(box BoundingBox, col color.RGBA) {
 	cbox := box.cptr()
@@ -339,13 +359,13 @@ func DrawBoundingBox(box BoundingBox, col color.RGBA) {
 }
 
 // DrawBillboard - Draw a billboard texture
-func DrawBillboard(camera Camera, texture Texture2D, center Vector3, size float32, tint color.RGBA) {
+func DrawBillboard(camera Camera, texture Texture2D, center Vector3, scale float32, tint color.RGBA) {
 	ccamera := camera.cptr()
 	ctexture := texture.cptr()
 	ccenter := center.cptr()
-	csize := (C.float)(size)
+	cscale := (C.float)(scale)
 	ctint := colorCptr(tint)
-	C.DrawBillboard(*ccamera, *ctexture, *ccenter, csize, *ctint)
+	C.DrawBillboard(*ccamera, *ctexture, *ccenter, cscale, *ctint)
 }
 
 // DrawBillboardRec - Draw a billboard texture defined by sourceRec
@@ -545,10 +565,10 @@ func LoadMaterialDefault() Material {
 	return v
 }
 
-// IsMaterialReady - Check if a material is ready
-func IsMaterialReady(material Material) bool {
+// IsMaterialValid - Check if a material is valid (shader assigned, map textures loaded in GPU)
+func IsMaterialValid(material Material) bool {
 	cmaterial := material.cptr()
-	ret := C.IsMaterialReady(*cmaterial)
+	ret := C.IsMaterialValid(*cmaterial)
 	v := bool(ret)
 	return v
 }
@@ -585,12 +605,20 @@ func LoadModelAnimations(fileName string) []ModelAnimation {
 	return v
 }
 
-// UpdateModelAnimation - Update model animation pose
+// UpdateModelAnimation - Update model animation pose (CPU)
 func UpdateModelAnimation(model Model, anim ModelAnimation, frame int32) {
 	cmodel := model.cptr()
 	canim := anim.cptr()
 	cframe := (C.int)(frame)
 	C.UpdateModelAnimation(*cmodel, *canim, cframe)
+}
+
+// UpdateModelAnimationBones - Update model animation mesh bone matrices (GPU skinning)
+func UpdateModelAnimationBones(model Model, anim ModelAnimation, frame int32) {
+	cmodel := model.cptr()
+	canim := anim.cptr()
+	cframe := (C.int)(frame)
+	C.UpdateModelAnimationBones(*cmodel, *canim, cframe)
 }
 
 // UnloadModelAnimation - Unload animation data
