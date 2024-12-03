@@ -31,7 +31,7 @@ type Wave struct {
 	// Number of channels (1-mono, 2-stereo)
 	Channels uint32
 	// Buffer data pointer
-	data unsafe.Pointer
+	Data unsafe.Pointer
 }
 
 // NewWave - Returns new Wave
