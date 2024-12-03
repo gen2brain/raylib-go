@@ -23,7 +23,7 @@ It is also possible to use raylib-go without cgo (Windows only; see requirements
 
 ##### macOS
 
-On macOS you need Xcode or Command Line Tools for Xcode.
+On macOS, you need Xcode or Command Line Tools for Xcode (if you have `brew` installed, you already have this).
 
 ##### Windows
 
