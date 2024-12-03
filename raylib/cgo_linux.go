@@ -12,14 +12,18 @@ package rl
 #include "external/glfw/src/vulkan.c"
 #include "external/glfw/src/window.c"
 
+#if defined _GLFW_WAYLAND
 #include "external/glfw/src/wl_init.c"
 #include "external/glfw/src/wl_monitor.c"
 #include "external/glfw/src/wl_window.c"
+#endif
 
+#if defined _GLFW_X11
 #include "external/glfw/src/x11_init.c"
 #include "external/glfw/src/x11_monitor.c"
 #include "external/glfw/src/x11_window.c"
 #include "external/glfw/src/glx_context.c"
+#endif
 
 #include "external/glfw/src/linux_joystick.c"
 #include "external/glfw/src/posix_module.c"
@@ -35,12 +39,14 @@ GLFWbool _glfwConnectNull(int platformID, _GLFWplatform* platform) {
 }
 
 #cgo linux CFLAGS: -Iexternal/glfw/include -DPLATFORM_DESKTOP -Wno-stringop-overflow
-#cgo linux LDFLAGS: -lm -pthread -ldl -lrt -lwayland-client -lwayland-cursor -lwayland-egl -lxkbcommon
+#cgo linux LDFLAGS: -lm -pthread -ldl -lrt -lxkbcommon
+#cgo linux,!x11 LDFLAGS: -lwayland-client -lwayland-cursor -lwayland-egl
 
 #cgo linux,x11 CFLAGS: -D_GLFW_X11
-#cgo linux,!x11 CFLAGS: -D_GLFW_X11 -D_GLFW_WAYLAND
+#cgo linux,wayland CFLAGS: -D_GLFW_WAYLAND
+#cgo linux,!x11,!wayland CFLAGS: -D_GLFW_X11 -D_GLFW_WAYLAND
 
-#cgo linux,!es2,!es3 LDFLAGS: -lGL
+#cgo linux,!es2,!es3,!wayland LDFLAGS: -lGL
 
 #cgo linux,opengl11,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_11
 #cgo linux,opengl21,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_21
