@@ -39,8 +39,6 @@ To remove console window, build with `-ldflags "-H=windowsgui"`.
 Download the raylib.dll from the assets on the [releases page](https://github.com/raysan5/raylib/releases). It is contained in the `raylib-*_win64_msvc*.zip`.
 Put the raylib.dll into the root folder of your project or copy it into `C:\Windows\System32` for a system-wide installation.
 
-As of November 15, 2023, raylib 5.0 is the required version.
-
 It is also possible to build the DLL yourself. You can find more info at [raylib's wiki](https://github.com/raysan5/raylib/wiki/Working-on-Windows).
 
 ##### Android
