@@ -932,6 +932,11 @@ type ModelAnimation struct {
 	Name       [32]int8
 }
 
+// GetBones returns the bones information (skeleton) of a ModelAnimation as go slice
+func (m ModelAnimation) GetBones() []BoneInfo {
+	return unsafe.Slice(m.Bones, m.BoneCount)
+}
+
 // RayCollision type - ray hit information
 type RayCollision struct {
 	Hit      bool
