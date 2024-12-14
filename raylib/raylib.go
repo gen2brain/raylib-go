@@ -937,6 +937,12 @@ func (m ModelAnimation) GetBones() []BoneInfo {
 	return unsafe.Slice(m.Bones, m.BoneCount)
 }
 
+// GetFramePose returns the Transform for a specific bone at a specific frame
+func (m ModelAnimation) GetFramePose(frame, bone int) Transform {
+	framePoses := unsafe.Slice(m.FramePoses, m.FrameCount)
+	return unsafe.Slice(framePoses[frame], m.BoneCount)[bone]
+}
+
 // RayCollision type - ray hit information
 type RayCollision struct {
 	Hit      bool
