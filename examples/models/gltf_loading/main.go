@@ -62,7 +62,7 @@ func main() {
 
 		rl.EndMode3D()
 
-		rl.DrawText("current animation number: "+fmt.Sprint(animIndex), 10, 10, 10, rl.Black)
+		rl.DrawText(fmt.Sprintf("current animation: %s [%d]", animPlaying.GetName(), animIndex), 10, 10, 10, rl.Black)
 		rl.DrawText("UP/DOWN ARROW KEYS CHANGE ANIMATION", 10, 30, 10, rl.Black)
 
 		rl.EndDrawing()
