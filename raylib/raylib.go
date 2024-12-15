@@ -929,7 +929,29 @@ type ModelAnimation struct {
 	FrameCount int32
 	Bones      *BoneInfo
 	FramePoses **Transform
-	Name       [32]int8
+	Name       [32]uint8
+}
+
+// GetBones returns the bones information (skeleton) of a ModelAnimation as go slice
+func (m ModelAnimation) GetBones() []BoneInfo {
+	return unsafe.Slice(m.Bones, m.BoneCount)
+}
+
+// GetFramePose returns the Transform for a specific bone at a specific frame
+func (m ModelAnimation) GetFramePose(frame, bone int) Transform {
+	framePoses := unsafe.Slice(m.FramePoses, m.FrameCount)
+	return unsafe.Slice(framePoses[frame], m.BoneCount)[bone]
+}
+
+// GetName returns the ModelAnimation's name as go string
+func (m ModelAnimation) GetName() string {
+	var end int
+	for end = range m.Name {
+		if m.Name[end] == 0 {
+			break
+		}
+	}
+	return string(m.Name[:end])
 }
 
 // RayCollision type - ray hit information

@@ -19,9 +19,7 @@
 package main
 
 import (
-	"unsafe"
-
-	"github.com/gen2brain/raylib-go/raylib"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 const (
@@ -116,9 +114,8 @@ func main() {
 		if drawSkeleton {
 			modelBones := model.GetBones()
 			modelPoses := model.GetBindPose()
-			animBones := unsafe.Slice(anims[animID].Bones, anims[animID].BoneCount)
-			animPoses := unsafe.Slice(anims[animID].FramePoses, anims[animID].FrameCount)
-			transforms := unsafe.Slice(animPoses[animFrameCounter], anims[animID].BoneCount)
+			anim := anims[animID]
+			animBones := anim.GetBones()
 			for bone := 0; bone < int(model.BoneCount)-1; bone++ {
 				if !animPlaying || animsCount == 0 {
 					// Display the bind-pose skeleton
@@ -128,9 +125,11 @@ func main() {
 					}
 				} else {
 					// // Display the frame-pose skeleton
-					rl.DrawCube(transforms[bone].Translation, 0.05, 0.05, 0.05, rl.Red)
+					pos := anim.GetFramePose(animFrameCounter, bone).Translation
+					rl.DrawCube(pos, 0.05, 0.05, 0.05, rl.Red)
 					if animBones[bone].Parent >= 0 {
-						rl.DrawLine3D(transforms[bone].Translation, transforms[animBones[bone].Parent].Translation, rl.Red)
+						endPos := anim.GetFramePose(animFrameCounter, int(animBones[bone].Parent)).Translation
+						rl.DrawLine3D(pos, endPos, rl.Red)
 					}
 				}
 			}
