@@ -8,6 +8,7 @@ import (
 	"image"
 	"image/color"
 	"os"
+	"reflect"
 	"unsafe"
 
 	"github.com/ebitengine/purego"
@@ -17,6 +18,10 @@ import (
 var (
 	// raylibDll is the pointer to the shared library
 	raylibDll uintptr
+
+	// audioCallbacks is needed to have a reference between Go functions (keys) created by the user
+	// and C function pointers (values) created by purego.NewCallback
+	audioCallbacks map[uintptr]uintptr
 )
 
 var initWindow func(width int32, height int32, title string)
@@ -532,6 +537,7 @@ var detachAudioMixedProcessor func(processor uintptr)
 
 func init() {
 	raylibDll = loadLibrary()
+	audioCallbacks = make(map[uintptr]uintptr)
 
 	initRlglPurego()
 
@@ -3894,15 +3900,15 @@ func AttachAudioStreamProcessor(stream AudioStream, processor AudioCallback) {
 		processor(unsafe.Slice((*float32)(bufferData), frames), int(frames))
 		return 0
 	})
+	ptr := uintptr(reflect.ValueOf(processor).UnsafePointer())
+	audioCallbacks[ptr] = fn
 	attachAudioStreamProcessor(uintptr(unsafe.Pointer(&stream)), fn)
 }
 
 // DetachAudioStreamProcessor - Detach audio stream processor from stream
 func DetachAudioStreamProcessor(stream AudioStream, processor AudioCallback) {
-	fn := purego.NewCallback(func(bufferData unsafe.Pointer, frames int32) uintptr {
-		processor(unsafe.Slice((*float32)(bufferData), frames), int(frames))
-		return 0
-	})
+	ptr := uintptr(reflect.ValueOf(processor).UnsafePointer())
+	fn := audioCallbacks[ptr]
 	detachAudioStreamProcessor(uintptr(unsafe.Pointer(&stream)), fn)
 }
 
@@ -3912,15 +3918,15 @@ func AttachAudioMixedProcessor(processor AudioCallback) {
 		processor(unsafe.Slice((*float32)(bufferData), frames), int(frames))
 		return 0
 	})
+	ptr := uintptr(reflect.ValueOf(processor).UnsafePointer())
+	audioCallbacks[ptr] = fn
 	attachAudioMixedProcessor(fn)
 }
 
 // DetachAudioMixedProcessor - Detach audio stream processor from the entire audio pipeline
 func DetachAudioMixedProcessor(processor AudioCallback) {
-	fn := purego.NewCallback(func(bufferData unsafe.Pointer, frames int32) uintptr {
-		processor(unsafe.Slice((*float32)(bufferData), frames), int(frames))
-		return 0
-	})
+	ptr := uintptr(reflect.ValueOf(processor).UnsafePointer())
+	fn := audioCallbacks[ptr]
 	detachAudioMixedProcessor(fn)
 }
 
