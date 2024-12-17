@@ -20,12 +20,12 @@
 )
 
 :COMPILE
-        @echo compiling for platform %FL%
+        @echo compiling for platform %FL% and architecture %GOARCH%
         @set CGO_CFLAGS="-I%ANDROID_SYSROOT%/usr/include -I%ANDROID_SYSROOT%/usr/include/%TRIPLE% --sysroot=%ANDROID_SYSROOT% -D__ANDROID_API__=%ANDROID_API%"
         @set CGO_LDFLAGS="-L%ANDROID_SYSROOT%/usr/lib/%TRIPLE%/%ANDROID_API% -L%ANDROID_TOOLCHAIN%/%TRIPLE%/lib --sysroot=%ANDROID_SYSROOT%"
         @set CGO_ENABLED=1
         @set GOOS=android
-        @set GOARCH=arm
+        @set GOARCH=%GOARCH%
         @go build -buildmode=c-shared -ldflags="-s -w -extldflags=-Wl,-soname,lib%LIBRARY_NAME%.so" -o=android/libs/%FL%/lib%LIBRARY_NAME%.so
 @EXIT /B
 
@@ -48,21 +48,21 @@
         @set GOARCH=arm
         @CALL:COMPILE )
     @IF %TARGET_ARCH% == "arm64-v8a" (
-        @set CC="armv7a-linux-androideabi%ANDROID_API%-clang"
+        @set CC="aarch64-linux-android%ANDROID_API%-clang"
         @set TRIPLE=aarch64-linux-android
         @set FL=arm64-v8a
         @set GOARCH=arm64
         @CALL:COMPILE )
     @IF %TARGET_ARCH% == "x86" (
-        @set CC="armv7a-linux-androideabi%ANDROID_API%-clang"
+        @set CC="i686-linux-android%ANDROID_API%-clang"
         @set TRIPLE=i686-linux-android
         @set FL=x86
-        @set GOARCH=arm
+        @set GOARCH=386
         @CALL:COMPILE )
     @IF %TARGET_ARCH% == "x86_64" (
-        @set CC="armv7a-linux-androideabi%ANDROID_API%-clang"
+        @set CC="x86_64-linux-android%ANDROID_API%-clang"
         @set TRIPLE=x86_64-linux-android
         @set FL=x86_64
-        @set GOARCH=arm64
+        @set GOARCH=amd64
         @CALL:COMPILE )
 @EXIT /B
