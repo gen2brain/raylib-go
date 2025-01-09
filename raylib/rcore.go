@@ -3,6 +3,16 @@ package rl
 /*
 #include "raylib.h"
 #include <stdlib.h>
+
+#if !defined(SUPPORT_CLIPBOARD_IMAGE)
+// Get clipboard image stub - returns empty image
+Image GetClipboardImage(void)
+{
+    Image image = {0};
+    return image;
+}
+#endif
+
 */
 import "C"
 
