@@ -299,7 +299,7 @@ func SetSoundPan(sound Sound, pan float32) {
 }
 
 // WaveFormat - Convert wave data to desired format
-func WaveFormat(wave Wave, sampleRate int32, sampleSize int32, channels int32) {
+func WaveFormat(wave *Wave, sampleRate int32, sampleSize int32, channels int32) {
 	cwave := wave.cptr()
 	csampleRate := (C.int)(sampleRate)
 	csampleSize := (C.int)(sampleSize)
@@ -316,7 +316,7 @@ func WaveCopy(wave Wave) Wave {
 }
 
 // WaveCrop - Crop a wave to defined frames range
-func WaveCrop(wave Wave, initFrame int32, finalFrame int32) {
+func WaveCrop(wave *Wave, initFrame int32, finalFrame int32) {
 	cwave := wave.cptr()
 	cinitFrame := (C.int)(initFrame)
 	cfinalFrame := (C.int)(finalFrame)
