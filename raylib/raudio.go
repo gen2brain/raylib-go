@@ -237,6 +237,12 @@ func UnloadSound(sound Sound) {
 	C.UnloadSound(*csound)
 }
 
+// UnloadSoundAlias - Unload a sound alias (does not deallocate sample data)
+func UnloadSoundAlias(sound Sound) {
+	csound := sound.cptr()
+	C.UnloadSoundAlias(*csound)
+}
+
 // ExportWave - Export wave data to file
 func ExportWave(wave Wave, fileName string) {
 	cwave := wave.cptr()
