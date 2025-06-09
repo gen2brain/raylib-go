@@ -29,7 +29,7 @@
 *
 *   LICENSE: zlib/libpng
 *
-*   Copyright (c) 2013-2024 Ramon Santamaria (@raysan5) and contributors
+*   Copyright (c) 2013-2025 Ramon Santamaria (@raysan5) and contributors
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -125,7 +125,7 @@ typedef struct {
 
     // Gamepad data
     int gamepadStreamFd[MAX_GAMEPADS];  // Gamepad device file descriptor
-    int gamepadAbsAxisRange[MAX_GAMEPADS][MAX_GAMEPAD_AXIS][2]; // [0] = min, [1] = range value of the axis
+    int gamepadAbsAxisRange[MAX_GAMEPADS][MAX_GAMEPAD_AXES][2]; // [0] = min, [1] = range value of the axes
     int gamepadAbsAxisMap[MAX_GAMEPADS][ABS_CNT]; // Maps the axes gamepads from the evdev api to a sequential one
     int gamepadCount;                   // The number of gamepads registered
 } PlatformData;
@@ -278,7 +278,7 @@ void MinimizeWindow(void)
     TRACELOG(LOG_WARNING, "MinimizeWindow() not available on target platform");
 }
 
-// Set window state: not minimized/maximized
+// Restore window from being minimized/maximized
 void RestoreWindow(void)
 {
     TRACELOG(LOG_WARNING, "RestoreWindow() not available on target platform");
@@ -372,7 +372,7 @@ int GetMonitorCount(void)
     return 1;
 }
 
-// Get number of monitors
+// Get current monitor where window is placed
 int GetCurrentMonitor(void)
 {
     TRACELOG(LOG_WARNING, "GetCurrentMonitor() not implemented on target platform");
@@ -623,7 +623,7 @@ int SetGamepadMappings(const char *mappings)
 // Set gamepad vibration
 void SetGamepadVibration(int gamepad, float leftMotor, float rightMotor, float duration)
 {
-    TRACELOG(LOG_WARNING, "GamepadSetVibration() not implemented on target platform");
+    TRACELOG(LOG_WARNING, "SetGamepadVibration() not implemented on target platform");
 }
 
 // Set mouse position XY
@@ -736,20 +736,24 @@ int InitPlatform(void)
 
 #if defined(DEFAULT_GRAPHIC_DEVICE_DRM)
     platform.fd = open(DEFAULT_GRAPHIC_DEVICE_DRM, O_RDWR);
+    if (platform.fd != -1) TRACELOG(LOG_INFO, "DISPLAY: Default graphic device DRM opened successfully");
 #else
-    TRACELOG(LOG_INFO, "DISPLAY: No graphic card set, trying platform-gpu-card");
+    TRACELOG(LOG_WARNING, "DISPLAY: No graphic card set, trying platform-gpu-card");
     platform.fd = open("/dev/dri/by-path/platform-gpu-card",  O_RDWR); // VideoCore VI (Raspberry Pi 4)
+    if (platform.fd != -1) TRACELOG(LOG_INFO, "DISPLAY: platform-gpu-card opened successfully");
 
     if ((platform.fd == -1) || (drmModeGetResources(platform.fd) == NULL))
     {
-        TRACELOG(LOG_INFO, "DISPLAY: Failed to open platform-gpu-card, trying card1");
+        TRACELOG(LOG_WARNING, "DISPLAY: Failed to open platform-gpu-card, trying card1");
         platform.fd = open("/dev/dri/card1", O_RDWR); // Other Embedded
+        if (platform.fd != -1) TRACELOG(LOG_INFO, "DISPLAY: card1 opened successfully");
     }
 
     if ((platform.fd == -1) || (drmModeGetResources(platform.fd) == NULL))
     {
-        TRACELOG(LOG_INFO, "DISPLAY: Failed to open graphic card1, trying card0");
+        TRACELOG(LOG_WARNING, "DISPLAY: Failed to open graphic card1, trying card0");
         platform.fd = open("/dev/dri/card0", O_RDWR); // VideoCore IV (Raspberry Pi 1-3)
+        if (platform.fd != -1) TRACELOG(LOG_INFO, "DISPLAY: card0 opened successfully");
     }
 #endif
 
@@ -899,18 +903,17 @@ int InitPlatform(void)
         TRACELOG(LOG_INFO, "DISPLAY: Trying to enable MSAA x4");
     }
 
-    const EGLint framebufferAttribs[] =
-    {
-        EGL_RENDERABLE_TYPE, (rlGetVersion() == RL_OPENGL_ES_30)? EGL_OPENGL_ES3_BIT : EGL_OPENGL_ES2_BIT,      // Type of context support
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,          // Don't use it on Android!
+    const EGLint framebufferAttribs[] = {
+        EGL_RENDERABLE_TYPE, (rlGetVersion() == RL_OPENGL_ES_30)? EGL_OPENGL_ES3_BIT : EGL_OPENGL_ES2_BIT, // Type of context support
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT, // Don't use it on Android!
         EGL_RED_SIZE, 8,            // RED color bit depth (alternative: 5)
         EGL_GREEN_SIZE, 8,          // GREEN color bit depth (alternative: 6)
         EGL_BLUE_SIZE, 8,           // BLUE color bit depth (alternative: 5)
         EGL_ALPHA_SIZE, 8,        // ALPHA bit depth (required for transparent framebuffer)
         //EGL_TRANSPARENT_TYPE, EGL_NONE, // Request transparent framebuffer (EGL_TRANSPARENT_RGB does not work on RPI)
-        EGL_DEPTH_SIZE, 16,         // Depth buffer size (Required to use Depth testing!)
+        EGL_DEPTH_SIZE, 24,         // Depth buffer size (Required to use Depth testing!)
         //EGL_STENCIL_SIZE, 8,      // Stencil buffer size
-        EGL_SAMPLE_BUFFERS, sampleBuffer,    // Activate MSAA
+        EGL_SAMPLE_BUFFERS, sampleBuffer, // Activate MSAA
         EGL_SAMPLES, samples,       // 4x Antialiasing if activated (Free on MALI GPUs)
         EGL_NONE
     };
@@ -946,7 +949,7 @@ int InitPlatform(void)
 
     TRACELOG(LOG_TRACE, "DISPLAY: EGL configs available: %d", numConfigs);
 
-    EGLConfig *configs = RL_CALLOC(numConfigs, sizeof(*configs));
+    EGLConfig *configs = (EGLConfig *)RL_CALLOC(numConfigs, sizeof(*configs));
     if (!configs)
     {
         TRACELOG(LOG_WARNING, "DISPLAY: Failed to get memory for EGL configs");
@@ -1372,7 +1375,7 @@ static void InitEvdevInput(void)
             if ((strncmp("event", entity->d_name, strlen("event")) == 0) ||     // Search for devices named "event*"
                 (strncmp("mouse", entity->d_name, strlen("mouse")) == 0))       // Search for devices named "mouse*"
             {
-                sprintf(path, "%s%s", DEFAULT_EVDEV_PATH, entity->d_name);
+                snprintf(path, MAX_FILEPATH_LENGTH, "%s%s", DEFAULT_EVDEV_PATH, entity->d_name);
                 ConfigureEvdevDevice(path);                                     // Configure the device if appropriate
             }
         }
@@ -1401,7 +1404,7 @@ static void ConfigureEvdevDevice(char *device)
     int fd = open(device, O_RDONLY | O_NONBLOCK);
     if (fd < 0)
     {
-        TRACELOG(LOG_WARNING, "DRM: Failed to open input device: %s", device);
+        TRACELOG(LOG_WARNING, "SYSTEM: Failed to open input device: %s", device);
         return;
     }
 
@@ -1458,7 +1461,7 @@ static void ConfigureEvdevDevice(char *device)
         // matter if we support them
         else if (hasAbsXY && TEST_BIT(keyBits, BTN_MOUSE)) isMouse = true;
 
-        // If any of the common joystick axis is present, we assume it's a gamepad
+        // If any of the common joystick axes are present, we assume it's a gamepad
         else
         {
             for (int axis = (hasAbsXY? ABS_Z : ABS_X); axis < ABS_PRESSURE; axis++)
@@ -1530,7 +1533,7 @@ static void ConfigureEvdevDevice(char *device)
             platform.absRange.height = absinfo[ABS_Y].info.maximum - absinfo[ABS_Y].info.minimum;
         }
     }
-    else if (isGamepad && !isMouse && !isKeyboard && platform.gamepadCount < MAX_GAMEPADS)
+    else if (isGamepad && !isMouse && !isKeyboard && (platform.gamepadCount < MAX_GAMEPADS))
     {
         deviceKindStr = "gamepad";
         int index = platform.gamepadCount++;
@@ -1544,7 +1547,7 @@ static void ConfigureEvdevDevice(char *device)
         if (absAxisCount > 0)
         {
             // TODO / NOTE
-            // So gamepad axis (as in the actual linux joydev.c) are just simply enumerated
+            // So gamepad axes (as in the actual linux joydev.c) are just simply enumerated
             // and (at least for some input drivers like xpat) it's convention to use
             // ABS_X, ABX_Y for one joystick ABS_RX, ABS_RY for the other and the Z axes for the
             // shoulder buttons
@@ -1679,7 +1682,7 @@ static void PollGamepadEvents(void)
 
                     TRACELOG(LOG_DEBUG, "INPUT: Gamepad %2i: Axis: %2i Value: %i", i, axisRaylib, event.value);
 
-                    if (axisRaylib < MAX_GAMEPAD_AXIS)
+                    if (axisRaylib < MAX_GAMEPAD_AXES)
                     {
                         int min = platform.gamepadAbsAxisRange[i][event.code][0];
                         int range = platform.gamepadAbsAxisRange[i][event.code][1];
@@ -1894,7 +1897,7 @@ static int FindExactConnectorMode(const drmModeConnector *connector, uint width,
 
         TRACELOG(LOG_TRACE, "DISPLAY: DRM Mode %d %ux%u@%u %s", i, mode->hdisplay, mode->vdisplay, mode->vrefresh, (mode->flags & DRM_MODE_FLAG_INTERLACE)? "interlaced" : "progressive");
 
-        if ((mode->flags & DRM_MODE_FLAG_INTERLACE) && (!allowInterlaced)) continue;
+        if ((mode->flags & DRM_MODE_FLAG_INTERLACE) && !allowInterlaced) continue;
 
         if ((mode->hdisplay == width) && (mode->vdisplay == height) && (mode->vrefresh == fps)) return i;
     }
@@ -1924,7 +1927,7 @@ static int FindNearestConnectorMode(const drmModeConnector *connector, uint widt
             continue;
         }
 
-        if ((mode->flags & DRM_MODE_FLAG_INTERLACE) && (!allowInterlaced))
+        if ((mode->flags & DRM_MODE_FLAG_INTERLACE) && !allowInterlaced)
         {
             TRACELOG(LOG_TRACE, "DISPLAY: DRM shouldn't choose an interlaced mode");
             continue;
