@@ -70,7 +70,7 @@ func (arr *CStringArray) ToSlice() []string {
 	defer C.free(unsafe.Pointer(cs))
 	p := uintptr(arr.Pointer)
 	for {
-		cs = (**C.char)(unsafe.Pointer(p))
+		cs = *(***C.char)(unsafe.Pointer(&p))
 		if *cs == nil { // skip NULL - the last element
 			break
 		}

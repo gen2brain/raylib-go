@@ -548,8 +548,8 @@ func ComboBox(bounds rl.Rectangle, text string, active int32) int32 {
 	return int32(cactive)
 }
 
-// Spinner control, returns selected value
-func Spinner(bounds rl.Rectangle, text string, value *int32, minValue, maxValue int, editMode bool) int32 {
+// Spinner control, sets value to the selected number and returns true when clicked.
+func Spinner(bounds rl.Rectangle, text string, value *int32, minValue, maxValue int, editMode bool) bool {
 	var cbounds C.struct_Rectangle
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
@@ -573,8 +573,7 @@ func Spinner(bounds rl.Rectangle, text string, value *int32, minValue, maxValue 
 	cmaxValue := C.int(maxValue)
 	ceditMode := C.bool(editMode)
 
-	C.GuiSpinner(cbounds, ctext, &cvalue, cminValue, cmaxValue, ceditMode)
-	return int32(cvalue)
+	return C.GuiSpinner(cbounds, ctext, &cvalue, cminValue, cmaxValue, ceditMode) != 0
 }
 
 // Slider control
