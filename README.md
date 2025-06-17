@@ -45,6 +45,11 @@ It is also possible to build the DLL yourself. You can find more info at [raylib
 
 [Android example](https://github.com/gen2brain/raylib-go/tree/master/examples/others/android/example).
 
+##### Wasm
+
+For web bindings, refer to [Raylib-Go-Wasm](https://github.com/BrownNPC/Raylib-Go-Wasm); it should be largely compatible with this repository.
+
+
 ### Installation
 
     go get -v -u github.com/gen2brain/raylib-go/raylib
