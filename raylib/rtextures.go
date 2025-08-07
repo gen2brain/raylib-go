@@ -240,10 +240,18 @@ func UnloadImageColors(cols []color.RGBA) {
 	C.UnloadImageColors((*C.Color)(unsafe.Pointer(&cols[0])))
 }
 
-// UpdateTexture - Update GPU texture with new data
-func UpdateTexture(texture Texture2D, pixels []color.RGBA) {
+// UpdateTexture - Update GPU texture with new data ([]color.RGBA, *image.RGBA or []byte)
+func UpdateTexture(texture Texture2D, pixels any) {
+	var cpixels unsafe.Pointer
+	switch p := pixels.(type) {
+	case []color.RGBA:
+		cpixels = unsafe.Pointer(&p[0])
+	case *image.RGBA:
+		cpixels = unsafe.Pointer(&p.Pix[0])
+	case []byte:
+		cpixels = unsafe.Pointer(&p[0])
+	}
 	ctexture := texture.cptr()
-	cpixels := unsafe.Pointer(&pixels[0])
 	C.UpdateTexture(*ctexture, cpixels)
 }
 
