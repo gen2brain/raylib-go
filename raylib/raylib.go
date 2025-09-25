@@ -11,6 +11,7 @@ package rl
 import (
 	"image/color"
 	"io"
+	"io/fs"
 	"runtime"
 	"unsafe"
 )
@@ -670,10 +671,30 @@ func NewBoundingBox(min, max Vector3) BoundingBox {
 	return BoundingBox{min, max}
 }
 
-// Asset file
-type Asset interface {
+// Asset implements fs.FS interfaces
+type Asset struct {
+	root string
+	fsys fs.FS
+}
+
+// NewAsset - creates a new Asset filesystem
+// For Android: root should be empty or a directory path within assets
+// For Desktop: root should be the filesystem path to assets
+func NewAsset(root string) *Asset {
+	return &Asset{root: root}
+}
+
+// NewAssetFromFS - creates a new Asset filesystem from a fs.FS
+// The root parameter specifies a subdirectory within the embedded filesystem (can be empty for root)
+func NewAssetFromFS(fsys fs.FS, root string) *Asset {
+	return &Asset{root: root, fsys: fsys}
+}
+
+// AssetFile represents an opened asset file
+type AssetFile interface {
 	io.ReadSeeker
 	io.Closer
+	Stat() (fs.FileInfo, error)
 }
 
 // Gestures type

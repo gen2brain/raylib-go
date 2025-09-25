@@ -10,7 +10,9 @@ package rl
 import "C"
 
 import (
+	"io/fs"
 	"os"
+	"path/filepath"
 	"unsafe"
 )
 
@@ -80,12 +82,92 @@ func LoadDroppedFiles() []string {
 func UnloadDroppedFiles() {
 }
 
-// OpenAsset - Open asset
-func OpenAsset(name string) (Asset, error) {
-	f, err := os.Open(name)
+// Open implements fs.FS interface - opens the named file for reading
+func (a *Asset) Open(name string) (fs.File, error) {
+	if a.fsys != nil {
+		fullPath := name
+		if a.root != "" {
+			fullPath = filepath.Join(a.root, name)
+		}
+
+		return a.fsys.Open(fullPath)
+	}
+
+	return openAssetFile(a.root, name)
+}
+
+// ReadFile implements fs.ReadFileFS interface - reads the entire file
+func (a *Asset) ReadFile(name string) ([]byte, error) {
+	if a.fsys != nil {
+		fullPath := name
+		if a.root != "" {
+			fullPath = filepath.Join(a.root, name)
+		}
+
+		return fs.ReadFile(a.fsys, fullPath)
+	}
+
+	return readAssetFile(a.root, name)
+}
+
+// ReadDir implements fs.ReadDirFS interface - reads the directory
+func (a *Asset) ReadDir(name string) ([]fs.DirEntry, error) {
+	if a.fsys != nil {
+		fullPath := name
+		if a.root != "" {
+			fullPath = filepath.Join(a.root, name)
+		}
+		if fullPath == "." {
+			fullPath = "."
+		}
+
+		return fs.ReadDir(a.fsys, fullPath)
+	}
+
+	return readAssetDir(a.root, name)
+}
+
+// desktopAsset wraps os.File to implement AssetFile interface
+type desktopAsset struct {
+	*os.File
+}
+
+func (d *desktopAsset) Stat() (fs.FileInfo, error) {
+	return d.File.Stat()
+}
+
+func (d *desktopAsset) Seek(offset int64, whence int) (int64, error) {
+	return d.File.Seek(offset, whence)
+}
+
+func openAssetFile(root, name string) (fs.File, error) {
+	fullPath := name
+	if root != "" {
+		fullPath = filepath.Join(root, name)
+	}
+
+	f, err := os.Open(fullPath)
 	if err != nil {
 		return nil, err
 	}
 
-	return f, nil
+	return &desktopAsset{f}, nil
+}
+
+func readAssetFile(root, name string) ([]byte, error) {
+	fullPath := name
+	if root != "" {
+		fullPath = filepath.Join(root, name)
+	}
+
+	return os.ReadFile(fullPath)
+}
+
+func readAssetDir(root, name string) ([]fs.DirEntry, error) {
+	fullPath := name
+	if root != "" {
+		fullPath = filepath.Join(root, name)
+	}
+
+	return os.ReadDir(fullPath)
 }
