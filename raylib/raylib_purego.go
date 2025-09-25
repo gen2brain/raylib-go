@@ -3,6 +3,7 @@
 
 package rl
 
+import "C"
 import (
 	"fmt"
 	"image"
@@ -2849,9 +2850,18 @@ func UnloadRenderTexture(target RenderTexture2D) {
 	unloadRenderTexture(uintptr(unsafe.Pointer(&target)))
 }
 
-// UpdateTexture - Update GPU texture with new data
-func UpdateTexture(texture Texture2D, pixels []color.RGBA) {
-	updateTexture(uintptr(unsafe.Pointer(&texture)), unsafe.SliceData(pixels))
+// UpdateTexture - Update GPU texture with new data ([]color.RGBA, *image.RGBA or []byte)
+func UpdateTexture(texture Texture2D, pixels any) {
+	var cpixels unsafe.Pointer
+	switch p := pixels.(type) {
+	case []color.RGBA:
+		cpixels = unsafe.Pointer(&p[0])
+	case *image.RGBA:
+		cpixels = unsafe.Pointer(&p.Pix[0])
+	case []byte:
+		cpixels = unsafe.Pointer(&p[0])
+	}
+	updateTexture(uintptr(unsafe.Pointer(&texture)), cpixels)
 }
 
 // UpdateTextureRec - Update GPU texture rectangle with new data
@@ -3829,10 +3839,19 @@ func UnloadAudioStream(stream AudioStream) {
 	unloadAudioStream(uintptr(unsafe.Pointer(&stream)))
 }
 
-// UpdateAudioStream - Update audio stream buffers with data
-func UpdateAudioStream(stream AudioStream, data []float32) {
-	frameCount := int32(len(data))
-	updateAudioStream(uintptr(unsafe.Pointer(&stream)), data, frameCount)
+// UpdateAudioStream - Update audio stream buffers with data ([]float32 or []int16)
+func UpdateAudioStream(stream AudioStream, data any) {
+	var cdata unsafe.Pointer
+	var csamplesCount C.int
+	switch d := data.(type) {
+	case []float32:
+		cdata = unsafe.Pointer(&d[0])
+		csamplesCount = (C.int)(len(d))
+	case []int16:
+		cdata = unsafe.Pointer(&d[0])
+		csamplesCount = (C.int)(len(d))
+	}
+	updateAudioStream(uintptr(unsafe.Pointer(&stream)), cdata, csamplesCount)
 }
 
 // IsAudioStreamProcessed - Check if any audio stream buffers requires refill
