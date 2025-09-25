@@ -9,6 +9,12 @@ package rl
 */
 import "C"
 
+import (
+	"io/fs"
+	"os"
+	"path/filepath"
+)
+
 // SetMain - Sets callback function
 func SetMain(func()) {
 	return
