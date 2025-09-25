@@ -31,17 +31,6 @@ import (
 
 var callbackHolder func()
 
-// InitWindow - Initialize Window and OpenGL Graphics
-func InitWindow(width int32, height int32, title string) {
-	cwidth := (C.int)(width)
-	cheight := (C.int)(height)
-
-	ctitle := C.CString(title)
-	defer C.free(unsafe.Pointer(ctitle))
-
-	C.InitWindow(cwidth, cheight, ctitle)
-}
-
 // SetCallbackFunc - Sets callback function
 func SetCallbackFunc(callback func()) {
 	callbackHolder = callback
