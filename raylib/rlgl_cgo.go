@@ -702,9 +702,18 @@ func GetLocationAttrib(shaderId uint32, attribName string) int32 {
 	return int32(C.rlGetLocationAttrib(cshaderId, cattribName))
 }
 
-// SetUniform - Set shader value uniform
-func SetUniform(locIndex int32, value []float32, uniformType int32) {
-	C.rlSetUniform(C.int(locIndex), unsafe.Pointer(unsafe.SliceData(value)), C.int(uniformType), C.int((len(value))))
+// SetUniform - Set shader value uniform ([]float32, []int32, []uint32)
+func SetUniform(locIndex int32, value any, uniformType, count int32) {
+	var cvalue unsafe.Pointer
+	switch v := value.(type) {
+	case []float32:
+		cvalue = unsafe.Pointer(unsafe.SliceData(v))
+	case []int32:
+		cvalue = unsafe.Pointer(unsafe.SliceData(v))
+	case []uint32:
+		cvalue = unsafe.Pointer(unsafe.SliceData(v))
+	}
+	C.rlSetUniform(C.int(locIndex), cvalue, C.int(uniformType), C.int((count)))
 }
 
 // SetUniformMatrix - Set shader value matrix

@@ -764,7 +764,7 @@ func SetVertexAttributeDivisor(index uint32, divisor int32) {
 }
 
 // LoadTextureDepth - Load depth texture/renderbuffer (to be attached to fbo)
-func LoadTextureDepth(width, height int32, useRenderBuffer bool) uint32{
+func LoadTextureDepth(width, height int32, useRenderBuffer bool) uint32 {
 	return rlLoadTextureDepth(width, height, useRenderBuffer)
 }
 
@@ -818,9 +818,18 @@ func GetLocationAttrib(shaderId uint32, attribName string) int32 {
 	return rlGetLocationAttrib(shaderId, attribName)
 }
 
-// SetUniform - Set shader value uniform
-func SetUniform(locIndex int32, value []float32, uniformType int32) {
-	rlSetUniform(locIndex, unsafe.Pointer(unsafe.SliceData(value)), uniformType, int32(len(value)))
+// SetUniform - Set shader value uniform ([]float32, []int32, []uint32)
+func SetUniform(locIndex int32, value any, uniformType, count int32) {
+	var cvalue unsafe.Pointer
+	switch v := value.(type) {
+	case []float32:
+		cvalue = unsafe.Pointer(unsafe.SliceData(v))
+	case []int32:
+		cvalue = unsafe.Pointer(unsafe.SliceData(v))
+	case []uint32:
+		cvalue = unsafe.Pointer(unsafe.SliceData(v))
+	}
+	rlSetUniform(locIndex, cvalue, uniformType, int32(count))
 }
 
 // SetUniformMatrix - Set shader value matrix
