@@ -1,5 +1,5 @@
-//go:build !rgfw && !sdl && !sdl3 && !drm && !android
-// +build !rgfw,!sdl,!sdl3,!drm,!android
+//go:build !drm && !android
+// +build !drm,!android
 
 package rl
 
