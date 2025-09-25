@@ -95,7 +95,7 @@ func NewGame() (g Game) {
 
 // On Android this sets callback function to be used for android_main
 func init() {
-	rl.SetCallbackFunc(main)
+	rl.SetMain(main)
 }
 
 func main() {

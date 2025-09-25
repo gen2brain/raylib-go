@@ -16,7 +16,7 @@ const (
 )
 
 func init() {
-	rl.SetCallbackFunc(main)
+	rl.SetMain(main)
 }
 
 func main() {

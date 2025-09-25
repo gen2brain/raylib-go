@@ -81,7 +81,7 @@ func main() {
 
 // For android
 func init() {
-	rl.SetCallbackFunc(main)
+	rl.SetMain(main)
 }
 
 // NewGame - Create a new game instance
