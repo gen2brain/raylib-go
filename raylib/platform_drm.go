@@ -9,8 +9,8 @@ package rl
 */
 import "C"
 
-// SetCallbackFunc - Sets callback function
-func SetCallbackFunc(func()) {
+// SetMain - Sets callback function
+func SetMain(func()) {
 	return
 }
 

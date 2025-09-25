@@ -52,8 +52,8 @@ import (
 
 var callbackHolder func()
 
-// SetCallbackFunc - Sets callback function
-func SetCallbackFunc(callback func()) {
+// SetMain - Sets callback function
+func SetMain(callback func()) {
 	callbackHolder = callback
 }
 
@@ -224,7 +224,7 @@ func openAssetFile(root, name string) (fs.File, error) {
 		if C.IsAssetDir(cname) != 0 {
 			return nil, fmt.Errorf("cannot open directory as file: %s", fullPath)
 		}
-	
+
 		return nil, fmt.Errorf("asset file not found: %s", fullPath)
 	}
 

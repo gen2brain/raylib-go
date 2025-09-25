@@ -21,10 +21,6 @@ func init() {
 	runtime.LockOSThread()
 }
 
-// For compatibility with WASM bindings.
-// https://github.com/BrownNPC/Raylib-Go-Wasm
-var SetMain = SetCallbackFunc
-
 // Wave type, defines audio wave data
 type Wave struct {
 	// Number of samples

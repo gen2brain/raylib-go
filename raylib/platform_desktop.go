@@ -16,8 +16,8 @@ import (
 	"unsafe"
 )
 
-// SetCallbackFunc - Sets callback function
-func SetCallbackFunc(func()) {
+// SetMain - Sets callback function
+func SetMain(func()) {
 }
 
 // ShowCursor - Shows cursor

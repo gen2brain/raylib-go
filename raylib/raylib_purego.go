@@ -3958,8 +3958,8 @@ func DetachAudioMixedProcessor(processor AudioCallback) {
 	detachAudioMixedProcessor(fn)
 }
 
-// SetCallbackFunc - Sets callback function
-func SetCallbackFunc(func()) {
+// SetMain - Sets callback function
+func SetMain(func()) {
 }
 
 // NewImageFromImage - Returns new Image from Go image.Image
