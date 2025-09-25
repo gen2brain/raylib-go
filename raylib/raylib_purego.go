@@ -3,7 +3,6 @@
 
 package rl
 
-import "C"
 import (
 	"fmt"
 	"image"
@@ -346,8 +345,8 @@ var isTextureValid func(texture uintptr) bool
 var unloadTexture func(texture uintptr)
 var isRenderTextureValid func(target uintptr) bool
 var unloadRenderTexture func(target uintptr)
-var updateTexture func(texture uintptr, pixels *color.RGBA)
-var updateTextureRec func(texture uintptr, rec uintptr, pixels *color.RGBA)
+var updateTexture func(texture uintptr, pixels uintptr)
+var updateTextureRec func(texture uintptr, rec uintptr, pixels uintptr)
 var genTextureMipmaps func(texture *Texture2D)
 var setTextureFilter func(texture uintptr, filter int32)
 var setTextureWrap func(texture uintptr, wrap int32)
@@ -519,7 +518,7 @@ var getMusicTimePlayed func(music uintptr) float32
 var loadAudioStream func(audioStream uintptr, sampleRate uint32, sampleSize uint32, channels uint32)
 var isAudioStreamValid func(stream uintptr) bool
 var unloadAudioStream func(stream uintptr)
-var updateAudioStream func(stream uintptr, data []float32, frameCount int32)
+var updateAudioStream func(stream uintptr, data uintptr, frameCount int32)
 var isAudioStreamProcessed func(stream uintptr) bool
 var playAudioStream func(stream uintptr)
 var pauseAudioStream func(stream uintptr)
@@ -2861,11 +2860,11 @@ func UpdateTexture(texture Texture2D, pixels any) {
 	case []byte:
 		cpixels = unsafe.Pointer(&p[0])
 	}
-	updateTexture(uintptr(unsafe.Pointer(&texture)), cpixels)
+	updateTexture(uintptr(unsafe.Pointer(&texture)), uintptr(cpixels))
 }
 
 // UpdateTextureRec - Update GPU texture rectangle with new data
-func UpdateTextureRec(texture Texture2D, rec Rectangle, pixels []color.RGBA) {
+func UpdateTextureRec(texture Texture2D, rec Rectangle, pixels any) {
 	var cpixels unsafe.Pointer
 	switch p := pixels.(type) {
 	case []color.RGBA:
@@ -2875,7 +2874,7 @@ func UpdateTextureRec(texture Texture2D, rec Rectangle, pixels []color.RGBA) {
 	case []byte:
 		cpixels = unsafe.Pointer(&p[0])
 	}
-	updateTextureRec(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&rec)), cpixels)
+	updateTextureRec(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&rec)), uintptr(cpixels))
 }
 
 // GenTextureMipmaps - Generate GPU mipmaps for a texture
@@ -3851,16 +3850,16 @@ func UnloadAudioStream(stream AudioStream) {
 // UpdateAudioStream - Update audio stream buffers with data ([]float32 or []int16)
 func UpdateAudioStream(stream AudioStream, data any) {
 	var cdata unsafe.Pointer
-	var csamplesCount C.int
+	var csamplesCount int32
 	switch d := data.(type) {
 	case []float32:
 		cdata = unsafe.Pointer(&d[0])
-		csamplesCount = (C.int)(len(d))
+		csamplesCount = int32(len(d))
 	case []int16:
 		cdata = unsafe.Pointer(&d[0])
-		csamplesCount = (C.int)(len(d))
+		csamplesCount = int32(len(d))
 	}
-	updateAudioStream(uintptr(unsafe.Pointer(&stream)), cdata, csamplesCount)
+	updateAudioStream(uintptr(unsafe.Pointer(&stream)), uintptr(cdata), csamplesCount)
 }
 
 // IsAudioStreamProcessed - Check if any audio stream buffers requires refill
@@ -3991,15 +3990,6 @@ func (i *Image) ToImage() image.Image {
 	img.Pix = pixels
 
 	return img
-}
-
-// OpenAsset - Open asset
-func OpenAsset(name string) (Asset, error) {
-	f, err := os.Open(name)
-	if err != nil {
-		return nil, err
-	}
-	return f, nil
 }
 
 // HomeDir - Returns user home directory
