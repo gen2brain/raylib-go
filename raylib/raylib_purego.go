@@ -2866,7 +2866,16 @@ func UpdateTexture(texture Texture2D, pixels any) {
 
 // UpdateTextureRec - Update GPU texture rectangle with new data
 func UpdateTextureRec(texture Texture2D, rec Rectangle, pixels []color.RGBA) {
-	updateTextureRec(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&rec)), unsafe.SliceData(pixels))
+	var cpixels unsafe.Pointer
+	switch p := pixels.(type) {
+	case []color.RGBA:
+		cpixels = unsafe.Pointer(&p[0])
+	case *image.RGBA:
+		cpixels = unsafe.Pointer(&p.Pix[0])
+	case []byte:
+		cpixels = unsafe.Pointer(&p[0])
+	}
+	updateTextureRec(uintptr(unsafe.Pointer(&texture)), uintptr(unsafe.Pointer(&rec)), cpixels)
 }
 
 // GenTextureMipmaps - Generate GPU mipmaps for a texture
