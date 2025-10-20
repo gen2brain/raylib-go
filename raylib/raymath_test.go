@@ -36,7 +36,7 @@ func BenchmarkVector3OrthoNormalize(b *testing.B) {
 func FuzzVector3OrthoNormalize(f *testing.F) {
 	f.Add(
 		float32(1), float32(2), float32(3),
-		float32(1), float32(2), float32(3),
+		float32(4), float32(5), float32(6),
 	)
 	f.Fuzz(func(t *testing.T,
 		v1X, v1Y, v1Z float32,
@@ -44,6 +44,9 @@ func FuzzVector3OrthoNormalize(f *testing.F) {
 	) {
 		want1 := NewVector3(v1X, v1Y, v1Z)
 		want2 := NewVector3(v2X, v2Y, v2Z)
+		if testVector3Equals(Vector3CrossProduct(want1, want2), Vector3Zero(), 1e-3) {
+			t.SkipNow() // too unstable on macos
+		}
 		cVector3OrthoNormalize(&want1, &want2)
 
 		got1 := NewVector3(v1X, v1Y, v1Z)
