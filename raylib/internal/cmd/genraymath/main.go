@@ -79,7 +79,7 @@ func run() error {
 		inlineMethods = flag.Bool("inline-methods", false, "inline function bodies when generating methods")
 
 		skipGenTests   = flag.Bool("skip-tests", false, "don't generate tests or bindings")
-		skipGenMethods = flag.Bool("skip-methods", true, "don't generate methods")
+		skipGenMethods = flag.Bool("skip-methods", false, "don't generate methods")
 
 		fuzzTime     = flag.Duration("fuzztime", 0, "run fuzz tests for given time after generating")
 		fuzzFrom     = flag.String("fuzzfrom", "", "resume fuzzing from given function name")
