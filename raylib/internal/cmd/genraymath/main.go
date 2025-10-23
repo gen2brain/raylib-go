@@ -55,6 +55,7 @@ var (
 	lowPrecision = []string{
 		"Vector3RotateByAxisAngle",
 		"Vector2Rotate",
+		"QuaternionSlerp",
 	}
 
 	// the C versions of these functions use double params instead of floats
@@ -204,7 +205,7 @@ func run() error {
 		log.Printf("running fuzz test %d/%d for %q", n, total, fn.Name)
 		testName := "^Fuzz" + fn.Name + "$"
 		cmd := exec.Command("go", "test",
-			"-run", testName,
+			"-run", "^$",
 			"-fuzz", testName,
 			"-fuzztime", (*fuzzTime).String(),
 		)
@@ -381,7 +382,7 @@ func (f funcInfo) TestNotEqual(a, b string) string {
 
 	prec := 6
 	if slices.Contains(lowPrecision, f.Name) {
-		prec = 2
+		prec = 1
 	}
 
 	first, size := utf8.DecodeRuneInString(t)

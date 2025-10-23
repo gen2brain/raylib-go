@@ -40,7 +40,7 @@ func Remap(value, inputStart, inputEnd, outputStart, outputEnd float32) float32 
 
 // Wrap - Wrap input value from min to max
 func Wrap(value, min, max float32) float32 {
-	return float32(float64(value) - float64(max-min)*math.Floor(float64((value-min)/(max-min))))
+	return value - (max-min)*float32(math.Floor(float64((value-min)/(max-min))))
 }
 
 // FloatEquals - Check whether two given floats are almost equal
