@@ -36,9 +36,8 @@ var (
 		"Mat2Transpose",
 		"MatrixNormalize",
 		"Mat2Set",
+		"Vector2Cross",
 
-		"Vector2Cross",   // alias for Vector2CrossProduct
-		"Vector2LenSqr",  // alias for Vector2LengthSqr
 		"MatrixToFloat",  // MatrixToFloatV tested
 		"Vector3ToFloat", // Vector3ToFloatV tested
 	}
@@ -51,8 +50,9 @@ var (
 		"MatrixDecompose",
 	}
 
-	// fuzz testing these functions is flakey unless the test precision is lowered
-	lowPrecision = []string{
+	// some outputs can differ a lot when the input is big (especially for rotations) so we need to
+	// normalize test inputs
+	normalize = []string{
 		"Vector3RotateByAxisAngle",
 		"Vector2Rotate",
 		"QuaternionSlerp",
@@ -267,6 +267,7 @@ func parseFunc(fn *ast.FuncDecl, fset *token.FileSet, inlineMethods bool) (funcI
 			ret.Params = append(ret.Params, param{
 				Names:     names,
 				TypeName:  typeName,
+				Normalize: strings.HasPrefix(fn.Name.Name, typeName) && slices.Contains(normalize, fn.Name.Name),
 				UseDouble: typeName == "float32" && slices.Contains(useDouble, fn.Name.Name),
 			})
 		}
@@ -380,19 +381,15 @@ func (f funcInfo) TestNotEqual(a, b string) string {
 		}
 	}
 
-	prec := 6
-	if slices.Contains(lowPrecision, f.Name) {
-		prec = 1
-	}
-
 	first, size := utf8.DecodeRuneInString(t)
 	t = string(unicode.ToUpper(first)) + t[size:]
-	return fmt.Sprintf("!test%sEquals(%s, %s, 1e-%d)", t, a, b, prec)
+	return fmt.Sprintf("!test%sEquals(%s, %s)", t, a, b)
 }
 
 type param struct {
 	Names     []string
 	TypeName  string
+	Normalize bool
 	UseDouble bool
 }
 

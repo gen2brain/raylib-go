@@ -59,7 +59,7 @@ func Test{{ .Name }}(t *testing.T) {
 
 // helpers
 
-func testFloat32Equals(a, b float32, epsilon float64) bool {
+func testFloat32Equals(a, b float32) bool {
   if math.IsNaN(float64(a)) && math.IsNaN(float64(b)) {
     return true
   }
@@ -72,51 +72,51 @@ func testFloat32Equals(a, b float32, epsilon float64) bool {
   return math.Abs(float64(a-b)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(a)), math.Abs(float64(b))))
 }
 
-func testFloat32SliceEquals(a, b []float32, epsilon float64) bool {
+func testFloat32SliceEquals(a, b []float32) bool {
   if len(a) != len(b) {
     return false
   }
   for i := range a {
-    if !testFloat32Equals(a[i], b[i], epsilon) {
+    if !testFloat32Equals(a[i], b[i]) {
       return false
     }
   }
   return true
 }
 
-func testVector2Equals(a, b Vector2, epsilon float64) bool {
-  return testFloat32Equals(a.X, b.X, epsilon) &&
-     testFloat32Equals(a.Y, b.Y, epsilon)
+func testVector2Equals(a, b Vector2) bool {
+  return testFloat32Equals(a.X, b.X) &&
+     testFloat32Equals(a.Y, b.Y)
 }
 
-func testVector3Equals(a, b Vector3, epsilon float64) bool {
-  return testFloat32Equals(a.X, b.X, epsilon) &&
-     testFloat32Equals(a.Y, b.Y, epsilon) &&
-     testFloat32Equals(a.Z, b.Z, epsilon)
+func testVector3Equals(a, b Vector3) bool {
+  return testFloat32Equals(a.X, b.X) &&
+     testFloat32Equals(a.Y, b.Y) &&
+     testFloat32Equals(a.Z, b.Z)
 }
 
-func testQuaternionEquals(a, b Quaternion, epsilon float64) bool {
-  return testFloat32Equals(a.X, b.X, epsilon) &&
-     testFloat32Equals(a.Y, b.Y, epsilon) &&
-     testFloat32Equals(a.Z, b.Z, epsilon) &&
-     testFloat32Equals(a.W, b.W, epsilon)
+func testQuaternionEquals(a, b Quaternion) bool {
+  return testFloat32Equals(a.X, b.X) &&
+     testFloat32Equals(a.Y, b.Y) &&
+     testFloat32Equals(a.Z, b.Z) &&
+     testFloat32Equals(a.W, b.W)
 }
 
-func testMatrixEquals(a, b Matrix, epsilon float64) bool {
-  return testFloat32Equals(a.M0, b.M0, epsilon) &&
-     testFloat32Equals(a.M1, b.M1, epsilon) &&
-     testFloat32Equals(a.M2, b.M2, epsilon) &&
-     testFloat32Equals(a.M3, b.M3, epsilon) &&
-     testFloat32Equals(a.M4, b.M4, epsilon) &&
-     testFloat32Equals(a.M5, b.M5, epsilon) &&
-     testFloat32Equals(a.M6, b.M6, epsilon) &&
-     testFloat32Equals(a.M7, b.M7, epsilon) &&
-     testFloat32Equals(a.M8, b.M8, epsilon) &&
-     testFloat32Equals(a.M9, b.M9, epsilon) &&
-     testFloat32Equals(a.M10, b.M10, epsilon) &&
-     testFloat32Equals(a.M11, b.M11, epsilon) &&
-     testFloat32Equals(a.M12, b.M12, epsilon) &&
-     testFloat32Equals(a.M13, b.M13, epsilon) &&
-     testFloat32Equals(a.M14, b.M14, epsilon) &&
-     testFloat32Equals(a.M15, b.M15, epsilon)
+func testMatrixEquals(a, b Matrix) bool {
+  return testFloat32Equals(a.M0, b.M0) &&
+     testFloat32Equals(a.M1, b.M1) &&
+     testFloat32Equals(a.M2, b.M2) &&
+     testFloat32Equals(a.M3, b.M3) &&
+     testFloat32Equals(a.M4, b.M4) &&
+     testFloat32Equals(a.M5, b.M5) &&
+     testFloat32Equals(a.M6, b.M6) &&
+     testFloat32Equals(a.M7, b.M7) &&
+     testFloat32Equals(a.M8, b.M8) &&
+     testFloat32Equals(a.M9, b.M9) &&
+     testFloat32Equals(a.M10, b.M10) &&
+     testFloat32Equals(a.M11, b.M11) &&
+     testFloat32Equals(a.M12, b.M12) &&
+     testFloat32Equals(a.M13, b.M13) &&
+     testFloat32Equals(a.M14, b.M14) &&
+     testFloat32Equals(a.M15, b.M15)
 }

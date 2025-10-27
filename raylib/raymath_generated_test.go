@@ -46,7 +46,7 @@ func FuzzClamp(f *testing.F) {
 	) {
 		want := cClamp(value, min, max)
 		got := Clamp(value, min, max)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -131,7 +131,7 @@ func FuzzLerp(f *testing.F) {
 	) {
 		want := cLerp(start, end, amount)
 		got := Lerp(start, end, amount)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -196,7 +196,7 @@ func FuzzMatrixAdd(f *testing.F) {
 		)
 		want := cMatrixAdd(left, right)
 		got := MatrixAdd(left, right)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -246,7 +246,7 @@ func FuzzMatrixDeterminant(f *testing.F) {
 		)
 		want := cMatrixDeterminant(mat)
 		got := MatrixDeterminant(mat)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -299,7 +299,7 @@ func FuzzMatrixFrustum(f *testing.F) {
 	) {
 		want := cMatrixFrustum(left, right, bottom, top, nearPlane, farPlane)
 		got := MatrixFrustum(left, right, bottom, top, nearPlane, farPlane)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -330,7 +330,7 @@ func BenchmarkMatrixIdentity(b *testing.B) {
 func TestMatrixIdentity(t *testing.T) {
 	want := cMatrixIdentity()
 	got := MatrixIdentity()
-	if !testMatrixEquals(want, got, 1e-6) {
+	if !testMatrixEquals(want, got) {
 		t.Errorf("got %v; want %v", got, want)
 	}
 }
@@ -379,7 +379,7 @@ func FuzzMatrixInvert(f *testing.F) {
 		)
 		want := cMatrixInvert(mat)
 		got := MatrixInvert(mat)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -426,7 +426,7 @@ func FuzzMatrixLookAt(f *testing.F) {
 		up := NewVector3(upX, upY, upZ)
 		want := cMatrixLookAt(eye, target, up)
 		got := MatrixLookAt(eye, target, up)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -491,7 +491,7 @@ func FuzzMatrixMultiply(f *testing.F) {
 		)
 		want := cMatrixMultiply(left, right)
 		got := MatrixMultiply(left, right)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -544,7 +544,7 @@ func FuzzMatrixOrtho(f *testing.F) {
 	) {
 		want := cMatrixOrtho(left, right, bottom, top, near, far)
 		got := MatrixOrtho(left, right, bottom, top, near, far)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -591,7 +591,7 @@ func FuzzMatrixPerspective(f *testing.F) {
 	) {
 		want := cMatrixPerspective(fovY, aspect, nearPlane, farPlane)
 		got := MatrixPerspective(fovY, aspect, nearPlane, farPlane)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -633,7 +633,7 @@ func FuzzMatrixRotate(f *testing.F) {
 		axis := NewVector3(axisX, axisY, axisZ)
 		want := cMatrixRotate(axis, angle)
 		got := MatrixRotate(axis, angle)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -671,7 +671,7 @@ func FuzzMatrixRotateX(f *testing.F) {
 	) {
 		want := cMatrixRotateX(angle)
 		got := MatrixRotateX(angle)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -710,7 +710,7 @@ func FuzzMatrixRotateXYZ(f *testing.F) {
 		angle := NewVector3(angleX, angleY, angleZ)
 		want := cMatrixRotateXYZ(angle)
 		got := MatrixRotateXYZ(angle)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -748,7 +748,7 @@ func FuzzMatrixRotateY(f *testing.F) {
 	) {
 		want := cMatrixRotateY(angle)
 		got := MatrixRotateY(angle)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -786,7 +786,7 @@ func FuzzMatrixRotateZ(f *testing.F) {
 	) {
 		want := cMatrixRotateZ(angle)
 		got := MatrixRotateZ(angle)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -825,7 +825,7 @@ func FuzzMatrixRotateZYX(f *testing.F) {
 		angle := NewVector3(angleX, angleY, angleZ)
 		want := cMatrixRotateZYX(angle)
 		got := MatrixRotateZYX(angle)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -869,7 +869,7 @@ func FuzzMatrixScale(f *testing.F) {
 	) {
 		want := cMatrixScale(x, y, z)
 		got := MatrixScale(x, y, z)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -934,7 +934,7 @@ func FuzzMatrixSubtract(f *testing.F) {
 		)
 		want := cMatrixSubtract(left, right)
 		got := MatrixSubtract(left, right)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -984,7 +984,7 @@ func FuzzMatrixToFloatV(f *testing.F) {
 		)
 		want := cMatrixToFloatV(mat)
 		got := MatrixToFloatV(mat)
-		if !testFloat32SliceEquals(want[:], got[:], 1e-6) {
+		if !testFloat32SliceEquals(want[:], got[:]) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1034,7 +1034,7 @@ func FuzzMatrixTrace(f *testing.F) {
 		)
 		want := cMatrixTrace(mat)
 		got := MatrixTrace(mat)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1078,7 +1078,7 @@ func FuzzMatrixTranslate(f *testing.F) {
 	) {
 		want := cMatrixTranslate(x, y, z)
 		got := MatrixTranslate(x, y, z)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1128,7 +1128,7 @@ func FuzzMatrixTranspose(f *testing.F) {
 		)
 		want := cMatrixTranspose(mat)
 		got := MatrixTranspose(mat)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1172,7 +1172,7 @@ func FuzzNormalize(f *testing.F) {
 	) {
 		want := cNormalize(value, start, end)
 		got := Normalize(value, start, end)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1215,7 +1215,7 @@ func FuzzQuaternionAdd(f *testing.F) {
 		q2 := NewQuaternion(q2X, q2Y, q2Z, q2W)
 		want := cQuaternionAdd(q1, q2)
 		got := QuaternionAdd(q1, q2)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1257,7 +1257,7 @@ func FuzzQuaternionAddValue(f *testing.F) {
 		q := NewQuaternion(qX, qY, qZ, qW)
 		want := cQuaternionAddValue(q, add)
 		got := QuaternionAddValue(q, add)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1300,7 +1300,7 @@ func FuzzQuaternionDivide(f *testing.F) {
 		q2 := NewQuaternion(q2X, q2Y, q2Z, q2W)
 		want := cQuaternionDivide(q1, q2)
 		got := QuaternionDivide(q1, q2)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1385,7 +1385,7 @@ func FuzzQuaternionFromAxisAngle(f *testing.F) {
 		axis := NewVector3(axisX, axisY, axisZ)
 		want := cQuaternionFromAxisAngle(axis, angle)
 		got := QuaternionFromAxisAngle(axis, angle)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1429,7 +1429,7 @@ func FuzzQuaternionFromEuler(f *testing.F) {
 	) {
 		want := cQuaternionFromEuler(pitch, yaw, roll)
 		got := QuaternionFromEuler(pitch, yaw, roll)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1479,7 +1479,7 @@ func FuzzQuaternionFromMatrix(f *testing.F) {
 		)
 		want := cQuaternionFromMatrix(mat)
 		got := QuaternionFromMatrix(mat)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1522,7 +1522,7 @@ func FuzzQuaternionFromVector3ToVector3(f *testing.F) {
 		to := NewVector3(toX, toY, toZ)
 		want := cQuaternionFromVector3ToVector3(from, to)
 		got := QuaternionFromVector3ToVector3(from, to)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1553,7 +1553,7 @@ func BenchmarkQuaternionIdentity(b *testing.B) {
 func TestQuaternionIdentity(t *testing.T) {
 	want := cQuaternionIdentity()
 	got := QuaternionIdentity()
-	if !testQuaternionEquals(want, got, 1e-6) {
+	if !testQuaternionEquals(want, got) {
 		t.Errorf("got %v; want %v", got, want)
 	}
 }
@@ -1591,7 +1591,7 @@ func FuzzQuaternionInvert(f *testing.F) {
 		quat := NewQuaternion(quatX, quatY, quatZ, quatW)
 		want := cQuaternionInvert(quat)
 		got := QuaternionInvert(quat)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1630,7 +1630,7 @@ func FuzzQuaternionLength(f *testing.F) {
 		quat := NewQuaternion(quatX, quatY, quatZ, quatW)
 		want := cQuaternionLength(quat)
 		got := QuaternionLength(quat)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1676,7 +1676,7 @@ func FuzzQuaternionLerp(f *testing.F) {
 		q2 := NewQuaternion(q2X, q2Y, q2Z, q2W)
 		want := cQuaternionLerp(q1, q2, amount)
 		got := QuaternionLerp(q1, q2, amount)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1719,7 +1719,7 @@ func FuzzQuaternionMultiply(f *testing.F) {
 		q2 := NewQuaternion(q2X, q2Y, q2Z, q2W)
 		want := cQuaternionMultiply(q1, q2)
 		got := QuaternionMultiply(q1, q2)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1765,7 +1765,7 @@ func FuzzQuaternionNlerp(f *testing.F) {
 		q2 := NewQuaternion(q2X, q2Y, q2Z, q2W)
 		want := cQuaternionNlerp(q1, q2, amount)
 		got := QuaternionNlerp(q1, q2, amount)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1804,7 +1804,7 @@ func FuzzQuaternionNormalize(f *testing.F) {
 		q := NewQuaternion(qX, qY, qZ, qW)
 		want := cQuaternionNormalize(q)
 		got := QuaternionNormalize(q)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1846,7 +1846,7 @@ func FuzzQuaternionScale(f *testing.F) {
 		q := NewQuaternion(qX, qY, qZ, qW)
 		want := cQuaternionScale(q, mul)
 		got := QuaternionScale(q, mul)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1889,10 +1889,12 @@ func FuzzQuaternionSlerp(f *testing.F) {
 		amount float32,
 	) {
 		q1 := NewQuaternion(q1X, q1Y, q1Z, q1W)
+		q1 = QuaternionNormalize(q1)
 		q2 := NewQuaternion(q2X, q2Y, q2Z, q2W)
+		q2 = QuaternionNormalize(q2)
 		want := cQuaternionSlerp(q1, q2, amount)
 		got := QuaternionSlerp(q1, q2, amount)
-		if !testQuaternionEquals(want, got, 1e-1) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1935,7 +1937,7 @@ func FuzzQuaternionSubtract(f *testing.F) {
 		q2 := NewQuaternion(q2X, q2Y, q2Z, q2W)
 		want := cQuaternionSubtract(q1, q2)
 		got := QuaternionSubtract(q1, q2)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -1977,7 +1979,7 @@ func FuzzQuaternionSubtractValue(f *testing.F) {
 		q := NewQuaternion(qX, qY, qZ, qW)
 		want := cQuaternionSubtractValue(q, sub)
 		got := QuaternionSubtractValue(q, sub)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2016,7 +2018,7 @@ func FuzzQuaternionToEuler(f *testing.F) {
 		q := NewQuaternion(qX, qY, qZ, qW)
 		want := cQuaternionToEuler(q)
 		got := QuaternionToEuler(q)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2055,7 +2057,7 @@ func FuzzQuaternionToMatrix(f *testing.F) {
 		q := NewQuaternion(qX, qY, qZ, qW)
 		want := cQuaternionToMatrix(q)
 		got := QuaternionToMatrix(q)
-		if !testMatrixEquals(want, got, 1e-6) {
+		if !testMatrixEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2109,7 +2111,7 @@ func FuzzQuaternionTransform(f *testing.F) {
 		)
 		want := cQuaternionTransform(q, mat)
 		got := QuaternionTransform(q, mat)
-		if !testQuaternionEquals(want, got, 1e-6) {
+		if !testQuaternionEquals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2159,7 +2161,7 @@ func FuzzRemap(f *testing.F) {
 	) {
 		want := cRemap(value, inputStart, inputEnd, outputStart, outputEnd)
 		got := Remap(value, inputStart, inputEnd, outputStart, outputEnd)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2202,7 +2204,7 @@ func FuzzVector2Add(f *testing.F) {
 		v2 := NewVector2(v2X, v2Y)
 		want := cVector2Add(v1, v2)
 		got := Vector2Add(v1, v2)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2244,7 +2246,7 @@ func FuzzVector2AddValue(f *testing.F) {
 		v := NewVector2(vX, vY)
 		want := cVector2AddValue(v, add)
 		got := Vector2AddValue(v, add)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2287,7 +2289,7 @@ func FuzzVector2Angle(f *testing.F) {
 		v2 := NewVector2(v2X, v2Y)
 		want := cVector2Angle(v1, v2)
 		got := Vector2Angle(v1, v2)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2334,7 +2336,7 @@ func FuzzVector2Clamp(f *testing.F) {
 		max := NewVector2(maxX, maxY)
 		want := cVector2Clamp(v, min, max)
 		got := Vector2Clamp(v, min, max)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2379,7 +2381,7 @@ func FuzzVector2ClampValue(f *testing.F) {
 		v := NewVector2(vX, vY)
 		want := cVector2ClampValue(v, min, max)
 		got := Vector2ClampValue(v, min, max)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2422,7 +2424,7 @@ func FuzzVector2CrossProduct(f *testing.F) {
 		v2 := NewVector2(v2X, v2Y)
 		want := cVector2CrossProduct(v1, v2)
 		got := Vector2CrossProduct(v1, v2)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2465,7 +2467,7 @@ func FuzzVector2Distance(f *testing.F) {
 		v2 := NewVector2(v2X, v2Y)
 		want := cVector2Distance(v1, v2)
 		got := Vector2Distance(v1, v2)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2508,7 +2510,7 @@ func FuzzVector2DistanceSqr(f *testing.F) {
 		v2 := NewVector2(v2X, v2Y)
 		want := cVector2DistanceSqr(v1, v2)
 		got := Vector2DistanceSqr(v1, v2)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2551,7 +2553,7 @@ func FuzzVector2Divide(f *testing.F) {
 		v2 := NewVector2(v2X, v2Y)
 		want := cVector2Divide(v1, v2)
 		got := Vector2Divide(v1, v2)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2594,7 +2596,7 @@ func FuzzVector2DotProduct(f *testing.F) {
 		v2 := NewVector2(v2X, v2Y)
 		want := cVector2DotProduct(v1, v2)
 		got := Vector2DotProduct(v1, v2)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2676,7 +2678,7 @@ func FuzzVector2Invert(f *testing.F) {
 		v := NewVector2(vX, vY)
 		want := cVector2Invert(v)
 		got := Vector2Invert(v)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2715,7 +2717,7 @@ func FuzzVector2Length(f *testing.F) {
 		v := NewVector2(vX, vY)
 		want := cVector2Length(v)
 		got := Vector2Length(v)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2754,7 +2756,7 @@ func FuzzVector2LengthSqr(f *testing.F) {
 		v := NewVector2(vX, vY)
 		want := cVector2LengthSqr(v)
 		got := Vector2LengthSqr(v)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2800,7 +2802,7 @@ func FuzzVector2Lerp(f *testing.F) {
 		v2 := NewVector2(v2X, v2Y)
 		want := cVector2Lerp(v1, v2, amount)
 		got := Vector2Lerp(v1, v2, amount)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2843,7 +2845,7 @@ func FuzzVector2LineAngle(f *testing.F) {
 		end := NewVector2(endX, endY)
 		want := cVector2LineAngle(start, end)
 		got := Vector2LineAngle(start, end)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2889,7 +2891,7 @@ func FuzzVector2MoveTowards(f *testing.F) {
 		target := NewVector2(targetX, targetY)
 		want := cVector2MoveTowards(v, target, maxDistance)
 		got := Vector2MoveTowards(v, target, maxDistance)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2932,7 +2934,7 @@ func FuzzVector2Multiply(f *testing.F) {
 		v2 := NewVector2(v2X, v2Y)
 		want := cVector2Multiply(v1, v2)
 		got := Vector2Multiply(v1, v2)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -2971,7 +2973,7 @@ func FuzzVector2Negate(f *testing.F) {
 		v := NewVector2(vX, vY)
 		want := cVector2Negate(v)
 		got := Vector2Negate(v)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3010,7 +3012,7 @@ func FuzzVector2Normalize(f *testing.F) {
 		v := NewVector2(vX, vY)
 		want := cVector2Normalize(v)
 		got := Vector2Normalize(v)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3041,7 +3043,7 @@ func BenchmarkVector2One(b *testing.B) {
 func TestVector2One(t *testing.T) {
 	want := cVector2One()
 	got := Vector2One()
-	if !testVector2Equals(want, got, 1e-6) {
+	if !testVector2Equals(want, got) {
 		t.Errorf("got %v; want %v", got, want)
 	}
 }
@@ -3083,7 +3085,7 @@ func FuzzVector2Reflect(f *testing.F) {
 		normal := NewVector2(normalX, normalY)
 		want := cVector2Reflect(v, normal)
 		got := Vector2Reflect(v, normal)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3123,9 +3125,10 @@ func FuzzVector2Rotate(f *testing.F) {
 		angle float32,
 	) {
 		v := NewVector2(vX, vY)
+		v = Vector2Normalize(v)
 		want := cVector2Rotate(v, angle)
 		got := Vector2Rotate(v, angle)
-		if !testVector2Equals(want, got, 1e-1) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3167,7 +3170,7 @@ func FuzzVector2Scale(f *testing.F) {
 		v := NewVector2(vX, vY)
 		want := cVector2Scale(v, scale)
 		got := Vector2Scale(v, scale)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3210,7 +3213,7 @@ func FuzzVector2Subtract(f *testing.F) {
 		v2 := NewVector2(v2X, v2Y)
 		want := cVector2Subtract(v1, v2)
 		got := Vector2Subtract(v1, v2)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3252,7 +3255,7 @@ func FuzzVector2SubtractValue(f *testing.F) {
 		v := NewVector2(vX, vY)
 		want := cVector2SubtractValue(v, sub)
 		got := Vector2SubtractValue(v, sub)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3306,7 +3309,7 @@ func FuzzVector2Transform(f *testing.F) {
 		)
 		want := cVector2Transform(v, mat)
 		got := Vector2Transform(v, mat)
-		if !testVector2Equals(want, got, 1e-6) {
+		if !testVector2Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3337,7 +3340,7 @@ func BenchmarkVector2Zero(b *testing.B) {
 func TestVector2Zero(t *testing.T) {
 	want := cVector2Zero()
 	got := Vector2Zero()
-	if !testVector2Equals(want, got, 1e-6) {
+	if !testVector2Equals(want, got) {
 		t.Errorf("got %v; want %v", got, want)
 	}
 }
@@ -3379,7 +3382,7 @@ func FuzzVector3Add(f *testing.F) {
 		v2 := NewVector3(v2X, v2Y, v2Z)
 		want := cVector3Add(v1, v2)
 		got := Vector3Add(v1, v2)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3421,7 +3424,7 @@ func FuzzVector3AddValue(f *testing.F) {
 		v := NewVector3(vX, vY, vZ)
 		want := cVector3AddValue(v, add)
 		got := Vector3AddValue(v, add)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3464,7 +3467,7 @@ func FuzzVector3Angle(f *testing.F) {
 		v2 := NewVector3(v2X, v2Y, v2Z)
 		want := cVector3Angle(v1, v2)
 		got := Vector3Angle(v1, v2)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3515,7 +3518,7 @@ func FuzzVector3Barycenter(f *testing.F) {
 		c := NewVector3(cX, cY, cZ)
 		want := cVector3Barycenter(p, a, b1, c)
 		got := Vector3Barycenter(p, a, b1, c)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3562,7 +3565,7 @@ func FuzzVector3Clamp(f *testing.F) {
 		max := NewVector3(maxX, maxY, maxZ)
 		want := cVector3Clamp(v, min, max)
 		got := Vector3Clamp(v, min, max)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3607,7 +3610,7 @@ func FuzzVector3ClampValue(f *testing.F) {
 		v := NewVector3(vX, vY, vZ)
 		want := cVector3ClampValue(v, min, max)
 		got := Vector3ClampValue(v, min, max)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3650,7 +3653,7 @@ func FuzzVector3CrossProduct(f *testing.F) {
 		v2 := NewVector3(v2X, v2Y, v2Z)
 		want := cVector3CrossProduct(v1, v2)
 		got := Vector3CrossProduct(v1, v2)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3693,7 +3696,7 @@ func FuzzVector3Distance(f *testing.F) {
 		v2 := NewVector3(v2X, v2Y, v2Z)
 		want := cVector3Distance(v1, v2)
 		got := Vector3Distance(v1, v2)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3736,7 +3739,7 @@ func FuzzVector3DistanceSqr(f *testing.F) {
 		v2 := NewVector3(v2X, v2Y, v2Z)
 		want := cVector3DistanceSqr(v1, v2)
 		got := Vector3DistanceSqr(v1, v2)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3779,7 +3782,7 @@ func FuzzVector3Divide(f *testing.F) {
 		v2 := NewVector3(v2X, v2Y, v2Z)
 		want := cVector3Divide(v1, v2)
 		got := Vector3Divide(v1, v2)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3822,7 +3825,7 @@ func FuzzVector3DotProduct(f *testing.F) {
 		v2 := NewVector3(v2X, v2Y, v2Z)
 		want := cVector3DotProduct(v1, v2)
 		got := Vector3DotProduct(v1, v2)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3904,7 +3907,7 @@ func FuzzVector3Invert(f *testing.F) {
 		v := NewVector3(vX, vY, vZ)
 		want := cVector3Invert(v)
 		got := Vector3Invert(v)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3943,7 +3946,7 @@ func FuzzVector3Length(f *testing.F) {
 		v := NewVector3(vX, vY, vZ)
 		want := cVector3Length(v)
 		got := Vector3Length(v)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -3982,7 +3985,7 @@ func FuzzVector3LengthSqr(f *testing.F) {
 		v := NewVector3(vX, vY, vZ)
 		want := cVector3LengthSqr(v)
 		got := Vector3LengthSqr(v)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4028,7 +4031,7 @@ func FuzzVector3Lerp(f *testing.F) {
 		v2 := NewVector3(v2X, v2Y, v2Z)
 		want := cVector3Lerp(v1, v2, amount)
 		got := Vector3Lerp(v1, v2, amount)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4071,7 +4074,7 @@ func FuzzVector3Max(f *testing.F) {
 		vec2 := NewVector3(vec2X, vec2Y, vec2Z)
 		want := cVector3Max(vec1, vec2)
 		got := Vector3Max(vec1, vec2)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4114,7 +4117,7 @@ func FuzzVector3Min(f *testing.F) {
 		vec2 := NewVector3(vec2X, vec2Y, vec2Z)
 		want := cVector3Min(vec1, vec2)
 		got := Vector3Min(vec1, vec2)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4157,7 +4160,7 @@ func FuzzVector3Multiply(f *testing.F) {
 		v2 := NewVector3(v2X, v2Y, v2Z)
 		want := cVector3Multiply(v1, v2)
 		got := Vector3Multiply(v1, v2)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4196,7 +4199,7 @@ func FuzzVector3Negate(f *testing.F) {
 		v := NewVector3(vX, vY, vZ)
 		want := cVector3Negate(v)
 		got := Vector3Negate(v)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4235,7 +4238,7 @@ func FuzzVector3Normalize(f *testing.F) {
 		v := NewVector3(vX, vY, vZ)
 		want := cVector3Normalize(v)
 		got := Vector3Normalize(v)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4266,7 +4269,7 @@ func BenchmarkVector3One(b *testing.B) {
 func TestVector3One(t *testing.T) {
 	want := cVector3One()
 	got := Vector3One()
-	if !testVector3Equals(want, got, 1e-6) {
+	if !testVector3Equals(want, got) {
 		t.Errorf("got %v; want %v", got, want)
 	}
 }
@@ -4304,7 +4307,7 @@ func FuzzVector3Perpendicular(f *testing.F) {
 		v := NewVector3(vX, vY, vZ)
 		want := cVector3Perpendicular(v)
 		got := Vector3Perpendicular(v)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4347,7 +4350,7 @@ func FuzzVector3Project(f *testing.F) {
 		v2 := NewVector3(v2X, v2Y, v2Z)
 		want := cVector3Project(v1, v2)
 		got := Vector3Project(v1, v2)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4390,7 +4393,7 @@ func FuzzVector3Reflect(f *testing.F) {
 		normal := NewVector3(normalX, normalY, normalZ)
 		want := cVector3Reflect(vector, normal)
 		got := Vector3Reflect(vector, normal)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4436,7 +4439,7 @@ func FuzzVector3Refract(f *testing.F) {
 		n := NewVector3(nX, nY, nZ)
 		want := cVector3Refract(v, n, r)
 		got := Vector3Refract(v, n, r)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4479,7 +4482,7 @@ func FuzzVector3Reject(f *testing.F) {
 		v2 := NewVector3(v2X, v2Y, v2Z)
 		want := cVector3Reject(v1, v2)
 		got := Vector3Reject(v1, v2)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4522,10 +4525,12 @@ func FuzzVector3RotateByAxisAngle(f *testing.F) {
 		angle float32,
 	) {
 		v := NewVector3(vX, vY, vZ)
+		v = Vector3Normalize(v)
 		axis := NewVector3(axisX, axisY, axisZ)
+		axis = Vector3Normalize(axis)
 		want := cVector3RotateByAxisAngle(v, axis, angle)
 		got := Vector3RotateByAxisAngle(v, axis, angle)
-		if !testVector3Equals(want, got, 1e-1) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4568,7 +4573,7 @@ func FuzzVector3RotateByQuaternion(f *testing.F) {
 		q := NewQuaternion(qX, qY, qZ, qW)
 		want := cVector3RotateByQuaternion(v, q)
 		got := Vector3RotateByQuaternion(v, q)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4610,7 +4615,7 @@ func FuzzVector3Scale(f *testing.F) {
 		v := NewVector3(vX, vY, vZ)
 		want := cVector3Scale(v, scale)
 		got := Vector3Scale(v, scale)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4653,7 +4658,7 @@ func FuzzVector3Subtract(f *testing.F) {
 		v2 := NewVector3(v2X, v2Y, v2Z)
 		want := cVector3Subtract(v1, v2)
 		got := Vector3Subtract(v1, v2)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4695,7 +4700,7 @@ func FuzzVector3SubtractValue(f *testing.F) {
 		v := NewVector3(vX, vY, vZ)
 		want := cVector3SubtractValue(v, sub)
 		got := Vector3SubtractValue(v, sub)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4734,7 +4739,7 @@ func FuzzVector3ToFloatV(f *testing.F) {
 		v := NewVector3(vX, vY, vZ)
 		want := cVector3ToFloatV(v)
 		got := Vector3ToFloatV(v)
-		if !testFloat32SliceEquals(want[:], got[:], 1e-6) {
+		if !testFloat32SliceEquals(want[:], got[:]) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4788,7 +4793,7 @@ func FuzzVector3Transform(f *testing.F) {
 		)
 		want := cVector3Transform(v, mat)
 		got := Vector3Transform(v, mat)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4857,7 +4862,7 @@ func FuzzVector3Unproject(f *testing.F) {
 		)
 		want := cVector3Unproject(source, projection, view)
 		got := Vector3Unproject(source, projection, view)
-		if !testVector3Equals(want, got, 1e-6) {
+		if !testVector3Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4888,7 +4893,7 @@ func BenchmarkVector3Zero(b *testing.B) {
 func TestVector3Zero(t *testing.T) {
 	want := cVector3Zero()
 	got := Vector3Zero()
-	if !testVector3Equals(want, got, 1e-6) {
+	if !testVector3Equals(want, got) {
 		t.Errorf("got %v; want %v", got, want)
 	}
 }
@@ -4931,7 +4936,7 @@ func FuzzWrap(f *testing.F) {
 	) {
 		want := cWrap(value, min, max)
 		got := Wrap(value, min, max)
-		if !testFloat32Equals(want, got, 1e-6) {
+		if !testFloat32Equals(want, got) {
 			t.Errorf("got %v; want %v", got, want)
 		}
 	})
@@ -4939,7 +4944,7 @@ func FuzzWrap(f *testing.F) {
 
 // helpers
 
-func testFloat32Equals(a, b float32, epsilon float64) bool {
+func testFloat32Equals(a, b float32) bool {
 	if math.IsNaN(float64(a)) && math.IsNaN(float64(b)) {
 		return true
 	}
@@ -4952,51 +4957,51 @@ func testFloat32Equals(a, b float32, epsilon float64) bool {
 	return math.Abs(float64(a-b)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(a)), math.Abs(float64(b))))
 }
 
-func testFloat32SliceEquals(a, b []float32, epsilon float64) bool {
+func testFloat32SliceEquals(a, b []float32) bool {
 	if len(a) != len(b) {
 		return false
 	}
 	for i := range a {
-		if !testFloat32Equals(a[i], b[i], epsilon) {
+		if !testFloat32Equals(a[i], b[i]) {
 			return false
 		}
 	}
 	return true
 }
 
-func testVector2Equals(a, b Vector2, epsilon float64) bool {
-	return testFloat32Equals(a.X, b.X, epsilon) &&
-		testFloat32Equals(a.Y, b.Y, epsilon)
+func testVector2Equals(a, b Vector2) bool {
+	return testFloat32Equals(a.X, b.X) &&
+		testFloat32Equals(a.Y, b.Y)
 }
 
-func testVector3Equals(a, b Vector3, epsilon float64) bool {
-	return testFloat32Equals(a.X, b.X, epsilon) &&
-		testFloat32Equals(a.Y, b.Y, epsilon) &&
-		testFloat32Equals(a.Z, b.Z, epsilon)
+func testVector3Equals(a, b Vector3) bool {
+	return testFloat32Equals(a.X, b.X) &&
+		testFloat32Equals(a.Y, b.Y) &&
+		testFloat32Equals(a.Z, b.Z)
 }
 
-func testQuaternionEquals(a, b Quaternion, epsilon float64) bool {
-	return testFloat32Equals(a.X, b.X, epsilon) &&
-		testFloat32Equals(a.Y, b.Y, epsilon) &&
-		testFloat32Equals(a.Z, b.Z, epsilon) &&
-		testFloat32Equals(a.W, b.W, epsilon)
+func testQuaternionEquals(a, b Quaternion) bool {
+	return testFloat32Equals(a.X, b.X) &&
+		testFloat32Equals(a.Y, b.Y) &&
+		testFloat32Equals(a.Z, b.Z) &&
+		testFloat32Equals(a.W, b.W)
 }
 
-func testMatrixEquals(a, b Matrix, epsilon float64) bool {
-	return testFloat32Equals(a.M0, b.M0, epsilon) &&
-		testFloat32Equals(a.M1, b.M1, epsilon) &&
-		testFloat32Equals(a.M2, b.M2, epsilon) &&
-		testFloat32Equals(a.M3, b.M3, epsilon) &&
-		testFloat32Equals(a.M4, b.M4, epsilon) &&
-		testFloat32Equals(a.M5, b.M5, epsilon) &&
-		testFloat32Equals(a.M6, b.M6, epsilon) &&
-		testFloat32Equals(a.M7, b.M7, epsilon) &&
-		testFloat32Equals(a.M8, b.M8, epsilon) &&
-		testFloat32Equals(a.M9, b.M9, epsilon) &&
-		testFloat32Equals(a.M10, b.M10, epsilon) &&
-		testFloat32Equals(a.M11, b.M11, epsilon) &&
-		testFloat32Equals(a.M12, b.M12, epsilon) &&
-		testFloat32Equals(a.M13, b.M13, epsilon) &&
-		testFloat32Equals(a.M14, b.M14, epsilon) &&
-		testFloat32Equals(a.M15, b.M15, epsilon)
+func testMatrixEquals(a, b Matrix) bool {
+	return testFloat32Equals(a.M0, b.M0) &&
+		testFloat32Equals(a.M1, b.M1) &&
+		testFloat32Equals(a.M2, b.M2) &&
+		testFloat32Equals(a.M3, b.M3) &&
+		testFloat32Equals(a.M4, b.M4) &&
+		testFloat32Equals(a.M5, b.M5) &&
+		testFloat32Equals(a.M6, b.M6) &&
+		testFloat32Equals(a.M7, b.M7) &&
+		testFloat32Equals(a.M8, b.M8) &&
+		testFloat32Equals(a.M9, b.M9) &&
+		testFloat32Equals(a.M10, b.M10) &&
+		testFloat32Equals(a.M11, b.M11) &&
+		testFloat32Equals(a.M12, b.M12) &&
+		testFloat32Equals(a.M13, b.M13) &&
+		testFloat32Equals(a.M14, b.M14) &&
+		testFloat32Equals(a.M15, b.M15)
 }

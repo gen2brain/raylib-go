@@ -103,6 +103,9 @@
         {{ $name }}M3, {{ $name }}M7, {{ $name }}M11, {{ $name }}M15,
       )
     {{- end -}}
+    {{- if $param.Normalize }}
+      {{ testvar $name }} = {{ $param.TypeName}}Normalize({{ testvar $name }})
+    {{- end -}}
   {{- end -}}
 {{- end -}}
 {{- end -}}

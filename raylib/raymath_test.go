@@ -44,7 +44,7 @@ func FuzzVector3OrthoNormalize(f *testing.F) {
 	) {
 		want1 := NewVector3(v1X, v1Y, v1Z)
 		want2 := NewVector3(v2X, v2Y, v2Z)
-		if testVector3Equals(Vector3CrossProduct(want1, want2), Vector3Zero(), 1e-3) {
+		if testVector3Equals(Vector3CrossProduct(want1, want2), Vector3Zero()) {
 			t.SkipNow() // too unstable on macos
 		}
 		cVector3OrthoNormalize(&want1, &want2)
@@ -53,10 +53,10 @@ func FuzzVector3OrthoNormalize(f *testing.F) {
 		got2 := NewVector3(v2X, v2Y, v2Z)
 		Vector3OrthoNormalize(&got1, &got2)
 
-		if !testVector3Equals(want1, got1, 1e-6) {
+		if !testVector3Equals(want1, got1) {
 			t.Errorf("v1: got %v; want %v", got1, want1)
 		}
-		if !testVector3Equals(want2, got2, 1e-6) {
+		if !testVector3Equals(want2, got2) {
 			t.Errorf("v2: got %v; want %v", got2, want2)
 		}
 	})
@@ -98,6 +98,7 @@ func FuzzQuaternionToAxisAngle(f *testing.F) {
 		qX, qY, qZ, qW float32,
 	) {
 		q := NewQuaternion(qX, qY, qZ, qW)
+		q = QuaternionNormalize(q)
 
 		var wantAxis Vector3
 		var wantAngle float32
@@ -107,11 +108,11 @@ func FuzzQuaternionToAxisAngle(f *testing.F) {
 		var gotAngle float32
 		QuaternionToAxisAngle(q, &gotAxis, &gotAngle)
 
-		if !testVector3Equals(wantAxis, skip, 1e-6) && // it's ok if our version has higher precision
-			!testVector3Equals(wantAxis, gotAxis, 0.2) {
+		if !testVector3Equals(wantAxis, skip) && // it's ok if our version has higher precision
+			!testVector3Equals(wantAxis, gotAxis) {
 			t.Errorf("axis: got %v; want %v", gotAxis, wantAxis)
 		}
-		if !testFloat32Equals(wantAngle, gotAngle, 1e-3) {
+		if !testFloat32Equals(wantAngle, gotAngle) {
 			t.Errorf("angle: got %v; want %v", gotAngle, wantAngle)
 		}
 	})
@@ -182,13 +183,13 @@ func FuzzMatrixDecompose(f *testing.F) {
 		var gotScale Vector3
 		cMatrixDecompose(mat, &gotTranslation, &gotRotation, &gotScale)
 
-		if !testVector3Equals(wantTranslation, gotTranslation, 1e-6) {
+		if !testVector3Equals(wantTranslation, gotTranslation) {
 			t.Errorf("translation: got %v; want %v", gotTranslation, wantTranslation)
 		}
-		if !testQuaternionEquals(wantRotation, gotRotation, 1e-6) {
+		if !testQuaternionEquals(wantRotation, gotRotation) {
 			t.Errorf("rotation: got %v; want %v", gotRotation, wantRotation)
 		}
-		if !testVector3Equals(wantScale, gotScale, 1e-6) {
+		if !testVector3Equals(wantScale, gotScale) {
 			t.Errorf("scale: got %v; want %v", gotScale, wantScale)
 		}
 	})
