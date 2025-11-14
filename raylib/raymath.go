@@ -1,8 +1,11 @@
+//go:generate go run ./internal/cmd/genraymath
 package rl
 
 import (
 	"math"
 )
+
+const epsilon = 1e-6
 
 // Clamp - Clamp float value
 func Clamp(value, min, max float32) float32 {
@@ -37,12 +40,12 @@ func Remap(value, inputStart, inputEnd, outputStart, outputEnd float32) float32 
 
 // Wrap - Wrap input value from min to max
 func Wrap(value, min, max float32) float32 {
-	return float32(float64(value) - float64(max-min)*math.Floor(float64((value-min)/(max-min))))
+	return value - (max-min)*float32(math.Floor(float64((value-min)/(max-min))))
 }
 
 // FloatEquals - Check whether two given floats are almost equal
 func FloatEquals(x, y float32) bool {
-	return (math.Abs(float64(x-y)) <= 0.000001*math.Max(1.0, math.Max(math.Abs(float64(x)), math.Abs(float64(y)))))
+	return (math.Abs(float64(x-y)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(x)), math.Abs(float64(y)))))
 }
 
 // Vector2Zero - Vector with components value 0.0
@@ -101,10 +104,13 @@ func Vector2DistanceSqr(v1 Vector2, v2 Vector2) float32 {
 }
 
 // Vector2Angle - Calculate angle from two vectors in radians
+// NOTE: Coordinate system convention: positive X right, positive Y down,
+// positive angles appear clockwise, and negative angles appear counterclockwise
 func Vector2Angle(v1, v2 Vector2) float32 {
-	result := math.Atan2(float64(v2.Y), float64(v2.X)) - math.Atan2(float64(v1.Y), float64(v1.X))
+	dot := v1.X*v2.X + v1.Y*v2.Y
+	det := v1.X*v2.Y - v1.Y*v2.X
 
-	return float32(result)
+	return float32(math.Atan2(float64(det), float64(dot)))
 }
 
 // Vector2LineAngle - Calculate angle defined by a two vectors line
@@ -176,8 +182,7 @@ func Vector2Reflect(v Vector2, normal Vector2) Vector2 {
 func Vector2Rotate(v Vector2, angle float32) Vector2 {
 	var result = Vector2{}
 
-	cosres := float32(math.Cos(float64(angle)))
-	sinres := float32(math.Sin(float64(angle)))
+	sinres, cosres := sincos(angle)
 
 	result.X = v.X*cosres - v.Y*sinres
 	result.Y = v.X*sinres + v.Y*cosres
@@ -244,8 +249,8 @@ func Vector2ClampValue(v Vector2, min float32, max float32) Vector2 {
 
 // Vector2Equals - Check whether two given vectors are almost equal
 func Vector2Equals(p Vector2, q Vector2) bool {
-	return (math.Abs(float64(p.X-q.X)) <= 0.000001*math.Max(1.0, math.Max(math.Abs(float64(p.X)), math.Abs(float64(q.X)))) &&
-		math.Abs(float64(p.Y-q.Y)) <= 0.000001*math.Max(1.0, math.Max(math.Abs(float64(p.Y)), math.Abs(float64(q.Y)))))
+	return (math.Abs(float64(p.X-q.X)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(p.X)), math.Abs(float64(q.X)))) &&
+		math.Abs(float64(p.Y-q.Y)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(p.Y)), math.Abs(float64(q.Y)))))
 }
 
 // Vector2CrossProduct - Calculate two vectors cross product
@@ -256,11 +261,6 @@ func Vector2CrossProduct(v1, v2 Vector2) float32 {
 // Vector2Cross - Calculate the cross product of a vector and a value
 func Vector2Cross(value float32, vector Vector2) Vector2 {
 	return NewVector2(-value*vector.Y, value*vector.X)
-}
-
-// Vector2LenSqr - Returns the len square root of a vector
-func Vector2LenSqr(vector Vector2) float32 {
-	return vector.X*vector.X + vector.Y*vector.Y
 }
 
 // Vector3Zero - Vector with components value 0.0
@@ -454,10 +454,10 @@ func Vector3Reject(v1, v2 Vector3) Vector3 {
 // Makes vectors normalized and orthogonal to each other
 // Gram-Schmidt function implementation
 func Vector3OrthoNormalize(v1, v2 *Vector3) {
-	Vector3Normalize(*v1)
+	*v1 = Vector3Normalize(*v1)
 
 	vn1 := Vector3CrossProduct(*v1, *v2)
-	Vector3Normalize(vn1)
+	vn1 = Vector3Normalize(vn1)
 
 	vn2 := Vector3CrossProduct(vn1, *v1)
 	*v2 = vn2
@@ -709,6 +709,12 @@ func Vector3Unproject(source Vector3, projection Matrix, view Matrix) Vector3 {
 	return result
 }
 
+// Vector3ToFloat - Converts Vector3 to float32 slice
+func Vector3ToFloat(vec Vector3) []float32 {
+	data := Vector3ToFloatV(vec)
+	return data[:]
+}
+
 // Vector3ToFloatV - Get Vector3 as float array
 func Vector3ToFloatV(v Vector3) [3]float32 {
 	var result [3]float32
@@ -762,9 +768,9 @@ func Vector3ClampValue(v Vector3, min float32, max float32) Vector3 {
 
 // Vector3Equals - Check whether two given vectors are almost equal
 func Vector3Equals(p Vector3, q Vector3) bool {
-	return (math.Abs(float64(p.X-q.X)) <= 0.000001*math.Max(1.0, math.Max(math.Abs(float64(p.X)), math.Abs(float64(q.X)))) &&
-		math.Abs(float64(p.Y-q.Y)) <= 0.000001*math.Max(1.0, math.Max(math.Abs(float64(p.Y)), math.Abs(float64(q.Y)))) &&
-		math.Abs(float64(p.Z-q.Z)) <= 0.000001*math.Max(1.0, math.Max(math.Abs(float64(p.Z)), math.Abs(float64(q.Z)))))
+	return (math.Abs(float64(p.X-q.X)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(p.X)), math.Abs(float64(q.X)))) &&
+		math.Abs(float64(p.Y-q.Y)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(p.Y)), math.Abs(float64(q.Y)))) &&
+		math.Abs(float64(p.Z-q.Z)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(p.Z)), math.Abs(float64(q.Z)))))
 }
 
 // Vector3Refract - Compute the direction of a refracted ray
@@ -792,16 +798,14 @@ func Vector3Refract(v Vector3, n Vector3, r float32) Vector3 {
 
 // Mat2Radians - Creates a matrix 2x2 from a given radians value
 func Mat2Radians(radians float32) Mat2 {
-	c := float32(math.Cos(float64(radians)))
-	s := float32(math.Sin(float64(radians)))
+	s, c := sincos(radians)
 
 	return NewMat2(c, -s, s, c)
 }
 
 // Mat2Set - Set values from radians to a created matrix 2x2
 func Mat2Set(matrix *Mat2, radians float32) {
-	cos := float32(math.Cos(float64(radians)))
-	sin := float32(math.Sin(float64(radians)))
+	sin, cos := sincos(radians)
 
 	matrix.M00 = cos
 	matrix.M01 = -sin
@@ -821,33 +825,27 @@ func Mat2MultiplyVector2(matrix Mat2, vector Vector2) Vector2 {
 
 // MatrixDeterminant - Compute matrix determinant
 func MatrixDeterminant(mat Matrix) float32 {
-	var result float32
+	m0 := mat.M0
+	m1 := mat.M1
+	m2 := mat.M2
+	m3 := mat.M3
+	m4 := mat.M4
+	m5 := mat.M5
+	m6 := mat.M6
+	m7 := mat.M7
+	m8 := mat.M8
+	m9 := mat.M9
+	m10 := mat.M10
+	m11 := mat.M11
+	m12 := mat.M12
+	m13 := mat.M13
+	m14 := mat.M14
+	m15 := mat.M15
 
-	a00 := mat.M0
-	a01 := mat.M1
-	a02 := mat.M2
-	a03 := mat.M3
-	a10 := mat.M4
-	a11 := mat.M5
-	a12 := mat.M6
-	a13 := mat.M7
-	a20 := mat.M8
-	a21 := mat.M9
-	a22 := mat.M10
-	a23 := mat.M11
-	a30 := mat.M12
-	a31 := mat.M13
-	a32 := mat.M14
-	a33 := mat.M15
-
-	result = a30*a21*a12*a03 - a20*a31*a12*a03 - a30*a11*a22*a03 + a10*a31*a22*a03 +
-		a20*a11*a32*a03 - a10*a21*a32*a03 - a30*a21*a02*a13 + a20*a31*a02*a13 +
-		a30*a01*a22*a13 - a00*a31*a22*a13 - a20*a01*a32*a13 + a00*a21*a32*a13 +
-		a30*a11*a02*a23 - a10*a31*a02*a23 - a30*a01*a12*a23 + a00*a31*a12*a23 +
-		a10*a01*a32*a23 - a00*a11*a32*a23 - a20*a11*a02*a33 + a10*a21*a02*a33 +
-		a20*a01*a12*a33 - a00*a21*a12*a33 - a10*a01*a22*a33 + a00*a11*a22*a33
-
-	return result
+	return (m0*(m5*(m10*m15-m11*m14)-m9*(m6*m15-m7*m14)+m13*(m6*m11-m7*m10)) -
+		m4*(m1*(m10*m15-m11*m14)-m9*(m2*m15-m3*m14)+m13*(m2*m11-m3*m10)) +
+		m8*(m1*(m6*m15-m7*m14)-m5*(m2*m15-m3*m14)+m13*(m2*m7-m3*m6)) -
+		m12*(m1*(m6*m11-m7*m10)-m5*(m2*m11-m3*m10)+m9*(m2*m7-m3*m6)))
 }
 
 // MatrixTrace - Returns the trace of the matrix (sum of the values along the diagonal)
@@ -1071,8 +1069,7 @@ func MatrixRotate(axis Vector3, angle float32) Matrix {
 		z *= length
 	}
 
-	sinres := float32(math.Sin(float64(angle)))
-	cosres := float32(math.Cos(float64(angle)))
+	sinres, cosres := sincos(angle)
 	t := 1.0 - cosres
 
 	// Cache some matrix values (speed optimization)
@@ -1125,12 +1122,11 @@ func MatrixRotate(axis Vector3, angle float32) Matrix {
 func MatrixRotateX(angle float32) Matrix {
 	result := MatrixIdentity()
 
-	cosres := float32(math.Cos(float64(angle)))
-	sinres := float32(math.Sin(float64(angle)))
+	sinres, cosres := sincos(angle)
 
 	result.M5 = cosres
-	result.M6 = -sinres
-	result.M9 = sinres
+	result.M6 = sinres
+	result.M9 = -sinres
 	result.M10 = cosres
 
 	return result
@@ -1140,12 +1136,11 @@ func MatrixRotateX(angle float32) Matrix {
 func MatrixRotateY(angle float32) Matrix {
 	result := MatrixIdentity()
 
-	cosres := float32(math.Cos(float64(angle)))
-	sinres := float32(math.Sin(float64(angle)))
+	sinres, cosres := sincos(angle)
 
 	result.M0 = cosres
-	result.M2 = sinres
-	result.M8 = -sinres
+	result.M2 = -sinres
+	result.M8 = sinres
 	result.M10 = cosres
 
 	return result
@@ -1155,38 +1150,34 @@ func MatrixRotateY(angle float32) Matrix {
 func MatrixRotateZ(angle float32) Matrix {
 	result := MatrixIdentity()
 
-	cosres := float32(math.Cos(float64(angle)))
-	sinres := float32(math.Sin(float64(angle)))
+	sinres, cosres := sincos(angle)
 
 	result.M0 = cosres
-	result.M1 = -sinres
-	result.M4 = sinres
+	result.M1 = sinres
+	result.M4 = -sinres
 	result.M5 = cosres
 
 	return result
 }
 
 // MatrixRotateXYZ - Get xyz-rotation matrix (angles in radians)
-func MatrixRotateXYZ(ang Vector3) Matrix {
+func MatrixRotateXYZ(angle Vector3) Matrix {
 	result := MatrixIdentity()
 
-	cosz := float32(math.Cos(float64(-ang.Z)))
-	sinz := float32(math.Sin(float64(-ang.Z)))
-	cosy := float32(math.Cos(float64(-ang.Y)))
-	siny := float32(math.Sin(float64(-ang.Y)))
-	cosx := float32(math.Cos(float64(-ang.X)))
-	sinx := float32(math.Sin(float64(-ang.X)))
+	sinz, cosz := sincos(-angle.Z)
+	siny, cosy := sincos(-angle.Y)
+	sinx, cosx := sincos(-angle.X)
 
 	result.M0 = cosz * cosy
-	result.M4 = (cosz * siny * sinx) - (sinz * cosx)
-	result.M8 = (cosz * siny * cosx) + (sinz * sinx)
+	result.M1 = (cosz * siny * sinx) - (sinz * cosx)
+	result.M2 = (cosz * siny * cosx) + (sinz * sinx)
 
-	result.M1 = sinz * cosy
+	result.M4 = sinz * cosy
 	result.M5 = (sinz * siny * sinx) + (cosz * cosx)
-	result.M9 = (sinz * siny * cosx) - (cosz * sinx)
+	result.M6 = (sinz * siny * cosx) - (cosz * sinx)
 
-	result.M2 = -siny
-	result.M6 = cosy * sinx
+	result.M8 = -siny
+	result.M9 = cosy * sinx
 	result.M10 = cosy * cosx
 
 	return result
@@ -1197,12 +1188,9 @@ func MatrixRotateXYZ(ang Vector3) Matrix {
 func MatrixRotateZYX(angle Vector3) Matrix {
 	var result = Matrix{}
 
-	var cz = float32(math.Cos(float64(angle.Z)))
-	var sz = float32(math.Sin(float64(angle.Z)))
-	var cy = float32(math.Cos(float64(angle.Y)))
-	var sy = float32(math.Sin(float64(angle.Y)))
-	var cx = float32(math.Cos(float64(angle.X)))
-	var sx = float32(math.Sin(float64(angle.X)))
+	sz, cz := sincos(angle.Z)
+	sy, cy := sincos(angle.Y)
+	sx, cx := sincos(angle.X)
 
 	result.M0 = cz * cy
 	result.M4 = cz*sy*sx - cx*sz
@@ -1239,42 +1227,60 @@ func MatrixScale(x, y, z float32) Matrix {
 }
 
 // MatrixFrustum - Returns perspective projection matrix
-func MatrixFrustum(left, right, bottom, top, near, far float32) Matrix {
+func MatrixFrustum(left, right, bottom, top, nearPlane, farPlane float32) Matrix {
 	var result Matrix
 
 	rl := right - left
 	tb := top - bottom
-	fn := far - near
+	fn := farPlane - nearPlane
 
-	result.M0 = (near * 2.0) / rl
+	result.M0 = (nearPlane * 2.0) / rl
 	result.M1 = 0.0
 	result.M2 = 0.0
 	result.M3 = 0.0
 
 	result.M4 = 0.0
-	result.M5 = (near * 2.0) / tb
+	result.M5 = (nearPlane * 2.0) / tb
 	result.M6 = 0.0
 	result.M7 = 0.0
 
-	result.M8 = right + left/rl
-	result.M9 = top + bottom/tb
-	result.M10 = -(far + near) / fn
+	result.M8 = (right + left) / rl
+	result.M9 = (top + bottom) / tb
+	result.M10 = -(farPlane + nearPlane) / fn
 	result.M11 = -1.0
 
 	result.M12 = 0.0
 	result.M13 = 0.0
-	result.M14 = -(far * near * 2.0) / fn
+	result.M14 = -(farPlane * nearPlane * 2.0) / fn
 	result.M15 = 0.0
 
 	return result
 }
 
 // MatrixPerspective - Returns perspective projection matrix
-func MatrixPerspective(fovy, aspect, near, far float32) Matrix {
-	top := near * float32(math.Tan(float64(fovy*Pi)/360.0))
-	right := top * aspect
+// NOTE: Fovy angle must be provided in radians
+func MatrixPerspective(fovY, aspect, nearPlane, farPlane float32) Matrix {
+	var result Matrix
 
-	return MatrixFrustum(-right, right, -top, top, near, far)
+	top := nearPlane * float32(math.Tan(float64(fovY)*0.5))
+	bottom := -top
+	right := top * aspect
+	left := -right
+
+	// MatrixFrustum(-right, right, -top, top, near, far);
+	rl := float32(right - left)
+	tb := float32(top - bottom)
+	fn := float32(farPlane - nearPlane)
+
+	result.M0 = (nearPlane * 2.0) / rl
+	result.M5 = (nearPlane * 2.0) / tb
+	result.M8 = (right + left) / rl
+	result.M9 = (top + bottom) / tb
+	result.M10 = -(farPlane + nearPlane) / fn
+	result.M11 = -1.0
+	result.M14 = -(farPlane * nearPlane * 2.0) / fn
+
+	return result
 }
 
 // MatrixOrtho - Returns orthographic projection matrix
@@ -1309,29 +1315,28 @@ func MatrixOrtho(left, right, bottom, top, near, far float32) Matrix {
 func MatrixLookAt(eye, target, up Vector3) Matrix {
 	var result Matrix
 
-	z := Vector3Subtract(eye, target)
-	z = Vector3Normalize(z)
-	x := Vector3CrossProduct(up, z)
-	x = Vector3Normalize(x)
-	y := Vector3CrossProduct(z, x)
-	y = Vector3Normalize(y)
+	vz := Vector3Subtract(eye, target)
+	vz = Vector3Normalize(vz)
+	vx := Vector3CrossProduct(up, vz)
+	vx = Vector3Normalize(vx)
+	vy := Vector3CrossProduct(vz, vx)
 
-	result.M0 = x.X
-	result.M1 = x.Y
-	result.M2 = x.Z
-	result.M3 = -((x.X * eye.X) + (x.Y * eye.Y) + (x.Z * eye.Z))
-	result.M4 = y.X
-	result.M5 = y.Y
-	result.M6 = y.Z
-	result.M7 = -((y.X * eye.X) + (y.Y * eye.Y) + (y.Z * eye.Z))
-	result.M8 = z.X
-	result.M9 = z.Y
-	result.M10 = z.Z
-	result.M11 = -((z.X * eye.X) + (z.Y * eye.Y) + (z.Z * eye.Z))
-	result.M12 = 0.0
-	result.M13 = 0.0
-	result.M14 = 0.0
-	result.M15 = 1.0
+	result.M0 = vx.X
+	result.M1 = vy.X
+	result.M2 = vz.X
+	result.M3 = 0
+	result.M4 = vx.Y
+	result.M5 = vy.Y
+	result.M6 = vz.Y
+	result.M7 = 0
+	result.M8 = vx.Z
+	result.M9 = vy.Z
+	result.M10 = vz.Z
+	result.M11 = 0
+	result.M12 = -Vector3DotProduct(vx, eye)
+	result.M13 = -Vector3DotProduct(vy, eye)
+	result.M14 = -Vector3DotProduct(vz, eye)
+	result.M15 = 1
 
 	return result
 }
@@ -1503,48 +1508,59 @@ func QuaternionNlerp(q1 Quaternion, q2 Quaternion, amount float32) Quaternion {
 	result.Z = q1.Z + amount*(q2.Z-q1.Z)
 	result.W = q1.W + amount*(q2.W-q1.W)
 
-	// QuaternionNormalize(q);
-	q := result
-	length := float32(math.Sqrt(float64(q.X*q.X + q.Y*q.Y + q.Z*q.Z + q.W*q.W)))
+	// QuaternionNormalize(r);
+	r := result
+	length := float32(math.Sqrt(float64(r.X*r.X + r.Y*r.Y + r.Z*r.Z + r.W*r.W)))
 	if length == 0.0 {
 		length = 1.0
 	}
 	ilength := 1.0 / length
 
-	result.X = q.X * ilength
-	result.Y = q.Y * ilength
-	result.Z = q.Z * ilength
-	result.W = q.W * ilength
+	result.X = r.X * ilength
+	result.Y = r.Y * ilength
+	result.Z = r.Z * ilength
+	result.W = r.W * ilength
 
 	return result
 }
 
 // QuaternionSlerp - Calculates spherical linear interpolation between two quaternions
 func QuaternionSlerp(q1, q2 Quaternion, amount float32) Quaternion {
-	var result Quaternion
-
 	cosHalfTheta := q1.X*q2.X + q1.Y*q2.Y + q1.Z*q2.Z + q1.W*q2.W
 
+	if cosHalfTheta < 0 {
+		q2.X = -q2.X
+		q2.Y = -q2.Y
+		q2.Z = -q2.Z
+		q2.W = -q2.W
+		cosHalfTheta = -cosHalfTheta
+	}
+
 	if math.Abs(float64(cosHalfTheta)) >= 1.0 {
-		result = q1
+		return q1
+	}
+	if cosHalfTheta > 0.95 {
+		return QuaternionNlerp(q1, q2, amount)
+	}
+
+	var result Quaternion
+
+	halfTheta := float32(math.Acos(float64(cosHalfTheta)))
+	sinHalfTheta := float32(math.Sqrt(float64(1.0 - cosHalfTheta*cosHalfTheta)))
+
+	if math.Abs(float64(sinHalfTheta)) < epsilon {
+		result.X = (q1.X*0.5 + q2.X*0.5)
+		result.Y = (q1.Y*0.5 + q2.Y*0.5)
+		result.Z = (q1.Z*0.5 + q2.Z*0.5)
+		result.W = (q1.W*0.5 + q2.W*0.5)
 	} else {
-		halfTheta := float32(math.Acos(float64(cosHalfTheta)))
-		sinHalfTheta := float32(math.Sqrt(float64(1.0 - cosHalfTheta*cosHalfTheta)))
+		ratioA := float32(math.Sin(float64((1-amount)*halfTheta))) / sinHalfTheta
+		ratioB := float32(math.Sin(float64(amount*halfTheta))) / sinHalfTheta
 
-		if math.Abs(float64(sinHalfTheta)) < 0.001 {
-			result.X = q1.X*0.5 + q2.X*0.5
-			result.Y = q1.Y*0.5 + q2.Y*0.5
-			result.Z = q1.Z*0.5 + q2.Z*0.5
-			result.W = q1.W*0.5 + q2.W*0.5
-		} else {
-			ratioA := float32(math.Sin(float64((1-amount)*halfTheta))) / sinHalfTheta
-			ratioB := float32(math.Sin(float64(amount*halfTheta))) / sinHalfTheta
-
-			result.X = q1.X*ratioA + q2.X*ratioB
-			result.Y = q1.Y*ratioA + q2.Y*ratioB
-			result.Z = q1.Z*ratioA + q2.Z*ratioB
-			result.W = q1.W*ratioA + q2.W*ratioB
-		}
+		result.X = (q1.X*ratioA + q2.X*ratioB)
+		result.Y = (q1.Y*ratioA + q2.Y*ratioB)
+		result.Z = (q1.Z*ratioA + q2.Z*ratioB)
+		result.W = (q1.W*ratioA + q2.W*ratioB)
 	}
 
 	return result
@@ -1580,49 +1596,55 @@ func QuaternionFromVector3ToVector3(from Vector3, to Vector3) Quaternion {
 }
 
 // QuaternionFromMatrix - Returns a quaternion for a given rotation matrix
-func QuaternionFromMatrix(matrix Matrix) Quaternion {
+func QuaternionFromMatrix(mat Matrix) Quaternion {
 	var result Quaternion
 
-	trace := MatrixTrace(matrix)
+	fourWSquaredMinus1 := mat.M0 + mat.M5 + mat.M10
+	fourXSquaredMinus1 := mat.M0 - mat.M5 - mat.M10
+	fourYSquaredMinus1 := mat.M5 - mat.M0 - mat.M10
+	fourZSquaredMinus1 := mat.M10 - mat.M0 - mat.M5
 
-	if trace > 0.0 {
-		s := float32(math.Sqrt(float64(trace+1)) * 2.0)
-		invS := 1.0 / s
+	biggestIndex := 0
+	fourBiggestSquaredMinus1 := fourWSquaredMinus1
+	if fourXSquaredMinus1 > fourBiggestSquaredMinus1 {
+		fourBiggestSquaredMinus1 = fourXSquaredMinus1
+		biggestIndex = 1
+	}
 
-		result.W = s * 0.25
-		result.X = (matrix.M6 - matrix.M9) * invS
-		result.Y = (matrix.M8 - matrix.M2) * invS
-		result.Z = (matrix.M1 - matrix.M4) * invS
-	} else {
-		m00 := matrix.M0
-		m11 := matrix.M5
-		m22 := matrix.M10
+	if fourYSquaredMinus1 > fourBiggestSquaredMinus1 {
+		fourBiggestSquaredMinus1 = fourYSquaredMinus1
+		biggestIndex = 2
+	}
 
-		if m00 > m11 && m00 > m22 {
-			s := float32(math.Sqrt(float64(1.0+m00-m11-m22)) * 2.0)
-			invS := 1.0 / s
+	if fourZSquaredMinus1 > fourBiggestSquaredMinus1 {
+		fourBiggestSquaredMinus1 = fourZSquaredMinus1
+		biggestIndex = 3
+	}
 
-			result.W = (matrix.M6 - matrix.M9) * invS
-			result.X = s * 0.25
-			result.Y = (matrix.M4 + matrix.M1) * invS
-			result.Z = (matrix.M8 + matrix.M2) * invS
-		} else if m11 > m22 {
-			s := float32(math.Sqrt(float64(1.0+m11-m00-m22)) * 2.0)
-			invS := 1.0 / s
+	biggestVal := float32(math.Sqrt(float64(fourBiggestSquaredMinus1)+1.0) * 0.5)
+	mult := 0.25 / biggestVal
 
-			result.W = (matrix.M8 - matrix.M2) * invS
-			result.X = (matrix.M4 + matrix.M1) * invS
-			result.Y = s * 0.25
-			result.Z = (matrix.M9 + matrix.M6) * invS
-		} else {
-			s := float32(math.Sqrt(float64(1.0+m22-m00-m11)) * 2.0)
-			invS := 1.0 / s
-
-			result.W = (matrix.M1 - matrix.M4) * invS
-			result.X = (matrix.M8 + matrix.M2) * invS
-			result.Y = (matrix.M9 + matrix.M6) * invS
-			result.Z = s * 0.25
-		}
+	switch biggestIndex {
+	case 0:
+		result.W = biggestVal
+		result.X = (mat.M6 - mat.M9) * mult
+		result.Y = (mat.M8 - mat.M2) * mult
+		result.Z = (mat.M1 - mat.M4) * mult
+	case 1:
+		result.X = biggestVal
+		result.W = (mat.M6 - mat.M9) * mult
+		result.Y = (mat.M1 + mat.M4) * mult
+		result.Z = (mat.M8 + mat.M2) * mult
+	case 2:
+		result.Y = biggestVal
+		result.W = (mat.M8 - mat.M2) * mult
+		result.X = (mat.M1 + mat.M4) * mult
+		result.Z = (mat.M6 + mat.M9) * mult
+	case 3:
+		result.Z = biggestVal
+		result.W = (mat.M1 - mat.M4) * mult
+		result.X = (mat.M8 + mat.M2) * mult
+		result.Y = (mat.M6 + mat.M9) * mult
 	}
 
 	return result
@@ -1630,45 +1652,28 @@ func QuaternionFromMatrix(matrix Matrix) Quaternion {
 
 // QuaternionToMatrix - Returns a matrix for a given quaternion
 func QuaternionToMatrix(q Quaternion) Matrix {
-	var result Matrix
+	result := MatrixIdentity()
 
-	x := q.X
-	y := q.Y
-	z := q.Z
-	w := q.W
+	a2 := q.X * q.X
+	b2 := q.Y * q.Y
+	c2 := q.Z * q.Z
+	ac := q.X * q.Z
+	ab := q.X * q.Y
+	bc := q.Y * q.Z
+	ad := q.W * q.X
+	bd := q.W * q.Y
+	cd := q.W * q.Z
+	result.M0 = 1 - 2*(b2+c2)
+	result.M1 = 2 * (ab + cd)
+	result.M2 = 2 * (ac - bd)
 
-	x2 := x + x
-	y2 := y + y
-	z2 := z + z
+	result.M4 = 2 * (ab - cd)
+	result.M5 = 1 - 2*(a2+c2)
+	result.M6 = 2 * (bc + ad)
 
-	xx := x * x2
-	xy := x * y2
-	xz := x * z2
-
-	yy := y * y2
-	yz := y * z2
-	zz := z * z2
-
-	wx := w * x2
-	wy := w * y2
-	wz := w * z2
-
-	result.M0 = 1.0 - (yy + zz)
-	result.M1 = xy - wz
-	result.M2 = xz + wy
-	result.M3 = 0.0
-	result.M4 = xy + wz
-	result.M5 = 1.0 - (xx + zz)
-	result.M6 = yz - wx
-	result.M7 = 0.0
-	result.M8 = xz - wy
-	result.M9 = yz + wx
-	result.M10 = 1.0 - (xx + yy)
-	result.M11 = 0.0
-	result.M12 = 0.0
-	result.M13 = 0.0
-	result.M14 = 0.0
-	result.M15 = 1.0
+	result.M8 = 2 * (ac + bd)
+	result.M9 = 2 * (bc - ad)
+	result.M10 = 1 - 2*(a2+b2)
 
 	return result
 }
@@ -1683,8 +1688,7 @@ func QuaternionFromAxisAngle(axis Vector3, angle float32) Quaternion {
 
 	axis = Vector3Normalize(axis)
 
-	sinres := float32(math.Sin(float64(angle)))
-	cosres := float32(math.Cos(float64(angle)))
+	sinres, cosres := sincos(angle)
 
 	result.X = axis.X * sinres
 	result.Y = axis.Y * sinres
@@ -1707,7 +1711,7 @@ func QuaternionToAxisAngle(q Quaternion, outAxis *Vector3, outAngle *float32) {
 	resAngle := 2.0 * float32(math.Acos(float64(q.W)))
 	den := float32(math.Sqrt(float64(1.0 - q.W*q.W)))
 
-	if den > 0.0001 {
+	if den > epsilon {
 		resAxis.X = q.X / den
 		resAxis.Y = q.Y / den
 		resAxis.Z = q.Z / den
@@ -1726,12 +1730,9 @@ func QuaternionToAxisAngle(q Quaternion, outAxis *Vector3, outAngle *float32) {
 func QuaternionFromEuler(pitch, yaw, roll float32) Quaternion {
 	var result Quaternion
 
-	x0 := float32(math.Cos(float64(pitch * 0.5)))
-	x1 := float32(math.Sin(float64(pitch * 0.5)))
-	y0 := float32(math.Cos(float64(yaw * 0.5)))
-	y1 := float32(math.Sin(float64(yaw * 0.5)))
-	z0 := float32(math.Cos(float64(roll * 0.5)))
-	z1 := float32(math.Sin(float64(roll * 0.5)))
+	x1, x0 := sincos(pitch * 0.5)
+	y1, y0 := sincos(yaw * 0.5)
+	z1, z0 := sincos(roll * 0.5)
 
 	result.X = x1*y0*z0 - x0*y1*z1
 	result.Y = x0*y1*z0 + x1*y0*z1
@@ -1782,15 +1783,15 @@ func QuaternionTransform(q Quaternion, mat Matrix) Quaternion {
 }
 
 // QuaternionEquals - Check whether two given quaternions are almost equal
-func QuaternionEquals(p, q Quaternion) bool {
-	return (math.Abs(float64(p.X-q.X)) <= 0.000001*math.Max(1.0, math.Max(math.Abs(float64(p.X)), math.Abs(float64(q.X)))) &&
-		math.Abs(float64(p.Y-q.Y)) <= 0.000001*math.Max(1.0, math.Max(math.Abs(float64(p.Y)), math.Abs(float64(q.Y)))) &&
-		math.Abs(float64(p.Z-q.Z)) <= 0.000001*math.Max(1.0, math.Max(math.Abs(float64(p.Z)), math.Abs(float64(q.Z)))) &&
-		math.Abs(float64(p.W-q.W)) <= 0.000001*math.Max(1.0, math.Max(math.Abs(float64(p.W)), math.Abs(float64(q.W)))) ||
-		math.Abs(float64(p.X+q.X)) <= 0.000001*math.Max(1.0, math.Max(math.Abs(float64(p.X)), math.Abs(float64(q.X)))) &&
-			math.Abs(float64(p.Y+q.Y)) <= 0.000001*math.Max(1.0, math.Max(math.Abs(float64(p.Y)), math.Abs(float64(q.Y)))) &&
-			math.Abs(float64(p.Z+q.Z)) <= 0.000001*math.Max(1.0, math.Max(math.Abs(float64(p.Z)), math.Abs(float64(q.Z)))) &&
-			math.Abs(float64(p.W+q.W)) <= 0.000001*math.Max(1.0, math.Max(math.Abs(float64(p.W)), math.Abs(float64(q.W)))))
+func QuaternionEquals(q, p Quaternion) bool {
+	return (math.Abs(float64(q.X-p.X)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(q.X)), math.Abs(float64(p.X)))) &&
+		math.Abs(float64(q.Y-p.Y)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(q.Y)), math.Abs(float64(p.Y)))) &&
+		math.Abs(float64(q.Z-p.Z)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(q.Z)), math.Abs(float64(p.Z)))) &&
+		math.Abs(float64(q.W-p.W)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(q.W)), math.Abs(float64(p.W)))) ||
+		math.Abs(float64(q.X+p.X)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(q.X)), math.Abs(float64(p.X)))) &&
+			math.Abs(float64(q.Y+p.Y)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(q.Y)), math.Abs(float64(p.Y)))) &&
+			math.Abs(float64(q.Z+p.Z)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(q.Z)), math.Abs(float64(p.Z)))) &&
+			math.Abs(float64(q.W+p.W)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(q.W)), math.Abs(float64(p.W)))))
 }
 
 // MatrixDecompose - Decompose a transformation matrix into its rotational, translational and scaling components
@@ -1844,4 +1845,9 @@ func MatrixDecompose(mat Matrix, translation *Vector3, rotation *Quaternion, sca
 		// Set to identity if close to zero
 		*rotation = QuaternionIdentity()
 	}
+}
+
+func sincos(angle float32) (sin, cos float32) {
+	sind, cosd := math.Sincos(float64(angle))
+	return float32(sind), float32(cosd)
 }

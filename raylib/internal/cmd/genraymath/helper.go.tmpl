@@ -1,0 +1,160 @@
+{{ define "params" }}
+{{- range $i, $param := .Params -}}
+  {{- range $j, $name := .Names -}}
+    {{- if or $i $j }}, {{ end -}}
+    {{ $name }}
+  {{- end }} {{ $param.TypeName }}
+{{- end -}}
+{{ end }}
+
+{{ define "args" }}
+{{- range $i, $param := .Params -}}
+  {{- range $j, $name := .Names -}}
+    {{- if or $i $j }}, {{ end -}}
+    {{ $name }}
+  {{- end -}}
+{{- end -}}
+{{ end }}
+
+{{ define "testargs" }}
+{{- range $i, $param := .Params -}}
+  {{- range $j, $name := .Names -}}
+    {{- if or $i $j }}, {{ end -}}
+    {{ testvar $name }}
+  {{- end -}}
+{{- end -}}
+{{ end }}
+
+{{ define "methodparams"  }}
+{{- $comma := false -}}
+{{- range $i, $param := .Params -}}
+  {{- range $j, $name := .Names -}}
+    {{- if or $i $j -}}
+    {{- if $comma }} ,{{ end -}}
+    {{- $comma = true -}}
+    {{ $name }}
+    {{- end -}}
+  {{- end -}}
+  {{- if or $i (gt (len .Names) 1) }} {{ $param.TypeName }}{{- end -}}
+{{- end -}}
+{{ end }}
+
+{{ define "methodargs" }}
+{{- range $i, $param := .Params -}}
+  {{- range $j, $name := .Names -}}
+    {{- if or $i $j }}, {{ $name }}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{ end }}
+
+{{ define "cargs" }}
+{{- range $i, $param := .Params -}}
+  {{- range $j, $name := .Names -}}
+    {{- if or $i $j }}, {{ end -}}
+    c{{ $name }}
+  {{- end -}}
+{{- end -}}
+{{ end }}
+
+{{ define "fuzzparams" }}
+{{- range $i, $param := .Params -}}
+  {{- range $j, $name := .Names -}}
+    {{- if eq $param.TypeName "Vector2" }}
+      {{ $name }}X, {{ $name }}Y float32,
+    {{- else if eq $param.TypeName "Vector3" }}
+      {{ $name }}X, {{ $name }}Y, {{ $name }}Z float32,
+    {{- else if eq $param.TypeName "Vector4" }}
+      {{ $name }}X, {{ $name }}Y, {{ $name }}Z, {{$name}}W float32,
+    {{- else if eq $param.TypeName "Quaternion" }}
+      {{ $name }}X, {{ $name }}Y, {{ $name }}Z, {{$name}}W float32,
+    {{- else if eq $param.TypeName "Mat2" }}
+      {{ $name }}M00, {{ $name }}M01, {{ $name }}M10, {{$name}}M11 float32,
+    {{- else if eq $param.TypeName "Matrix" }}
+      {{ $name }}M0, {{ $name }}M4, {{ $name }}M8, {{ $name }}M12,
+      {{ $name }}M1, {{ $name }}M5, {{ $name }}M9, {{ $name }}M13,
+      {{ $name }}M2, {{ $name }}M6, {{ $name }}M10, {{ $name }}M14,
+      {{ $name }}M3, {{ $name }}M7, {{ $name }}M11, {{ $name }}M15 float32,
+    {{- else }}
+    {{ testvar $name }} {{ $param.TypeName }},
+    {{- end -}}
+  {{- end -}}
+{{- end }}
+{{ end }}
+
+{{- define "fuzzvars"  -}}
+{{- range $i, $param := .Params -}}
+  {{- range $j, $name := .Names -}}
+    {{- if eq $param.TypeName "Vector2" }}
+      {{ testvar $name }} := NewVector2({{ $name }}X, {{ $name }}Y)
+    {{- else if eq $param.TypeName "Vector3" }}
+      {{ testvar $name }} := NewVector3({{ $name }}X, {{ $name }}Y, {{ $name }}Z)
+    {{- else if eq $param.TypeName "Vector4" }}
+      {{ testvar $name }} := NewVector4({{ $name }}X, {{ $name }}Y, {{ $name }}Z, {{$name}}W)
+    {{- else if eq $param.TypeName "Quaternion" }}
+      {{ testvar $name }} := NewQuaternion({{ $name }}X, {{ $name }}Y, {{ $name }}Z, {{$name}}W)
+    {{- else if eq $param.TypeName "Mat2" }}
+      {{ testvar $name }} := NewMat2({{ $name }}M00, {{ $name }}M01, {{ $name }}M10, {{$name}}M11)
+    {{- else if eq $param.TypeName "Matrix" }}
+      {{ testvar $name }} := NewMatrix(
+        {{ $name }}M0, {{ $name }}M4, {{ $name }}M8, {{ $name }}M12,
+        {{ $name }}M1, {{ $name }}M5, {{ $name }}M9, {{ $name }}M13,
+        {{ $name }}M2, {{ $name }}M6, {{ $name }}M10, {{ $name }}M14,
+        {{ $name }}M3, {{ $name }}M7, {{ $name }}M11, {{ $name }}M15,
+      )
+    {{- end -}}
+    {{- if $param.Normalize }}
+      {{ testvar $name }} = {{ $param.TypeName}}Normalize({{ testvar $name }})
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "fuzzcorpus" -}}
+f.Add(
+{{ range $i, $param := .Params -}}
+  {{- range $j, $name := .Names -}}
+    {{- if eq $param.TypeName "Vector2" -}}
+      float32(1), float32(2),
+    {{ else if eq $param.TypeName "Vector3" -}}
+      float32(1), float32(2), float32(3),
+    {{ else if eq $param.TypeName "Vector4" -}}
+      float32(1), float32(2), float32(3), float32(4),
+    {{ else if eq $param.TypeName "Quaternion" -}}
+      float32(1), float32(2), float32(3), float32(4),
+    {{ else if eq $param.TypeName "Mat2" -}}
+      float32(1), float32(2), float32(3), float32(4),
+    {{ else if eq $param.TypeName "Matrix" -}}
+      float32(1), float32(2), float32(3), float32(4),
+      float32(1), float32(2), float32(3), float32(4),
+      float32(1), float32(2), float32(3), float32(4),
+      float32(1), float32(2), float32(3), float32(4),
+    {{ else -}}
+      float32({{ add $j 1 }}),
+    {{ end -}}
+  {{- end -}}
+{{- end -}}
+)
+{{- end -}}
+
+{{- define "quickvars" -}}
+{{- range $i, $param := .Params -}}
+  {{- range $j, $name := .Names }}
+    {{ testvar $name }} := {{ if eq $param.TypeName "Vector2" -}}
+      NewVector2(1, 2)
+    {{- else if eq $param.TypeName "Vector3" -}}
+      NewVector3(1, 2, 3)
+    {{- else if eq $param.TypeName "Vector4" -}}
+      NewVector4(1, 2, 3, 4)
+    {{- else if eq $param.TypeName "Quaternion" -}}
+      NewQuaternion(1, 2, 3, 4)
+    {{- else if eq $param.TypeName "Mat2" -}}
+      NewMat2(1, 2, 3, 4)
+    {{- else if eq $param.TypeName "Matrix" -}}
+      NewMatrix(1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4)
+    {{- else -}}
+      float32({{ add $j 1 }})
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- end -}}

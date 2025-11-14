@@ -935,7 +935,7 @@ func solveCircleToCircle(manifold *Manifold) {
 	// Calculate translational vector, which is normal
 	var normal rl.Vector2 = rl.Vector2Subtract(bodyB.Position, bodyA.Position)
 
-	distSqr := rl.Vector2LenSqr(normal)
+	distSqr := rl.Vector2LengthSqr(normal)
 	radius := bodyA.Shape.Radius + bodyB.Shape.Radius
 
 	// Check if circles are not in contact
@@ -1246,7 +1246,7 @@ func initializeManifolds(manifold *Manifold) {
 		// The idea is if the only thing moving this object is gravity, then the collision should be
 		// performed without any restitution
 		rad := rl.NewVector2(gravityForce.X*deltaTime/1000, gravityForce.Y*deltaTime/1000)
-		if rl.Vector2LenSqr(radiusV) < (rl.Vector2LenSqr(rad) + epsilon) {
+		if rl.Vector2LengthSqr(radiusV) < (rl.Vector2LengthSqr(rad) + epsilon) {
 			manifold.Restitution = 0
 		}
 	}

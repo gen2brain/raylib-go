@@ -1,0 +1,4 @@
+go test fuzz v1
+float32(-146500)
+float32(209328.98)
+float32(-98)
