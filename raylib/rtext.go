@@ -102,18 +102,28 @@ func IsFontValid(font Font) bool {
 
 // LoadFontData - Load font data for further use
 func LoadFontData(fileData []byte, fontSize int32, codePoints []rune, codepointCount, typ int32) []GlyphInfo {
+	if len(fileData) == 0 {
+		return nil
+	}
 	cfileData := (*C.uchar)(unsafe.Pointer(&fileData[0]))
 	cdataSize := (C.int)(len(fileData))
 	cfontSize := (C.int)(fontSize)
+	// Note: unsafe.SliceData returns nil for a nil slice, which is acceptable for C API expecting NULL
 	ccodePoints := (*C.int)(unsafe.SliceData(codePoints))
-	// In case no chars count provided, default to 95
-	if codepointCount <= 0 {
-		codepointCount = 95
+	// In case no chars count provided, default to 95 (kept for compatibility; C side also defaults if 0)
+	if codepointCount < 0 {
+		codepointCount = 0
 	}
 	ccodePointCount := (C.int)(codepointCount)
 	ctype := (C.int)(typ)
-	ret := C.LoadFontData(cfileData, cdataSize, cfontSize, ccodePoints, ccodePointCount, ctype)
-	v := unsafe.Slice((*GlyphInfo)(unsafe.Pointer(ret)), ccodePointCount)
+	var cglyphCount C.int
+	ret := C.LoadFontData(cfileData, cdataSize, cfontSize, ccodePoints, ccodePointCount, ctype, &cglyphCount)
+	// Build Go slice with the actual glyph count returned by C
+	count := int(cglyphCount)
+	if count <= 0 || ret == nil {
+		return nil
+	}
+	v := unsafe.Slice((*GlyphInfo)(unsafe.Pointer(ret)), count)
 	return v
 }
 

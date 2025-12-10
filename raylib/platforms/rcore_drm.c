@@ -18,9 +18,9 @@
 *
 *   CONFIGURATION:
 *       #define SUPPORT_SSH_KEYBOARD_RPI (Raspberry Pi only)
-*           Reconfigure standard input to receive key inputs, works with SSH connection.
+*           Reconfigure standard input to receive key inputs, works with SSH connection
 *           WARNING: Reconfiguring standard input could lead to undesired effects, like breaking other
-*           running processes orblocking the device if not restored properly. Use with care.
+*           running processes orblocking the device if not restored properly. Use with care
 *
 *   DEPENDENCIES:
 *       - DRM and GLM: System libraries for display initialization and configuration
@@ -48,11 +48,12 @@
 *
 **********************************************************************************************/
 
-#include <fcntl.h>   // POSIX file control definitions - open(), creat(), fcntl()
-#include <unistd.h>  // POSIX standard function definitions - read(), close(), STDIN_FILENO
-#include <termios.h> // POSIX terminal control definitions - tcgetattr(), tcsetattr()
-#include <pthread.h> // POSIX threads management (inputs reading)
-#include <dirent.h>  // POSIX directory browsing
+#include <fcntl.h>          // POSIX file control definitions - open(), creat(), fcntl()
+#include <unistd.h>         // POSIX standard function definitions - read(), close(), STDIN_FILENO
+#include <termios.h>        // POSIX terminal control definitions - tcgetattr(), tcsetattr()
+#include <pthread.h>        // POSIX threads management (inputs reading)
+#include <dirent.h>         // POSIX directory browsing
+#include <limits.h>         // INT_MAX
 
 #include <sys/ioctl.h>      // Required for: ioctl() - UNIX System call for device-specific input/output operations
 #include <linux/kd.h>       // Linux: KDSKBMODE, K_MEDIUMRAM constants definition
@@ -64,12 +65,25 @@
 // so the enum KEY_F12 from raylib is used
 #undef KEY_F12
 
-#include <gbm.h>            // Generic Buffer Management (native platform for EGL on DRM)
 #include <xf86drm.h>        // Direct Rendering Manager user-level library interface
 #include <xf86drmMode.h>    // Direct Rendering Manager mode setting (KMS) interface
 
-#include "EGL/egl.h"        // Native platform windowing system interface
-#include "EGL/eglext.h"     // EGL extensions
+#if !defined(GRAPHICS_API_OPENGL_11_SOFTWARE)
+    #include <gbm.h>            // Generic Buffer Management (native platform for EGL on DRM)
+    #include "EGL/egl.h"        // Native platform windowing system interface
+    #include "EGL/eglext.h"     // EGL extensions
+#else
+    #include <sys/mman.h>       // For mmap when copying to the dumb buffer
+    #include <errno.h>          // For the conversion of certain error messages
+#endif
+
+// NOTE: DRM cache enables triple buffered DRM caching
+#if defined(SUPPORT_DRM_CACHE)
+    #include <poll.h>       // Required for: drmHandleEvent() poll
+    #include <errno.h>      // Required for: EBUSY, EAGAIN
+
+    #define MAX_DRM_CACHED_BUFFERS  3
+#endif // SUPPORT_DRM_CACHE
 
 #ifndef EGL_OPENGL_ES3_BIT
     #define EGL_OPENGL_ES3_BIT  0x40
@@ -78,34 +92,35 @@
 //----------------------------------------------------------------------------------
 // Defines and Macros
 //----------------------------------------------------------------------------------
-#define USE_LAST_TOUCH_DEVICE       // When multiple touchscreens are connected, only use the one with the highest event<N> number
+#define USE_LAST_TOUCH_DEVICE           // When multiple touchscreens are connected, only use the one with the highest event<N> number
 
-#define DEFAULT_EVDEV_PATH       "/dev/input/"      // Path to the linux input events
+#define DEFAULT_EVDEV_PATH "/dev/input/"    // Path to the linux input events
 
-// So actually the biggest key is KEY_CNT but we only really map the keys up to
-// KEY_ALS_TOGGLE
+// Actually biggest key is KEY_CNT but we only really map the keys up to KEY_ALS_TOGGLE
 #define KEYMAP_SIZE KEY_ALS_TOGGLE
 
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
 //----------------------------------------------------------------------------------
-typedef unsigned int uint;
-
 typedef struct {
     // Display data
     int fd;                             // File descriptor for /dev/dri/...
     drmModeConnector *connector;        // Direct Rendering Manager (DRM) mode connector
     drmModeCrtc *crtc;                  // CRT Controller
     int modeIndex;                      // Index of the used mode of connector->modes
+    uint32_t prevFB;                    // Previous DRM framebufer (during frame swapping)
+
+#if !defined(GRAPHICS_API_OPENGL_11_SOFTWARE)
     struct gbm_device *gbmDevice;       // GBM device
     struct gbm_surface *gbmSurface;     // GBM surface
     struct gbm_bo *prevBO;              // Previous GBM buffer object (during frame swapping)
-    uint32_t prevFB;                    // Previous GBM framebufer (during frame swapping)
-
     EGLDisplay device;                  // Native display device (physical screen connection)
     EGLSurface surface;                 // Surface to draw on, framebuffers (connected to context)
     EGLContext context;                 // Graphic context, mode in which drawing can be done
     EGLConfig config;                   // Graphic config
+#else
+    uint32_t prevDumbHandle;            // Handle to the previous dumb buffer (during frame swapping)
+#endif
 
     // Keyboard data
     int defaultKeyboardMode;            // Default keyboard mode
@@ -130,6 +145,18 @@ typedef struct {
     int gamepadCount;                   // The number of gamepads registered
 } PlatformData;
 
+#if defined(SUPPORT_DRM_CACHE)
+typedef struct {
+    struct gbm_bo *bo;      // Graphics buffer object
+    uint32_t fbId;          // DRM framebuffer ID
+} FramebufferCache;
+
+static FramebufferCache fbCache[MAX_DRM_CACHED_BUFFERS] = { 0 };
+static volatile int fbCacheCount = 0;
+static volatile bool pendingFlip = false;
+static bool crtcSet = false;
+#endif // SUPPORT_DRM_CACHE
+
 //----------------------------------------------------------------------------------
 // Global Variables Definition
 //----------------------------------------------------------------------------------
@@ -138,7 +165,7 @@ extern CoreData CORE;                   // Global CORE state context
 static PlatformData platform = { 0 };   // Platform specific data
 
 //----------------------------------------------------------------------------------
-// Local Variables Definition
+// Global Variables Definition
 //----------------------------------------------------------------------------------
 
 // NOTE: The complete evdev EV_KEY list can be found at /usr/include/linux/input-event-codes.h
@@ -193,7 +220,7 @@ static const short linuxToRaylibMap[KEYMAP_SIZE] = {
     248, 0,   0,   0,   0,   0,   0,   0,
 
     // Gamepads are mapped according to:
-    // https://www.kernel.org/doc/html/next/input/gamepad.html
+    // Ref: https://www.kernel.org/doc/html/next/input/gamepad.html
     // Those mappings are standardized, but that doesn't mean people follow
     // the standards, so this is more of an approximation
     [BTN_DPAD_UP] = GAMEPAD_BUTTON_LEFT_FACE_UP,
@@ -227,6 +254,7 @@ static void RestoreKeyboard(void);              // Restore keyboard system
 static void ProcessKeyboard(void);              // Process keyboard events
 #endif
 
+// Input management functions
 static void InitEvdevInput(void);               // Initialize evdev inputs
 static void ConfigureEvdevDevice(char *device); // Identifies a input device and configures it for use if appropriate
 static void PollKeyboardEvents(void);           // Process evdev keyboard events
@@ -539,7 +567,7 @@ void EnableCursor(void)
     SetMousePosition(CORE.Window.screen.width/2, CORE.Window.screen.height/2);
 
     platform.cursorRelative = false;
-    CORE.Input.Mouse.cursorHidden = false;
+    CORE.Input.Mouse.cursorLocked = false;
 }
 
 // Disables cursor (lock cursor)
@@ -549,12 +577,220 @@ void DisableCursor(void)
     SetMousePosition(0, 0);
 
     platform.cursorRelative = true;
-    CORE.Input.Mouse.cursorHidden = true;
+    CORE.Input.Mouse.cursorLocked = true;
 }
+
+#if defined(SUPPORT_DRM_CACHE)
+
+// Destroy cached framebuffer callback, set by gbm_bo_set_user_data()
+static void DestroyFrameBufferCallback(struct gbm_bo *bo, void *data)
+{
+    uint32_t fbId = (uintptr_t)data;
+
+    // Remove from cache
+    for (int i = 0; i < fbCacheCount; i++)
+    {
+        if (fbCache[i].bo == bo)
+        {
+            TRACELOG(LOG_INFO, "DISPLAY: DRM: Framebuffer removed [%u]", (uintptr_t)fbId);
+            drmModeRmFB(platform.fd, fbCache[i].fbId); // Release DRM FB
+
+            // Shift remaining entries
+            for (int j = i; j < fbCacheCount - 1; j++) fbCache[j] = fbCache[j + 1];
+
+            fbCacheCount--;
+            break;
+        }
+    }
+}
+
+// Create or retrieve cached DRM FB for BO
+static uint32_t GetOrCreateFbForBo(struct gbm_bo *bo)
+{
+    // Try to find existing cache entry
+    for (int i = 0; i < fbCacheCount; i++)
+    {
+        if (fbCache[i].bo == bo) return fbCache[i].fbId;
+    }
+
+    // Create new entry if cache not full
+    if (fbCacheCount >= MAX_DRM_CACHED_BUFFERS) return 0; // FB cache full
+
+    uint32_t handle = gbm_bo_get_handle(bo).u32;
+    uint32_t stride = gbm_bo_get_stride(bo);
+    uint32_t width = gbm_bo_get_width(bo);
+    uint32_t height = gbm_bo_get_height(bo);
+
+    uint32_t fbId = 0;
+    if (drmModeAddFB(platform.fd, width, height, 24, 32, stride, handle, &fbId)) return 0;
+
+    // Store in cache
+    fbCache[fbCacheCount] = (FramebufferCache){ .bo = bo, .fbId = fbId };
+    fbCacheCount++;
+
+    // Set destroy callback to auto-cleanup
+    gbm_bo_set_user_data(bo, (void *)(uintptr_t)fbId, DestroyFrameBufferCallback);
+
+    TRACELOG(LOG_INFO, "DISPLAY: DRM: Added new buffer object [%u]" , (uintptr_t)fbId);
+
+    return fbId;
+}
+
+// Renders a blank frame to allocate initial buffers
+// TODO: WARNING: Platform backend should not include OpenGL code
+void RenderBlankFrame()
+{
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+    eglSwapBuffers(platform.device, platform.surface);
+    glFinish(); // Ensure the buffer is processed
+}
+
+// Initialize with first buffer only
+int InitSwapScreenBuffer()
+{
+    if (!platform.gbmSurface || (platform.fd < 0))
+    {
+        TRACELOG(LOG_ERROR, "DISPLAY: DRM: Swap buffers can not be initialized");
+        return -1;
+    }
+
+    // Render a blank frame to allocate buffers
+    RenderBlankFrame();
+
+    // Get first buffer
+    struct gbm_bo *bo = gbm_surface_lock_front_buffer(platform.gbmSurface);
+    if (!bo)
+    {
+        TRACELOG(LOG_ERROR, "DISPLAY: DRM: Failed to lock initial swap buffer");
+        return -1;
+    }
+
+    // Create FB for first buffer
+    uint32_t fbId = GetOrCreateFbForBo(bo);
+    if (!fbId)
+    {
+        gbm_surface_release_buffer(platform.gbmSurface, bo);
+        return -1;
+    }
+
+    // Initial CRTC setup
+    if (drmModeSetCrtc(platform.fd, platform.crtc->crtc_id, fbId, 0, 0, &platform.connector->connector_id, 1, &platform.connector->modes[platform.modeIndex]))
+    {
+        TRACELOG(LOG_ERROR, "DISPLAY: DRM: Failed to initialize CRTC setup. ERROR: %s", strerror(errno));
+        gbm_surface_release_buffer(platform.gbmSurface, bo);
+        return -1;
+    }
+
+    // Keep first buffer locked until flipped
+    platform.prevBO = bo;
+    crtcSet = true;
+
+    return 0;
+}
+
+// Static page flip handler
+// NOTE: Called once the drmModePageFlip() finished from the drmHandleEvent() context
+static void PageFlipHandler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void *data)
+{
+    // Unused inputs
+    (void)fd;
+    (void)frame;
+    (void)sec;
+    (void)usec;
+
+    pendingFlip = false;
+    struct gbm_bo *boToRelease = (struct gbm_bo *)data;
+
+    // Buffers are released after the flip completes (via page_flip_handler), ensuring they're no longer in use
+    // Prevents the GPU from writing to a buffer being scanned out
+    if (boToRelease) gbm_surface_release_buffer(platform.gbmSurface, boToRelease);
+}
+
+// Swap implementation with proper caching
+void SwapScreenBuffer()
+{
+    if (!crtcSet || !platform.gbmSurface) return;
+
+    static int loopCnt = 0;
+    static int errCnt[5] = { 0 };
+    loopCnt++;
+
+    // Call this only, if pendingFlip is not set
+    eglSwapBuffers(platform.device, platform.surface);
+
+    // Process pending events non-blocking
+    drmEventContext evctx = {
+        .version = DRM_EVENT_CONTEXT_VERSION,
+        .page_flip_handler = PageFlipHandler
+    };
+
+    struct pollfd pfd = { .fd = platform.fd, .events = POLLIN };
+
+    // Polling for event for 0ms
+    while (poll(&pfd, 1, 0) > 0) drmHandleEvent(platform.fd, &evctx);
+
+    // Skip if previous flip pending
+    if (pendingFlip)
+    {
+        errCnt[0]++; // Skip frame: flip pending
+        return;
+    }
+
+    // Get new front buffer
+    struct gbm_bo *nextBO = gbm_surface_lock_front_buffer(platform.gbmSurface);
+    if (!nextBO) // Failed to lock front buffer
+    {
+        errCnt[1]++;
+        return;
+    }
+
+    // Get FB ID (creates new one if needed)
+    uint32_t fbId = GetOrCreateFbForBo(nextBO);
+    if (!fbId)
+    {
+        gbm_surface_release_buffer(platform.gbmSurface, nextBO);
+        errCnt[2]++;
+        return;
+    }
+
+    // Attempt page flip
+    // NOTE: rmModePageFlip() schedules a buffer-flip for the next vblank and then notifies us about it
+    // It takes a CRTC-id, fb-id and an arbitrary data-pointer and then schedules the page-flip
+    // This is fully asynchronous and when the page-flip happens, the DRM-fd will become readable and we can call drmHandleEvent()
+    // This will read all vblank/page-flip events and call our modeset_page_flip_event() callback with the data-pointer that we passed to drmModePageFlip()
+    // We simply call modeset_draw_dev() then so the next frame is rendered... returns immediately
+    if (drmModePageFlip(platform.fd, platform.crtc->crtc_id, fbId, DRM_MODE_PAGE_FLIP_EVENT, platform.prevBO))
+    {
+        if (errno == EBUSY) errCnt[3]++; // Display busy - skip flip
+        else errCnt[4]++; // Page flip failed
+
+        gbm_surface_release_buffer(platform.gbmSurface, nextBO);
+        return;
+    }
+
+    // Success: update state
+    pendingFlip = true;
+    platform.prevBO = nextBO;
+
+/*
+    // Some benchmarking code
+    if (loopCnt >= 600)
+    {
+        TRACELOG(LOG_INFO, "DRM: Error counters: %d, %d, %d, %d, %d, %d", errCnt[0], errCnt[1], errCnt[2], errCnt[3], errCnt[4], loopCnt);
+        for (int i = 0; i < 5; i++) errCnt[i] = 0;
+        loopCnt = 0;
+    }
+*/
+}
+
+#else // !SUPPORT_DRM_CACHE
 
 // Swap back buffer with front buffer (screen drawing)
 void SwapScreenBuffer(void)
 {
+#if !defined(GRAPHICS_API_OPENGL_11_SOFTWARE)
+    // Hardware rendering buffer swap with EGL
     eglSwapBuffers(platform.device, platform.surface);
 
     if (!platform.gbmSurface || (-1 == platform.fd) || !platform.connector || !platform.crtc) TRACELOG(LOG_ERROR, "DISPLAY: DRM initialization failed to swap");
@@ -580,7 +816,181 @@ void SwapScreenBuffer(void)
     if (platform.prevBO) gbm_surface_release_buffer(platform.gbmSurface, platform.prevBO);
 
     platform.prevBO = bo;
+#else
+    // Software rendering buffer swap
+    if ((platform.fd == -1) || !platform.connector || (platform.modeIndex < 0))
+    {
+        TRACELOG(LOG_ERROR, "DISPLAY: DRM initialization failed to swap");
+        return;
+    }
+
+    // Retrieving the dimensions of the display mode used
+    drmModeModeInfo *mode = &platform.connector->modes[platform.modeIndex];
+    uint32_t width = mode->hdisplay;
+    uint32_t height = mode->vdisplay;
+
+    // Dumb buffers use a fixed format based on bpp
+#if SW_COLOR_BUFFER_BITS == 24
+    const uint32_t bpp = 32;    // 32 bits per pixel (XRGB8888 format)
+    const uint32_t depth = 24;  // Color depth, here only 24 bits, alpha is not used
+#else
+    // REVIEW: Not sure how it will be interpreted (RGB or RGBA?)
+    const uint32_t bpp = SW_COLOR_BUFFER_BITS;
+    const uint32_t depth = SW_COLOR_BUFFER_BITS;
+#endif
+
+    // Create a dumb buffer for software rendering
+    struct drm_mode_create_dumb creq = { 0 };
+    creq.width = width;
+    creq.height = height;
+    creq.bpp = bpp;
+
+    int result = drmIoctl(platform.fd, DRM_IOCTL_MODE_CREATE_DUMB, &creq);
+    if (result < 0)
+    {
+        TRACELOG(LOG_ERROR, "DISPLAY: Failed to create dumb buffer: %s", strerror(errno));
+        return;
+    }
+
+    // Create framebuffer with the correct format
+    uint32_t fb = 0;
+    result = drmModeAddFB(platform.fd, width, height, depth, bpp, creq.pitch, creq.handle, &fb);
+    if (result != 0)
+    {
+        TRACELOG(LOG_ERROR, "DISPLAY: drmModeAddFB() failed with result: %d (%s)", result, strerror(errno));
+        struct drm_mode_destroy_dumb dreq = { 0 };
+        dreq.handle = creq.handle;
+        drmIoctl(platform.fd, DRM_IOCTL_MODE_DESTROY_DUMB, &dreq);
+        return;
+    }
+
+    // Map the dumb buffer to copy our software rendered buffer
+    struct drm_mode_map_dumb mreq = { 0 };
+    mreq.handle = creq.handle;
+    result = drmIoctl(platform.fd, DRM_IOCTL_MODE_MAP_DUMB, &mreq);
+    if (result != 0)
+    {
+        TRACELOG(LOG_ERROR, "DISPLAY: Failed to map dumb buffer: %s", strerror(errno));
+        drmModeRmFB(platform.fd, fb);
+        struct drm_mode_destroy_dumb dreq = { 0 };
+        dreq.handle = creq.handle;
+        drmIoctl(platform.fd, DRM_IOCTL_MODE_DESTROY_DUMB, &dreq);
+        return;
+    }
+
+    // Map the buffer into userspace
+    void *dumbBuffer = mmap(0, creq.size, PROT_READ | PROT_WRITE, MAP_SHARED, platform.fd, mreq.offset);
+    if (dumbBuffer == MAP_FAILED)
+    {
+        TRACELOG(LOG_ERROR, "DISPLAY: Failed to mmap dumb buffer: %s", strerror(errno));
+        drmModeRmFB(platform.fd, fb);
+        struct drm_mode_destroy_dumb dreq = { 0 };
+        dreq.handle = creq.handle;
+        drmIoctl(platform.fd, DRM_IOCTL_MODE_DESTROY_DUMB, &dreq);
+        return;
+    }
+
+    // Copy the software rendered buffer to the dumb buffer with scaling if needed
+    // NOTE: RLSW will make a simple copy if the dimensions match
+    swBlitFramebuffer(0, 0, width, height, 0, 0, width, height, SW_RGBA, SW_UNSIGNED_BYTE, dumbBuffer);
+
+    // Unmap the buffer
+    munmap(dumbBuffer, creq.size);
+
+    // Find a CRTC compatible with the connector
+    uint32_t crtcId = 0;
+    if (platform.crtc) crtcId = platform.crtc->crtc_id;
+    else
+    {
+        // Find a CRTC that's compatible with this connector
+        drmModeRes *res = drmModeGetResources(platform.fd);
+        if (!res)
+        {
+            TRACELOG(LOG_ERROR, "DISPLAY: Failed to get DRM resources");
+            drmModeRmFB(platform.fd, fb);
+            struct drm_mode_destroy_dumb dreq = {0};
+            dreq.handle = creq.handle;
+            drmIoctl(platform.fd, DRM_IOCTL_MODE_DESTROY_DUMB, &dreq);
+            return;
+        }
+
+        // Check which CRTCs are compatible with this connector
+        drmModeEncoder *encoder = NULL;
+        if (platform.connector->encoder_id) encoder = drmModeGetEncoder(platform.fd, platform.connector->encoder_id);
+
+        if (encoder && encoder->crtc_id)
+        {
+            crtcId = encoder->crtc_id;
+            platform.crtc = drmModeGetCrtc(platform.fd, crtcId);
+        }
+        else
+        {
+            // Find a free CRTC
+            for (int i = 0; i < res->count_crtcs; i++)
+            {
+                drmModeCrtc *crtc = drmModeGetCrtc(platform.fd, res->crtcs[i]);
+                if (crtc && !crtc->buffer_id) // CRTC is free
+                {
+                    crtcId = res->crtcs[i];
+                    if (platform.crtc) drmModeFreeCrtc(platform.crtc);
+                    platform.crtc = crtc;
+                    break;
+                }
+
+                if (crtc) drmModeFreeCrtc(crtc);
+            }
+        }
+
+        if (encoder) drmModeFreeEncoder(encoder);
+        drmModeFreeResources(res);
+
+        if (!crtcId)
+        {
+            TRACELOG(LOG_ERROR, "DISPLAY: No compatible CRTC found");
+            drmModeRmFB(platform.fd, fb);
+            struct drm_mode_destroy_dumb dreq = {0};
+            dreq.handle = creq.handle;
+            drmIoctl(platform.fd, DRM_IOCTL_MODE_DESTROY_DUMB, &dreq);
+            return;
+        }
+    }
+
+    // Set CRTC with better error handling
+    result = drmModeSetCrtc(platform.fd, crtcId, fb, 0, 0, &platform.connector->connector_id, 1, mode);
+    if (result != 0)
+    {
+        TRACELOG(LOG_ERROR, "DISPLAY: drmModeSetCrtc() failed with result: %d (%s)", result, strerror(errno));
+        TRACELOG(LOG_ERROR, "DISPLAY: CRTC ID: %u, FB ID: %u, Connector ID: %u", crtcId, fb, platform.connector->connector_id);
+        TRACELOG(LOG_ERROR, "DISPLAY: Mode: %dx%d@%d", mode->hdisplay, mode->vdisplay, mode->vrefresh);
+
+        drmModeRmFB(platform.fd, fb);
+        struct drm_mode_destroy_dumb dreq = {0};
+        dreq.handle = creq.handle;
+        drmIoctl(platform.fd, DRM_IOCTL_MODE_DESTROY_DUMB, &dreq);
+        return;
+    }
+
+    // Clean up previous framebuffer
+    if (platform.prevFB)
+    {
+        result = drmModeRmFB(platform.fd, platform.prevFB);
+        if (result != 0) TRACELOG(LOG_WARNING, "DISPLAY: drmModeRmFB() failed with result: %d", result);
+    }
+
+    platform.prevFB = fb;
+
+    // Clean up previous dumb buffer
+    if (platform.prevDumbHandle)
+    {
+        struct drm_mode_destroy_dumb dreq = {0};
+        dreq.handle = platform.prevDumbHandle;
+        drmIoctl(platform.fd, DRM_IOCTL_MODE_DESTROY_DUMB, &dreq);
+    }
+
+    platform.prevDumbHandle = creq.handle;
+#endif
 }
+#endif // SUPPORT_DRM_CACHE
 
 //----------------------------------------------------------------------------------
 // Module Functions Definition: Misc
@@ -600,9 +1010,9 @@ double GetTime(void)
 }
 
 // Open URL with default system browser (if available)
-// NOTE: This function is only safe to use if you control the URL given.
-// A user could craft a malicious string performing another action.
-// Only call this function yourself not with user input or make sure to check the string yourself.
+// NOTE: This function is only safe to use if you control the URL given
+// A user could craft a malicious string performing another action
+// Only call this function yourself not with user input or make sure to check the string yourself
 // Ref: https://github.com/raysan5/raylib/issues/686
 void OpenURL(const char *url)
 {
@@ -639,7 +1049,7 @@ void SetMouseCursor(int cursor)
     TRACELOG(LOG_WARNING, "SetMouseCursor() not implemented on target platform");
 }
 
-// Get physical key name.
+// Get physical key name
 const char *GetKeyName(int key)
 {
     TRACELOG(LOG_WARNING, "GetKeyName() not implemented on target platform");
@@ -673,7 +1083,7 @@ void PollInputEvents(void)
     PollKeyboardEvents();
 
 #if defined(SUPPORT_SSH_KEYBOARD_RPI)
-    // NOTE: Keyboard reading could be done using input_event(s) or just read from stdin, both methods are used here.
+    // NOTE: Keyboard reading could be done using input_event(s) or just read from stdin, both methods are used here
     // stdin reading is still used for legacy purposes, it allows keyboard input trough SSH console
     if (!platform.eventKeyboardMode) ProcessKeyboard();
 #endif
@@ -703,11 +1113,12 @@ void PollInputEvents(void)
     // Register previous touch states
     for (int i = 0; i < MAX_TOUCH_POINTS; i++) CORE.Input.Touch.previousTouchState[i] = CORE.Input.Touch.currentTouchState[i];
 
-    // Reset touch positions
-    //for (int i = 0; i < MAX_TOUCH_POINTS; i++) CORE.Input.Touch.position[i] = (Vector2){ 0, 0 };
+    // Reset touch positions to invalid state
+    for (int i = 0; i < MAX_TOUCH_POINTS; i++) CORE.Input.Touch.position[i] = (Vector2){ -1, -1 };
 
     // Map touch position to mouse position for convenience
-    CORE.Input.Touch.position[0] = CORE.Input.Mouse.currentPosition;
+    // NOTE: For DRM touchscreen devices, this mapping is disabled to avoid false touch detection
+    // CORE.Input.Touch.position[0] = CORE.Input.Mouse.currentPosition;
 
     // Handle the mouse/touch/gestures events:
     PollMouseEvents();
@@ -724,26 +1135,32 @@ int InitPlatform(void)
     platform.connector = NULL;
     platform.modeIndex = -1;
     platform.crtc = NULL;
+    platform.prevFB = 0;
+
+#if !defined(GRAPHICS_API_OPENGL_11_SOFTWARE)
     platform.gbmDevice = NULL;
     platform.gbmSurface = NULL;
     platform.prevBO = NULL;
-    platform.prevFB = 0;
+#else
+    platform.prevDumbHandle = 0;
+#endif
 
     // Initialize graphic device: display/window and graphic context
     //----------------------------------------------------------------------------
     CORE.Window.fullscreen = true;
-    CORE.Window.flags |= FLAG_FULLSCREEN_MODE;
+    FLAG_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE);
 
 #if defined(DEFAULT_GRAPHIC_DEVICE_DRM)
     platform.fd = open(DEFAULT_GRAPHIC_DEVICE_DRM, O_RDWR);
     if (platform.fd != -1) TRACELOG(LOG_INFO, "DISPLAY: Default graphic device DRM opened successfully");
 #else
     TRACELOG(LOG_WARNING, "DISPLAY: No graphic card set, trying platform-gpu-card");
-    platform.fd = open("/dev/dri/by-path/platform-gpu-card",  O_RDWR); // VideoCore VI (Raspberry Pi 4)
+    platform.fd = open("/dev/dri/by-path/platform-gpu-card", O_RDWR); // VideoCore VI (Raspberry Pi 4)
     if (platform.fd != -1) TRACELOG(LOG_INFO, "DISPLAY: platform-gpu-card opened successfully");
 
     if ((platform.fd == -1) || (drmModeGetResources(platform.fd) == NULL))
     {
+        if (platform.fd != -1) close(platform.fd);
         TRACELOG(LOG_WARNING, "DISPLAY: Failed to open platform-gpu-card, trying card1");
         platform.fd = open("/dev/dri/card1", O_RDWR); // Other Embedded
         if (platform.fd != -1) TRACELOG(LOG_INFO, "DISPLAY: card1 opened successfully");
@@ -751,9 +1168,18 @@ int InitPlatform(void)
 
     if ((platform.fd == -1) || (drmModeGetResources(platform.fd) == NULL))
     {
+        if (platform.fd != -1) close(platform.fd);
         TRACELOG(LOG_WARNING, "DISPLAY: Failed to open graphic card1, trying card0");
         platform.fd = open("/dev/dri/card0", O_RDWR); // VideoCore IV (Raspberry Pi 1-3)
         if (platform.fd != -1) TRACELOG(LOG_INFO, "DISPLAY: card0 opened successfully");
+    }
+
+    if ((platform.fd == -1) || (drmModeGetResources(platform.fd) == NULL))
+    {
+        if (platform.fd != -1) close(platform.fd);
+        TRACELOG(LOG_WARNING, "DISPLAY: Failed to open graphic card0, trying card2");
+        platform.fd = open("/dev/dri/card2", O_RDWR);
+        if (platform.fd != -1) TRACELOG(LOG_INFO, "DISPLAY: card2 opened successfully");
     }
 #endif
 
@@ -767,29 +1193,55 @@ int InitPlatform(void)
     if (!res)
     {
         TRACELOG(LOG_WARNING, "DISPLAY: Failed get DRM resources");
+        close(platform.fd);
         return -1;
     }
 
     TRACELOG(LOG_TRACE, "DISPLAY: Connectors found: %i", res->count_connectors);
 
+    // Connector detection
     for (size_t i = 0; i < res->count_connectors; i++)
     {
         TRACELOG(LOG_TRACE, "DISPLAY: Connector index %i", i);
 
         drmModeConnector *con = drmModeGetConnector(platform.fd, res->connectors[i]);
-        TRACELOG(LOG_TRACE, "DISPLAY: Connector modes detected: %i", con->count_modes);
-
-        // In certain cases the status of the conneciton is reported as UKNOWN, but it is still connected.
-        // This might be a hardware or software limitation like on Raspberry Pi Zero with composite output.
-        if (((con->connection == DRM_MODE_CONNECTED) || (con->connection == DRM_MODE_UNKNOWNCONNECTION)) && (con->encoder_id))
+        if (!con)
         {
-            TRACELOG(LOG_TRACE, "DISPLAY: DRM mode connected");
+            TRACELOG(LOG_WARNING, "DISPLAY: Failed to get connector %i", i);
+            continue;
+        }
+
+        TRACELOG(LOG_TRACE, "DISPLAY: Connector %i modes detected: %i", i, con->count_modes);
+        TRACELOG(LOG_TRACE, "DISPLAY: Connector %i status: %s", i,
+                 (con->connection == DRM_MODE_CONNECTED)? "CONNECTED" :
+                 (con->connection == DRM_MODE_DISCONNECTED)? "DISCONNECTED" :
+                 (con->connection == DRM_MODE_UNKNOWNCONNECTION)? "UNKNOWN" : "OTHER");
+
+        // In certain cases the status of the conneciton is reported as UKNOWN, but it is still connected
+        // This might be a hardware or software limitation like on Raspberry Pi Zero with composite output
+        // WARNING: Accept CONNECTED, UNKNOWN and even those without encoder_id connectors for software mode
+        if (((con->connection == DRM_MODE_CONNECTED) || (con->connection == DRM_MODE_UNKNOWNCONNECTION)) && (con->count_modes > 0))
+        {
+#if !defined(GRAPHICS_API_OPENGL_11_SOFTWARE)
+            // For hardware rendering, we need an encoder_id
+            if (con->encoder_id)
+            {
+                TRACELOG(LOG_TRACE, "DISPLAY: DRM connector %i connected with encoder", i);
+                platform.connector = con;
+                break;
+            }
+            else TRACELOG(LOG_TRACE, "DISPLAY: DRM connector %i connected but no encoder", i);
+#else
+            // For software rendering, we can accept even without encoder_id
+            TRACELOG(LOG_TRACE, "DISPLAY: DRM connector %i suitable for software rendering", i);
             platform.connector = con;
             break;
+#endif
         }
-        else
+
+        if (!platform.connector)
         {
-            TRACELOG(LOG_TRACE, "DISPLAY: DRM mode NOT connected (deleting)");
+            TRACELOG(LOG_TRACE, "DISPLAY: DRM connector %i NOT suitable (deleting)", i);
             drmModeFreeConnector(con);
         }
     }
@@ -798,14 +1250,18 @@ int InitPlatform(void)
     {
         TRACELOG(LOG_WARNING, "DISPLAY: No suitable DRM connector found");
         drmModeFreeResources(res);
+        close(platform.fd);
         return -1;
     }
 
+#if !defined(GRAPHICS_API_OPENGL_11_SOFTWARE)
     drmModeEncoder *enc = drmModeGetEncoder(platform.fd, platform.connector->encoder_id);
     if (!enc)
     {
         TRACELOG(LOG_WARNING, "DISPLAY: Failed to get DRM mode encoder");
+        drmModeFreeConnector(platform.connector);
         drmModeFreeResources(res);
+        close(platform.fd);
         return -1;
     }
 
@@ -814,7 +1270,9 @@ int InitPlatform(void)
     {
         TRACELOG(LOG_WARNING, "DISPLAY: Failed to get DRM mode crtc");
         drmModeFreeEncoder(enc);
+        drmModeFreeConnector(platform.connector);
         drmModeFreeResources(res);
+        close(platform.fd);
         return -1;
     }
 
@@ -829,7 +1287,9 @@ int InitPlatform(void)
         {
             TRACELOG(LOG_WARNING, "DISPLAY: No matching DRM connector mode found");
             drmModeFreeEncoder(enc);
+            drmModeFreeConnector(platform.connector);
             drmModeFreeResources(res);
+            close(platform.fd);
             return -1;
         }
 
@@ -837,7 +1297,7 @@ int InitPlatform(void)
         CORE.Window.screen.height = CORE.Window.display.height;
     }
 
-    const bool allowInterlaced = CORE.Window.flags & FLAG_INTERLACED_HINT;
+    const bool allowInterlaced = FLAG_IS_SET(CORE.Window.flags, FLAG_INTERLACED_HINT);
     const int fps = (CORE.Time.target > 0)? (1.0/CORE.Time.target) : 60;
 
     // Try to find an exact matching mode
@@ -857,7 +1317,9 @@ int InitPlatform(void)
     {
         TRACELOG(LOG_WARNING, "DISPLAY: Failed to find a suitable DRM connector mode");
         drmModeFreeEncoder(enc);
+        drmModeFreeConnector(platform.connector);
         drmModeFreeResources(res);
+        close(platform.fd);
         return -1;
     }
 
@@ -866,19 +1328,45 @@ int InitPlatform(void)
 
     TRACELOG(LOG_INFO, "DISPLAY: Selected DRM connector mode %s (%ux%u%c@%u)", platform.connector->modes[platform.modeIndex].name,
         platform.connector->modes[platform.modeIndex].hdisplay, platform.connector->modes[platform.modeIndex].vdisplay,
-        (platform.connector->modes[platform.modeIndex].flags & DRM_MODE_FLAG_INTERLACE)? 'i' : 'p',
+        FLAG_IS_SET(platform.connector->modes[platform.modeIndex].flags, DRM_MODE_FLAG_INTERLACE)? 'i' : 'p',
         platform.connector->modes[platform.modeIndex].vrefresh);
+
+    drmModeFreeEncoder(enc);
+    enc = NULL;
+#else
+    // For software rendering, the first available mode can be used
+    if (platform.connector->count_modes > 0)
+    {
+        platform.modeIndex = 0;
+        CORE.Window.display.width = platform.connector->modes[0].hdisplay;
+        CORE.Window.display.height = platform.connector->modes[0].vdisplay;
+
+        TRACELOG(LOG_INFO, "DISPLAY: Selected DRM connector mode %s (%ux%u%c@%u) for software rendering",
+                 platform.connector->modes[0].name,
+                 platform.connector->modes[0].hdisplay,
+                 platform.connector->modes[0].vdisplay,
+                 (platform.connector->modes[0].flags & DRM_MODE_FLAG_INTERLACE)? 'i' : 'p',
+                 platform.connector->modes[0].vrefresh);
+    }
+    else
+    {
+        TRACELOG(LOG_WARNING, "DISPLAY: No modes available for connector");
+        drmModeFreeConnector(platform.connector);
+        drmModeFreeResources(res);
+        close(platform.fd);
+        return -1;
+    }
+#endif
 
     // Use the width and height of the surface for render
     CORE.Window.render.width = CORE.Window.screen.width;
     CORE.Window.render.height = CORE.Window.screen.height;
 
-    drmModeFreeEncoder(enc);
-    enc = NULL;
-
     drmModeFreeResources(res);
     res = NULL;
 
+#if !defined(GRAPHICS_API_OPENGL_11_SOFTWARE)
+    // Hardware rendering initialization with EGL
     platform.gbmDevice = gbm_create_device(platform.fd);
     if (!platform.gbmDevice)
     {
@@ -896,7 +1384,7 @@ int InitPlatform(void)
 
     EGLint samples = 0;
     EGLint sampleBuffer = 0;
-    if (CORE.Window.flags & FLAG_MSAA_4X_HINT)
+    if (FLAG_IS_SET(CORE.Window.flags, FLAG_MSAA_4X_HINT))
     {
         samples = 4;
         sampleBuffer = 1;
@@ -936,7 +1424,7 @@ int InitPlatform(void)
     // Initialize the EGL device connection
     if (eglInitialize(platform.device, NULL, NULL) == EGL_FALSE)
     {
-        // If all of the calls to eglInitialize returned EGL_FALSE then an error has occurred.
+        // If all of the calls to eglInitialize returned EGL_FALSE then an error has occurred
         TRACELOG(LOG_WARNING, "DISPLAY: Failed to initialize EGL device");
         return -1;
     }
@@ -968,7 +1456,7 @@ int InitPlatform(void)
 
     // find the EGL config that matches the previously setup GBM format
     int found = 0;
-    for (EGLint i = 0; i < matchingNumConfigs; ++i)
+    for (EGLint i = 0; i < matchingNumConfigs; i++)
     {
         EGLint id = 0;
         if (!eglGetConfigAttrib(platform.device, configs[i], EGL_NATIVE_VISUAL_ID, &id))
@@ -1047,24 +1535,46 @@ int InitPlatform(void)
         return -1;
     }
 
-    if ((CORE.Window.flags & FLAG_WINDOW_MINIMIZED) > 0) MinimizeWindow();
+    // Load OpenGL extensions
+    // NOTE: GL procedures address loader is required to load extensions
+    rlLoadExtensions(eglGetProcAddress);
+#else
+    // At this point we need to manage render size vs screen size
+    // NOTE: This function use and modify global module variables:
+    //  -> CORE.Window.screen.width/CORE.Window.screen.height
+    //  -> CORE.Window.render.width/CORE.Window.render.height
+    //  -> CORE.Window.screenScale
+    SetupFramebuffer(CORE.Window.display.width, CORE.Window.display.height);
+
+    // Setup window ready state for software rendering
+    CORE.Window.ready = true;
+
+    CORE.Window.render.width = CORE.Window.screen.width;
+    CORE.Window.render.height = CORE.Window.screen.height;
+    CORE.Window.currentFbo.width = CORE.Window.render.width;
+    CORE.Window.currentFbo.height = CORE.Window.render.height;
+
+    TRACELOG(LOG_INFO, "DISPLAY: Device initialized successfully (Software Rendering)");
+    TRACELOG(LOG_INFO, "    > Display size: %i x %i", CORE.Window.display.width, CORE.Window.display.height);
+    TRACELOG(LOG_INFO, "    > Screen size:  %i x %i", CORE.Window.screen.width, CORE.Window.screen.height);
+    TRACELOG(LOG_INFO, "    > Render size:  %i x %i", CORE.Window.render.width, CORE.Window.render.height);
+    TRACELOG(LOG_INFO, "    > Viewport offsets: %i, %i", CORE.Window.renderOffset.x, CORE.Window.renderOffset.y);
+#endif
+
+    if (FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_MINIMIZED)) MinimizeWindow();
 
     // If graphic device is no properly initialized, we end program
     if (!CORE.Window.ready) { TRACELOG(LOG_FATAL, "PLATFORM: Failed to initialize graphic device"); return -1; }
     else SetWindowPosition(GetMonitorWidth(GetCurrentMonitor())/2 - CORE.Window.screen.width/2, GetMonitorHeight(GetCurrentMonitor())/2 - CORE.Window.screen.height/2);
 
     // Set some default window flags
-    CORE.Window.flags &= ~FLAG_WINDOW_HIDDEN;       // false
-    CORE.Window.flags &= ~FLAG_WINDOW_MINIMIZED;    // false
-    CORE.Window.flags |= FLAG_WINDOW_MAXIMIZED;     // true
-    CORE.Window.flags &= ~FLAG_WINDOW_UNFOCUSED;    // false
+    FLAG_CLEAR(CORE.Window.flags, FLAG_WINDOW_HIDDEN);       // false
+    FLAG_CLEAR(CORE.Window.flags, FLAG_WINDOW_MINIMIZED);    // false
+    FLAG_SET(CORE.Window.flags, FLAG_WINDOW_MAXIMIZED);      // true
+    FLAG_CLEAR(CORE.Window.flags, FLAG_WINDOW_UNFOCUSED);    // false
 
-    // Load OpenGL extensions
-    // NOTE: GL procedures address loader is required to load extensions
-    rlLoadExtensions(eglGetProcAddress);
     //----------------------------------------------------------------------------
-
-    // Initialize timming system
+    // Initialize timing system
     //----------------------------------------------------------------------------
     // NOTE: timming system must be initialized before the input events system
     InitTimer();
@@ -1084,9 +1594,21 @@ int InitPlatform(void)
     CORE.Storage.basePath = GetWorkingDirectory();
     //----------------------------------------------------------------------------
 
+#if defined(SUPPORT_DRM_CACHE)
+    if (InitSwapScreenBuffer() == 0)
+    {
+        TRACELOG(LOG_INFO, "PLATFORM: DRM: Initialized successfully");
+        return 0;
+    }
+    else
+    {
+        TRACELOG(LOG_INFO, "PLATFORM: DRM: Initialized failed");
+        return -1;
+    }
+#else // !SUPPORT_DRM_CACHE
     TRACELOG(LOG_INFO, "PLATFORM: DRM: Initialized successfully");
-
     return 0;
+#endif
 }
 
 // Close platform
@@ -1098,6 +1620,7 @@ void ClosePlatform(void)
         platform.prevFB = 0;
     }
 
+#if !defined(GRAPHICS_API_OPENGL_11_SOFTWARE)
     if (platform.prevBO)
     {
         gbm_surface_release_buffer(platform.gbmSurface, platform.prevBO);
@@ -1115,6 +1638,7 @@ void ClosePlatform(void)
         gbm_device_destroy(platform.gbmDevice);
         platform.gbmDevice = NULL;
     }
+#endif
 
     if (platform.crtc)
     {
@@ -1136,6 +1660,7 @@ void ClosePlatform(void)
         platform.fd = -1;
     }
 
+#if !defined(GRAPHICS_API_OPENGL_11_SOFTWARE)
     // Close surface, context and display
     if (platform.device != EGL_NO_DISPLAY)
     {
@@ -1154,6 +1679,7 @@ void ClosePlatform(void)
         eglTerminate(platform.device);
         platform.device = EGL_NO_DISPLAY;
     }
+#endif
 
     CORE.Window.shouldClose = true;   // Added to force threads to exit when the close window is called
 
@@ -1194,8 +1720,8 @@ static void InitKeyboard(void)
 
     // New terminal settings for keyboard: turn off buffering (non-canonical mode), echo and key processing
     // NOTE: ISIG controls if ^C and ^Z generate break signals or not
-    keyboardNewSettings.c_lflag &= ~(ICANON | ECHO | ISIG);
-    //keyboardNewSettings.c_iflag &= ~(ISTRIP | INLCR | ICRNL | IGNCR | IXON | IXOFF);
+    FLAG_CLEAR(keyboardNewSettings.c_lflag, ICANON | ECHO | ISIG);
+    //FLAG_CLEAR(keyboardNewSettings.c_iflag, ISTRIP | INLCR | ICRNL | IGNCR | IXON | IXOFF);
     keyboardNewSettings.c_cc[VMIN] = 1;
     keyboardNewSettings.c_cc[VTIME] = 0;
 
@@ -1214,10 +1740,10 @@ static void InitKeyboard(void)
     else
     {
         // Reconfigure keyboard mode to get:
-        //    - scancodes (K_RAW)
-        //    - keycodes (K_MEDIUMRAW)
-        //    - ASCII chars (K_XLATE)
-        //    - UNICODE chars (K_UNICODE)
+        // - scancodes (K_RAW)
+        // - keycodes (K_MEDIUMRAW)
+        // - ASCII chars (K_XLATE)
+        // - UNICODE chars (K_UNICODE)
         ioctl(STDIN_FILENO, KDSKBMODE, K_XLATE);  // ASCII chars
     }
 
@@ -1320,7 +1846,7 @@ static void ProcessKeyboard(void)
         {
             CORE.Input.Keyboard.currentKeyState[259] = 1;
 
-            CORE.Input.Keyboard.keyPressedQueue[CORE.Input.Keyboard.keyPressedQueueCount] = 257;     // Add keys pressed into queue
+            CORE.Input.Keyboard.keyPressedQueue[CORE.Input.Keyboard.keyPressedQueueCount] = 259;     // Add keys pressed into queue
             CORE.Input.Keyboard.keyPressedQueueCount++;
         }
         else
@@ -1339,7 +1865,7 @@ static void ProcessKeyboard(void)
 }
 #endif  // SUPPORT_SSH_KEYBOARD_RPI
 
-// Initialise user input from evdev(/dev/input/event<N>)
+// Initialize user input from evdev(/dev/input/event<N>)
 // this means mouse, keyboard or gamepad devices
 static void InitEvdevInput(void)
 {
@@ -1347,12 +1873,12 @@ static void InitEvdevInput(void)
     DIR *directory = NULL;
     struct dirent *entity = NULL;
 
-    // Initialise keyboard file descriptor
+    // Initialize keyboard file descriptor
     platform.keyboardFd = -1;
     platform.mouseFd = -1;
 
     // Reset variables
-    for (int i = 0; i < MAX_TOUCH_POINTS; ++i)
+    for (int i = 0; i < MAX_TOUCH_POINTS; i++)
     {
         CORE.Input.Touch.position[i].x = -1;
         CORE.Input.Touch.position[i].y = -1;
@@ -1408,7 +1934,7 @@ static void ConfigureEvdevDevice(char *device)
         return;
     }
 
-    // At this point we have a connection to the device, but we don't yet know what the device is.
+    // At this point we have a connection to the device, but we don't yet know what the device is
     // It could be many things, even as simple as a power button...
     //-------------------------------------------------------------------------------------------------------
 
@@ -1720,7 +2246,8 @@ static void PollMouseEvents(void)
                 }
                 else CORE.Input.Mouse.currentPosition.x += event.value;
 
-                CORE.Input.Touch.position[0].x = CORE.Input.Mouse.currentPosition.x;
+                // NOTE: For DRM touchscreen, do not simulate touch from mouse movement
+                // CORE.Input.Touch.position[0].x = CORE.Input.Mouse.currentPosition.x;
                 touchAction = 2;    // TOUCH_ACTION_MOVE
             }
 
@@ -1733,7 +2260,8 @@ static void PollMouseEvents(void)
                 }
                 else CORE.Input.Mouse.currentPosition.y += event.value;
 
-                CORE.Input.Touch.position[0].y = CORE.Input.Mouse.currentPosition.y;
+                // NOTE: For DRM touchscreen, do not simulate touch from mouse movement
+                // CORE.Input.Touch.position[0].y = CORE.Input.Mouse.currentPosition.y;
                 touchAction = 2;    // TOUCH_ACTION_MOVE
             }
 
@@ -1824,7 +2352,7 @@ static void PollMouseEvents(void)
         }
 
         // Screen confinement
-        if (!CORE.Input.Mouse.cursorHidden)
+        if (!CORE.Input.Mouse.cursorLocked)
         {
             if (CORE.Input.Mouse.currentPosition.x < 0) CORE.Input.Mouse.currentPosition.x = 0;
             if (CORE.Input.Mouse.currentPosition.x > CORE.Window.screen.width/CORE.Input.Mouse.scale.x) CORE.Input.Mouse.currentPosition.x = CORE.Window.screen.width/CORE.Input.Mouse.scale.x;
@@ -1874,7 +2402,7 @@ static int FindMatchingConnectorMode(const drmModeConnector *connector, const dr
     for (size_t i = 0; i < connector->count_modes; i++)
     {
         TRACELOG(LOG_TRACE, "DISPLAY: DRM mode: %d %ux%u@%u %s", i, connector->modes[i].hdisplay, connector->modes[i].vdisplay,
-            connector->modes[i].vrefresh, (connector->modes[i].flags & DRM_MODE_FLAG_INTERLACE)? "interlaced" : "progressive");
+            connector->modes[i].vrefresh, (FLAG_IS_SET(connector->modes[i].flags, DRM_MODE_FLAG_INTERLACE) > 0)? "interlaced" : "progressive");
 
         if (0 == BINCMP(&platform.crtc->mode, &platform.connector->modes[i])) return i;
     }
@@ -1895,9 +2423,9 @@ static int FindExactConnectorMode(const drmModeConnector *connector, uint width,
     {
         const drmModeModeInfo *const mode = &platform.connector->modes[i];
 
-        TRACELOG(LOG_TRACE, "DISPLAY: DRM Mode %d %ux%u@%u %s", i, mode->hdisplay, mode->vdisplay, mode->vrefresh, (mode->flags & DRM_MODE_FLAG_INTERLACE)? "interlaced" : "progressive");
+        TRACELOG(LOG_TRACE, "DISPLAY: DRM Mode %d %ux%u@%u %s", i, mode->hdisplay, mode->vdisplay, mode->vrefresh, (FLAG_IS_SET(mode->flags, DRM_MODE_FLAG_INTERLACE) > 0)? "interlaced" : "progressive");
 
-        if ((mode->flags & DRM_MODE_FLAG_INTERLACE) && !allowInterlaced) continue;
+        if ((FLAG_IS_SET(mode->flags, DRM_MODE_FLAG_INTERLACE) > 0) && !allowInterlaced) continue;
 
         if ((mode->hdisplay == width) && (mode->vdisplay == height) && (mode->vrefresh == fps)) return i;
     }
@@ -1914,12 +2442,14 @@ static int FindNearestConnectorMode(const drmModeConnector *connector, uint widt
     if (NULL == connector) return -1;
 
     int nearestIndex = -1;
+    int minUnusedPixels = INT_MAX;
+    int minFpsDiff = INT_MAX;
     for (int i = 0; i < platform.connector->count_modes; i++)
     {
         const drmModeModeInfo *const mode = &platform.connector->modes[i];
 
         TRACELOG(LOG_TRACE, "DISPLAY: DRM mode: %d %ux%u@%u %s", i, mode->hdisplay, mode->vdisplay, mode->vrefresh,
-            (mode->flags & DRM_MODE_FLAG_INTERLACE)? "interlaced" : "progressive");
+            (FLAG_IS_SET(mode->flags, DRM_MODE_FLAG_INTERLACE) > 0)? "interlaced" : "progressive");
 
         if ((mode->hdisplay < width) || (mode->vdisplay < height))
         {
@@ -1927,27 +2457,23 @@ static int FindNearestConnectorMode(const drmModeConnector *connector, uint widt
             continue;
         }
 
-        if ((mode->flags & DRM_MODE_FLAG_INTERLACE) && !allowInterlaced)
+        if ((FLAG_IS_SET(mode->flags, DRM_MODE_FLAG_INTERLACE) > 0) && !allowInterlaced)
         {
             TRACELOG(LOG_TRACE, "DISPLAY: DRM shouldn't choose an interlaced mode");
             continue;
         }
 
-        if (nearestIndex < 0)
+        const int unusedPixels = (mode->hdisplay - width)*(mode->vdisplay - height);
+        const int fpsDiff = mode->vrefresh - fps;
+
+        if ((unusedPixels < minUnusedPixels) ||
+            ((unusedPixels == minUnusedPixels) && (abs(fpsDiff) < abs(minFpsDiff))) ||
+            ((unusedPixels == minUnusedPixels) && (abs(fpsDiff) == abs(minFpsDiff)) && (fpsDiff > 0)))
         {
             nearestIndex = i;
-            continue;
+            minUnusedPixels = unusedPixels;
+            minFpsDiff = fpsDiff;
         }
-
-        const int widthDiff = abs(mode->hdisplay - width);
-        const int heightDiff = abs(mode->vdisplay - height);
-        const int fpsDiff = abs(mode->vrefresh - fps);
-
-        const int nearestWidthDiff = abs(platform.connector->modes[nearestIndex].hdisplay - width);
-        const int nearestHeightDiff = abs(platform.connector->modes[nearestIndex].vdisplay - height);
-        const int nearestFpsDiff = abs(platform.connector->modes[nearestIndex].vrefresh - fps);
-
-        if ((widthDiff < nearestWidthDiff) || (heightDiff < nearestHeightDiff) || (fpsDiff < nearestFpsDiff)) nearestIndex = i;
     }
 
     return nearestIndex;
