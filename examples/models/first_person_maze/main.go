@@ -47,6 +47,8 @@ func main() {
 	mapPosition := rl.NewVector3(-16.0, 0.0, -8.0) // Set model position
 
 	rl.SetTargetFPS(60) // Set our game to run at 60 frames-per-second
+
+	rl.DisableCursor() // Locking the cursor to enable camera control with mouse
 	//--------------------------------------------------------------------------------------
 
 	// Main game loop
