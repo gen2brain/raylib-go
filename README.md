@@ -22,7 +22,7 @@ It is also possible to use raylib-go without cgo (Windows only; see requirements
 
       apt-get install -y libegl1-mesa-dev libdrm-dev libgbm-dev
 
-- For `-tags sdl2` (SDL2 backend):
+- For `-tags sdl` (SDL2 backend):
 
       apt-get install -y libsdl2-dev libgl1-mesa-dev
 
@@ -38,7 +38,7 @@ It is also possible to use raylib-go without cgo (Windows only; see requirements
 
 ###### Additional packages by build tag:
 
-- SDL2 (`-tags sdl2`):
+- SDL2 (`-tags sdl`):
 
       brew install sdl2
 
@@ -78,7 +78,7 @@ For web bindings, refer to [Raylib-Go-Wasm](https://github.com/BrownNPC/Raylib-G
 ### Build tags
 
 * `drm` - build for Linux native [DRM](https://en.wikipedia.org/wiki/Direct_Rendering_Manager) mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM)
-* `sdl2` - build for [SDL2](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL)
+* `sdl` - build for [SDL2](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL)
 * `sdl3` - build for [SDL3](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL3)
 * `rgfw` - build for [RGFW](https://github.com/ColleagueRiley/RGFW) backend (PLATFORM_DESKTOP_RGFW)
 * `noaudio` - disables audio functions

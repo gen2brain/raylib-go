@@ -1,14 +1,14 @@
-//go:build freebsd && !linux && sdl2 && !rgfw && !drm && !android
-// +build freebsd,!linux,sdl2,!rgfw,!drm,!android
+//go:build freebsd && !linux && sdl && !rgfw && !drm && !android
+// +build freebsd,!linux,sdl,!rgfw,!drm,!android
 
 package rl
 
 /*
 #cgo freebsd CFLAGS: -I. -I/usr/local/include
-#cgo freebsd,sdl2 CFLAGS: -DPLATFORM_DESKTOP_SDL -DUSING_SDL2_PROJECT
+#cgo freebsd,sdl CFLAGS: -DPLATFORM_DESKTOP_SDL -DUSING_SDL2_PROJECT
 #cgo freebsd LDFLAGS: -L/usr/local/lib
 
-#cgo freebsd,sdl2 pkg-config: sdl2
+#cgo freebsd,sdl pkg-config: sdl2
 
 #cgo freebsd,!es2,!es3 LDFLAGS: -lGL
 
