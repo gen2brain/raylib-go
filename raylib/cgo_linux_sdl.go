@@ -1,17 +1,13 @@
-//go:build linux && sdl && !rgfw && !drm && !android
-// +build linux
-// +build sdl
-// +build !rgfw
-// +build !drm
-// +build !android
+//go:build linux && sdl2 && !rgfw && !drm && !android
+// +build linux,sdl2,!rgfw,!drm,!android
 
 package rl
 
 /*
 #cgo linux,!es2 LDFLAGS: -lm
 #cgo linux CFLAGS: -Wno-stringop-overflow
-#cgo linux,sdl CFLAGS: -DPLATFORM_DESKTOP_SDL -DUSING_SDL2_PROJECT
-#cgo linux,sdl pkg-config: sdl2
+#cgo linux,sdl2 CFLAGS: -DPLATFORM_DESKTOP_SDL -DUSING_SDL2_PROJECT
+#cgo linux,sdl2 pkg-config: sdl2
 
 #cgo linux,!es2,!es3 LDFLAGS: -lGL
 

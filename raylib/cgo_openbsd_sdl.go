@@ -1,19 +1,14 @@
-//go:build openbsd && !linux && sdl && !rgfw && !drm && !android
-// +build openbsd
-// +build !linux
-// +build sdl
-// +build !rgfw
-// +build !drm
-// +build !android
+//go:build openbsd && !linux && sdl2 && !rgfw && !drm && !android
+// +build openbsd,!linux,sdl2,!rgfw,!drm,!android
 
 package rl
 
 /*
 #cgo openbsd CFLAGS: -I. -I/usr/X11R6/include
-#cgo openbsd,sdl CFLAGS: -DPLATFORM_DESKTOP_SDL -DUSING_SDL2_PROJECT
+#cgo openbsd,sdl2 CFLAGS: -DPLATFORM_DESKTOP_SDL -DUSING_SDL2_PROJECT
 #cgo openbsd LDFLAGS: -L/usr/X11R6/lib
 
-#cgo openbsd,sdl pkg-config: sdl2
+#cgo openbsd,sdl2 pkg-config: sdl2
 
 #cgo openbsd,!es2,!es3 LDFLAGS: -lGL
 

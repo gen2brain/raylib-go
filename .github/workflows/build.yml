@@ -61,7 +61,7 @@ jobs:
       run: go build -tags drm
       working-directory: raylib
 
-  test-sdl:
+  test-sdl2:
     strategy:
       matrix:
         go-version: [1.21.x]

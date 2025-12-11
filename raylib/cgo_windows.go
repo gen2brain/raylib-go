@@ -1,5 +1,5 @@
-//go:build windows && !rgfw && !sdl && !sdl3
-// +build windows,!rgfw,!sdl,!sdl3
+//go:build windows && !rgfw && !sdl2 && !sdl3
+// +build windows,!rgfw,!sdl2,!sdl3
 
 package rl
 
