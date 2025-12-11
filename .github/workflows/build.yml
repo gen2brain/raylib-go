@@ -128,7 +128,7 @@ jobs:
         cd SDL
         mkdir build
         cd build
-        cmake .. -DSDL_SHARED=ON -DSDL_STATIC=OFF # or configure as needed
+        cmake .. -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_UNIX_CONSOLE_BUILD=ON
         make -j$(nproc)
         sudo make install
     - name: Install SDL3 (macOS)
