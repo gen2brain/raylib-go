@@ -13,22 +13,9 @@ It is also possible to use raylib-go without cgo (Windows only; see requirements
 
 ### Requirements
 
-##### Ubuntu/Debian
-    apt-get install -y libgl1-mesa-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev libwayland-dev libxkbcommon-dev
+##### Ubuntu
 
-###### Additional packages by build tag:
-
-- For `-tags drm` (native DRM/KMS):
-
-      apt-get install -y libegl1-mesa-dev libdrm-dev libgbm-dev
-
-- For `-tags sdl` (SDL2 backend):
-
-      apt-get install -y libsdl2-dev libgl1-mesa-dev
-
-- For `-tags sdl3` (SDL3 backend):
-
-      apt-get install -y libsdl3-dev libgl1-mesa-dev
+    apt-get install libgl1-mesa-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev libwayland-dev libxkbcommon-dev
 
 ##### Fedora
 
@@ -36,15 +23,7 @@ It is also possible to use raylib-go without cgo (Windows only; see requirements
 
 ##### macOS
 
-###### Additional packages by build tag:
-
-- SDL2 (`-tags sdl`):
-
-      brew install sdl2
-
-- SDL3 (`-tags sdl3`):
-
-      brew install sdl3
+On macOS, you need Xcode or Command Line Tools for Xcode (if you have `brew` installed, you already have this).
 
 ##### Windows
 
@@ -78,7 +57,7 @@ For web bindings, refer to [Raylib-Go-Wasm](https://github.com/BrownNPC/Raylib-G
 ### Build tags
 
 * `drm` - build for Linux native [DRM](https://en.wikipedia.org/wiki/Direct_Rendering_Manager) mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM)
-* `sdl` - build for [SDL2](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL)
+* `sdl` - build for [SDL](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL)
 * `sdl3` - build for [SDL3](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL3)
 * `rgfw` - build for [RGFW](https://github.com/ColleagueRiley/RGFW) backend (PLATFORM_DESKTOP_RGFW)
 * `noaudio` - disables audio functions
