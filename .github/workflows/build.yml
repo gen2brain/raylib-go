@@ -65,7 +65,7 @@ jobs:
     strategy:
       matrix:
         go-version: [1.21.x]
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install Go
@@ -74,12 +74,83 @@ jobs:
         go-version: ${{ matrix.go-version }}
     - name: Checkout code
       uses: actions/checkout@v3
-    - name: Install package
+    - name: Install package (Linux)
       run: |
         sudo apt-get update -y; sudo apt-get -y install libgl1-mesa-dev libsdl2-dev
-    - name: Build
+      if: runner.os == 'Linux'
+    - name: Install package (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew update
+        brew install sdl2
+    - name: Setup MSYS2 and SDL2 (Windows)
+      if: runner.os == 'Windows'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-pkg-config
+          mingw-w64-x86_64-SDL2
+    - name: Build (SDL2, non-Windows)
+      if: runner.os != 'Windows'
       run: go build -tags sdl
       working-directory: raylib
+    - name: Build (SDL2, Windows)
+      if: runner.os == 'Windows'
+      shell: msys2 {0}
+      run: go build -tags sdl
+      working-directory: raylib
+      env:
+        CGO_ENABLED: 1
+        CC: x86_64-w64-mingw32-gcc
+
+  test-sdl3:
+    strategy:
+      matrix:
+        go-version: [1.21.x]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Install SDL3 (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update -y
+        sudo apt-get -y install libgl1-mesa-dev libsdl3-dev
+    - name: Install SDL3 (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew update
+        brew install sdl3
+    - name: Setup MSYS2 and SDL3 (Windows)
+      if: runner.os == 'Windows'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-pkg-config
+          mingw-w64-x86_64-SDL3
+    - name: Build (SDL3, non-Windows)
+      if: runner.os != 'Windows'
+      run: go build -tags sdl3
+      working-directory: raylib
+    - name: Build (SDL3, Windows)
+      if: runner.os == 'Windows'
+      shell: msys2 {0}
+      run: go build -tags sdl3
+      working-directory: raylib
+      env:
+        CGO_ENABLED: 1
+        CC: x86_64-w64-mingw32-gcc
 
   test-rgfw:
     strategy:
