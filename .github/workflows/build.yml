@@ -95,12 +95,12 @@ jobs:
           mingw-w64-x86_64-SDL2
     - name: Build (SDL2, non-Windows)
       if: runner.os != 'Windows'
-      run: go build -tags sdl
+      run: go build -tags sdl2
       working-directory: raylib
     - name: Build (SDL2, Windows)
       if: runner.os == 'Windows'
       shell: msys2 {0}
-      run: go build -tags sdl
+      run: go build -tags sdl2
       working-directory: raylib
       env:
         CGO_ENABLED: 1
@@ -123,7 +123,14 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update -y
-        sudo apt-get -y install libgl1-mesa-dev libsdl3-dev
+        sudo apt-get -y install libgl1-mesa-dev
+        git clone https://github.com/libsdl-org/SDL.git
+        cd SDL
+        mkdir build
+        cd build
+        cmake .. -DSDL_SHARED=ON -DSDL_STATIC=OFF # or configure as needed
+        make -j$(nproc)
+        sudo make install
     - name: Install SDL3 (macOS)
       if: runner.os == 'macOS'
       run: |
