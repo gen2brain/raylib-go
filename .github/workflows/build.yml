@@ -145,7 +145,7 @@ jobs:
         install: >-
           mingw-w64-x86_64-gcc
           mingw-w64-x86_64-pkg-config
-          mingw-w64-x86_64-SDL3
+          mingw-w64-x86_64-sdl3
     - name: Build (SDL3, non-Windows)
       if: runner.os != 'Windows'
       run: go build -tags sdl3
