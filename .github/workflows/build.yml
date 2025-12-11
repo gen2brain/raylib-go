@@ -152,13 +152,15 @@ jobs:
       working-directory: raylib
     - name: Build (SDL3, Windows)
       if: runner.os == 'Windows'
+      # Keep the msys2 shell setting
       shell: msys2 {0}
-      run: go build -tags sdl3
-      working-directory: raylib
+      run: |
+        source "$ONGOPATH"
+        cd raylib
+        go build -tags sdl3
       env:
         CGO_ENABLED: 1
         CC: x86_64-w64-mingw32-gcc
-        PATH: ${{ env.PATH }}
 
   test-rgfw:
     strategy:
