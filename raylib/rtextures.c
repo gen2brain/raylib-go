@@ -36,7 +36,7 @@
 *
 *   DEPENDENCIES:
 *       stb_image        - Multiple image formats loading (JPEG, PNG, BMP, TGA, PSD, GIF, PIC)
-*                          NOTE: stb_image has been slightly modified to support Android platform.
+*                          NOTE: stb_image has been slightly modified to support Android platform
 *       stb_image_resize - Multiple image resize algorithms
 *
 *
@@ -169,10 +169,13 @@
         #pragma GCC diagnostic ignored "-Wunused-function"
     #endif
 
+    #define RL_GPUTEX_MALLOC RL_MALLOC
+    #define RL_GPUTEX_FREE RL_FREE
+    #define RL_GPUTEX_LOG(...) TRACELOG(LOG_WARNING, "IMAGE: " __VA_ARGS__)
+    #define RL_GPUTEX_SHOW_LOG_INFO
     #define RL_GPUTEX_IMPLEMENTATION
     #include "external/rl_gputex.h"         // Required for: rl_load_xxx_from_memory()
                                             // NOTE: Used to read compressed textures data (multiple formats support)
-
     #if defined(__GNUC__) // GCC and Clang
         #pragma GCC diagnostic pop
     #endif
@@ -255,7 +258,7 @@
 extern void LoadFontDefault(void);          // [Module: text] Loads default font, required by ImageDrawText()
 
 //----------------------------------------------------------------------------------
-// Module specific Functions Declaration
+// Module Internal Functions Declaration
 //----------------------------------------------------------------------------------
 static float HalfToFloat(unsigned short x);
 static unsigned short FloatToHalf(float x);
@@ -264,7 +267,6 @@ static Vector4 *LoadImageDataNormalized(Image image);       // Load pixel data f
 //----------------------------------------------------------------------------------
 // Module Functions Definition
 //----------------------------------------------------------------------------------
-
 // Load image from file into CPU memory (RAM)
 Image LoadImage(const char *fileName)
 {
@@ -419,7 +421,7 @@ Image LoadImageFromMemory(const char *fileType, const unsigned char *fileData, i
 {
     Image image = { 0 };
 
-    // Security check for input data
+    // Security checks for input data
     if ((fileData == NULL) || (dataSize == 0))
     {
         TRACELOG(LOG_WARNING, "IMAGE: Invalid file data");
@@ -512,7 +514,7 @@ Image LoadImageFromMemory(const char *fileType, const unsigned char *fileData, i
             image.data = qoi_decode(fileData, dataSize, &desc, (int) fileData[12]);
             image.width = desc.width;
             image.height = desc.height;
-            image.format = desc.channels == 4 ? PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 : PIXELFORMAT_UNCOMPRESSED_R8G8B8;
+            image.format = (desc.channels == 4)? PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 : PIXELFORMAT_UNCOMPRESSED_R8G8B8;
             image.mipmaps = 1;
         }
     }
@@ -590,11 +592,10 @@ Image LoadImageFromTexture(Texture2D texture)
 // Load image from screen buffer and (screenshot)
 Image LoadImageFromScreen(void)
 {
-    Vector2 scale = GetWindowScaleDPI();
     Image image = { 0 };
 
-    image.width = (int)(GetScreenWidth()*scale.x);
-    image.height = (int)(GetScreenHeight()*scale.y);
+    image.width = (int)(GetRenderWidth());
+    image.height = (int)(GetRenderHeight());
     image.mipmaps = 1;
     image.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
     image.data = rlReadScreenPixels(image.width, image.height);
@@ -647,16 +648,15 @@ bool ExportImage(Image image, const char *fileName)
         allocatedData = true;
     }
 
+    if (false) { } // Required to attach following 'else' cases
 #if defined(SUPPORT_FILEFORMAT_PNG)
-    if (IsFileExtension(fileName, ".png"))
+    else if (IsFileExtension(fileName, ".png"))
     {
         int dataSize = 0;
         unsigned char *fileData = stbi_write_png_to_mem((const unsigned char *)imgData, image.width*channels, image.width, image.height, channels, &dataSize);
         result = SaveFileData(fileName, fileData, dataSize);
         RL_FREE(fileData);
     }
-#else
-    if (false) { }
 #endif
 #if defined(SUPPORT_FILEFORMAT_BMP)
     else if (IsFileExtension(fileName, ".bmp")) result = stbi_write_bmp(fileName, image.width, image.height, channels, imgData);
@@ -700,6 +700,7 @@ bool ExportImage(Image image, const char *fileName)
         // NOTE: It's up to the user to track image parameters
         result = SaveFileData(fileName, image.data, GetPixelDataSize(image.width, image.height, image.format));
     }
+    else TRACELOG(LOG_WARNING, "IMAGE: Export image format requested not supported");
 
     if (allocatedData) RL_FREE(imgData);
 #endif      // SUPPORT_IMAGE_EXPORT
@@ -810,8 +811,8 @@ Image GenImageColor(int width, int height, Color color)
         .data = pixels,
         .width = width,
         .height = height,
-        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
-        .mipmaps = 1
+        .mipmaps = 1,
+        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
     };
 
     return image;
@@ -862,8 +863,8 @@ Image GenImageGradientLinear(int width, int height, int direction, Color start, 
         .data = pixels,
         .width = width,
         .height = height,
-        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
-        .mipmaps = 1
+        .mipmaps = 1,
+        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
     };
 
     return image;
@@ -899,8 +900,8 @@ Image GenImageGradientRadial(int width, int height, float density, Color inner, 
         .data = pixels,
         .width = width,
         .height = height,
-        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
-        .mipmaps = 1
+        .mipmaps = 1,
+        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
     };
 
     return image;
@@ -948,8 +949,8 @@ Image GenImageGradientSquare(int width, int height, float density, Color inner, 
         .data = pixels,
         .width = width,
         .height = height,
-        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
-        .mipmaps = 1
+        .mipmaps = 1,
+        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
     };
 
     return image;
@@ -973,8 +974,8 @@ Image GenImageChecked(int width, int height, int checksX, int checksY, Color col
         .data = pixels,
         .width = width,
         .height = height,
-        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
-        .mipmaps = 1
+        .mipmaps = 1,
+        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
     };
 
     return image;
@@ -996,8 +997,8 @@ Image GenImageWhiteNoise(int width, int height, float factor)
         .data = pixels,
         .width = width,
         .height = height,
-        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
-        .mipmaps = 1
+        .mipmaps = 1,
+        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
     };
 
     return image;
@@ -1038,7 +1039,7 @@ Image GenImagePerlinNoise(int width, int height, int offsetX, int offsetY, float
             // We need to normalize the data from [-1..1] to [0..1]
             float np = (p + 1.0f)/2.0f;
 
-            int intensity = (int)(np*255.0f);
+            unsigned char intensity = (unsigned char)(np*255.0f);
             pixels[y*width + x] = (Color){ intensity, intensity, intensity, 255 };
         }
     }
@@ -1047,8 +1048,8 @@ Image GenImagePerlinNoise(int width, int height, int offsetX, int offsetY, float
         .data = pixels,
         .width = width,
         .height = height,
-        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
-        .mipmaps = 1
+        .mipmaps = 1,
+        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
     };
 
     return image;
@@ -1098,11 +1099,12 @@ Image GenImageCellular(int width, int height, int tileSize)
                 }
             }
 
-            // I made this up, but it seems to give good results at all tile sizes
+            // This approach seems to give good results at all tile sizes
             int intensity = (int)(minDistance*256.0f/tileSize);
             if (intensity > 255) intensity = 255;
 
-            pixels[y*width + x] = (Color){ intensity, intensity, intensity, 255 };
+            unsigned char intensityUC = (unsigned char)intensity;
+            pixels[y*width + x] = (Color){ intensityUC, intensityUC, intensityUC, 255 };
         }
     }
 
@@ -1112,8 +1114,8 @@ Image GenImageCellular(int width, int height, int tileSize)
         .data = pixels,
         .width = width,
         .height = height,
-        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
-        .mipmaps = 1
+        .mipmaps = 1,
+        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
     };
 
     return image;
@@ -1710,7 +1712,7 @@ Image ImageFromChannel(Image image, int selectedChannel)
 }
 
 // Resize and image to new size using Nearest-Neighbor scaling algorithm
-void ImageResizeNN(Image *image,int newWidth,int newHeight)
+void ImageResizeNN(Image *image, int newWidth, int newHeight)
 {
     // Security check to avoid program crash
     if ((image->data == NULL) || (image->width == 0) || (image->height == 0)) return;
@@ -2217,9 +2219,9 @@ void ImageBlurGaussian(Image *image, int blurSize)
         else if (pixelsCopy1[i].w <= 255.0f)
         {
             float alpha = (float)pixelsCopy1[i].w/255.0f;
-            pixels[i].r = (unsigned char)((float)pixelsCopy1[i].x/alpha);
-            pixels[i].g = (unsigned char)((float)pixelsCopy1[i].y/alpha);
-            pixels[i].b = (unsigned char)((float)pixelsCopy1[i].z/alpha);
+            pixels[i].r = (unsigned char)fminf((float)pixelsCopy1[i].x/alpha, 255.0);
+            pixels[i].g = (unsigned char)fminf((float)pixelsCopy1[i].y/alpha, 255.0);
+            pixels[i].b = (unsigned char)fminf((float)pixelsCopy1[i].z/alpha, 255.0);
             pixels[i].a = (unsigned char) pixelsCopy1[i].w;
         }
     }
@@ -2397,13 +2399,14 @@ void ImageMipmaps(Image *image)
 
     if (image->mipmaps < mipCount)
     {
-        void *temp = RL_REALLOC(image->data, mipSize);
-
-        if (temp != NULL) image->data = temp;      // Assign new pointer (new size) to store mipmaps data
-        else TRACELOG(LOG_WARNING, "IMAGE: Mipmaps required memory could not be allocated");
+        // Create second buffer and copy data manually to it
+        void *temp = RL_CALLOC(mipSize, 1);
+        memcpy(temp, image->data, GetPixelDataSize(image->width, image->height, image->format));
+        RL_FREE(image->data);
+        image->data = temp;
 
         // Pointer to allocated memory point where store next mipmap level data
-        unsigned char *nextmip = image->data;
+        unsigned char *nextmip = (unsigned char *)image->data;
 
         mipWidth = image->width;
         mipHeight = image->height;
@@ -2426,9 +2429,7 @@ void ImageMipmaps(Image *image)
             if (i < image->mipmaps) continue;
 
             TRACELOGD("IMAGE: Generating mipmap level: %i (%i x %i) - size: %i - offset: 0x%x", i, mipWidth, mipHeight, mipSize, nextmip);
-
             ImageResize(&imCopy, mipWidth, mipHeight); // Uses internally Mitchell cubic downscale filter
-
             memcpy(nextmip, imCopy.data, mipSize);
         }
 
@@ -2927,7 +2928,16 @@ void ImageColorReplace(Image *image, Color color, Color replace)
     image->data = pixels;
     image->format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
 
-    ImageFormat(image, format);
+    // Only convert back to original format if it supported alpha
+    if ((format == PIXELFORMAT_UNCOMPRESSED_R8G8B8) ||
+        (format == PIXELFORMAT_UNCOMPRESSED_R5G6B5) ||
+        (format == PIXELFORMAT_UNCOMPRESSED_GRAYSCALE) ||
+        (format == PIXELFORMAT_UNCOMPRESSED_R32G32B32) ||
+        (format == PIXELFORMAT_UNCOMPRESSED_R16G16B16) ||
+        (format == PIXELFORMAT_COMPRESSED_DXT1_RGB) ||
+        (format == PIXELFORMAT_COMPRESSED_ETC1_RGB) ||
+        (format == PIXELFORMAT_COMPRESSED_ETC2_RGB) ||
+        (format == PIXELFORMAT_COMPRESSED_PVRT_RGB)) ImageFormat(image, format);
 }
 #endif      // SUPPORT_IMAGE_MANIPULATION
 
@@ -3331,11 +3341,14 @@ void ImageClearBackground(Image *dst, Color color)
 
     unsigned char *pSrcPixel = (unsigned char *)dst->data;
     int bytesPerPixel = GetPixelDataSize(1, 1, dst->format);
+    int totalPixels = dst->width*dst->height;
 
-    // Repeat the first pixel data throughout the image
-    for (int i = 1; i < dst->width*dst->height; i++)
+    // Repeat the first pixel data throughout the image,
+    // doubling the pixels copied on each iteration
+    for (int i = 1; i < totalPixels; i *= 2)
     {
-        memcpy(pSrcPixel + i*bytesPerPixel, pSrcPixel, bytesPerPixel);
+        int pixelsToCopy = MIN(i, totalPixels - i);
+        memcpy(pSrcPixel + i*bytesPerPixel, pSrcPixel, pixelsToCopy*bytesPerPixel);
     }
 }
 
@@ -3565,34 +3578,43 @@ void ImageDrawLineEx(Image *dst, Vector2 start, Vector2 end, int thick, Color co
     int dx = x2 - x1;
     int dy = y2 - y1;
 
-    // Draw the main line between (x1, y1) and (x2, y2)
-    ImageDrawLine(dst, x1, y1, x2, y2, color);
-
     // Determine if the line is more horizontal or vertical
     if ((dx != 0) && (abs(dy/dx) < 1))
     {
         // Line is more horizontal
-        // Calculate half the width of the line
-        int wy = (thick - 1)*(int)sqrtf((float)(dx*dx + dy*dy))/(2*abs(dx));
 
-        // Draw additional lines above and below the main line
-        for (int i = 1; i <= wy; i++)
+        // How many additional lines to draw
+        int wy = thick - 1;
+
+        // Draw the main line and lower half
+        for (int i = 0; i <= ((wy+1)/2); i++)
         {
-            ImageDrawLine(dst, x1, y1 - i, x2, y2 - i, color); // Draw above the main line
-            ImageDrawLine(dst, x1, y1 + i, x2, y2 + i, color); // Draw below the main line
+            ImageDrawLine(dst, x1, y1 + i, x2, y2 + i, color);
+        }
+
+        // Draw the upper half
+        for (int i = 1; i <= (wy/2); i++)
+        {
+            ImageDrawLine(dst, x1, y1 - i, x2, y2 - i, color);
         }
     }
     else if (dy != 0)
     {
         // Line is more vertical or perfectly horizontal
-        // Calculate half the width of the line
-        int wx = (thick - 1)*(int)sqrtf((float)(dx*dx + dy*dy))/(2*abs(dy));
 
-        // Draw additional lines to the left and right of the main line
-        for (int i = 1; i <= wx; i++)
+        // How many additional lines to draw
+        int wx = thick - 1;
+
+        //Draw the main line and right half
+        for (int i = 0; i <= ((wx+1)/2); i++)
         {
-            ImageDrawLine(dst, x1 - i, y1, x2 - i, y2, color); // Draw left of the main line
-            ImageDrawLine(dst, x1 + i, y1, x2 + i, y2, color); // Draw right of the main line
+            ImageDrawLine(dst, x1 + i, y1, x2 + i, y2, color);
+        }
+
+        // Draw the left half
+        for (int i = 1; i <= (wx/2); i++)
+        {
+            ImageDrawLine(dst, x1 - i, y1, x2 - i, y2, color);
         }
     }
 }
@@ -3705,9 +3727,10 @@ void ImageDrawRectangleRec(Image *dst, Rectangle rec, Color color)
     unsigned char *pSrcPixel = (unsigned char *)dst->data + bytesOffset;
 
     // Repeat the first pixel data throughout the row
-    for (int x = 1; x < (int)rec.width; x++)
+    for (int x = 1; x < (int)rec.width; x *= 2)
     {
-        memcpy(pSrcPixel + x*bytesPerPixel, pSrcPixel, bytesPerPixel);
+        int pixelsToCopy = MIN(x, (int)rec.width - x);
+        memcpy(pSrcPixel + x*bytesPerPixel, pSrcPixel, pixelsToCopy*bytesPerPixel);
     }
 
     // Repeat the first row data for all other rows
@@ -3978,9 +4001,7 @@ void ImageDraw(Image *dst, Image src, Rectangle srcRec, Rectangle dstRec, Color 
         //    [x] Consider fast path: no alpha blending required cases (src has no alpha)
         //    [x] Consider fast path: same src/dst format with no alpha -> direct line copy
         //    [-] GetPixelColor(): Get Vector4 instead of Color, easier for ColorAlphaBlend()
-        //    [ ] Support f32bit channels drawing
-
-        // TODO: Support PIXELFORMAT_UNCOMPRESSED_R32G32B32A32 and PIXELFORMAT_UNCOMPRESSED_R1616B16A16
+        //    [ ] TODO: Support 16bit and 32bit (float) channels drawing
 
         Color colSrc, colDst, blend;
         bool blendRequired = true;
@@ -4178,7 +4199,7 @@ TextureCubemap LoadTextureCubemap(Image image, int layout)
         }
         /*else if (layout == CUBEMAP_LAYOUT_PANORAMA)
         {
-            // TODO: implement panorama by converting image to square faces...
+            // TODO: Implement panorama by converting image to square faces...
             // Ref: https://github.com/denivip/panorama/blob/master/panorama.cpp
         } */
         else
@@ -4204,6 +4225,7 @@ TextureCubemap LoadTextureCubemap(Image image, int layout)
             }
 
             // Convert image data to 6 faces in a vertical column, that's the optimum layout for loading
+            // NOTE: Image formatting does not work with compressed textures
             faces = GenImageColor(size, size*6, MAGENTA);
             ImageFormat(&faces, image.format);
 
@@ -4215,8 +4237,6 @@ TextureCubemap LoadTextureCubemap(Image image, int layout)
                 ImageMipmaps(&faces);
             }
         #endif
-
-            // NOTE: Image formatting does not work with compressed textures
 
             for (int i = 0; i < 6; i++) ImageDraw(&faces, mipmapped, faceRecs[i], (Rectangle){ 0, (float)size*i, (float)size, (float)size }, WHITE);
 
@@ -4286,13 +4306,11 @@ bool IsTextureValid(Texture2D texture)
 {
     bool result = false;
 
-    // TODO: Validate maximum texture size supported by GPU
-
     if ((texture.id > 0) &&         // Validate OpenGL id (texture uplaoded to GPU)
         (texture.width > 0) &&      // Validate texture width
         (texture.height > 0) &&     // Validate texture height
         (texture.format > 0) &&     // Validate texture pixel format
-        (texture.mipmaps > 0)) result = true;     // Validate texture mipmaps (at least 1 for basic mipmap level)
+        (texture.mipmaps > 0)) result = true; // Validate texture mipmaps (at least 1 for basic mipmap level)
 
     return result;
 }
@@ -4338,14 +4356,17 @@ void UnloadRenderTexture(RenderTexture2D target)
 }
 
 // Update GPU texture with new data
-// NOTE: pixels data must match texture.format
+// NOTE 1: pixels data must match texture.format
+// NOTE 2: pixels data must contain at least as many pixels as texture
 void UpdateTexture(Texture2D texture, const void *pixels)
 {
     rlUpdateTexture(texture.id, 0, 0, texture.width, texture.height, texture.format, pixels);
 }
 
 // Update GPU texture rectangle with new data
-// NOTE: pixels data must match texture.format
+// NOTE 1: pixels data must match texture.format
+// NOTE 2: pixels data must contain as many pixels as rec contains
+// NOTE 3: rec must fit completely within texture's width and height
 void UpdateTextureRec(Texture2D texture, Rectangle rec, const void *pixels)
 {
     rlUpdateTexture(texture.id, (int)rec.x, (int)rec.y, (int)rec.width, (int)rec.height, texture.format, pixels);
@@ -4579,7 +4600,7 @@ void DrawTexturePro(Texture2D texture, Rectangle source, Rectangle dest, Vector2
         // NOTE: Vertex position can be transformed using matrices
         // but the process is way more costly than just calculating
         // the vertex positions manually, like done above
-        // I leave here the old implementation for educational purposes,
+        // Old implementation is left here for educational purposes,
         // just in case someone wants to do some performance test
         /*
         rlSetTexture(texture.id);
@@ -5383,10 +5404,10 @@ int GetPixelDataSize(int width, int height, int format)
 }
 
 //----------------------------------------------------------------------------------
-// Module specific Functions Definition
+// Module Internal Functions Definition
 //----------------------------------------------------------------------------------
 // Convert half-float (stored as unsigned short) to float
-// REF: https://stackoverflow.com/questions/1659440/32-bit-to-16-bit-floating-point-conversion/60047308#60047308
+// Ref: https://stackoverflow.com/questions/1659440/32-bit-to-16-bit-floating-point-conversion/60047308#60047308
 static float HalfToFloat(unsigned short x)
 {
     float result = 0.0f;
@@ -5397,7 +5418,7 @@ static float HalfToFloat(unsigned short x)
     } uni;
 
     const unsigned int e = (x & 0x7c00) >> 10; // Exponent
-    const unsigned int m = (x & 0x03cc) << 13; // Mantissa
+    const unsigned int m = (x & 0x03ff) << 13; // Mantissa
     uni.fm = (float)m;
     const unsigned int v = uni.ui >> 23; // Evil log2 bit hack to count leading zeros in denormalized format
     uni.ui = (x & 0x8000) << 16 | (e != 0)*((e + 112) << 23 | m) | ((e == 0)&(m != 0))*((v - 37) << 23 | ((m << (150 - v)) & 0x007fe000)); // sign : normalized : denormalized

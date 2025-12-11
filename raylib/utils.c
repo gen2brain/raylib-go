@@ -82,7 +82,7 @@ static const char *internalDataPath = NULL;         // Android internal data pat
 #endif
 
 //----------------------------------------------------------------------------------
-// Module specific Functions Declaration
+// Module Internal Functions Declaration
 //----------------------------------------------------------------------------------
 #if defined(PLATFORM_ANDROID)
 FILE *funopen(const void *cookie, int (*readfn)(void *, char *, int), int (*writefn)(void *, const char *, int),
@@ -95,9 +95,8 @@ static int android_close(void *cookie);
 #endif
 
 //----------------------------------------------------------------------------------
-// Module Functions Definition - Utilities
+// Module Functions Definition
 //----------------------------------------------------------------------------------
-
 // Set the current threshold (minimum) log level
 void SetTraceLogLevel(int logType) { logTypeLevel = logType; }
 
@@ -204,7 +203,7 @@ unsigned char *LoadFileData(const char *fileName, int *dataSize)
 
             if (size > 0)
             {
-                data = (unsigned char *)RL_MALLOC(size*sizeof(unsigned char));
+                data = (unsigned char *)RL_CALLOC(size, sizeof(unsigned char));
 
                 if (data != NULL)
                 {
@@ -367,7 +366,7 @@ char *LoadFileText(const char *fileName)
 
             if (size > 0)
             {
-                text = (char *)RL_MALLOC((size + 1)*sizeof(char));
+                text = (char *)RL_CALLOC(size + 1, sizeof(char));
 
                 if (text != NULL)
                 {
@@ -375,7 +374,7 @@ char *LoadFileText(const char *fileName)
 
                     // WARNING: \r\n is converted to \n on reading, so,
                     // read bytes count gets reduced by the number of lines
-                    if (count < size) text = RL_REALLOC(text, count + 1);
+                    if (count < size) text = (char *)RL_REALLOC(text, count + 1);
 
                     // Zero-terminate the string
                     text[count] = '\0';
@@ -452,7 +451,7 @@ FILE *android_fopen(const char *fileName, const char *mode)
 {
     if (mode[0] == 'w')
     {
-        // fopen() is mapped to android_fopen() that only grants read access to
+        // NOTE: fopen() is mapped to android_fopen() that only grants read access to
         // assets directory through AAssetManager but we want to also be able to
         // write data when required using the standard stdio FILE access functions
         // Ref: https://stackoverflow.com/questions/11294487/android-writing-saving-files-from-native-code-only
@@ -482,7 +481,7 @@ FILE *android_fopen(const char *fileName, const char *mode)
 #endif  // PLATFORM_ANDROID
 
 //----------------------------------------------------------------------------------
-// Module specific Functions Definition
+// Module Internal Functions Definition
 //----------------------------------------------------------------------------------
 #if defined(PLATFORM_ANDROID)
 static int android_read(void *cookie, char *data, int dataSize)
