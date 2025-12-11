@@ -158,6 +158,7 @@ jobs:
       env:
         CGO_ENABLED: 1
         CC: x86_64-w64-mingw32-gcc
+        PATH: ${{ env.PATH }}
 
   test-rgfw:
     strategy:
