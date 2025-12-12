@@ -333,7 +333,7 @@ func WaveCrop(wave *Wave, initFrame int32, finalFrame int32) {
 func LoadWaveSamples(wave Wave) []float32 {
 	cwave := wave.cptr()
 	ret := C.LoadWaveSamples(*cwave)
-	v := unsafe.Slice((*float32)(unsafe.Pointer(ret)), wave.FrameCount)
+	v := unsafe.Slice((*float32)(unsafe.Pointer(ret)), wave.FrameCount*wave.Channels)
 	return v
 }
 
