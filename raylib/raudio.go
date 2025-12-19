@@ -7,7 +7,7 @@ package rl
 #include "raylib.h"
 #include <stdlib.h>
 
-extern void internalAudioStreamCallbackGo(void *, int);
+__declspec(dllexport) extern void internalAudioStreamCallbackGo(void *, int);
 
 static void audioStreamWrapperCallback(void *data, unsigned int frames) {
 	internalAudioStreamCallbackGo(data, frames);
@@ -17,7 +17,7 @@ static void setAudioStreamCallbackWrapper(AudioStream stream) {
 	SetAudioStreamCallback(stream, audioStreamWrapperCallback);
 }
 
-extern void internalAudioMixedProcessorGo(void *, int);
+__declspec(dllexport) extern void internalAudioMixedProcessorGo(void *, int);
 
 static void audioMixedProcessorCallback(void *data, unsigned int frames) {
 	internalAudioMixedProcessorGo(data, frames);
