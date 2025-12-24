@@ -9,37 +9,37 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: ${{ matrix.go-version }}
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Install package
-        run: |
-          sudo apt-get update -y; sudo apt-get -y install libxi-dev libxinerama-dev libxcursor-dev libxrandr-dev libgl1-mesa-dev libwayland-dev libxkbcommon-dev
-        if: runner.os == 'Linux'
-      - name: Build
-        run: go build ./...
-        working-directory: raylib
-      - name: Verify dependencies
-        run: go mod verify
-        working-directory: raylib
-      - name: Build
-        run: go build -v ./...
-        working-directory: raylib
-      - name: Run go vet
-        run: go vet ./...
-        working-directory: raylib
-      - name: Install staticcheck
-        run: go install honnef.co/go/tools/cmd/staticcheck@latest
-        working-directory: raylib
-      - name: Run staticcheck
-        run: staticcheck ./...
-        working-directory: raylib
-      - name: Run tests
-        run: go test -race -vet=off ./...
-        working-directory: raylib
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Install package
+      run: |
+        sudo apt-get update -y; sudo apt-get -y install libxi-dev libxinerama-dev libxcursor-dev libxrandr-dev libgl1-mesa-dev libwayland-dev libxkbcommon-dev
+      if: runner.os == 'Linux'
+    - name: Build
+      run: go build ./...
+      working-directory: raylib
+    - name: Verify dependencies
+      run: go mod verify
+      working-directory: raylib
+    - name: Build
+      run: go build -v ./...
+      working-directory: raylib
+    - name: Run go vet
+      run: go vet ./...
+      working-directory: raylib
+    - name: Install staticcheck
+      run: go install honnef.co/go/tools/cmd/staticcheck@latest
+      working-directory: raylib
+    - name: Run staticcheck
+      run: staticcheck ./...
+      working-directory: raylib
+    - name: Run tests
+      run: go test -race -vet=off ./...
+      working-directory: raylib
 
   test-drm:
     strategy:
@@ -48,18 +48,18 @@ jobs:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: ${{ matrix.go-version }}
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Install package
-        run: |
-          sudo apt-get update -y; sudo apt-get -y install libegl1-mesa-dev libdrm-dev libgbm-dev
-      - name: Build
-        run: go build -tags drm
-        working-directory: raylib
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Install package
+      run: |
+        sudo apt-get update -y; sudo apt-get -y install libegl1-mesa-dev libdrm-dev libgbm-dev
+    - name: Build
+      run: go build -tags drm
+      working-directory: raylib
 
   test-sdl:
     strategy:
@@ -68,18 +68,18 @@ jobs:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: ${{ matrix.go-version }}
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Install package
-        run: |
-          sudo apt-get update -y; sudo apt-get -y install libgl1-mesa-dev libsdl2-dev
-      - name: Build
-        run: go build -tags sdl
-        working-directory: raylib
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Install package
+      run: |
+        sudo apt-get update -y; sudo apt-get -y install libgl1-mesa-dev libsdl2-dev
+    - name: Build
+      run: go build -tags sdl
+      working-directory: raylib
 
   test-rgfw:
     strategy:
@@ -89,19 +89,19 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: ${{ matrix.go-version }}
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Install package
-        run: |
-          sudo apt-get update -y; sudo apt-get -y install libxi-dev libxinerama-dev libxcursor-dev libxrandr-dev libgl1-mesa-dev libxkbcommon-dev
-        if: runner.os == 'Linux'
-      - name: Build
-        run: go build -tags rgfw
-        working-directory: raylib
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Install package
+      run: |
+        sudo apt-get update -y; sudo apt-get -y install libxi-dev libxinerama-dev libxcursor-dev libxrandr-dev libgl1-mesa-dev libxkbcommon-dev
+      if: runner.os == 'Linux'
+    - name: Build
+      run: go build -tags rgfw
+      working-directory: raylib
 
   test-purego:
     strategy:
@@ -110,17 +110,17 @@ jobs:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: ${{ matrix.go-version }}
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Build
-        run: go build
-        working-directory: raylib
-        env:
-          GOOS: windows
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Build
+      run: go build
+      working-directory: raylib
+      env:
+        GOOS: windows
 
   test-examples:
     strategy:
@@ -129,15 +129,15 @@ jobs:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: ${{ matrix.go-version }}
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Install package
-        run: |
-          sudo apt-get update -y; sudo apt-get -y install libxi-dev libxinerama-dev libxcursor-dev libxrandr-dev libgl1-mesa-dev libwayland-dev libxkbcommon-dev
-      - name: Build
-        run: go build ./...
-        working-directory: examples
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Install package
+      run: |
+        sudo apt-get update -y; sudo apt-get -y install libxi-dev libxinerama-dev libxcursor-dev libxrandr-dev libgl1-mesa-dev libwayland-dev libxkbcommon-dev
+    - name: Build
+      run: go build ./...
+      working-directory: examples
