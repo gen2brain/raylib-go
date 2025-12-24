@@ -378,7 +378,7 @@ var loadFontEx func(font uintptr, fileName string, fontSize int32, codepoints []
 var loadFontFromImage func(font uintptr, image uintptr, key uintptr, firstChar int32)
 var loadFontFromMemory func(font uintptr, fileType string, fileData []byte, dataSize int32, fontSize int32, codepoints []int32, codepointCount int32)
 var isFontValid func(font uintptr) bool
-var loadFontData func(fileData []byte, dataSize int32, fontSize int32, codepoints []int32, codepointCount int32, _type int32) *GlyphInfo
+var loadFontData func(fileData []byte, dataSize int32, fontSize int32, codepoints []int32, codepointCount int32, _type int32, glyphCount *int32) *GlyphInfo
 var genImageFontAtlas func(image uintptr, glyphs *GlyphInfo, glyphRecs []*Rectangle, glyphCount int32, fontSize int32, padding int32, packMethod int32)
 var unloadFontData func(glyphs *GlyphInfo, glyphCount int32)
 var unloadFont func(font uintptr)
@@ -3066,12 +3066,15 @@ func IsFontValid(font Font) bool {
 // LoadFontData - Load font data for further use
 func LoadFontData(fileData []byte, fontSize int32, codepoints []rune, codepointCount, typ int32) []GlyphInfo {
 	dataSize := int32(len(fileData))
-	// In case no chars count provided, default to 95
-	if codepointCount <= 0 {
-		codepointCount = 95
+	if codepointCount < 0 {
+		codepointCount = 0
 	}
-	ret := loadFontData(fileData, dataSize, fontSize, codepoints, codepointCount, typ)
-	return unsafe.Slice(ret, codepointCount)
+	var glyphCount int32
+	ret := loadFontData(fileData, dataSize, fontSize, codepoints, codepointCount, typ, &glyphCount)
+	if ret == nil || glyphCount <= 0 {
+		return nil
+	}
+	return unsafe.Slice(ret, int(glyphCount))
 }
 
 // GenImageFontAtlas - Generate image font atlas using chars info

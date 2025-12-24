@@ -1,6 +1,6 @@
 module examples
 
-go 1.21
+go 1.22.0
 
 replace github.com/gen2brain/raylib-go/raylib => ../raylib
 

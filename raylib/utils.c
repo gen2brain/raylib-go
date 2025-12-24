@@ -82,7 +82,7 @@ static const char *internalDataPath = NULL;         // Android internal data pat
 #endif
 
 //----------------------------------------------------------------------------------
-// Module specific Functions Declaration
+// Module Internal Functions Declaration
 //----------------------------------------------------------------------------------
 #if defined(PLATFORM_ANDROID)
 FILE *funopen(const void *cookie, int (*readfn)(void *, char *, int), int (*writefn)(void *, const char *, int),
@@ -95,9 +95,8 @@ static int android_close(void *cookie);
 #endif
 
 //----------------------------------------------------------------------------------
-// Module Functions Definition - Utilities
+// Module Functions Definition
 //----------------------------------------------------------------------------------
-
 // Set the current threshold (minimum) log level
 void SetTraceLogLevel(int logType) { logTypeLevel = logType; }
 
@@ -106,7 +105,7 @@ void TraceLog(int logType, const char *text, ...)
 {
 #if defined(SUPPORT_TRACELOG)
     // Message has level below current threshold, don't emit
-    if (logType < logTypeLevel) return;
+    if ((logType < logTypeLevel) || (text == NULL)) return;
 
     va_list args;
     va_start(args, text);
@@ -143,8 +142,8 @@ void TraceLog(int logType, const char *text, ...)
         default: break;
     }
 
-    unsigned int textSize = (unsigned int)strlen(text);
-    memcpy(buffer + strlen(buffer), text, (textSize < (MAX_TRACELOG_MSG_LENGTH - 12))? textSize : (MAX_TRACELOG_MSG_LENGTH - 12));
+    unsigned int textLength = (unsigned int)strlen(text);
+    memcpy(buffer + strlen(buffer), text, (textLength < (MAX_TRACELOG_MSG_LENGTH - 12))? textLength : (MAX_TRACELOG_MSG_LENGTH - 12));
     strcat(buffer, "\n");
     vprintf(buffer, args);
     fflush(stdout);
@@ -204,7 +203,7 @@ unsigned char *LoadFileData(const char *fileName, int *dataSize)
 
             if (size > 0)
             {
-                data = (unsigned char *)RL_MALLOC(size*sizeof(unsigned char));
+                data = (unsigned char *)RL_CALLOC(size, sizeof(unsigned char));
 
                 if (data != NULL)
                 {
@@ -314,7 +313,7 @@ bool ExportDataAsCode(const unsigned char *data, int dataSize, const char *fileN
 
     // Get file name from path
     char varFileName[256] = { 0 };
-    strcpy(varFileName, GetFileNameWithoutExt(fileName));
+    strncpy(varFileName, GetFileNameWithoutExt(fileName), 256 - 1);
     for (int i = 0; varFileName[i] != '\0'; i++)
     {
         // Convert variable name to uppercase
@@ -367,7 +366,7 @@ char *LoadFileText(const char *fileName)
 
             if (size > 0)
             {
-                text = (char *)RL_MALLOC((size + 1)*sizeof(char));
+                text = (char *)RL_CALLOC(size + 1, sizeof(char));
 
                 if (text != NULL)
                 {
@@ -375,7 +374,7 @@ char *LoadFileText(const char *fileName)
 
                     // WARNING: \r\n is converted to \n on reading, so,
                     // read bytes count gets reduced by the number of lines
-                    if (count < size) text = RL_REALLOC(text, count + 1);
+                    if (count < size) text = (char *)RL_REALLOC(text, count + 1);
 
                     // Zero-terminate the string
                     text[count] = '\0';
@@ -447,15 +446,15 @@ void InitAssetManager(AAssetManager *manager, const char *dataPath)
 }
 
 // Replacement for fopen()
-// Ref: https://developer.android.com/ndk/reference/group/asset
+// REF: https://developer.android.com/ndk/reference/group/asset
 FILE *android_fopen(const char *fileName, const char *mode)
 {
     if (mode[0] == 'w')
     {
-        // fopen() is mapped to android_fopen() that only grants read access to
+        // NOTE: fopen() is mapped to android_fopen() that only grants read access to
         // assets directory through AAssetManager but we want to also be able to
         // write data when required using the standard stdio FILE access functions
-        // Ref: https://stackoverflow.com/questions/11294487/android-writing-saving-files-from-native-code-only
+        // REF: https://stackoverflow.com/questions/11294487/android-writing-saving-files-from-native-code-only
         #undef fopen
         return fopen(TextFormat("%s/%s", internalDataPath, fileName), mode);
         #define fopen(name, mode) android_fopen(name, mode)
@@ -482,7 +481,7 @@ FILE *android_fopen(const char *fileName, const char *mode)
 #endif  // PLATFORM_ANDROID
 
 //----------------------------------------------------------------------------------
-// Module specific Functions Definition
+// Module Internal Functions Definition
 //----------------------------------------------------------------------------------
 #if defined(PLATFORM_ANDROID)
 static int android_read(void *cookie, char *data, int dataSize)
