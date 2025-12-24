@@ -7,6 +7,9 @@ package rl
 #include "raylib.h"
 #include <stdlib.h>
 
+#if defined(_WIN32) || defined(WIN32) || defined(__WIN32__) || defined(__NT__)
+    __declspec(dllexport)
+#endif
 extern void internalAudioStreamCallbackGo(void *, int);
 
 static void audioStreamWrapperCallback(void *data, unsigned int frames) {
@@ -17,6 +20,9 @@ static void setAudioStreamCallbackWrapper(AudioStream stream) {
 	SetAudioStreamCallback(stream, audioStreamWrapperCallback);
 }
 
+#if defined(_WIN32) || defined(WIN32) || defined(__WIN32__) || defined(__NT__)
+    __declspec(dllexport)
+#endif
 extern void internalAudioMixedProcessorGo(void *, int);
 
 static void audioMixedProcessorCallback(void *data, unsigned int frames) {
@@ -333,7 +339,7 @@ func WaveCrop(wave *Wave, initFrame int32, finalFrame int32) {
 func LoadWaveSamples(wave Wave) []float32 {
 	cwave := wave.cptr()
 	ret := C.LoadWaveSamples(*cwave)
-	v := unsafe.Slice((*float32)(unsafe.Pointer(ret)), wave.FrameCount)
+	v := unsafe.Slice((*float32)(unsafe.Pointer(ret)), wave.FrameCount*wave.Channels)
 	return v
 }
 
