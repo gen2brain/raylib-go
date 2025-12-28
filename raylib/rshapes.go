@@ -90,6 +90,16 @@ func DrawLineBezier(startPos, endPos Vector2, thick float32, col color.RGBA) {
 	C.DrawLineBezier(*cstartPos, *cendPos, cthick, *ccolor)
 }
 
+// DrawLineDashed - Draw a dashed line
+func DrawLineDashed(startPos, endPos Vector2, dashSize, spaceSize int32, col color.RGBA) {
+	cstartPos := startPos.cptr()
+	cendPos := endPos.cptr()
+	cdashSize := (C.int)(dashSize)
+	cspaceSize := (C.int)(spaceSize)
+	ccolor := colorCptr(col)
+	C.DrawLineDashed(*cstartPos, *cendPos, cdashSize, cspaceSize, *ccolor)
+}
+
 // DrawCircle - Draw a color-filled circle
 func DrawCircle(centerX, centerY int32, radius float32, col color.RGBA) {
 	ccenterX := (C.int)(centerX)
