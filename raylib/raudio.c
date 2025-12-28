@@ -1,3 +1,6 @@
+//go:build !noaudio
+// +build !noaudio
+
 /**********************************************************************************************
 *
 *   raudio v1.1 - A simple and easy-to-use audio library based on miniaudio
