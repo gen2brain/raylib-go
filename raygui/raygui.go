@@ -1437,8 +1437,10 @@ func ScrollBar(bounds rl.Rectangle, value, minValue, maxValue int32) int32 {
 }
 
 // Color fade-in or fade-out, alpha value normalized [0..1]
-func Fade(color rl.Color, alpha float32) {
-	ccolor := (*C.Color)(unsafe.Pointer(&color))
+// WARNING: It multiplies current alpha by alpha scale factor
+func Fade(color rl.Color, alpha float32) rl.Color {
+	ccolor := C.struct_Color{C.uchar(color.R), C.uchar(color.G), C.uchar(color.B), C.uchar(color.A)}
 	calpha := C.float(alpha)
-	C.GuiFade(*ccolor, calpha)
+	cresult := C.GuiFade(ccolor, calpha)
+	return rl.Color{R: uint8(cresult.r), G: uint8(cresult.g), B: uint8(cresult.b), A: uint8(cresult.a)}
 }
