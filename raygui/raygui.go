@@ -925,7 +925,7 @@ func ValueBoxFloat(bounds rl.Rectangle, text, textValue string, value *float32, 
 		*value = float32(cvalue)
 	}()
 
-	return C.GuiValueBoxFloat(cbounds, ctext, &cvalue, &ctextValue, &value, C.bool(editMode)) != 0
+	return C.GuiValueBoxFloat(cbounds, ctext, &ctextValue, &cvalue, C.bool(editMode)) != 0
 }
 
 // Slider control
