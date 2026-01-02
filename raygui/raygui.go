@@ -487,7 +487,6 @@ func IsLocked() bool {
 }
 
 // Set gui controls alpha global state
-// TODO: Newly implemented, verify if works
 func SetAlpha(alpha float32) {
 	calpha := C.float(alpha)
 	C.GuiSetAlpha(calpha)
@@ -751,7 +750,7 @@ func ToggleSlider(bounds rl.Rectangle, text string, active int32) int32 {
 	}
 	cactive := C.int(active)
 	C.GuiToggleSlider(cbounds, ctext, &cactive)
-	return int32(cactive) // TODO: return value seems wrong, it returns both "result" var and modifies "active" parameter
+	return int32(cactive)
 }
 
 // CheckBox control, returns true when active
@@ -898,8 +897,7 @@ func ValueBox(bounds rl.Rectangle, text string, value *int32, minValue, maxValue
 }
 
 // Floating point Value Box control, updates input val_str with numbers
-// TODO: Newly implemented, verify if works
-func ValueBoxFloat(bounds rl.Rectangle, text, textValue string, value *float32, editMode bool) bool {
+func ValueBoxFloat(bounds rl.Rectangle, text string, textValue *string, value *float32, editMode bool) bool {
 	var cbounds C.struct_Rectangle
 	cbounds.x = C.float(bounds.X)
 	cbounds.y = C.float(bounds.Y)
@@ -911,11 +909,18 @@ func ValueBoxFloat(bounds rl.Rectangle, text, textValue string, value *float32, 
 		defer C.free(unsafe.Pointer(ctext))
 	}
 
-	var ctextValue *C.char
-	if len(textValue) > 0 {
-		ctextValue = C.CString(textValue)
-		defer C.free(unsafe.Pointer(ctextValue))
+	bs := []byte(*textValue)
+	if len(bs) == 0 {
+		bs = []byte{byte(0)}
 	}
+	if 0 < len(bs) && bs[len(bs)-1] != byte(0) { // minimalize allocation
+		bs = append(bs, byte(0)) // for next input symbols
+	}
+	ctextValue := (*C.char)(unsafe.Pointer(&bs[0]))
+	defer func() {
+		*textValue = strings.Trim(string(bs), "\x00")
+		// no need : C.free(unsafe.Pointer(ctext))
+	}()
 
 	if value == nil {
 		value = new(float32)
@@ -1339,22 +1344,19 @@ func Grid(bounds rl.Rectangle, text string, spacing float32, subdivs int32, mous
 //----------------------------------------------------------------------------------
 
 // Enable gui tooltips (global state)
-// TODO: Newly implemented, verify if works
 func EnableTooltip() {
 	C.GuiEnableTooltip()
 }
 
 // Disable gui tooltips (global state)
-// TODO: Newly implemented, verify if works
 func DisableTooltip() {
 	C.GuiDisableTooltip()
 }
 
 // Set tooltip string
-// TODO: Newly implemented, verify if works
 func SetTooltip(tooltip string) {
 	ctooltip := C.CString(tooltip)
-	//defer C.free(unsafe.Pointer(ctooltip)) // TODO: raygui uses pointer to ctooltip directly
+	defer C.free(unsafe.Pointer(ctooltip))
 	C.GuiSetTooltip(ctooltip)
 }
 
@@ -1390,7 +1392,6 @@ func LoadIcons(fileName string, loadIconsName bool) {
 }
 
 // Load icons from memory (Binary files only)
-// TODO: Newly implemented, verify if works
 func LoadIconsFromMemory(data []byte, loadIconsName bool) {
 	C.GuiLoadIconsFromMemory((*C.uchar)(unsafe.Pointer(&data[0])), C.int(len(data)), C.bool(loadIconsName))
 }
@@ -1400,12 +1401,12 @@ func DrawIcon(iconId IconID, posX, posY, pixelSize int32, col color.RGBA) {
 	C.GuiDrawIcon(C.int(iconId), C.int(posX), C.int(posY), C.int(pixelSize), *(*C.Color)(unsafe.Pointer(&col)))
 }
 
-// TODO: Newly implemented, verify if works
+// Set icon drawing size
 func SetIconScale(scale int32) {
 	C.GuiSetIconScale(C.int(scale))
 }
 
-// TODO: Newly implemented, verify if works
+// Get text width considering gui style and icon size (if required)
 func GetTextWidth(text string) int32 {
 	ctext := C.CString(text)
 	defer C.free(unsafe.Pointer(ctext))
