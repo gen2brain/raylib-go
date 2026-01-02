@@ -98,9 +98,9 @@ var beginVrStereoMode func(config uintptr)
 var endVrStereoMode func()
 var loadVrStereoConfig func(config uintptr, device uintptr)
 var unloadVrStereoConfig func(config uintptr)
-var loadShader func(shader uintptr, vsFileName uintptr, fsFileName uintptr)
-var loadShaderFromMemory func(shader uintptr, vsCode uintptr, fsCode uintptr)
 var isShaderValid func(shader uintptr) bool
+var loadShader func(shader uintptr, vsFileName string, csFileName string, esFileName string, gsFileName string, fsFileName string)
+var loadShaderFromMemory func(shader uintptr, vsCode string, csCode string, esCode string, gsCode string, fsCode string)
 var getShaderLocation func(shader uintptr, uniformName string) int32
 var getShaderLocationAttrib func(shader uintptr, attribName string) int32
 var setShaderValue func(shader uintptr, locIndex int32, value []float32, uniformType int32)
@@ -1433,12 +1433,34 @@ func UnloadVrStereoConfig(config VrStereoConfig) {
 }
 
 // LoadShader - Load shader from files and bind default locations
-func LoadShader(vsFileName string, fsFileName string) Shader {
+func LoadShader(vsFileName string, csFileName string, esFileName string, gsFileName string, fsFileName string) Shader {
 	var shader Shader
-	var cvsFileName, cfsFileName *byte
+
+	var cvsFileName, ccsFileName, cesFileName, cgsFileName, cfsFileName *byte
 	if vsFileName != "" {
 		var err error
 		cvsFileName, err = windows.BytePtrFromString(vsFileName)
+		if err != nil {
+			panic(err)
+		}
+	}
+	if csFileName != "" {
+		var err error
+		ccsFileName, err = windows.BytePtrFromString(csFileName)
+		if err != nil {
+			panic(err)
+		}
+	}
+	if esFileName != "" {
+		var err error
+		cesFileName, err = windows.BytePtrFromString(esFileName)
+		if err != nil {
+			panic(err)
+		}
+	}
+	if gsFileName != "" {
+		var err error
+		cgsFileName, err = windows.BytePtrFromString(gsFileName)
 		if err != nil {
 			panic(err)
 		}
@@ -1450,17 +1472,44 @@ func LoadShader(vsFileName string, fsFileName string) Shader {
 			panic(err)
 		}
 	}
-	loadShader(uintptr(unsafe.Pointer(&shader)), uintptr(unsafe.Pointer(cvsFileName)), uintptr(unsafe.Pointer(cfsFileName)))
+	loadShader(
+		uintptr(unsafe.Pointer(&shader)),
+		uintptr(unsafe.Pointer(cvsFileName)),
+		uintptr(unsafe.Pointer(ccsFileName)),
+		uintptr(unsafe.Pointer(cesFileName)),
+		uintptr(unsafe.Pointer(cgsFileName)),
+		uintptr(unsafe.Pointer(cfsFileName)))
 	return shader
 }
 
 // LoadShaderFromMemory - Load shader from code strings and bind default locations
-func LoadShaderFromMemory(vsCode string, fsCode string) Shader {
+func LoadShaderFromMemory(vsCode string, csCode string, esCode string, gsCode string, fsCode string) Shader {
 	var shader Shader
-	var cvsCode, cfsCode *byte
+	var cvsCode, ccsCode, cesCode, cgsCode, cfsCode *byte
 	if vsCode != "" {
 		var err error
 		cvsCode, err = windows.BytePtrFromString(vsCode)
+		if err != nil {
+			panic(err)
+		}
+	}
+	if csCode != "" {
+		var err error
+		ccsFileName, err = windows.BytePtrFromString(csCode)
+		if err != nil {
+			panic(err)
+		}
+	}
+	if esCode != "" {
+		var err error
+		cesFileName, err = windows.BytePtrFromString(esCode)
+		if err != nil {
+			panic(err)
+		}
+	}
+	if gsCode != "" {
+		var err error
+		cgsCode, err = windows.BytePtrFromString(gsCode)
 		if err != nil {
 			panic(err)
 		}
@@ -1472,7 +1521,13 @@ func LoadShaderFromMemory(vsCode string, fsCode string) Shader {
 			panic(err)
 		}
 	}
-	loadShaderFromMemory(uintptr(unsafe.Pointer(&shader)), uintptr(unsafe.Pointer(cvsCode)), uintptr(unsafe.Pointer(cfsCode)))
+	loadShaderFromMemory(
+		uintptr(unsafe.Pointer(&shader)),
+		uintptr(unsafe.Pointer(cvsCode)),
+		uintptr(unsafe.Pointer(ccsCode)),
+		uintptr(unsafe.Pointer(cesCode)),
+		uintptr(unsafe.Pointer(cgsCode)),
+		uintptr(unsafe.Pointer(cfsCode)))
 	return shader
 }
 

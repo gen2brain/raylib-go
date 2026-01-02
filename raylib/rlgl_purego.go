@@ -109,9 +109,9 @@ var rlLoadFramebuffer func() uint32
 var rlFramebufferAttach func(fboId uint32, texId uint32, attachType int32, texType int32, mipLevel int32)
 var rlFramebufferComplete func(id uint32) bool
 var rlUnloadFramebuffer func(id uint32)
-var rlLoadShaderCode func(vsCode string, fsCode string) uint32
+var rlLoadShaderCode func(vsCode string, csCode string, esCode string, gsCode string, fsCode string) uint32
 var rlCompileShader func(shaderCode string, _type int32) uint32
-var rlLoadShaderProgram func(vShaderId uint32, fShaderId uint32) uint32
+var rlLoadShaderProgram func(vShaderId uint32, cShaderId uint32, eShaderId uint32, gShaderId uint32, fShaderId uint32) uint32
 var rlUnloadShaderProgram func(id uint32)
 var rlGetLocationUniform func(shaderId uint32, uniformName string) int32
 var rlGetLocationAttrib func(shaderId uint32, attribName string) int32
@@ -789,8 +789,8 @@ func UnloadFramebuffer(id uint32) {
 }
 
 // LoadShaderCode - Load shader from code strings
-func LoadShaderCode(vsCode string, fsCode string) uint32 {
-	return rlLoadShaderCode(vsCode, fsCode)
+func LoadShaderCode(vsCode string, csCode string, esCode string, gsCode string, fsCode string) uint32 {
+	return rlLoadShaderCode(vsCode, csCode, esCode, gsCode, fsCode)
 }
 
 // CompileShader - Compile custom shader and return shader id (type: VERTEX_SHADER, FRAGMENT_SHADER, COMPUTE_SHADER)
@@ -799,8 +799,8 @@ func CompileShader(shaderCode string, type_ int32) uint32 {
 }
 
 // LoadShaderProgram - Load custom shader program
-func LoadShaderProgram(vShaderId uint32, fShaderId uint32) uint32 {
-	return rlLoadShaderProgram(vShaderId, fShaderId)
+func LoadShaderProgram(vShaderId uint32, cShaderId uint32, eShaderId uint32, gShaderId uint32, fShaderId uint32) uint32 {
+	return rlLoadShaderProgram(vShaderId, cShaderId, eShaderId, gShaderId, fShaderId)
 }
 
 // UnloadShaderProgram - Unload shader program

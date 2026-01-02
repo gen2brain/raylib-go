@@ -1225,32 +1225,41 @@ void UnloadVrStereoConfig(VrStereoConfig config)
 
 // Load shader from files and bind default locations
 // NOTE: If shader string is NULL, using default vertex/fragment shaders
-Shader LoadShader(const char *vsFileName, const char *fsFileName)
+Shader LoadShader(const char *vsFileName, const char *csFileName, const char *esFileName, const char *gsFileName, const char *fsFileName)
 {
     Shader shader = { 0 };
 
     char *vShaderStr = NULL;
+    char *cShaderStr = NULL;
+    char *eShaderStr = NULL;
+    char *gShaderStr = NULL;
     char *fShaderStr = NULL;
 
     if (vsFileName != NULL) vShaderStr = LoadFileText(vsFileName);
+    if (csFileName != NULL) cShaderStr = LoadFileText(csFileName);
+    if (esFileName != NULL) eShaderStr = LoadFileText(esFileName);
+    if (gsFileName != NULL) gShaderStr = LoadFileText(gsFileName);
     if (fsFileName != NULL) fShaderStr = LoadFileText(fsFileName);
 
     if ((vShaderStr == NULL) && (fShaderStr == NULL)) TRACELOG(LOG_WARNING, "SHADER: Shader files provided are not valid, using default shader");
 
-    shader = LoadShaderFromMemory(vShaderStr, fShaderStr);
+    shader = LoadShaderFromMemory(vShaderStr, cShaderStr, eShaderStr, gShaderStr, fShaderStr);
 
     UnloadFileText(vShaderStr);
+    UnloadFileText(cShaderStr);
+    UnloadFileText(eShaderStr);
+    UnloadFileText(gShaderStr);
     UnloadFileText(fShaderStr);
 
     return shader;
 }
 
 // Load shader from code strings and bind default locations
-Shader LoadShaderFromMemory(const char *vsCode, const char *fsCode)
+Shader LoadShaderFromMemory(const char *vsCode, const char *csCode, const char *esCode, const char *gsCode, const char *fsCode)
 {
     Shader shader = { 0 };
 
-    shader.id = rlLoadShaderCode(vsCode, fsCode);
+    shader.id = rlLoadShaderCode(vsCode, csCode, esCode, gsCode, fsCode);
 
     if (shader.id == 0)
     {

@@ -657,12 +657,18 @@ func UnloadFramebuffer(id uint32) {
 }
 
 // LoadShaderCode - Load shader from code strings
-func LoadShaderCode(vsCode string, fsCode string) uint32 {
+func LoadShaderCode(vsCode string, csCode string, esCode string, gsCode string, fsCode string) uint32 {
 	cvsCode := C.CString(vsCode)
 	defer C.free(unsafe.Pointer(cvsCode))
+	ccsCode := C.CString(csCode)
+	defer C.free(unsafe.Pointer(ccsCode))
+	cesCode := C.CString(esCode)
+	defer C.free(unsafe.Pointer(cesCode))
+	cgsCode := C.CString(gsCode)
+	defer C.free(unsafe.Pointer(cgsCode))
 	cfsCode := C.CString(fsCode)
 	defer C.free(unsafe.Pointer(cfsCode))
-	return uint32(C.rlLoadShaderCode(cvsCode, cfsCode))
+	return uint32(C.rlLoadShaderCode(cvsCode, ccsCode, cesCode, cgsCode, cfsCode))
 }
 
 // CompileShader - Compile custom shader and return shader id (type: VERTEX_SHADER, FRAGMENT_SHADER, COMPUTE_SHADER)
@@ -674,10 +680,13 @@ func CompileShader(shaderCode string, type_ int32) uint32 {
 }
 
 // LoadShaderProgram - Load custom shader program
-func LoadShaderProgram(vShaderId uint32, fShaderId uint32) uint32 {
+func LoadShaderProgram(vShaderId uint32, cShaderId uint32, eShaderId uint32, gShaderId uint32, fShaderId uint32) uint32 {
 	cvShaderId := C.uint(vShaderId)
+	ccShaderId := C.uint(cShaderId)
+	ceShaderId := C.uint(eShaderId)
+	cgShaderId := C.uint(gShaderId)
 	cfShaderId := C.uint(fShaderId)
-	return uint32(C.rlLoadShaderProgram(cvShaderId, cfShaderId))
+	return uint32(C.rlLoadShaderProgram(cvShaderId, ccShaderId, ceShaderId, cgShaderId, cfShaderId))
 }
 
 // UnloadShaderProgram - Unload shader program

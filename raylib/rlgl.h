@@ -294,6 +294,9 @@
 
 // GL Shader type
 #define RL_FRAGMENT_SHADER                      0x8B30      // GL_FRAGMENT_SHADER
+#define RL_TESSCTRL_SHADER                      0x8E88      // GL_TESS_CONTROL_SHADER
+#define RL_TESSEVAL_SHADER                      0x8E87      // GL_TESS_EVALUATION_SHADER
+#define RL_GEOMETRY_SHADER                      0x8DD9      // GL_GEOMETRY_SHADER
 #define RL_VERTEX_SHADER                        0x8B31      // GL_VERTEX_SHADER
 #define RL_COMPUTE_SHADER                       0x91B9      // GL_COMPUTE_SHADER
 
@@ -781,9 +784,9 @@ RLAPI void rlCopyFramebuffer(int x, int y, int width, int height, int format, vo
 RLAPI void rlResizeFramebuffer(int width, int height);                    // Resize internal framebuffer
 
 // Shaders management
-RLAPI unsigned int rlLoadShaderCode(const char *vsCode, const char *fsCode);    // Load shader from code strings
+RLAPI unsigned int rlLoadShaderCode(const char *vsCode, const char *csCode, const char *esCode, const char *gsCode, const char *fsCode);    // Load shader from code strings
 RLAPI unsigned int rlCompileShader(const char *shaderCode, int type);           // Compile custom shader and return shader id (type: RL_VERTEX_SHADER, RL_FRAGMENT_SHADER, RL_COMPUTE_SHADER)
-RLAPI unsigned int rlLoadShaderProgram(unsigned int vShaderId, unsigned int fShaderId); // Load custom shader program
+RLAPI unsigned int rlLoadShaderProgram(unsigned int vShaderId, unsigned int cShaderId, unsigned int eShaderId, unsigned int gShaderId, unsigned int fShaderId); // Load custom shader program
 RLAPI void rlUnloadShaderProgram(unsigned int id);                              // Unload shader program
 RLAPI int rlGetLocationUniform(unsigned int shaderId, const char *uniformName); // Get shader location uniform, requires shader program id
 RLAPI int rlGetLocationAttrib(unsigned int shaderId, const char *attribName);   // Get shader location attribute, requires shader program id
@@ -1091,6 +1094,9 @@ typedef struct rlglData {
         unsigned int defaultTextureId;      // Default texture used on shapes/poly drawing (required by shader)
         unsigned int activeTextureId[RL_DEFAULT_BATCH_MAX_TEXTURE_UNITS];    // Active texture ids to be enabled on batch drawing (0 active by default)
         unsigned int defaultVShaderId;      // Default vertex shader id (used by default shader program)
+        unsigned int defaultCShaderId;      // Default tess ctrl shader id (used by default shader program)
+        unsigned int defaultEShaderId;      // Default tess eval shader id (used by default shader program)
+        unsigned int defaultGShaderId;      // Default geometry shader id (used by default shader program)
         unsigned int defaultFShaderId;      // Default fragment shader id (used by default shader program)
         unsigned int defaultShaderId;       // Default shader program id, supports vertex color and diffuse texture
         int *defaultShaderLocs;             // Default shader locations pointer to be used on rendering
@@ -4173,13 +4179,16 @@ void rlUnloadVertexBuffer(unsigned int vboId)
 //-----------------------------------------------------------------------------------------------
 // Load shader from code strings
 // NOTE: If shader string is NULL, using default vertex/fragment shaders
-unsigned int rlLoadShaderCode(const char *vsCode, const char *fsCode)
+unsigned int rlLoadShaderCode(const char *vsCode, const char* csCode, const char* esCode, const char* gsCode, const char *fsCode)
 {
     unsigned int id = 0;
     if (!isGpuReady) { TRACELOG(RL_LOG_WARNING, "GL: GPU is not ready to load data, trying to load before InitWindow()?"); return id; }
 
 #if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
     unsigned int vertexShaderId = 0;
+    unsigned int tessctrlShaderId = 0;
+    unsigned int tessevalShaderId = 0;
+    unsigned int geometryShaderId = 0;
     unsigned int fragmentShaderId = 0;
 
     // Compile vertex shader (if provided)
@@ -4187,17 +4196,36 @@ unsigned int rlLoadShaderCode(const char *vsCode, const char *fsCode)
     if (vsCode != NULL) vertexShaderId = rlCompileShader(vsCode, GL_VERTEX_SHADER);
     else vertexShaderId = RLGL.State.defaultVShaderId;
 
+    // Compile tess ctrl shader (if provided)
+    if (csCode != NULL) tessctrlShaderId = rlCompileShader(csCode, GL_TESS_CONTROL_SHADER);
+    // In case no tess ctrl shader was provided or compilation failed, we use default tess ctrl shader
+    if (tessctrlShaderId == 0) tessctrlShaderId = RLGL.State.defaultCShaderId;
+
+    // Compile tess eval shader (if provided)
+    if (esCode != NULL) tessevalShaderId = rlCompileShader(esCode, GL_TESS_EVALUATION_SHADER);
+    // In case no tess eval shader was provided or compilation failed, we use default tess eval shader
+    if (tessevalShaderId == 0) tessevalShaderId = RLGL.State.defaultEShaderId;
+
+    // Compile geometry shader (if provided)
+    if (gsCode != NULL) geometryShaderId = rlCompileShader(gsCode, GL_GEOMETRY_SHADER);
+    // In case no geometry shader was provided or compilation failed, we use default geometry shader
+    if (geometryShaderId == 0) geometryShaderId = RLGL.State.defaultGShaderId;
+
     // Compile fragment shader (if provided)
     // NOTE: If not vertex shader is provided, use default one
     if (fsCode != NULL) fragmentShaderId = rlCompileShader(fsCode, GL_FRAGMENT_SHADER);
     else fragmentShaderId = RLGL.State.defaultFShaderId;
 
     // In case vertex and fragment shader are the default ones, no need to recompile, we can just assign the default shader program id
-    if ((vertexShaderId == RLGL.State.defaultVShaderId) && (fragmentShaderId == RLGL.State.defaultFShaderId)) id = RLGL.State.defaultShaderId;
-    else if ((vertexShaderId > 0) && (fragmentShaderId > 0))
+    if ((vertexShaderId == RLGL.State.defaultVShaderId) &&
+        (tessctrlShaderId == RLGL.State.defaultCShaderId) &&
+        (tessevalShaderId == RLGL.State.defaultEShaderId) &&
+        (geometryShaderId == RLGL.State.defaultGShaderId) &&
+        (fragmentShaderId == RLGL.State.defaultFShaderId)) id = RLGL.State.defaultShaderId;
+    else
     {
         // One of or both shader are new, we need to compile a new shader program
-        id = rlLoadShaderProgram(vertexShaderId, fragmentShaderId);
+        id = rlLoadShaderProgram(vertexShaderId, tessctrlShaderId, tessevalShaderId, geometryShaderId, fragmentShaderId);
 
         // We can detach and delete vertex/fragment shaders (if not default ones)
         // NOTE: We detach shader before deletion to make sure memory is freed
@@ -4206,6 +4234,24 @@ unsigned int rlLoadShaderCode(const char *vsCode, const char *fsCode)
             // WARNING: Shader program linkage could fail and returned id is 0
             if (id > 0) glDetachShader(id, vertexShaderId);
             glDeleteShader(vertexShaderId);
+        }
+        if (tessctrlShaderId != RLGL.State.defaultCShaderId)
+        {
+            // WARNING: Shader program linkage could fail and returned id is 0
+            if (id > 0) glDetachShader(id, tessctrlShaderId);
+            glDeleteShader(tessctrlShaderId);
+        }
+        if (tessevalShaderId != RLGL.State.defaultEShaderId)
+        {
+            // WARNING: Shader program linkage could fail and returned id is 0
+            if (id > 0) glDetachShader(id, tessevalShaderId);
+            glDeleteShader(tessevalShaderId);
+        }
+        if (geometryShaderId != RLGL.State.defaultGShaderId)
+        {
+            // WARNING: Shader program linkage could fail and returned id is 0
+            if (id > 0) glDetachShader(id, geometryShaderId);
+            glDeleteShader(geometryShaderId);
         }
         if (fragmentShaderId != RLGL.State.defaultFShaderId)
         {
@@ -4269,7 +4315,9 @@ unsigned int rlCompileShader(const char *shaderCode, int type)
         {
             case GL_VERTEX_SHADER: TRACELOG(RL_LOG_WARNING, "SHADER: [ID %i] Failed to compile vertex shader code", shaderId); break;
             case GL_FRAGMENT_SHADER: TRACELOG(RL_LOG_WARNING, "SHADER: [ID %i] Failed to compile fragment shader code", shaderId); break;
-            //case GL_GEOMETRY_SHADER:
+            case GL_TESS_CONTROL_SHADER: TRACELOG(RL_LOG_WARNING, "SHADER: [ID %i] Failed to compile tesselation control shader code", shaderId); break;
+            case GL_TESS_EVALUATION_SHADER: TRACELOG(RL_LOG_WARNING, "SHADER: [ID %i] Failed to compile tesselation evaluation shader code", shaderId); break;
+            case GL_GEOMETRY_SHADER: TRACELOG(RL_LOG_WARNING, "SHADER: [ID %i] Failed to compile geometry shader code", shaderId); break;
         #if defined(GRAPHICS_API_OPENGL_43)
             case GL_COMPUTE_SHADER: TRACELOG(RL_LOG_WARNING, "SHADER: [ID %i] Failed to compile compute shader code", shaderId); break;
         #elif defined(GRAPHICS_API_OPENGL_33)
@@ -4301,7 +4349,9 @@ unsigned int rlCompileShader(const char *shaderCode, int type)
         {
             case GL_VERTEX_SHADER: TRACELOG(RL_LOG_INFO, "SHADER: [ID %i] Vertex shader compiled successfully", shaderId); break;
             case GL_FRAGMENT_SHADER: TRACELOG(RL_LOG_INFO, "SHADER: [ID %i] Fragment shader compiled successfully", shaderId); break;
-            //case GL_GEOMETRY_SHADER:
+            case GL_TESS_CONTROL_SHADER: TRACELOG(RL_LOG_INFO, "SHADER: [ID %i] Tesselation Control shader compiled successfully", shaderId); break;
+            case GL_TESS_EVALUATION_SHADER: TRACELOG(RL_LOG_INFO, "SHADER: [ID %i] Tesselation Evaluation shader compiled successfully", shaderId); break;
+            case GL_GEOMETRY_SHADER: TRACELOG(RL_LOG_INFO, "SHADER: [ID %i] Geometry shader compiled successfully", shaderId); break;
         #if defined(GRAPHICS_API_OPENGL_43)
             case GL_COMPUTE_SHADER: TRACELOG(RL_LOG_INFO, "SHADER: [ID %i] Compute shader compiled successfully", shaderId); break;
         #elif defined(GRAPHICS_API_OPENGL_33)
@@ -4316,7 +4366,7 @@ unsigned int rlCompileShader(const char *shaderCode, int type)
 }
 
 // Load custom shader strings and return program id
-unsigned int rlLoadShaderProgram(unsigned int vShaderId, unsigned int fShaderId)
+unsigned int rlLoadShaderProgram(unsigned int vShaderId, unsigned int cShaderId, unsigned int eShaderId, unsigned int gShaderId, unsigned int fShaderId)
 {
     unsigned int programId = 0;
     if (!isGpuReady) { TRACELOG(RL_LOG_WARNING, "GL: GPU is not ready to load data, trying to load before InitWindow()?"); return programId; }
@@ -4326,6 +4376,15 @@ unsigned int rlLoadShaderProgram(unsigned int vShaderId, unsigned int fShaderId)
     programId = glCreateProgram();
 
     glAttachShader(programId, vShaderId);
+    if (cShaderId != RLGL.State.defaultCShaderId) {
+        glAttachShader(programId, cShaderId);
+    }
+    if (eShaderId != RLGL.State.defaultEShaderId) {
+        glAttachShader(programId, eShaderId);
+    }
+    if (gShaderId != RLGL.State.defaultGShaderId) {
+        glAttachShader(programId, gShaderId);
+    }
     glAttachShader(programId, fShaderId);
 
     // NOTE: Default attribute shader locations must be Bound before linking
@@ -5074,9 +5133,12 @@ static void rlLoadShaderDefault(void)
     // NOTE: Compiled vertex/fragment shaders are not deleted,
     // they are kept for re-use as default shaders in case some shader loading fails
     RLGL.State.defaultVShaderId = rlCompileShader(defaultVShaderCode, GL_VERTEX_SHADER);     // Compile default vertex shader
+    RLGL.State.defaultCShaderId = 0;
+    RLGL.State.defaultEShaderId = 0;
+    RLGL.State.defaultGShaderId = 0;
     RLGL.State.defaultFShaderId = rlCompileShader(defaultFShaderCode, GL_FRAGMENT_SHADER);   // Compile default fragment shader
 
-    RLGL.State.defaultShaderId = rlLoadShaderProgram(RLGL.State.defaultVShaderId, RLGL.State.defaultFShaderId);
+    RLGL.State.defaultShaderId = rlLoadShaderProgram(RLGL.State.defaultVShaderId, RLGL.State.defaultCShaderId, RLGL.State.defaultEShaderId, RLGL.State.defaultGShaderId, RLGL.State.defaultFShaderId);
 
     if (RLGL.State.defaultShaderId > 0)
     {

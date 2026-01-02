@@ -48,6 +48,9 @@ const (
 
 	// GL Shader type
 	FragmentShader = 0x8B30 // GL_FRAGMENT_SHADER
+	TessCtrlShader = 0x8E88 // GL_TESS_CONTROL_SHADER
+	TessEvalShader = 0x8E87 // GL_TESS_EVALUATION_SHADER
+	GeometryShader = 0x8DD9 // GL_GEOMETRY_SHADER
 	VertexShader   = 0x8B31 // GL_VERTEX_SHADER
 	ComputeShader  = 0x91B9 // GL_COMPUTE_SHADER
 

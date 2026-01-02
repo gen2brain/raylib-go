@@ -523,44 +523,98 @@ func EndScissorMode() {
 }
 
 // LoadShader - Load a custom shader and bind default locations
-func LoadShader(vsFileName string, fsFileName string) Shader {
+func LoadShader(vsFileName string, csFileName string, esFileName string, gsFileName string, fsFileName string) Shader {
 	cvsFileName := C.CString(vsFileName)
-	defer C.free(unsafe.Pointer(cvsFileName))
-
+	ccsFileName := C.CString(csFileName)
+	cesFileName := C.CString(esFileName)
+	cgsFileName := C.CString(gsFileName)
 	cfsFileName := C.CString(fsFileName)
-	defer C.free(unsafe.Pointer(cfsFileName))
 
 	if vsFileName == "" {
+		C.free(unsafe.Pointer(cvsFileName))
 		cvsFileName = nil
+	} else {
+		defer C.free(unsafe.Pointer(cvsFileName))
+	}
+
+	if csFileName == "" {
+		C.free(unsafe.Pointer(ccsFileName))
+		ccsFileName = nil
+	} else {
+		defer C.free(unsafe.Pointer(ccsFileName))
+	}
+
+	if esFileName == "" {
+		C.free(unsafe.Pointer(cesFileName))
+		cesFileName = nil
+	} else {
+		defer C.free(unsafe.Pointer(cesFileName))
+	}
+
+	if gsFileName == "" {
+		C.free(unsafe.Pointer(cgsFileName))
+		cgsFileName = nil
+	} else {
+		defer C.free(unsafe.Pointer(cgsFileName))
 	}
 
 	if fsFileName == "" {
+		C.free(unsafe.Pointer(cfsFileName))
 		cfsFileName = nil
+	} else {
+		defer C.free(unsafe.Pointer(cfsFileName))
 	}
 
-	ret := C.LoadShader(cvsFileName, cfsFileName)
+	ret := C.LoadShader(cvsFileName, ccsFileName, cesFileName, cgsFileName, cfsFileName)
 	v := newShaderFromPointer(unsafe.Pointer(&ret))
 
 	return v
 }
 
 // LoadShaderFromMemory - Load shader from code strings and bind default locations
-func LoadShaderFromMemory(vsCode string, fsCode string) Shader {
+func LoadShaderFromMemory(vsCode string, csCode string, esCode string, gsCode string, fsCode string) Shader {
 	cvsCode := C.CString(vsCode)
-	defer C.free(unsafe.Pointer(cvsCode))
-
+	ccsCode := C.CString(csCode)
+	cesCode := C.CString(esCode)
+	cgsCode := C.CString(gsCode)
 	cfsCode := C.CString(fsCode)
-	defer C.free(unsafe.Pointer(cfsCode))
 
 	if vsCode == "" {
+		C.free(unsafe.Pointer(cvsCode))
 		cvsCode = nil
+	} else {
+		defer C.free(unsafe.Pointer(cvsCode))
+	}
+
+	if csCode == "" {
+		C.free(unsafe.Pointer(ccsCode))
+		ccsCode = nil
+	} else {
+		defer C.free(unsafe.Pointer(ccsCode))
+	}
+
+	if esCode == "" {
+		C.free(unsafe.Pointer(cesCode))
+		cesCode = nil
+	} else {
+		defer C.free(unsafe.Pointer(cesCode))
+	}
+
+	if gsCode == "" {
+		C.free(unsafe.Pointer(cgsCode))
+		cgsCode = nil
+	} else {
+		defer C.free(unsafe.Pointer(cgsCode))
 	}
 
 	if fsCode == "" {
+		C.free(unsafe.Pointer(cfsCode))
 		cfsCode = nil
+	} else {
+		defer C.free(unsafe.Pointer(cfsCode))
 	}
 
-	ret := C.LoadShaderFromMemory(cvsCode, cfsCode)
+	ret := C.LoadShaderFromMemory(cvsCode, ccsCode, cesCode, cgsCode, cfsCode)
 	v := newShaderFromPointer(unsafe.Pointer(&ret))
 
 	return v
