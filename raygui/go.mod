@@ -2,7 +2,7 @@ module github.com/gen2brain/raylib-go/raygui
 
 go 1.22.0
 
-require github.com/gen2brain/raylib-go/raylib v0.56.0-dev
+require github.com/gen2brain/raylib-go/raylib v0.0.0-20251228111424-040fd2b41803
 
 require (
 	github.com/ebitengine/purego v0.8.1 // indirect
