@@ -248,6 +248,11 @@ func RestoreWindow() {
 	C.RestoreWindow()
 }
 
+// SetWindowFocused - Set window to be focused
+func SetWindowFocused() {
+	C.SetWindowFocused()
+}
+
 // SetWindowIcon - Set icon for window (single image, RGBA 32bit, only PLATFORM_DESKTOP)
 func SetWindowIcon(image Image) {
 	cimage := image.cptr()
