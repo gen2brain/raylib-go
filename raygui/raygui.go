@@ -15,11 +15,6 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
-const (
-	SCROLLBAR_LEFT_SIDE  = 0
-	SCROLLBAR_RIGHT_SIDE = 1
-)
-
 type (
 	ControlID     uint16
 	PropertyID    uint16
@@ -30,6 +25,14 @@ type (
 
 func (p PropertyID) IsExtended() bool {
 	return p >= 16
+}
+
+func (v PropertyValue) AsColor() rl.Color {
+	return rl.Color{uint8(v >> 24), uint8(v >> 16), uint8(v >> 8), uint8(v)}
+}
+
+func NewColorPropertyValue(color rl.Color) PropertyValue {
+	return PropertyValue(uint32(color.R)<<24 + uint32(color.G)<<16 + uint32(color.B)<<8 + uint32(color.A))
 }
 
 // Gui control state
@@ -63,6 +66,11 @@ const (
 	TEXT_WRAP_WORD
 )
 
+const (
+	SCROLLBAR_LEFT_SIDE PropertyValue = iota
+	SCROLLBAR_RIGHT_SIDE
+)
+
 // Gui controls
 const (
 	// Default -> populates to all controls when set
@@ -79,7 +87,7 @@ const (
 	DROPDOWNBOX
 	TEXTBOX // Used also for: TEXTBOXMULTI
 	VALUEBOX
-	SPINNER
+	CONTROL11
 	LISTVIEW
 	COLORPICKER
 	SCROLLBAR
