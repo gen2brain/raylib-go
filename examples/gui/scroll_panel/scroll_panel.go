@@ -130,30 +130,30 @@ func DrawStyleEditControls() {
 	style = int32(gui.GetStyle(gui.SCROLLBAR, gui.BORDER_WIDTH))
 	gui.Label(rl.Rectangle{555, 195, 110, 10}, "BORDER_WIDTH")
 	gui.Spinner(rl.Rectangle{670, 190, 90, 20}, "", &style, 0, 6, false)
-	gui.SetStyle(gui.SCROLLBAR, gui.BORDER_WIDTH, int64(style))
+	gui.SetStyle(gui.SCROLLBAR, gui.BORDER_WIDTH, gui.PropertyValue(style))
 
 	style = int32(gui.GetStyle(gui.SCROLLBAR, gui.ARROWS_SIZE))
 	gui.Label(rl.Rectangle{555, 220, 110, 10}, "ARROWS_SIZE")
 	gui.Spinner(rl.Rectangle{670, 215, 90, 20}, "", &style, 4, 14, false)
-	gui.SetStyle(gui.SCROLLBAR, gui.ARROWS_SIZE, int64(style))
+	gui.SetStyle(gui.SCROLLBAR, gui.ARROWS_SIZE, gui.PropertyValue(style))
 
-	style = int32(gui.GetStyle(gui.SCROLLBAR, gui.SLIDER_PADDING))
-	gui.Label(rl.Rectangle{555, 245, 110, 10}, "SLIDER_PADDING")
+	style = int32(gui.GetStyle(gui.SCROLLBAR, gui.SCROLL_PADDING))
+	gui.Label(rl.Rectangle{555, 245, 110, 10}, "SCROLL_PADDING")
 	gui.Spinner(rl.Rectangle{670, 240, 90, 20}, "", &style, 0, 14, false)
-	gui.SetStyle(gui.SCROLLBAR, gui.SLIDER_PADDING, int64(style))
+	gui.SetStyle(gui.SCROLLBAR, gui.SCROLL_PADDING, gui.PropertyValue(style))
 
 	style = boolToint32(gui.CheckBox(rl.Rectangle{565, 280, 20, 20}, "ARROWS_VISIBLE", int32Tobool(int32(gui.GetStyle(gui.SCROLLBAR, gui.ARROWS_VISIBLE)))))
-	gui.SetStyle(gui.SCROLLBAR, gui.ARROWS_VISIBLE, int64(style))
+	gui.SetStyle(gui.SCROLLBAR, gui.ARROWS_VISIBLE, gui.PropertyValue(style))
 
-	style = int32(gui.GetStyle(gui.SCROLLBAR, gui.SLIDER_PADDING))
+	style = int32(gui.GetStyle(gui.SLIDER, gui.SLIDER_PADDING))
 	gui.Label(rl.Rectangle{555, 325, 110, 10}, "SLIDER_PADDING")
 	gui.Spinner(rl.Rectangle{670, 320, 90, 20}, "", &style, 0, 14, false)
-	gui.SetStyle(gui.SCROLLBAR, gui.SLIDER_PADDING, int64(style))
+	gui.SetStyle(gui.SLIDER, gui.SLIDER_PADDING, gui.PropertyValue(style))
 
-	style = int32(gui.GetStyle(gui.SCROLLBAR, gui.SLIDER_WIDTH))
+	style = int32(gui.GetStyle(gui.SLIDER, gui.SLIDER_WIDTH))
 	gui.Label(rl.Rectangle{555, 350, 110, 10}, "SLIDER_WIDTH")
 	gui.Spinner(rl.Rectangle{670, 345, 90, 20}, "", &style, 2, 100, false)
-	gui.SetStyle(gui.SCROLLBAR, gui.SLIDER_WIDTH, int64(style))
+	gui.SetStyle(gui.SLIDER, gui.SLIDER_WIDTH, gui.PropertyValue(style))
 
 	var text string
 	if gui.GetStyle(gui.LISTVIEW, gui.SCROLLBAR_SIDE) == gui.SCROLLBAR_LEFT_SIDE {
@@ -162,7 +162,7 @@ func DrawStyleEditControls() {
 		text = "SCROLLBAR: RIGHT"
 	}
 	style = boolToint32(gui.Toggle(rl.Rectangle{560, 110, 200, 35}, text, int32Tobool(int32(gui.GetStyle(gui.LISTVIEW, gui.SCROLLBAR_SIDE)))))
-	gui.SetStyle(gui.LISTVIEW, gui.SCROLLBAR_SIDE, int64(style))
+	gui.SetStyle(gui.LISTVIEW, gui.SCROLLBAR_SIDE, gui.PropertyValue(style))
 	//----------------------------------------------------------
 
 	// ScrollBar style controls
@@ -172,12 +172,12 @@ func DrawStyleEditControls() {
 	style = int32(gui.GetStyle(gui.LISTVIEW, gui.SCROLLBAR_WIDTH))
 	gui.Label(rl.Rectangle{555, 35, 110, 10}, "SCROLLBAR_WIDTH")
 	gui.Spinner(rl.Rectangle{670, 30, 90, 20}, "", &style, 6, 30, false)
-	gui.SetStyle(gui.LISTVIEW, gui.SCROLLBAR_WIDTH, int64(style))
+	gui.SetStyle(gui.LISTVIEW, gui.SCROLLBAR_WIDTH, gui.PropertyValue(style))
 
-	style = int32(gui.GetStyle(gui.DEFAULT, gui.BORDER_WIDTH))
+	style = int32(gui.GetStyle(gui.LISTVIEW, gui.BORDER_WIDTH))
 	gui.Label(rl.Rectangle{555, 60, 110, 10}, "BORDER_WIDTH")
 	gui.Spinner(rl.Rectangle{670, 55, 90, 20}, "", &style, 0, 20, false)
-	gui.SetStyle(gui.DEFAULT, gui.BORDER_WIDTH, int64(style))
+	gui.SetStyle(gui.LISTVIEW, gui.BORDER_WIDTH, gui.PropertyValue(style))
 	//----------------------------------------------------------
 }
 
