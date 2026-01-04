@@ -211,6 +211,11 @@ func IsWindowState(flag uint32) bool {
 	return v
 }
 
+// SetWindowFocused - Sets the window to have focus
+func SetWindowFocused() {
+	C.SetWindowFocused()
+}
+
 // SetWindowState - Set window configuration state using flags
 func SetWindowState(flags uint32) {
 	cflags := (C.uint)(flags)
