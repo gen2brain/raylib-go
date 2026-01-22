@@ -65,7 +65,8 @@ func CircIn(t, b, c, d float32) float32 {
 // CircOut easing
 // t: current time, b: begInnIng value, c: change In value, d: duration
 func CircOut(t, b, c, d float32) float32 {
-	return c*float32(math.Sqrt(1-float64((t/d-1)*t))) + b
+	t = t/d - 1
+	return c*float32(math.Sqrt(1-float64(t*t))) + b
 }
 
 // CircInOut easing
