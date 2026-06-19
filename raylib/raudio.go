@@ -46,20 +46,30 @@ import (
 
 var (
 	internalAudioStreamCallback AudioCallback
-	audioMixedProcessorsMutex   = sync.RWMutex{}
-	audioMixedProcessors        = []AudioCallback{}
+	internalAudioStreamChannels uint32 = 2
+)
+
+var (
+	audioMixedProcessorsMutex = sync.RWMutex{}
+	audioMixedProcessors      = []AudioCallback{}
 )
 
 // SetAudioStreamCallback - Audio thread callback to request new data
 func SetAudioStreamCallback(stream AudioStream, callback AudioCallback) {
 	internalAudioStreamCallback = callback
+	internalAudioStreamChannels = stream.Channels
 	C.setAudioStreamCallbackWrapper(*stream.cptr())
 }
 
 //export internalAudioStreamCallbackGo
 func internalAudioStreamCallbackGo(data unsafe.Pointer, frames C.int) {
 	if internalAudioStreamCallback != nil {
-		internalAudioStreamCallback(unsafe.Slice((*float32)(data), frames), int(frames))
+		// Buffer holds frames*channels samples, interleaved per stream channels.
+		channels := int(internalAudioStreamChannels)
+		if channels < 1 {
+			channels = 1
+		}
+		internalAudioStreamCallback(unsafe.Slice((*float32)(data), int(frames)*channels), int(frames))
 	}
 }
 

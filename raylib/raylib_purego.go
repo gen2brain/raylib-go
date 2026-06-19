@@ -3877,8 +3877,13 @@ func SetAudioStreamBufferSizeDefault(size int32) {
 
 // SetAudioStreamCallback - Audio thread callback to request new data
 func SetAudioStreamCallback(stream AudioStream, callback AudioCallback) {
+	channels := int(stream.Channels)
+	if channels < 1 {
+		channels = 1
+	}
 	fn := purego.NewCallback(func(bufferData unsafe.Pointer, frames int32) uintptr {
-		callback(unsafe.Slice((*float32)(bufferData), frames), int(frames))
+		// Buffer holds frames*channels samples, interleaved per stream channels.
+		callback(unsafe.Slice((*float32)(bufferData), int(frames)*channels), int(frames))
 		return 0
 	})
 	setAudioStreamCallback.Call(nil, &stream, &fn)
