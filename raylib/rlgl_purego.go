@@ -206,10 +206,10 @@ var (
 	rlGetMatrixModelview        = dll.MustPrep("rlGetMatrixModelview", &typeMatrix)
 	rlGetMatrixProjection       = dll.MustPrep("rlGetMatrixProjection", &typeMatrix)
 	rlGetMatrixTransform        = dll.MustPrep("rlGetMatrixTransform", &typeMatrix)
-	rlGetMatrixProjectionStereo = dll.MustPrep("rlGetMatrixProjectionStereo", &ffi.TypeSint32)
-	rlGetMatrixViewOffsetStereo = dll.MustPrep("rlGetMatrixViewOffsetStereo", &ffi.TypeSint32)
+	rlGetMatrixProjectionStereo = dll.MustPrep("rlGetMatrixProjectionStereo", &typeMatrix, &ffi.TypeSint32)
+	rlGetMatrixViewOffsetStereo = dll.MustPrep("rlGetMatrixViewOffsetStereo", &typeMatrix, &ffi.TypeSint32)
 	rlSetMatrixProjection       = dll.MustPrep("rlSetMatrixProjection", &ffi.TypeVoid, &typeMatrix)
-	rlSetMatrixModelview        = dll.MustPrep("rlSetMatrixProjection", &ffi.TypeVoid, &typeMatrix)
+	rlSetMatrixModelview        = dll.MustPrep("rlSetMatrixModelview", &ffi.TypeVoid, &typeMatrix)
 	rlSetMatrixProjectionStereo = dll.MustPrep("rlSetMatrixProjectionStereo", &ffi.TypeVoid, &typeMatrix, &typeMatrix)
 	rlSetMatrixViewOffsetStereo = dll.MustPrep("rlSetMatrixViewOffsetStereo", &ffi.TypeVoid, &typeMatrix, &typeMatrix)
 
