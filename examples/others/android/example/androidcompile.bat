@@ -4,7 +4,7 @@
 @set LIBRARY_NAME=example
 @REM Set your android sdk folder here
 @set ANDROID_HOME=F:/AndroidSDK 
-@REM Set your android NDK folder here. WARNING: NDK 27 is not supported yet. See https://github.com/raysan5/raylib/issues/4166
+@REM Set your android NDK folder here
 @set ANDROID_NDK_HOME=F:/AndroidSDK/ndk/23.2.8568313
 @REM The target architecture for android. See https://developer.android.com/ndk/guides/abis. 
 @REM Valid options are: armeabi-v7a,arm64-v8a,x86,x86_64 or "all" if you want to build for all architectures.

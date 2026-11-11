@@ -2,22 +2,14 @@ apply plugin: 'com.android.application'
 
 android {
     namespace = "com.example.android"
-    compileSdkVersion 34
-    buildToolsVersion '34.0.0'
+    compileSdk = 36
 
     defaultConfig {
         applicationId "com.example.android"
-        minSdkVersion 16
-        targetSdkVersion 34
+        minSdk = 24
+        targetSdk = 36
         versionCode 1
         versionName '1.0'
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            zipAlignEnabled true
-        }
     }
 
     sourceSets {
@@ -25,11 +17,7 @@ android {
             jniLibs.srcDirs = ['libs']
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
-
             manifest.srcFile 'AndroidManifest.xml'
         }
     }
-}
-
-dependencies {
 }
