@@ -1,3 +1,5 @@
+//go:build !nocgo
+
 /**********************************************************************************************
 *
 *   rmodels - Basic functions to draw 3d shapes and load and draw 3d models

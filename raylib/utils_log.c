@@ -1,3 +1,5 @@
+//go:build !nocgo
+
 #include "raylib.h"
 #include "utils_log.h"
 #include <stdio.h>                      // Required for: vprintf()

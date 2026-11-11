@@ -1,7 +1,8 @@
-//go:build darwin && (sdl || sdl3) && !rgfw
+//go:build darwin && (sdl || sdl3) && !rgfw && !nocgo
 // +build darwin
 // +build sdl sdl3
 // +build !rgfw
+// +build !nocgo
 
 package rl
 

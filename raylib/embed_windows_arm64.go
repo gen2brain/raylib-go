@@ -1,5 +1,6 @@
-//go:build !cgo && !extlib
-// +build !cgo,!extlib
+//go:build (!cgo || nocgo) && !extlib
+// +build !cgo nocgo
+// +build !extlib
 
 package rl
 

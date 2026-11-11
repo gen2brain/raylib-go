@@ -1,3 +1,5 @@
+//go:build !nocgo
+
 /**********************************************************************************************
 *
 *   rcore - Window/display management, Graphic device/context management and input management

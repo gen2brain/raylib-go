@@ -1,3 +1,5 @@
+//go:build !nocgo
+
 /**********************************************************************************************
 *
 *   rtext - Basic functions to load fonts and draw text

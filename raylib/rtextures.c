@@ -1,3 +1,5 @@
+//go:build !nocgo
+
 /**********************************************************************************************
 *
 *   rtextures - Basic functions to load and draw textures

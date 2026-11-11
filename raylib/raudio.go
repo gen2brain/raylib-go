@@ -1,5 +1,5 @@
-//go:build !noaudio
-// +build !noaudio
+//go:build !noaudio && !nocgo
+// +build !noaudio,!nocgo
 
 package rl
 

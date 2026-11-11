@@ -1,5 +1,5 @@
-//go:build !cgo && !extlib && windows && (amd64 || arm64)
-// +build !cgo
+//go:build (!cgo || nocgo) && !extlib && windows && (amd64 || arm64)
+// +build !cgo nocgo
 // +build !extlib
 // +build windows
 // +build amd64 arm64

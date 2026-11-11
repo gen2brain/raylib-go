@@ -1,5 +1,5 @@
-//go:build !cgo
-// +build !cgo
+//go:build !cgo || nocgo
+// +build !cgo nocgo
 
 package rl
 

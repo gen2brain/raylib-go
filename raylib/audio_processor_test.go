@@ -1,4 +1,4 @@
-//go:build !cgo || !noaudio
+//go:build !cgo || nocgo || !noaudio
 
 package rl
 

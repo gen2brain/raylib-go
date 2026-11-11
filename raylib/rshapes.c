@@ -1,3 +1,5 @@
+//go:build !nocgo
+
 /**********************************************************************************************
 *
 *   rshapes - Basic functions to draw 2d shapes and check collisions

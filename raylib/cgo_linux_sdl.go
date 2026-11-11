@@ -1,9 +1,10 @@
-//go:build linux && (sdl || sdl3) && !rgfw && !drm && !android
+//go:build linux && (sdl || sdl3) && !rgfw && !drm && !android && !nocgo
 // +build linux
 // +build sdl sdl3
 // +build !rgfw
 // +build !drm
 // +build !android
+// +build !nocgo
 
 package rl
 

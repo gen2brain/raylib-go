@@ -1,5 +1,5 @@
-//go:build !cgo && !extlib && (linux || darwin) && (amd64 || arm64)
-// +build !cgo
+//go:build (!cgo || nocgo) && !extlib && (linux || darwin) && (amd64 || arm64)
+// +build !cgo nocgo
 // +build !extlib
 // +build linux darwin
 // +build amd64 arm64

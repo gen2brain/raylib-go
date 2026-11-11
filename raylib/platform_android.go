@@ -1,5 +1,5 @@
-//go:build android
-// +build android
+//go:build android && !nocgo
+// +build android,!nocgo
 
 package rl
 

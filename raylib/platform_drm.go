@@ -1,5 +1,5 @@
-//go:build linux && drm && !android
-// +build linux,drm,!android
+//go:build linux && drm && !android && !nocgo
+// +build linux,drm,!android,!nocgo
 
 package rl
 
