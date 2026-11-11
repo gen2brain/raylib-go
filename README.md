@@ -60,12 +60,13 @@ On FreeBSD build with `-gcflags="github.com/ebitengine/purego/internal/fakecgo=-
 
 Platforms (cgo, default is [GLFW](https://www.glfw.org/)):
 
-| Tag    | Description                                                                                                                                |
-|--------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| `drm`  | Linux native [DRM](https://en.wikipedia.org/wiki/Direct_Rendering_Manager) mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM) |
-| `sdl`  | [SDL](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL)                                                                    |
-| `sdl3` | [SDL3](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL3)                                                                  |
-| `rgfw` | [RGFW](https://github.com/ColleagueRiley/RGFW) backend (PLATFORM_DESKTOP_RGFW)                                                             |
+| Tag     | Description                                                                                                                                |
+|---------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| `drm`   | Linux native [DRM](https://en.wikipedia.org/wiki/Direct_Rendering_Manager) mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM) |
+| `sdl`   | [SDL](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL)                                                                    |
+| `sdl3`  | [SDL3](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL3)                                                                  |
+| `rgfw`  | [RGFW](https://github.com/ColleagueRiley/RGFW) backend (PLATFORM_DESKTOP_RGFW)                                                             |
+| `win32` | Native Win32 backend, Windows only (PLATFORM_DESKTOP_WIN32)                                                                                |
 
 Graphics API (cgo, default is OpenGL 3.3 on desktop):
 

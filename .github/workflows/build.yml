@@ -103,6 +103,45 @@ jobs:
       run: go build -tags rgfw
       working-directory: raylib
 
+  test-win32:
+    strategy:
+      matrix:
+        go-version: [1.21.x]
+        os: [windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Build
+      run: go build -tags win32
+      working-directory: raylib
+    - name: Link example
+      run: go build -tags win32 ./core/basic_window
+      working-directory: examples
+
+  test-nocgo:
+    strategy:
+      matrix:
+        go-version: [1.21.x]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Test
+      run: go test -tags nocgo ./...
+      working-directory: raylib
+      env:
+        CGO_ENABLED: 1
+
   test-purego:
     strategy:
       matrix:

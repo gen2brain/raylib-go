@@ -1,7 +1,8 @@
-//go:build windows && (sdl || sdl3) && !rgfw && !nocgo
+//go:build windows && (sdl || sdl3) && !rgfw && !win32 && !nocgo
 // +build windows
 // +build sdl sdl3
 // +build !rgfw
+// +build !win32
 // +build !nocgo
 
 package rl
