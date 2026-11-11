@@ -11,7 +11,7 @@ package rl
 /*
 #cgo openbsd CFLAGS: -I. -I/usr/X11R6/include
 #cgo openbsd,sdl CFLAGS: -DPLATFORM_DESKTOP_SDL
-#cgo openbsd,sdl3 CFLAGS: -DPLATFORM_DESKTOP_SDL -DPLATFORM_DESKTOP_SDL3
+#cgo openbsd,sdl3 CFLAGS: -DPLATFORM_DESKTOP_SDL -DPLATFORM_DESKTOP_SDL3 -DUSING_SDL3_PROJECT
 #cgo openbsd LDFLAGS: -L/usr/X11R6/lib
 
 #cgo openbsd,sdl pkg-config: sdl2

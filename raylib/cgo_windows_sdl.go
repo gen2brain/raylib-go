@@ -11,7 +11,7 @@ package rl
 #cgo windows,sdl3 LDFLAGS: -lSDL3
 #cgo windows CFLAGS: -Iexternal -Wno-stringop-overflow
 #cgo windows,sdl CFLAGS: -DPLATFORM_DESKTOP_SDL
-#cgo windows,sdl3 CFLAGS: -DPLATFORM_DESKTOP_SDL -DPLATFORM_DESKTOP_SDL3
+#cgo windows,sdl3 CFLAGS: -DPLATFORM_DESKTOP_SDL -DPLATFORM_DESKTOP_SDL3 -DUSING_SDL3_PROJECT
 
 #cgo windows,!es2,!es3 LDFLAGS: -lopengl32
 

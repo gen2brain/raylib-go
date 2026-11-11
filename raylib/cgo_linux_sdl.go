@@ -11,7 +11,7 @@ package rl
 #cgo linux,!es2 LDFLAGS: -lm
 #cgo linux CFLAGS: -Wno-stringop-overflow
 #cgo linux,sdl CFLAGS: -DPLATFORM_DESKTOP_SDL
-#cgo linux,sdl3 CFLAGS: -DPLATFORM_DESKTOP_SDL -DPLATFORM_DESKTOP_SDL3
+#cgo linux,sdl3 CFLAGS: -DPLATFORM_DESKTOP_SDL -DPLATFORM_DESKTOP_SDL3 -DUSING_SDL3_PROJECT
 #cgo linux,sdl pkg-config: sdl2
 #cgo linux,sdl3 pkg-config: sdl3
 

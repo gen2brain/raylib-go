@@ -11,7 +11,7 @@ package rl
 /*
 #cgo freebsd CFLAGS: -I. -I/usr/local/include
 #cgo freebsd,sdl CFLAGS: -DPLATFORM_DESKTOP_SDL
-#cgo freebsd,sdl3 CFLAGS: -DPLATFORM_DESKTOP_SDL -DPLATFORM_DESKTOP_SDL3
+#cgo freebsd,sdl3 CFLAGS: -DPLATFORM_DESKTOP_SDL -DPLATFORM_DESKTOP_SDL3 -DUSING_SDL3_PROJECT
 #cgo freebsd LDFLAGS: -L/usr/local/lib
 
 #cgo freebsd,sdl pkg-config: sdl2
