@@ -685,6 +685,7 @@ func InitWindow(width int32, height int32, title string) {
 // CloseWindow - Close window and unload OpenGL context
 func CloseWindow() {
 	closeWindow.Call(nil)
+	unloadLib()
 }
 
 // WindowShouldClose - Check if application should close ([KeyEscape] pressed or windows close icon clicked)

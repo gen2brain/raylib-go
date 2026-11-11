@@ -5,5 +5,7 @@ package rl
 
 import _ "embed"
 
-//go:embed libs/raylib-6.0_macos.tar.gz
+//go:embed libs/darwin_arm64/libraylib.dylib.gz
 var embeddedLib []byte
+
+const embeddedLibName = "libraylib.dylib"

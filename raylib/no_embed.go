@@ -4,11 +4,13 @@
 
 package rl
 
-import (
-	_ "embed"
-)
-
 // extractLib extracts the embedded shared library and returns the path to it
 func extractLib() (libname string) {
 	return
 }
+
+func removeExtracted() {}
+
+func afterLoad() {}
+
+func unloadLib() {}

@@ -58,8 +58,10 @@ func loadLibrary() ffi.Lib {
 
 	lib, err := ffi.Load(libname)
 	if err != nil {
+		removeExtracted()
 		panic(fmt.Errorf("cannot load library %s: %w", libname, err))
 	}
+	afterLoad()
 
 	addr, err := lib.Get("raylib_version")
 	if err != nil {

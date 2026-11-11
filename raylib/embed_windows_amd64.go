@@ -5,5 +5,7 @@ package rl
 
 import _ "embed"
 
-//go:embed libs/raylib-6.0_win64_msvc16.tar.gz
+//go:embed libs/windows_amd64/raylib.dll.gz
 var embeddedLib []byte
+
+const embeddedLibName = "raylib.dll"

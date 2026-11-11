@@ -5,5 +5,7 @@ package rl
 
 import _ "embed"
 
-//go:embed libs/raylib-6.0_linux_arm64.tar.gz
+//go:embed libs/linux_arm64/libraylib.so.gz
 var embeddedLib []byte
+
+const embeddedLibName = "libraylib.so"
