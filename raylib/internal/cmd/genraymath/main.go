@@ -366,7 +366,12 @@ func (f funcInfo) ReturnValue() string {
 	}
 }
 
-func (f funcInfo) TestNotEqual(a, b string) string {
+// TestScaled reports whether the comparison of the return value takes a scale.
+func (f funcInfo) TestScaled() bool {
+	return f.ReturnType != "bool"
+}
+
+func (f funcInfo) TestNotEqual(a, b, scale string) string {
 	t := f.ReturnType
 	if t == "bool" {
 		return a + " != " + b
@@ -383,7 +388,7 @@ func (f funcInfo) TestNotEqual(a, b string) string {
 
 	first, size := utf8.DecodeRuneInString(t)
 	t = string(unicode.ToUpper(first)) + t[size:]
-	return fmt.Sprintf("!test%sEquals(%s, %s)", t, a, b)
+	return fmt.Sprintf("!test%sEquals(%s, %s, %s)", t, a, b, scale)
 }
 
 type param struct {

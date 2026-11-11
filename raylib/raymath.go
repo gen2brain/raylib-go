@@ -1796,55 +1796,63 @@ func QuaternionEquals(q, p Quaternion) bool {
 
 // MatrixDecompose - Decompose a transformation matrix into its rotational, translational and scaling components
 func MatrixDecompose(mat Matrix, translation *Vector3, rotation *Quaternion, scale *Vector3) {
-	// Extract translation.
+	const eps = float32(1e-9)
+
 	translation.X = mat.M12
 	translation.Y = mat.M13
 	translation.Z = mat.M14
 
-	// Extract upper-left for determinant computation
-	a := mat.M0
-	b := mat.M4
-	c := mat.M8
-	d := mat.M1
-	e := mat.M5
-	f := mat.M9
-	g := mat.M2
-	h := mat.M6
-	i := mat.M10
-	A := e*i - f*h
-	B := f*g - d*i
-	C := d*h - e*g
-
-	// Extract scale
-	det := a*A + b*B + c*C
-	abc := NewVector3(a, b, c)
-	def := NewVector3(d, e, f)
-	ghi := NewVector3(g, h, i)
-
-	scalex := Vector3Length(abc)
-	scaley := Vector3Length(def)
-	scalez := Vector3Length(ghi)
-	s := NewVector3(scalex, scaley, scalez)
-
-	if det < 0 {
-		s = Vector3Negate(s)
+	cols := [3]Vector3{
+		{mat.M0, mat.M4, mat.M8},
+		{mat.M1, mat.M5, mat.M9},
+		{mat.M2, mat.M6, mat.M10},
 	}
 
-	*scale = s
-
-	// Remove scale from the matrix if it is not close to zero
-	clone := mat
-	if !FloatEquals(det, 0) {
-		clone.M0 /= s.X
-		clone.M5 /= s.Y
-		clone.M10 /= s.Z
-
-		// Extract rotation
-		*rotation = QuaternionFromMatrix(clone)
-	} else {
-		// Set to identity if close to zero
-		*rotation = QuaternionIdentity()
+	stabilizer := eps
+	for _, c := range cols {
+		stabilizer = max(stabilizer, float32(math.Abs(float64(c.X))), float32(math.Abs(float64(c.Y))), float32(math.Abs(float64(c.Z))))
 	}
+	for i := range cols {
+		cols[i] = Vector3Scale(cols[i], 1/stabilizer)
+	}
+
+	var scl Vector3
+
+	scl.X = Vector3Length(cols[0])
+	if scl.X > eps {
+		cols[0] = Vector3Scale(cols[0], 1/scl.X)
+	}
+
+	cols[1] = Vector3Subtract(cols[1], Vector3Scale(cols[0], Vector3DotProduct(cols[0], cols[1])))
+
+	scl.Y = Vector3Length(cols[1])
+	if scl.Y > eps {
+		cols[1] = Vector3Scale(cols[1], 1/scl.Y)
+	}
+
+	cols[2] = Vector3Subtract(cols[2], Vector3Scale(cols[0], Vector3DotProduct(cols[0], cols[2])))
+	cols[2] = Vector3Subtract(cols[2], Vector3Scale(cols[1], Vector3DotProduct(cols[1], cols[2])))
+
+	scl.Z = Vector3Length(cols[2])
+	if scl.Z > eps {
+		cols[2] = Vector3Scale(cols[2], 1/scl.Z)
+	}
+
+	if Vector3DotProduct(cols[0], Vector3CrossProduct(cols[1], cols[2])) < 0 {
+		scl = Vector3Negate(scl)
+		for i := range cols {
+			cols[i] = Vector3Negate(cols[i])
+		}
+	}
+
+	*scale = Vector3Scale(scl, stabilizer)
+
+	*rotation = QuaternionFromMatrix(NewMatrix(
+		cols[0].X, cols[0].Y, cols[0].Z, 0,
+		cols[1].X, cols[1].Y, cols[1].Z, 0,
+		cols[2].X, cols[2].Y, cols[2].Z, 0,
+		0, 0, 0, 1,
+	))
 }
 
 func sincos(angle float32) (sin, cos float32) {
