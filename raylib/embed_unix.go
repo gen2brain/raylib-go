@@ -1,6 +1,6 @@
-//go:build !cgo && !raylib_no_embed && (linux || darwin) && (amd64 || arm64)
+//go:build !cgo && !extlib && (linux || darwin) && (amd64 || arm64)
 // +build !cgo
-// +build !raylib_no_embed
+// +build !extlib
 // +build linux darwin
 // +build amd64 arm64
 

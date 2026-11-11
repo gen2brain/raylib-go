@@ -1,6 +1,6 @@
-//go:build !cgo && !raylib_no_embed && windows && (amd64 || arm64)
+//go:build !cgo && !extlib && windows && (amd64 || arm64)
 // +build !cgo
-// +build !raylib_no_embed
+// +build !extlib
 // +build windows
 // +build amd64 arm64
 

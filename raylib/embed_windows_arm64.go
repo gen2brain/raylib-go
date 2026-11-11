@@ -1,5 +1,5 @@
-//go:build !cgo && !raylib_no_embed
-// +build !cgo,!raylib_no_embed
+//go:build !cgo && !extlib
+// +build !cgo,!extlib
 
 package rl
 

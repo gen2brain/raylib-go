@@ -1,6 +1,6 @@
-//go:build !cgo && (raylib_no_embed || (!windows && !linux && !darwin) || (!amd64 && !arm64))
+//go:build !cgo && (extlib || (!windows && !linux && !darwin) || (!amd64 && !arm64))
 // +build !cgo
-// +build raylib_no_embed !windows,!linux,!darwin !amd64,!arm64
+// +build extlib !windows,!linux,!darwin !amd64,!arm64
 
 package rl
 

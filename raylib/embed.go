@@ -1,6 +1,6 @@
-//go:build !cgo && !raylib_no_embed && (windows || linux || darwin) && (amd64 || arm64)
+//go:build !cgo && !extlib && (windows || linux || darwin) && (amd64 || arm64)
 // +build !cgo
-// +build !raylib_no_embed
+// +build !extlib
 // +build windows linux darwin
 // +build amd64 arm64
 
@@ -18,10 +18,6 @@ var extractedDir string
 
 // extractLib unpacks the embedded shared library into a new temporary directory and returns its path
 func extractLib() string {
-	if os.Getenv("RAYLIB_NO_EMBED") == "1" {
-		return ""
-	}
-
 	dir, err := os.MkdirTemp("", "raylib-go-")
 	if err != nil {
 		panic(err)
