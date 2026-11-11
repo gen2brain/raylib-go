@@ -36,22 +36,41 @@ static void setAudioMixedProcessorCallbackWrapper() {
 static void unsetAudioMixedProcessorCallbackWrapper() {
 	DetachAudioMixedProcessor(audioMixedProcessorCallback);
 }
+
+#if defined(_WIN32) || defined(WIN32) || defined(__WIN32__) || defined(__NT__)
+    __declspec(dllexport)
+#endif
+extern void internalAudioStreamProcessorGo(int, void *, int);
+
+#define AUDIO_STREAM_PROCESSOR(n) static void audioStreamProcessor##n(void *data, unsigned int frames) { internalAudioStreamProcessorGo(n, data, frames); }
+#define AUDIO_STREAM_PROCESSOR8(n) AUDIO_STREAM_PROCESSOR(n##0) AUDIO_STREAM_PROCESSOR(n##1) AUDIO_STREAM_PROCESSOR(n##2) AUDIO_STREAM_PROCESSOR(n##3) \
+	AUDIO_STREAM_PROCESSOR(n##4) AUDIO_STREAM_PROCESSOR(n##5) AUDIO_STREAM_PROCESSOR(n##6) AUDIO_STREAM_PROCESSOR(n##7)
+AUDIO_STREAM_PROCESSOR8(0) AUDIO_STREAM_PROCESSOR8(1) AUDIO_STREAM_PROCESSOR8(2) AUDIO_STREAM_PROCESSOR8(3)
+AUDIO_STREAM_PROCESSOR8(4) AUDIO_STREAM_PROCESSOR8(5) AUDIO_STREAM_PROCESSOR8(6) AUDIO_STREAM_PROCESSOR8(7)
+
+#define AUDIO_STREAM_PROCESSOR_REF8(n) audioStreamProcessor##n##0, audioStreamProcessor##n##1, audioStreamProcessor##n##2, audioStreamProcessor##n##3, \
+	audioStreamProcessor##n##4, audioStreamProcessor##n##5, audioStreamProcessor##n##6, audioStreamProcessor##n##7
+static AudioCallback audioStreamProcessors[64] = {
+	AUDIO_STREAM_PROCESSOR_REF8(0), AUDIO_STREAM_PROCESSOR_REF8(1), AUDIO_STREAM_PROCESSOR_REF8(2), AUDIO_STREAM_PROCESSOR_REF8(3),
+	AUDIO_STREAM_PROCESSOR_REF8(4), AUDIO_STREAM_PROCESSOR_REF8(5), AUDIO_STREAM_PROCESSOR_REF8(6), AUDIO_STREAM_PROCESSOR_REF8(7),
+};
+
+static void attachAudioStreamProcessorSlot(AudioStream stream, int slot) {
+	AttachAudioStreamProcessor(stream, audioStreamProcessors[slot]);
+}
+
+static void detachAudioStreamProcessorSlot(AudioStream stream, int slot) {
+	DetachAudioStreamProcessor(stream, audioStreamProcessors[slot]);
+}
 */
 import "C"
 import (
-	"reflect"
-	"sync"
 	"unsafe"
 )
 
 var (
 	internalAudioStreamCallback AudioCallback
 	internalAudioStreamChannels uint32 = 2
-)
-
-var (
-	audioMixedProcessorsMutex = sync.RWMutex{}
-	audioMixedProcessors      = []AudioCallback{}
 )
 
 // SetAudioStreamCallback - Audio thread callback to request new data
@@ -73,41 +92,49 @@ func internalAudioStreamCallbackGo(data unsafe.Pointer, frames C.int) {
 	}
 }
 
-// AttachAudioMixedProcessor - Attach audio stream processor to the entire audio pipeline, receives frames x 2 samples as 'float' (stereo)
-func AttachAudioMixedProcessor(processor AudioCallback) {
-	audioMixedProcessorsMutex.Lock()
-	defer audioMixedProcessorsMutex.Unlock()
-
-	if len(audioMixedProcessors) == 0 {
-		C.setAudioMixedProcessorCallbackWrapper()
+// AttachAudioStreamProcessor - Attach audio stream processor to stream, receives frames x 2 samples as 'float' (stereo)
+func AttachAudioStreamProcessor(stream AudioStream, processor AudioCallback) {
+	slot := acquireAudioStreamProcessor(stream, processor)
+	if slot < 0 {
+		return
 	}
 
-	audioMixedProcessors = append(audioMixedProcessors, processor)
+	C.attachAudioStreamProcessorSlot(*stream.cptr(), C.int(slot))
+}
+
+// DetachAudioStreamProcessor - Detach audio stream processor from stream
+func DetachAudioStreamProcessor(stream AudioStream, processor AudioCallback) {
+	slot := findAudioStreamProcessor(stream, processor)
+	if slot < 0 {
+		return
+	}
+
+	C.detachAudioStreamProcessorSlot(*stream.cptr(), C.int(slot))
+	releaseAudioStreamProcessor(slot)
+}
+
+//export internalAudioStreamProcessorGo
+func internalAudioStreamProcessorGo(slot C.int, data unsafe.Pointer, frames C.int) {
+	callAudioStreamProcessor(int(slot), data, int(frames))
+}
+
+// AttachAudioMixedProcessor - Attach audio stream processor to the entire audio pipeline, receives frames x 2 samples as 'float' (stereo)
+func AttachAudioMixedProcessor(processor AudioCallback) {
+	if addAudioMixedProcessor(processor) {
+		C.setAudioMixedProcessorCallbackWrapper()
+	}
 }
 
 // DetachAudioMixedProcessor - Detach audio stream processor from the entire audio pipeline
 func DetachAudioMixedProcessor(processor AudioCallback) {
-	audioMixedProcessorsMutex.Lock()
-	defer audioMixedProcessorsMutex.Unlock()
-
-	callbackPtr := reflect.ValueOf(processor).Pointer()
-	for i := len(audioMixedProcessors) - 1; i >= 0; i-- {
-		if reflect.ValueOf(audioMixedProcessors[i]).Pointer() == callbackPtr {
-			audioMixedProcessors = append(audioMixedProcessors[:i], audioMixedProcessors[i+1:]...)
-			break
-		}
-	}
-
-	if len(audioMixedProcessors) == 0 {
+	if removeAudioMixedProcessor(processor) {
 		C.unsetAudioMixedProcessorCallbackWrapper()
 	}
 }
 
 //export internalAudioMixedProcessorGo
 func internalAudioMixedProcessorGo(data unsafe.Pointer, frames C.int) {
-	for _, callback := range audioMixedProcessors {
-		callback(unsafe.Slice((*float32)(data), frames), int(frames))
-	}
+	callAudioMixedProcessors(data, int(frames))
 }
 
 // newWaveFromPointer - Returns new Wave from pointer

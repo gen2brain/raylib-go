@@ -8,7 +8,7 @@ import (
 	"image"
 	"image/color"
 	"os"
-	"reflect"
+	"sync"
 	"unsafe"
 
 	"github.com/ebitengine/purego"
@@ -19,10 +19,6 @@ import (
 var (
 	// dll is the pointer to the shared library
 	dll ffi.Lib = loadLibrary()
-
-	// audioCallbacks is needed to have a reference between Go functions (keys) created by the user
-	// and C function pointers (values) created by purego.NewCallback
-	audioCallbacks map[uintptr]uintptr = make(map[uintptr]uintptr)
 
 	// Window-related functions
 
@@ -3892,39 +3888,61 @@ func SetAudioStreamCallback(stream AudioStream, callback AudioCallback) {
 
 // AttachAudioStreamProcessor - Attach audio stream processor to stream, receives frames x 2 samples as 'float' (stereo)
 func AttachAudioStreamProcessor(stream AudioStream, processor AudioCallback) {
-	fn := purego.NewCallback(func(bufferData unsafe.Pointer, frames int32) uintptr {
-		processor(unsafe.Slice((*float32)(bufferData), frames), int(frames))
-		return 0
-	})
-	ptr := uintptr(reflect.ValueOf(processor).UnsafePointer())
-	audioCallbacks[ptr] = fn
+	slot := acquireAudioStreamProcessor(stream, processor)
+	if slot < 0 {
+		return
+	}
+
+	fn := audioProcessorCallbacks()[slot]
 	attachAudioStreamProcessor.Call(nil, &stream, &fn)
 }
 
 // DetachAudioStreamProcessor - Detach audio stream processor from stream
 func DetachAudioStreamProcessor(stream AudioStream, processor AudioCallback) {
-	ptr := uintptr(reflect.ValueOf(processor).UnsafePointer())
-	fn := audioCallbacks[ptr]
+	slot := findAudioStreamProcessor(stream, processor)
+	if slot < 0 {
+		return
+	}
+
+	fn := audioProcessorCallbacks()[slot]
 	detachAudioStreamProcessor.Call(nil, &stream, &fn)
+	releaseAudioStreamProcessor(slot)
 }
 
 // AttachAudioMixedProcessor - Attach audio stream processor to the entire audio pipeline, receives frames x 2 samples as 'float' (stereo)
 func AttachAudioMixedProcessor(processor AudioCallback) {
-	fn := purego.NewCallback(func(bufferData unsafe.Pointer, frames int32) uintptr {
-		processor(unsafe.Slice((*float32)(bufferData), frames), int(frames))
-		return 0
-	})
-	ptr := uintptr(reflect.ValueOf(processor).UnsafePointer())
-	audioCallbacks[ptr] = fn
-	attachAudioMixedProcessor.Call(nil, &fn)
+	if addAudioMixedProcessor(processor) {
+		fn := audioMixedProcessorCallback()
+		attachAudioMixedProcessor.Call(nil, &fn)
+	}
 }
 
 // DetachAudioMixedProcessor - Detach audio stream processor from the entire audio pipeline
 func DetachAudioMixedProcessor(processor AudioCallback) {
-	ptr := uintptr(reflect.ValueOf(processor).UnsafePointer())
-	fn := audioCallbacks[ptr]
-	detachAudioMixedProcessor.Call(nil, &fn)
+	if removeAudioMixedProcessor(processor) {
+		fn := audioMixedProcessorCallback()
+		detachAudioMixedProcessor.Call(nil, &fn)
+	}
 }
+
+// audioProcessorCallbacks returns one C callback per stream processor slot, created once
+var audioProcessorCallbacks = sync.OnceValue(func() (fns [audioProcessorSlots]uintptr) {
+	for i := range fns {
+		slot := i
+		fns[i] = purego.NewCallback(func(data unsafe.Pointer, frames uint32) uintptr {
+			callAudioStreamProcessor(slot, data, int(frames))
+			return 0
+		})
+	}
+	return
+})
+
+var audioMixedProcessorCallback = sync.OnceValue(func() uintptr {
+	return purego.NewCallback(func(data unsafe.Pointer, frames uint32) uintptr {
+		callAudioMixedProcessors(data, int(frames))
+		return 0
+	})
+})
 
 // SetMain - Sets callback function
 func SetMain(func()) {
