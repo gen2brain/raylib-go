@@ -1,11 +1,10 @@
-![logo](https://goo.gl/XlIcXz)
+![logo](logo.png)
 ## raylib-go
 [![Build Status](https://github.com/gen2brain/raylib-go/actions/workflows/build.yml/badge.svg)](https://github.com/gen2brain/raylib-go/actions)
-[![GoDoc](https://godoc.org/github.com/gen2brain/raylib-go/raylib?status.svg)](https://godoc.org/github.com/gen2brain/raylib-go/raylib)
-[![Go Report Card](https://goreportcard.com/badge/github.com/gen2brain/raylib-go/raylib)](https://goreportcard.com/report/github.com/gen2brain/raylib-go/raylib)
+[![Go Reference](https://pkg.go.dev/badge/github.com/gen2brain/raylib-go/raylib.svg)](https://pkg.go.dev/github.com/gen2brain/raylib-go/raylib)
 [![Examples](https://img.shields.io/badge/learn%20by-examples-0077b3.svg?style=flat-square)](https://github.com/gen2brain/raylib-go/tree/master/examples)
 
-Golang bindings for [raylib](http://www.raylib.com/), a simple and easy-to-use library to enjoy videogames programming.
+Golang bindings for [raylib](https://www.raylib.com/), a simple and easy-to-use library to enjoy videogames programming.
 
 raylib C source code is included and compiled together with bindings. Note that the first build can take a few minutes.
 
@@ -42,11 +41,15 @@ To remove console window, build with `-ldflags "-H=windowsgui"`.
 
 For web bindings, refer to [Raylib-Go-Wasm](https://github.com/BrownNPC/Raylib-Go-Wasm); it should be largely compatible with this repository.
 
-#### purego (without cgo, i.e. CGO_ENABLED=0)
+#### purego (without cgo)
 
-You can use raylib-go on `Linux`, `macOS`, `Windows` and `FreeBSD` without the need of [cgo](https://go.dev/blog/cgo). 32-bit is not supported.
+You can use raylib-go on `Linux`, `macOS`, `Windows` and `FreeBSD` without the need of [cgo](https://go.dev/blog/cgo), i.e. with `CGO_ENABLED=0`,
+or with the `nocgo` build tag when cgo is enabled, for example when raylib's C symbols clash with another cgo library. 32-bit is not supported.
 
-The shared libraries (.dll, .so, .dylib) of raylib are already embedded for Linux arm64/amd64, macOS arm64/amd64 and Windows arm64/amd64. The build tag `raylib_no_embed` or the environment variable `RAYLIB_NO_EMBED=1` can disable this feature.
+The shared libraries (.so, .dylib, .dll) of raylib are embedded for Linux, macOS and Windows on amd64 and arm64, built from the same bundled C sources.
+They are unpacked to a temporary directory at startup and removed again. With the build tag `extlib` nothing is embedded and the system raylib library is loaded instead.
+
+On FreeBSD build with `-gcflags="github.com/ebitengine/purego/internal/fakecgo=-std"`.
 
 
 ### Installation
@@ -55,23 +58,38 @@ The shared libraries (.dll, .so, .dylib) of raylib are already embedded for Linu
 
 ### Build tags
 
-* `drm` - build for Linux native [DRM](https://en.wikipedia.org/wiki/Direct_Rendering_Manager) mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM)
-* `sdl` - build for [SDL](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL)
-* `sdl3` - build for [SDL3](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL3)
-* `rgfw` - build for [RGFW](https://github.com/ColleagueRiley/RGFW) backend (PLATFORM_DESKTOP_RGFW)
-* `noaudio` - disables audio functions
-* `opengl43` - uses OpenGL 4.3 backend
-* `opengl21` - uses OpenGL 2.1 backend (default is 3.3 on desktop)
-* `opengl11` - uses OpenGL 1.1 backend (pseudo OpenGL 1.1 style)
-* `es2` - uses OpenGL ES 2.0 backend (can be used to link against [Google's ANGLE](https://github.com/google/angle))
-* `es3` - experimental support for OpenGL ES 3.0
-* `x11` - force X11 compatibility mode on Wayland (PLATFORM_DESKTOP/GLFW)
-* `wayland` - force Wayland only mode (PLATFORM_DESKTOP/GLFW)
-* `raylib_no_embed` - doesn't embed the pre-build shared libraries (only applies to purego version)
+Platforms (cgo, default is [GLFW](https://www.glfw.org/)):
+
+| Tag    | Description                                                                                                                                |
+|--------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| `drm`  | Linux native [DRM](https://en.wikipedia.org/wiki/Direct_Rendering_Manager) mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM) |
+| `sdl`  | [SDL](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL)                                                                    |
+| `sdl3` | [SDL3](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL3)                                                                  |
+| `rgfw` | [RGFW](https://github.com/ColleagueRiley/RGFW) backend (PLATFORM_DESKTOP_RGFW)                                                             |
+
+Graphics API (cgo, default is OpenGL 3.3 on desktop):
+
+| Tag        | Description                                                                                   |
+|------------|-----------------------------------------------------------------------------------------------|
+| `opengl43` | OpenGL 4.3                                                                                    |
+| `opengl21` | OpenGL 2.1                                                                                    |
+| `opengl11` | OpenGL 1.1 (pseudo OpenGL 1.1 style)                                                          |
+| `es2`      | OpenGL ES 2.0 (can be used to link against [Google's ANGLE](https://github.com/google/angle)) |
+| `es3`      | OpenGL ES 3.0 (experimental)                                                                  |
+
+Options:
+
+| Tag       | Description                                                                   |
+|-----------|-------------------------------------------------------------------------------|
+| `x11`     | Force X11 compatibility mode on Wayland (GLFW)                                |
+| `wayland` | Force Wayland only mode (GLFW)                                                |
+| `noaudio` | Disable audio functions                                                       |
+| `nocgo`   | Use the purego backend even when cgo is enabled                               |
+| `extlib`  | Load the system raylib library instead of the embedded one (used with purego) |
 
 ### Documentation
 
-Documentation on [GoDoc](https://godoc.org/github.com/gen2brain/raylib-go/raylib). Also check raylib [cheatsheet](http://www.raylib.com/cheatsheet/cheatsheet.html). If you have problems or need assistance there is an active community in the #raylib-go channel of the [Raylib Discord Server](https://discord.gg/raylib) that can help.
+Documentation on [pkg.go.dev](https://pkg.go.dev/github.com/gen2brain/raylib-go/raylib). Also check raylib [cheatsheet](https://www.raylib.com/cheatsheet/cheatsheet.html). If you have problems or need assistance there is an active community in the #raylib-go channel of the [Raylib Discord Server](https://discord.gg/raylib) that can help.
 
 ### Example
 
