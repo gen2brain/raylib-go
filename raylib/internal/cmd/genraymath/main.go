@@ -140,6 +140,19 @@ func run() error {
 		return cmp.Compare(a.Name, b.Name)
 	})
 
+	// Quaternion is an alias of Vector4, so both share one method set; Quaternion methods win
+	quaternionMethods := map[string]bool{}
+	for _, f := range funcs {
+		if f.CanBeMethod() && f.Struct() == "Quaternion" {
+			quaternionMethods[f.MethodName()] = true
+		}
+	}
+	for i, f := range funcs {
+		if f.CanBeMethod() && f.Struct() == "Vector4" && quaternionMethods[f.MethodName()] {
+			funcs[i].NoMethod = true
+		}
+	}
+
 	var outputs []*output
 	if !*skipGenTests {
 		outputs = append(outputs,
@@ -332,11 +345,12 @@ type funcInfo struct {
 	Comments    []string
 	SkipTest    bool
 	SkipBinding bool
+	NoMethod    bool
 	Body        string
 }
 
 func (f funcInfo) CanBeMethod() bool {
-	if len(f.Params) == 0 {
+	if len(f.Params) == 0 || f.NoMethod {
 		return false
 	}
 	return strings.HasPrefix(f.Name, f.Params[0].TypeName)

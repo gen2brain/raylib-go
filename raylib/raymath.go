@@ -178,6 +178,44 @@ func Vector2Reflect(v Vector2, normal Vector2) Vector2 {
 	return result
 }
 
+// Vector2Min - Get min value for each pair of components
+func Vector2Min(v1, v2 Vector2) Vector2 {
+	result := Vector2{}
+
+	result.X = float32(math.Min(float64(v1.X), float64(v2.X)))
+	result.Y = float32(math.Min(float64(v1.Y), float64(v2.Y)))
+
+	return result
+}
+
+// Vector2Max - Get max value for each pair of components
+func Vector2Max(v1, v2 Vector2) Vector2 {
+	result := Vector2{}
+
+	result.X = float32(math.Max(float64(v1.X), float64(v2.X)))
+	result.Y = float32(math.Max(float64(v1.Y), float64(v2.Y)))
+
+	return result
+}
+
+// Vector2Refract - Compute the direction of a refracted ray
+func Vector2Refract(v Vector2, n Vector2, r float32) Vector2 {
+	var result = Vector2{}
+
+	dot := v.X*n.X + v.Y*n.Y
+	d := 1.0 - r*r*(1.0-dot*dot)
+
+	if d >= 0.0 {
+		d = float32(math.Sqrt(float64(d)))
+		v.X = r*v.X - (r*dot+d)*n.X
+		v.Y = r*v.Y - (r*dot+d)*n.Y
+
+		result = v
+	}
+
+	return result
+}
+
 // Vector2Rotate - Rotate vector by angle
 func Vector2Rotate(v Vector2, angle float32) Vector2 {
 	var result = Vector2{}
@@ -553,6 +591,42 @@ func Vector3Lerp(v1, v2 Vector3, amount float32) Vector3 {
 	return result
 }
 
+// Vector3MoveTowards - Move Vector towards target
+func Vector3MoveTowards(v Vector3, target Vector3, maxDistance float32) Vector3 {
+	var result = Vector3{}
+
+	dx := target.X - v.X
+	dy := target.Y - v.Y
+	dz := target.Z - v.Z
+	value := dx*dx + dy*dy + dz*dz
+
+	if value == 0 || maxDistance >= 0 && value <= maxDistance*maxDistance {
+		return target
+	}
+
+	dist := float32(math.Sqrt(float64(value)))
+
+	result.X = v.X + dx/dist*maxDistance
+	result.Y = v.Y + dy/dist*maxDistance
+	result.Z = v.Z + dz/dist*maxDistance
+
+	return result
+}
+
+// Vector3CubicHermite - Calculate cubic hermite interpolation between two vectors and their tangents (GLTF 2.0)
+func Vector3CubicHermite(v1, tangent1, v2, tangent2 Vector3, amount float32) Vector3 {
+	var result = Vector3{}
+
+	amountPow2 := amount * amount
+	amountPow3 := amount * amount * amount
+
+	result.X = (2*amountPow3-3*amountPow2+1)*v1.X + (amountPow3-2*amountPow2+amount)*tangent1.X + (-2*amountPow3+3*amountPow2)*v2.X + (amountPow3-amountPow2)*tangent2.X
+	result.Y = (2*amountPow3-3*amountPow2+1)*v1.Y + (amountPow3-2*amountPow2+amount)*tangent1.Y + (-2*amountPow3+3*amountPow2)*v2.Y + (amountPow3-amountPow2)*tangent2.Y
+	result.Z = (2*amountPow3-3*amountPow2+1)*v1.Z + (amountPow3-2*amountPow2+amount)*tangent1.Z + (-2*amountPow3+3*amountPow2)*v2.Z + (amountPow3-amountPow2)*tangent2.Z
+
+	return result
+}
+
 // Vector3Reflect - Calculate reflected vector to normal
 func Vector3Reflect(vector, normal Vector3) Vector3 {
 	// I is the original vector
@@ -823,6 +897,172 @@ func Mat2MultiplyVector2(matrix Mat2, vector Vector2) Vector2 {
 	return NewVector2(matrix.M00*vector.X+matrix.M01*vector.Y, matrix.M10*vector.X+matrix.M11*vector.Y)
 }
 
+// Vector4Zero - Get vector zero
+func Vector4Zero() Vector4 {
+	return NewVector4(0, 0, 0, 0)
+}
+
+// Vector4One - Get vector one
+func Vector4One() Vector4 {
+	return NewVector4(1, 1, 1, 1)
+}
+
+// Vector4Add - Add two vectors
+func Vector4Add(v1, v2 Vector4) Vector4 {
+	return NewVector4(v1.X+v2.X, v1.Y+v2.Y, v1.Z+v2.Z, v1.W+v2.W)
+}
+
+// Vector4AddValue - Add value to vector components
+func Vector4AddValue(v Vector4, add float32) Vector4 {
+	return NewVector4(v.X+add, v.Y+add, v.Z+add, v.W+add)
+}
+
+// Vector4Subtract - Subtract vectors
+func Vector4Subtract(v1, v2 Vector4) Vector4 {
+	return NewVector4(v1.X-v2.X, v1.Y-v2.Y, v1.Z-v2.Z, v1.W-v2.W)
+}
+
+// Vector4SubtractValue - Subtract value from vector components
+func Vector4SubtractValue(v Vector4, sub float32) Vector4 {
+	return NewVector4(v.X-sub, v.Y-sub, v.Z-sub, v.W-sub)
+}
+
+// Vector4Length - Vector length
+func Vector4Length(v Vector4) float32 {
+	return float32(math.Sqrt(float64(v.X*v.X + v.Y*v.Y + v.Z*v.Z + v.W*v.W)))
+}
+
+// Vector4LengthSqr - Vector square length
+func Vector4LengthSqr(v Vector4) float32 {
+	return v.X*v.X + v.Y*v.Y + v.Z*v.Z + v.W*v.W
+}
+
+// Vector4DotProduct - Vectors dot product
+func Vector4DotProduct(v1, v2 Vector4) float32 {
+	return v1.X*v2.X + v1.Y*v2.Y + v1.Z*v2.Z + v1.W*v2.W
+}
+
+// Vector4Distance - Calculate distance between two vectors
+func Vector4Distance(v1, v2 Vector4) float32 {
+	return float32(math.Sqrt(float64((v1.X-v2.X)*(v1.X-v2.X) + (v1.Y-v2.Y)*(v1.Y-v2.Y) +
+		(v1.Z-v2.Z)*(v1.Z-v2.Z) + (v1.W-v2.W)*(v1.W-v2.W))))
+}
+
+// Vector4DistanceSqr - Calculate square distance between two vectors
+func Vector4DistanceSqr(v1, v2 Vector4) float32 {
+	return (v1.X-v2.X)*(v1.X-v2.X) + (v1.Y-v2.Y)*(v1.Y-v2.Y) +
+		(v1.Z-v2.Z)*(v1.Z-v2.Z) + (v1.W-v2.W)*(v1.W-v2.W)
+}
+
+// Vector4Scale - Scale vector components by value (multiply)
+func Vector4Scale(v Vector4, scale float32) Vector4 {
+	return NewVector4(v.X*scale, v.Y*scale, v.Z*scale, v.W*scale)
+}
+
+// Vector4Multiply - Multiply vector by vector
+func Vector4Multiply(v1, v2 Vector4) Vector4 {
+	return NewVector4(v1.X*v2.X, v1.Y*v2.Y, v1.Z*v2.Z, v1.W*v2.W)
+}
+
+// Vector4Negate - Negate vector
+func Vector4Negate(v Vector4) Vector4 {
+	return NewVector4(-v.X, -v.Y, -v.Z, -v.W)
+}
+
+// Vector4Divide - Divide vector by vector
+func Vector4Divide(v1, v2 Vector4) Vector4 {
+	return NewVector4(v1.X/v2.X, v1.Y/v2.Y, v1.Z/v2.Z, v1.W/v2.W)
+}
+
+// Vector4Normalize - Normalize provided vector
+func Vector4Normalize(v Vector4) Vector4 {
+	var result = Vector4{}
+
+	length := float32(math.Sqrt(float64(v.X*v.X + v.Y*v.Y + v.Z*v.Z + v.W*v.W)))
+	if length > 0 {
+		ilength := 1.0 / length
+		result.X = v.X * ilength
+		result.Y = v.Y * ilength
+		result.Z = v.Z * ilength
+		result.W = v.W * ilength
+	}
+
+	return result
+}
+
+// Vector4Min - Get min value for each pair of components
+func Vector4Min(v1, v2 Vector4) Vector4 {
+	result := Vector4{}
+
+	result.X = float32(math.Min(float64(v1.X), float64(v2.X)))
+	result.Y = float32(math.Min(float64(v1.Y), float64(v2.Y)))
+	result.Z = float32(math.Min(float64(v1.Z), float64(v2.Z)))
+	result.W = float32(math.Min(float64(v1.W), float64(v2.W)))
+
+	return result
+}
+
+// Vector4Max - Get max value for each pair of components
+func Vector4Max(v1, v2 Vector4) Vector4 {
+	result := Vector4{}
+
+	result.X = float32(math.Max(float64(v1.X), float64(v2.X)))
+	result.Y = float32(math.Max(float64(v1.Y), float64(v2.Y)))
+	result.Z = float32(math.Max(float64(v1.Z), float64(v2.Z)))
+	result.W = float32(math.Max(float64(v1.W), float64(v2.W)))
+
+	return result
+}
+
+// Vector4Lerp - Calculate linear interpolation between two vectors
+func Vector4Lerp(v1, v2 Vector4, amount float32) Vector4 {
+	result := Vector4{}
+
+	result.X = v1.X + amount*(v2.X-v1.X)
+	result.Y = v1.Y + amount*(v2.Y-v1.Y)
+	result.Z = v1.Z + amount*(v2.Z-v1.Z)
+	result.W = v1.W + amount*(v2.W-v1.W)
+
+	return result
+}
+
+// Vector4MoveTowards - Move Vector towards target
+func Vector4MoveTowards(v Vector4, target Vector4, maxDistance float32) Vector4 {
+	var result = Vector4{}
+
+	dx := target.X - v.X
+	dy := target.Y - v.Y
+	dz := target.Z - v.Z
+	dw := target.W - v.W
+	value := dx*dx + dy*dy + dz*dz + dw*dw
+
+	if value == 0 || maxDistance >= 0 && value <= maxDistance*maxDistance {
+		return target
+	}
+
+	dist := float32(math.Sqrt(float64(value)))
+
+	result.X = v.X + dx/dist*maxDistance
+	result.Y = v.Y + dy/dist*maxDistance
+	result.Z = v.Z + dz/dist*maxDistance
+	result.W = v.W + dw/dist*maxDistance
+
+	return result
+}
+
+// Vector4Invert - Invert the given vector
+func Vector4Invert(v Vector4) Vector4 {
+	return NewVector4(1.0/v.X, 1.0/v.Y, 1.0/v.Z, 1.0/v.W)
+}
+
+// Vector4Equals - Check whether two given vectors are almost equal
+func Vector4Equals(p Vector4, q Vector4) bool {
+	return (math.Abs(float64(p.X-q.X)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(p.X)), math.Abs(float64(q.X)))) &&
+		math.Abs(float64(p.Y-q.Y)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(p.Y)), math.Abs(float64(q.Y)))) &&
+		math.Abs(float64(p.Z-q.Z)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(p.Z)), math.Abs(float64(q.Z)))) &&
+		math.Abs(float64(p.W-q.W)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(p.W)), math.Abs(float64(q.W)))))
+}
+
 // MatrixDeterminant - Compute matrix determinant
 func MatrixDeterminant(mat Matrix) float32 {
 	m0 := mat.M0
@@ -1039,6 +1279,16 @@ func MatrixMultiply(left, right Matrix) Matrix {
 	result.M15 = left.M12*right.M3 + left.M13*right.M7 + left.M14*right.M11 + left.M15*right.M15
 
 	return result
+}
+
+// MatrixMultiplyValue - Multiply matrix components by value
+func MatrixMultiplyValue(left Matrix, value float32) Matrix {
+	return NewMatrix(
+		left.M0*value, left.M4*value, left.M8*value, left.M12*value,
+		left.M1*value, left.M5*value, left.M9*value, left.M13*value,
+		left.M2*value, left.M6*value, left.M10*value, left.M14*value,
+		left.M3*value, left.M7*value, left.M11*value, left.M15*value,
+	)
 }
 
 // MatrixTranslate - Returns translation matrix
@@ -1566,6 +1816,27 @@ func QuaternionSlerp(q1, q2 Quaternion, amount float32) Quaternion {
 	return result
 }
 
+// QuaternionCubicHermiteSpline - Calculate quaternion cubic spline interpolation using Cubic Hermite Spline algorithm (GLTF 2.0)
+func QuaternionCubicHermiteSpline(q1, outTangent1, q2, inTangent2 Quaternion, t float32) Quaternion {
+	t2 := t * t
+	t3 := t2 * t
+	h00 := 2*t3 - 3*t2 + 1
+	h10 := t3 - 2*t2 + t
+	h01 := -2*t3 + 3*t2
+	h11 := t3 - t2
+
+	p0 := QuaternionScale(q1, h00)
+	m0 := QuaternionScale(outTangent1, h10)
+	p1 := QuaternionScale(q2, h01)
+	m1 := QuaternionScale(inTangent2, h11)
+
+	result := QuaternionAdd(p0, m0)
+	result = QuaternionAdd(result, p1)
+	result = QuaternionAdd(result, m1)
+
+	return QuaternionNormalize(result)
+}
+
 // QuaternionFromVector3ToVector3 - Calculate quaternion based on the rotation from one vector to another
 func QuaternionFromVector3ToVector3(from Vector3, to Vector3) Quaternion {
 	var result = Quaternion{}
@@ -1806,6 +2077,32 @@ func QuaternionEquals(q, p Quaternion) bool {
 			math.Abs(float64(q.Y+p.Y)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(q.Y)), math.Abs(float64(p.Y)))) &&
 			math.Abs(float64(q.Z+p.Z)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(q.Z)), math.Abs(float64(p.Z)))) &&
 			math.Abs(float64(q.W+p.W)) <= epsilon*math.Max(1.0, math.Max(math.Abs(float64(q.W)), math.Abs(float64(p.W)))))
+}
+
+// MatrixCompose - Compose a transformation matrix from rotational, translational and scaling components
+func MatrixCompose(translation Vector3, rotation Quaternion, scale Vector3) Matrix {
+	right := Vector3{X: 1 * scale.X, Y: 0 * scale.X, Z: 0 * scale.X}
+	up := Vector3{X: 0 * scale.Y, Y: 1 * scale.Y, Z: 0 * scale.Y}
+	forward := Vector3{X: 0 * scale.Z, Y: 0 * scale.Z, Z: 1 * scale.Z}
+
+	q := rotation
+	rotate := func(t Vector3) Vector3 {
+		return Vector3{
+			X: t.X*(q.X*q.X+q.W*q.W-q.Y*q.Y-q.Z*q.Z) + t.Y*(2*q.X*q.Y-2*q.W*q.Z) + t.Z*(2*q.X*q.Z+2*q.W*q.Y),
+			Y: t.X*(2*q.W*q.Z+2*q.X*q.Y) + t.Y*(q.W*q.W-q.X*q.X+q.Y*q.Y-q.Z*q.Z) + t.Z*(-2*q.W*q.X+2*q.Y*q.Z),
+			Z: t.X*(-2*q.W*q.Y+2*q.X*q.Z) + t.Y*(2*q.W*q.X+2*q.Y*q.Z) + t.Z*(q.W*q.W-q.X*q.X-q.Y*q.Y+q.Z*q.Z),
+		}
+	}
+	right = rotate(right)
+	up = rotate(up)
+	forward = rotate(forward)
+
+	return NewMatrix(
+		right.X, up.X, forward.X, translation.X,
+		right.Y, up.Y, forward.Y, translation.Y,
+		right.Z, up.Z, forward.Z, translation.Z,
+		0, 0, 0, 1,
+	)
 }
 
 // MatrixDecompose - Decompose a transformation matrix into its rotational, translational and scaling components

@@ -207,6 +207,54 @@ func FuzzMatrixAdd(f *testing.F) {
 	})
 }
 
+func BenchmarkMatrixCompose(b *testing.B) {
+	translation := NewVector3(1, 2, 3)
+	rotation := NewQuaternion(1, 2, 3, 4)
+	scale := NewVector3(1, 2, 3)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cMatrixCompose(translation, rotation, scale)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			MatrixCompose(translation, rotation, scale)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzMatrixCompose(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3),
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3),
+	)
+	f.Fuzz(func(t *testing.T,
+		translationX, translationY, translationZ float32,
+		rotationX, rotationY, rotationZ, rotationW float32,
+		scaleX, scaleY, scaleZ float32,
+	) {
+		translation := NewVector3(translationX, translationY, translationZ)
+		rotation := NewQuaternion(rotationX, rotationY, rotationZ, rotationW)
+		scale := NewVector3(scaleX, scaleY, scaleZ)
+		want := cMatrixCompose(translation, rotation, scale)
+		got := MatrixCompose(translation, rotation, scale)
+		inputScale := testScale(translation, rotation, scale)
+		if !testMatrixEquals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
 func BenchmarkMatrixDeterminant(b *testing.B) {
 	mat := NewMatrix(1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4)
 	var (
@@ -501,6 +549,60 @@ func FuzzMatrixMultiply(f *testing.F) {
 		want := cMatrixMultiply(left, right)
 		got := MatrixMultiply(left, right)
 		inputScale := testScale(left, right)
+		if !testMatrixEquals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkMatrixMultiplyValue(b *testing.B) {
+	left := NewMatrix(1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4)
+	value := float32(1)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cMatrixMultiplyValue(left, value)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			MatrixMultiplyValue(left, value)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzMatrixMultiplyValue(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1),
+	)
+	f.Fuzz(func(t *testing.T,
+		leftM0, leftM4, leftM8, leftM12,
+		leftM1, leftM5, leftM9, leftM13,
+		leftM2, leftM6, leftM10, leftM14,
+		leftM3, leftM7, leftM11, leftM15 float32,
+		value float32,
+	) {
+		left := NewMatrix(
+			leftM0, leftM4, leftM8, leftM12,
+			leftM1, leftM5, leftM9, leftM13,
+			leftM2, leftM6, leftM10, leftM14,
+			leftM3, leftM7, leftM11, leftM15,
+		)
+		want := cMatrixMultiplyValue(left, value)
+		got := MatrixMultiplyValue(left, value)
+		inputScale := testScale(left, value)
 		if !testMatrixEquals(want, got, inputScale) {
 			t.Errorf("got %v; want %v", got, want)
 		}
@@ -1284,6 +1386,61 @@ func FuzzQuaternionAddValue(f *testing.F) {
 		want := cQuaternionAddValue(q, add)
 		got := QuaternionAddValue(q, add)
 		inputScale := testScale(q, add)
+		if !testQuaternionEquals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkQuaternionCubicHermiteSpline(b *testing.B) {
+	q1 := NewQuaternion(1, 2, 3, 4)
+	outTangent1 := NewQuaternion(1, 2, 3, 4)
+	q2 := NewQuaternion(1, 2, 3, 4)
+	inTangent2 := NewQuaternion(1, 2, 3, 4)
+	t1 := float32(1)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cQuaternionCubicHermiteSpline(q1, outTangent1, q2, inTangent2, t1)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			QuaternionCubicHermiteSpline(q1, outTangent1, q2, inTangent2, t1)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzQuaternionCubicHermiteSpline(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1),
+	)
+	f.Fuzz(func(t *testing.T,
+		q1X, q1Y, q1Z, q1W float32,
+		outTangent1X, outTangent1Y, outTangent1Z, outTangent1W float32,
+		q2X, q2Y, q2Z, q2W float32,
+		inTangent2X, inTangent2Y, inTangent2Z, inTangent2W float32,
+		t1 float32,
+	) {
+		q1 := NewQuaternion(q1X, q1Y, q1Z, q1W)
+		outTangent1 := NewQuaternion(outTangent1X, outTangent1Y, outTangent1Z, outTangent1W)
+		q2 := NewQuaternion(q2X, q2Y, q2Z, q2W)
+		inTangent2 := NewQuaternion(inTangent2X, inTangent2Y, inTangent2Z, inTangent2W)
+		want := cQuaternionCubicHermiteSpline(q1, outTangent1, q2, inTangent2, t1)
+		got := QuaternionCubicHermiteSpline(q1, outTangent1, q2, inTangent2, t1)
+		inputScale := testScale(q1, outTangent1, q2, inTangent2, t1)
 		if !testQuaternionEquals(want, got, inputScale) {
 			t.Errorf("got %v; want %v", got, want)
 		}
@@ -2912,6 +3069,94 @@ func FuzzVector2LineAngle(f *testing.F) {
 	})
 }
 
+func BenchmarkVector2Max(b *testing.B) {
+	v1 := NewVector2(1, 2)
+	v2 := NewVector2(1, 2)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector2Max(v1, v2)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector2Max(v1, v2)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector2Max(f *testing.F) {
+	f.Add(
+		float32(1), float32(2),
+		float32(1), float32(2),
+	)
+	f.Fuzz(func(t *testing.T,
+		v1X, v1Y float32,
+		v2X, v2Y float32,
+	) {
+		v1 := NewVector2(v1X, v1Y)
+		v2 := NewVector2(v2X, v2Y)
+		want := cVector2Max(v1, v2)
+		got := Vector2Max(v1, v2)
+		inputScale := testScale(v1, v2)
+		if !testVector2Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector2Min(b *testing.B) {
+	v1 := NewVector2(1, 2)
+	v2 := NewVector2(1, 2)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector2Min(v1, v2)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector2Min(v1, v2)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector2Min(f *testing.F) {
+	f.Add(
+		float32(1), float32(2),
+		float32(1), float32(2),
+	)
+	f.Fuzz(func(t *testing.T,
+		v1X, v1Y float32,
+		v2X, v2Y float32,
+	) {
+		v1 := NewVector2(v1X, v1Y)
+		v2 := NewVector2(v2X, v2Y)
+		want := cVector2Min(v1, v2)
+		got := Vector2Min(v1, v2)
+		inputScale := testScale(v1, v2)
+		if !testVector2Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
 func BenchmarkVector2MoveTowards(b *testing.B) {
 	v := NewVector2(1, 2)
 	target := NewVector2(1, 2)
@@ -3151,6 +3396,53 @@ func FuzzVector2Reflect(f *testing.F) {
 		want := cVector2Reflect(v, normal)
 		got := Vector2Reflect(v, normal)
 		inputScale := testScale(v, normal)
+		if !testVector2Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector2Refract(b *testing.B) {
+	v := NewVector2(1, 2)
+	n := NewVector2(1, 2)
+	r := float32(1)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector2Refract(v, n, r)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector2Refract(v, n, r)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector2Refract(f *testing.F) {
+	f.Add(
+		float32(1), float32(2),
+		float32(1), float32(2),
+		float32(1),
+	)
+	f.Fuzz(func(t *testing.T,
+		vX, vY float32,
+		nX, nY float32,
+		r float32,
+	) {
+		v := NewVector2(vX, vY)
+		n := NewVector2(nX, nY)
+		want := cVector2Refract(v, n, r)
+		got := Vector2Refract(v, n, r)
+		inputScale := testScale(v, n, r)
 		if !testVector2Equals(want, got, inputScale) {
 			t.Errorf("got %v; want %v", got, want)
 		}
@@ -3737,6 +4029,61 @@ func FuzzVector3CrossProduct(f *testing.F) {
 	})
 }
 
+func BenchmarkVector3CubicHermite(b *testing.B) {
+	v1 := NewVector3(1, 2, 3)
+	tangent1 := NewVector3(1, 2, 3)
+	v2 := NewVector3(1, 2, 3)
+	tangent2 := NewVector3(1, 2, 3)
+	amount := float32(1)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector3CubicHermite(v1, tangent1, v2, tangent2, amount)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector3CubicHermite(v1, tangent1, v2, tangent2, amount)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector3CubicHermite(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3),
+		float32(1), float32(2), float32(3),
+		float32(1), float32(2), float32(3),
+		float32(1), float32(2), float32(3),
+		float32(1),
+	)
+	f.Fuzz(func(t *testing.T,
+		v1X, v1Y, v1Z float32,
+		tangent1X, tangent1Y, tangent1Z float32,
+		v2X, v2Y, v2Z float32,
+		tangent2X, tangent2Y, tangent2Z float32,
+		amount float32,
+	) {
+		v1 := NewVector3(v1X, v1Y, v1Z)
+		tangent1 := NewVector3(tangent1X, tangent1Y, tangent1Z)
+		v2 := NewVector3(v2X, v2Y, v2Z)
+		tangent2 := NewVector3(tangent2X, tangent2Y, tangent2Z)
+		want := cVector3CubicHermite(v1, tangent1, v2, tangent2, amount)
+		got := Vector3CubicHermite(v1, tangent1, v2, tangent2, amount)
+		inputScale := testScale(v1, tangent1, v2, tangent2, amount)
+		if !testVector3Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
 func BenchmarkVector3Distance(b *testing.B) {
 	v1 := NewVector3(1, 2, 3)
 	v2 := NewVector3(1, 2, 3)
@@ -4205,6 +4552,53 @@ func FuzzVector3Min(f *testing.F) {
 		want := cVector3Min(vec1, vec2)
 		got := Vector3Min(vec1, vec2)
 		inputScale := testScale(vec1, vec2)
+		if !testVector3Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector3MoveTowards(b *testing.B) {
+	v := NewVector3(1, 2, 3)
+	target := NewVector3(1, 2, 3)
+	maxDistance := float32(1)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector3MoveTowards(v, target, maxDistance)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector3MoveTowards(v, target, maxDistance)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector3MoveTowards(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3),
+		float32(1), float32(2), float32(3),
+		float32(1),
+	)
+	f.Fuzz(func(t *testing.T,
+		vX, vY, vZ float32,
+		targetX, targetY, targetZ float32,
+		maxDistance float32,
+	) {
+		v := NewVector3(vX, vY, vZ)
+		target := NewVector3(targetX, targetY, targetZ)
+		want := cVector3MoveTowards(v, target, maxDistance)
+		got := Vector3MoveTowards(v, target, maxDistance)
+		inputScale := testScale(v, target, maxDistance)
 		if !testVector3Equals(want, got, inputScale) {
 			t.Errorf("got %v; want %v", got, want)
 		}
@@ -5002,6 +5396,928 @@ func TestVector3Zero(t *testing.T) {
 	}
 }
 
+func BenchmarkVector4Add(b *testing.B) {
+	v1 := NewVector4(1, 2, 3, 4)
+	v2 := NewVector4(1, 2, 3, 4)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4Add(v1, v2)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4Add(v1, v2)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4Add(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+	)
+	f.Fuzz(func(t *testing.T,
+		v1X, v1Y, v1Z, v1W float32,
+		v2X, v2Y, v2Z, v2W float32,
+	) {
+		v1 := NewVector4(v1X, v1Y, v1Z, v1W)
+		v2 := NewVector4(v2X, v2Y, v2Z, v2W)
+		want := cVector4Add(v1, v2)
+		got := Vector4Add(v1, v2)
+		inputScale := testScale(v1, v2)
+		if !testVector4Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4AddValue(b *testing.B) {
+	v := NewVector4(1, 2, 3, 4)
+	add := float32(1)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4AddValue(v, add)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4AddValue(v, add)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4AddValue(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1),
+	)
+	f.Fuzz(func(t *testing.T,
+		vX, vY, vZ, vW float32,
+		add float32,
+	) {
+		v := NewVector4(vX, vY, vZ, vW)
+		want := cVector4AddValue(v, add)
+		got := Vector4AddValue(v, add)
+		inputScale := testScale(v, add)
+		if !testVector4Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4Distance(b *testing.B) {
+	v1 := NewVector4(1, 2, 3, 4)
+	v2 := NewVector4(1, 2, 3, 4)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4Distance(v1, v2)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4Distance(v1, v2)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4Distance(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+	)
+	f.Fuzz(func(t *testing.T,
+		v1X, v1Y, v1Z, v1W float32,
+		v2X, v2Y, v2Z, v2W float32,
+	) {
+		v1 := NewVector4(v1X, v1Y, v1Z, v1W)
+		v2 := NewVector4(v2X, v2Y, v2Z, v2W)
+		want := cVector4Distance(v1, v2)
+		got := Vector4Distance(v1, v2)
+		inputScale := testScale(v1, v2)
+		if !testFloat32Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4DistanceSqr(b *testing.B) {
+	v1 := NewVector4(1, 2, 3, 4)
+	v2 := NewVector4(1, 2, 3, 4)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4DistanceSqr(v1, v2)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4DistanceSqr(v1, v2)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4DistanceSqr(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+	)
+	f.Fuzz(func(t *testing.T,
+		v1X, v1Y, v1Z, v1W float32,
+		v2X, v2Y, v2Z, v2W float32,
+	) {
+		v1 := NewVector4(v1X, v1Y, v1Z, v1W)
+		v2 := NewVector4(v2X, v2Y, v2Z, v2W)
+		want := cVector4DistanceSqr(v1, v2)
+		got := Vector4DistanceSqr(v1, v2)
+		inputScale := testScale(v1, v2)
+		if !testFloat32Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4Divide(b *testing.B) {
+	v1 := NewVector4(1, 2, 3, 4)
+	v2 := NewVector4(1, 2, 3, 4)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4Divide(v1, v2)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4Divide(v1, v2)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4Divide(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+	)
+	f.Fuzz(func(t *testing.T,
+		v1X, v1Y, v1Z, v1W float32,
+		v2X, v2Y, v2Z, v2W float32,
+	) {
+		v1 := NewVector4(v1X, v1Y, v1Z, v1W)
+		v2 := NewVector4(v2X, v2Y, v2Z, v2W)
+		want := cVector4Divide(v1, v2)
+		got := Vector4Divide(v1, v2)
+		inputScale := testScale(v1, v2)
+		if !testVector4Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4DotProduct(b *testing.B) {
+	v1 := NewVector4(1, 2, 3, 4)
+	v2 := NewVector4(1, 2, 3, 4)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4DotProduct(v1, v2)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4DotProduct(v1, v2)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4DotProduct(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+	)
+	f.Fuzz(func(t *testing.T,
+		v1X, v1Y, v1Z, v1W float32,
+		v2X, v2Y, v2Z, v2W float32,
+	) {
+		v1 := NewVector4(v1X, v1Y, v1Z, v1W)
+		v2 := NewVector4(v2X, v2Y, v2Z, v2W)
+		want := cVector4DotProduct(v1, v2)
+		got := Vector4DotProduct(v1, v2)
+		inputScale := testScale(v1, v2)
+		if !testFloat32Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4Equals(b *testing.B) {
+	p := NewVector4(1, 2, 3, 4)
+	q := NewVector4(1, 2, 3, 4)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4Equals(p, q)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4Equals(p, q)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4Equals(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+	)
+	f.Fuzz(func(t *testing.T,
+		pX, pY, pZ, pW float32,
+		qX, qY, qZ, qW float32,
+	) {
+		p := NewVector4(pX, pY, pZ, pW)
+		q := NewVector4(qX, qY, qZ, qW)
+		want := cVector4Equals(p, q)
+		got := Vector4Equals(p, q)
+		if want != got {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4Invert(b *testing.B) {
+	v := NewVector4(1, 2, 3, 4)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4Invert(v)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4Invert(v)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4Invert(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+	)
+	f.Fuzz(func(t *testing.T,
+		vX, vY, vZ, vW float32,
+	) {
+		v := NewVector4(vX, vY, vZ, vW)
+		want := cVector4Invert(v)
+		got := Vector4Invert(v)
+		inputScale := testScale(v)
+		if !testVector4Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4Length(b *testing.B) {
+	v := NewVector4(1, 2, 3, 4)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4Length(v)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4Length(v)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4Length(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+	)
+	f.Fuzz(func(t *testing.T,
+		vX, vY, vZ, vW float32,
+	) {
+		v := NewVector4(vX, vY, vZ, vW)
+		want := cVector4Length(v)
+		got := Vector4Length(v)
+		inputScale := testScale(v)
+		if !testFloat32Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4LengthSqr(b *testing.B) {
+	v := NewVector4(1, 2, 3, 4)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4LengthSqr(v)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4LengthSqr(v)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4LengthSqr(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+	)
+	f.Fuzz(func(t *testing.T,
+		vX, vY, vZ, vW float32,
+	) {
+		v := NewVector4(vX, vY, vZ, vW)
+		want := cVector4LengthSqr(v)
+		got := Vector4LengthSqr(v)
+		inputScale := testScale(v)
+		if !testFloat32Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4Lerp(b *testing.B) {
+	v1 := NewVector4(1, 2, 3, 4)
+	v2 := NewVector4(1, 2, 3, 4)
+	amount := float32(1)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4Lerp(v1, v2, amount)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4Lerp(v1, v2, amount)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4Lerp(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1),
+	)
+	f.Fuzz(func(t *testing.T,
+		v1X, v1Y, v1Z, v1W float32,
+		v2X, v2Y, v2Z, v2W float32,
+		amount float32,
+	) {
+		v1 := NewVector4(v1X, v1Y, v1Z, v1W)
+		v2 := NewVector4(v2X, v2Y, v2Z, v2W)
+		want := cVector4Lerp(v1, v2, amount)
+		got := Vector4Lerp(v1, v2, amount)
+		inputScale := testScale(v1, v2, amount)
+		if !testVector4Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4Max(b *testing.B) {
+	v1 := NewVector4(1, 2, 3, 4)
+	v2 := NewVector4(1, 2, 3, 4)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4Max(v1, v2)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4Max(v1, v2)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4Max(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+	)
+	f.Fuzz(func(t *testing.T,
+		v1X, v1Y, v1Z, v1W float32,
+		v2X, v2Y, v2Z, v2W float32,
+	) {
+		v1 := NewVector4(v1X, v1Y, v1Z, v1W)
+		v2 := NewVector4(v2X, v2Y, v2Z, v2W)
+		want := cVector4Max(v1, v2)
+		got := Vector4Max(v1, v2)
+		inputScale := testScale(v1, v2)
+		if !testVector4Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4Min(b *testing.B) {
+	v1 := NewVector4(1, 2, 3, 4)
+	v2 := NewVector4(1, 2, 3, 4)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4Min(v1, v2)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4Min(v1, v2)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4Min(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+	)
+	f.Fuzz(func(t *testing.T,
+		v1X, v1Y, v1Z, v1W float32,
+		v2X, v2Y, v2Z, v2W float32,
+	) {
+		v1 := NewVector4(v1X, v1Y, v1Z, v1W)
+		v2 := NewVector4(v2X, v2Y, v2Z, v2W)
+		want := cVector4Min(v1, v2)
+		got := Vector4Min(v1, v2)
+		inputScale := testScale(v1, v2)
+		if !testVector4Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4MoveTowards(b *testing.B) {
+	v := NewVector4(1, 2, 3, 4)
+	target := NewVector4(1, 2, 3, 4)
+	maxDistance := float32(1)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4MoveTowards(v, target, maxDistance)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4MoveTowards(v, target, maxDistance)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4MoveTowards(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1),
+	)
+	f.Fuzz(func(t *testing.T,
+		vX, vY, vZ, vW float32,
+		targetX, targetY, targetZ, targetW float32,
+		maxDistance float32,
+	) {
+		v := NewVector4(vX, vY, vZ, vW)
+		target := NewVector4(targetX, targetY, targetZ, targetW)
+		want := cVector4MoveTowards(v, target, maxDistance)
+		got := Vector4MoveTowards(v, target, maxDistance)
+		inputScale := testScale(v, target, maxDistance)
+		if !testVector4Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4Multiply(b *testing.B) {
+	v1 := NewVector4(1, 2, 3, 4)
+	v2 := NewVector4(1, 2, 3, 4)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4Multiply(v1, v2)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4Multiply(v1, v2)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4Multiply(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+	)
+	f.Fuzz(func(t *testing.T,
+		v1X, v1Y, v1Z, v1W float32,
+		v2X, v2Y, v2Z, v2W float32,
+	) {
+		v1 := NewVector4(v1X, v1Y, v1Z, v1W)
+		v2 := NewVector4(v2X, v2Y, v2Z, v2W)
+		want := cVector4Multiply(v1, v2)
+		got := Vector4Multiply(v1, v2)
+		inputScale := testScale(v1, v2)
+		if !testVector4Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4Negate(b *testing.B) {
+	v := NewVector4(1, 2, 3, 4)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4Negate(v)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4Negate(v)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4Negate(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+	)
+	f.Fuzz(func(t *testing.T,
+		vX, vY, vZ, vW float32,
+	) {
+		v := NewVector4(vX, vY, vZ, vW)
+		want := cVector4Negate(v)
+		got := Vector4Negate(v)
+		inputScale := testScale(v)
+		if !testVector4Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4Normalize(b *testing.B) {
+	v := NewVector4(1, 2, 3, 4)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4Normalize(v)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4Normalize(v)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4Normalize(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+	)
+	f.Fuzz(func(t *testing.T,
+		vX, vY, vZ, vW float32,
+	) {
+		v := NewVector4(vX, vY, vZ, vW)
+		want := cVector4Normalize(v)
+		got := Vector4Normalize(v)
+		inputScale := testScale(v)
+		if !testVector4Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4One(b *testing.B) {
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4One()
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4One()
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func TestVector4One(t *testing.T) {
+	want := cVector4One()
+	got := Vector4One()
+	if !testVector4Equals(want, got, 0) {
+		t.Errorf("got %v; want %v", got, want)
+	}
+}
+
+func BenchmarkVector4Scale(b *testing.B) {
+	v := NewVector4(1, 2, 3, 4)
+	scale := float32(1)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4Scale(v, scale)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4Scale(v, scale)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4Scale(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1),
+	)
+	f.Fuzz(func(t *testing.T,
+		vX, vY, vZ, vW float32,
+		scale float32,
+	) {
+		v := NewVector4(vX, vY, vZ, vW)
+		want := cVector4Scale(v, scale)
+		got := Vector4Scale(v, scale)
+		inputScale := testScale(v, scale)
+		if !testVector4Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4Subtract(b *testing.B) {
+	v1 := NewVector4(1, 2, 3, 4)
+	v2 := NewVector4(1, 2, 3, 4)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4Subtract(v1, v2)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4Subtract(v1, v2)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4Subtract(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1), float32(2), float32(3), float32(4),
+	)
+	f.Fuzz(func(t *testing.T,
+		v1X, v1Y, v1Z, v1W float32,
+		v2X, v2Y, v2Z, v2W float32,
+	) {
+		v1 := NewVector4(v1X, v1Y, v1Z, v1W)
+		v2 := NewVector4(v2X, v2Y, v2Z, v2W)
+		want := cVector4Subtract(v1, v2)
+		got := Vector4Subtract(v1, v2)
+		inputScale := testScale(v1, v2)
+		if !testVector4Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4SubtractValue(b *testing.B) {
+	v := NewVector4(1, 2, 3, 4)
+	sub := float32(1)
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4SubtractValue(v, sub)
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4SubtractValue(v, sub)
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func FuzzVector4SubtractValue(f *testing.F) {
+	f.Add(
+		float32(1), float32(2), float32(3), float32(4),
+		float32(1),
+	)
+	f.Fuzz(func(t *testing.T,
+		vX, vY, vZ, vW float32,
+		sub float32,
+	) {
+		v := NewVector4(vX, vY, vZ, vW)
+		want := cVector4SubtractValue(v, sub)
+		got := Vector4SubtractValue(v, sub)
+		inputScale := testScale(v, sub)
+		if !testVector4Equals(want, got, inputScale) {
+			t.Errorf("got %v; want %v", got, want)
+		}
+	})
+}
+
+func BenchmarkVector4Zero(b *testing.B) {
+	var (
+		perCCall  time.Duration
+		perGoCall time.Duration
+	)
+	b.Run("c", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cVector4Zero()
+		}
+		perCCall = b.Elapsed() / time.Duration(b.N)
+	})
+	b.Run("go", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Vector4Zero()
+		}
+		perGoCall = b.Elapsed() / time.Duration(b.N)
+	})
+	if perCCall < perGoCall {
+		b.Log("Go slower than C")
+	}
+}
+
+func TestVector4Zero(t *testing.T) {
+	want := cVector4Zero()
+	got := Vector4Zero()
+	if !testVector4Equals(want, got, 0) {
+		t.Errorf("got %v; want %v", got, want)
+	}
+}
+
 func BenchmarkWrap(b *testing.B) {
 	value := float32(1)
 	min := float32(2)
@@ -5133,6 +6449,13 @@ func testVector3Equals(a, b Vector3, scale float32) bool {
 }
 
 func testQuaternionEquals(a, b Quaternion, scale float32) bool {
+	return testFloat32Equals(a.X, b.X, scale) &&
+		testFloat32Equals(a.Y, b.Y, scale) &&
+		testFloat32Equals(a.Z, b.Z, scale) &&
+		testFloat32Equals(a.W, b.W, scale)
+}
+
+func testVector4Equals(a, b Vector4, scale float32) bool {
 	return testFloat32Equals(a.X, b.X, scale) &&
 		testFloat32Equals(a.Y, b.Y, scale) &&
 		testFloat32Equals(a.Z, b.Z, scale) &&

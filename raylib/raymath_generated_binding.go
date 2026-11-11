@@ -39,6 +39,14 @@ func cMatrixAdd(left, right Matrix) Matrix {
 	return *(*Matrix)(unsafe.Pointer(&ret))
 }
 
+func cMatrixCompose(translation Vector3, rotation Quaternion, scale Vector3) Matrix {
+	ctranslation := *(*C.Vector3)(unsafe.Pointer(&translation))
+	crotation := *(*C.Quaternion)(unsafe.Pointer(&rotation))
+	cscale := *(*C.Vector3)(unsafe.Pointer(&scale))
+	ret := C.MatrixCompose(ctranslation, crotation, cscale)
+	return *(*Matrix)(unsafe.Pointer(&ret))
+}
+
 func cMatrixDecompose(mat Matrix, translation *Vector3, rotation *Quaternion, scale *Vector3) {
 	cmat := *(*C.Matrix)(unsafe.Pointer(&mat))
 	ctranslation := (*C.Vector3)(unsafe.Pointer(translation))
@@ -87,6 +95,13 @@ func cMatrixMultiply(left, right Matrix) Matrix {
 	cleft := *(*C.Matrix)(unsafe.Pointer(&left))
 	cright := *(*C.Matrix)(unsafe.Pointer(&right))
 	ret := C.MatrixMultiply(cleft, cright)
+	return *(*Matrix)(unsafe.Pointer(&ret))
+}
+
+func cMatrixMultiplyValue(left Matrix, value float32) Matrix {
+	cleft := *(*C.Matrix)(unsafe.Pointer(&left))
+	cvalue := C.float(value)
+	ret := C.MatrixMultiplyValue(cleft, cvalue)
 	return *(*Matrix)(unsafe.Pointer(&ret))
 }
 
@@ -207,6 +222,16 @@ func cQuaternionAddValue(q Quaternion, add float32) Quaternion {
 	cq := *(*C.Quaternion)(unsafe.Pointer(&q))
 	cadd := C.float(add)
 	ret := C.QuaternionAddValue(cq, cadd)
+	return *(*Quaternion)(unsafe.Pointer(&ret))
+}
+
+func cQuaternionCubicHermiteSpline(q1, outTangent1, q2, inTangent2 Quaternion, t float32) Quaternion {
+	cq1 := *(*C.Quaternion)(unsafe.Pointer(&q1))
+	coutTangent1 := *(*C.Quaternion)(unsafe.Pointer(&outTangent1))
+	cq2 := *(*C.Quaternion)(unsafe.Pointer(&q2))
+	cinTangent2 := *(*C.Quaternion)(unsafe.Pointer(&inTangent2))
+	ct := C.float(t)
+	ret := C.QuaternionCubicHermiteSpline(cq1, coutTangent1, cq2, cinTangent2, ct)
 	return *(*Quaternion)(unsafe.Pointer(&ret))
 }
 
@@ -475,6 +500,20 @@ func cVector2LineAngle(start Vector2, end Vector2) float32 {
 	return float32(ret)
 }
 
+func cVector2Max(v1, v2 Vector2) Vector2 {
+	cv1 := *(*C.Vector2)(unsafe.Pointer(&v1))
+	cv2 := *(*C.Vector2)(unsafe.Pointer(&v2))
+	ret := C.Vector2Max(cv1, cv2)
+	return *(*Vector2)(unsafe.Pointer(&ret))
+}
+
+func cVector2Min(v1, v2 Vector2) Vector2 {
+	cv1 := *(*C.Vector2)(unsafe.Pointer(&v1))
+	cv2 := *(*C.Vector2)(unsafe.Pointer(&v2))
+	ret := C.Vector2Min(cv1, cv2)
+	return *(*Vector2)(unsafe.Pointer(&ret))
+}
+
 func cVector2MoveTowards(v Vector2, target Vector2, maxDistance float32) Vector2 {
 	cv := *(*C.Vector2)(unsafe.Pointer(&v))
 	ctarget := *(*C.Vector2)(unsafe.Pointer(&target))
@@ -511,6 +550,14 @@ func cVector2Reflect(v Vector2, normal Vector2) Vector2 {
 	cv := *(*C.Vector2)(unsafe.Pointer(&v))
 	cnormal := *(*C.Vector2)(unsafe.Pointer(&normal))
 	ret := C.Vector2Reflect(cv, cnormal)
+	return *(*Vector2)(unsafe.Pointer(&ret))
+}
+
+func cVector2Refract(v Vector2, n Vector2, r float32) Vector2 {
+	cv := *(*C.Vector2)(unsafe.Pointer(&v))
+	cn := *(*C.Vector2)(unsafe.Pointer(&n))
+	cr := C.float(r)
+	ret := C.Vector2Refract(cv, cn, cr)
 	return *(*Vector2)(unsafe.Pointer(&ret))
 }
 
@@ -607,6 +654,16 @@ func cVector3CrossProduct(v1, v2 Vector3) Vector3 {
 	return *(*Vector3)(unsafe.Pointer(&ret))
 }
 
+func cVector3CubicHermite(v1, tangent1, v2, tangent2 Vector3, amount float32) Vector3 {
+	cv1 := *(*C.Vector3)(unsafe.Pointer(&v1))
+	ctangent1 := *(*C.Vector3)(unsafe.Pointer(&tangent1))
+	cv2 := *(*C.Vector3)(unsafe.Pointer(&v2))
+	ctangent2 := *(*C.Vector3)(unsafe.Pointer(&tangent2))
+	camount := C.float(amount)
+	ret := C.Vector3CubicHermite(cv1, ctangent1, cv2, ctangent2, camount)
+	return *(*Vector3)(unsafe.Pointer(&ret))
+}
+
 func cVector3Distance(v1, v2 Vector3) float32 {
 	cv1 := *(*C.Vector3)(unsafe.Pointer(&v1))
 	cv2 := *(*C.Vector3)(unsafe.Pointer(&v2))
@@ -679,6 +736,14 @@ func cVector3Min(vec1, vec2 Vector3) Vector3 {
 	cvec1 := *(*C.Vector3)(unsafe.Pointer(&vec1))
 	cvec2 := *(*C.Vector3)(unsafe.Pointer(&vec2))
 	ret := C.Vector3Min(cvec1, cvec2)
+	return *(*Vector3)(unsafe.Pointer(&ret))
+}
+
+func cVector3MoveTowards(v Vector3, target Vector3, maxDistance float32) Vector3 {
+	cv := *(*C.Vector3)(unsafe.Pointer(&v))
+	ctarget := *(*C.Vector3)(unsafe.Pointer(&target))
+	cmaxDistance := C.float(maxDistance)
+	ret := C.Vector3MoveTowards(cv, ctarget, cmaxDistance)
 	return *(*Vector3)(unsafe.Pointer(&ret))
 }
 
@@ -807,6 +872,153 @@ func cVector3Unproject(source Vector3, projection Matrix, view Matrix) Vector3 {
 func cVector3Zero() Vector3 {
 	ret := C.Vector3Zero()
 	return *(*Vector3)(unsafe.Pointer(&ret))
+}
+
+func cVector4Add(v1, v2 Vector4) Vector4 {
+	cv1 := *(*C.Vector4)(unsafe.Pointer(&v1))
+	cv2 := *(*C.Vector4)(unsafe.Pointer(&v2))
+	ret := C.Vector4Add(cv1, cv2)
+	return *(*Vector4)(unsafe.Pointer(&ret))
+}
+
+func cVector4AddValue(v Vector4, add float32) Vector4 {
+	cv := *(*C.Vector4)(unsafe.Pointer(&v))
+	cadd := C.float(add)
+	ret := C.Vector4AddValue(cv, cadd)
+	return *(*Vector4)(unsafe.Pointer(&ret))
+}
+
+func cVector4Distance(v1, v2 Vector4) float32 {
+	cv1 := *(*C.Vector4)(unsafe.Pointer(&v1))
+	cv2 := *(*C.Vector4)(unsafe.Pointer(&v2))
+	ret := C.Vector4Distance(cv1, cv2)
+	return float32(ret)
+}
+
+func cVector4DistanceSqr(v1, v2 Vector4) float32 {
+	cv1 := *(*C.Vector4)(unsafe.Pointer(&v1))
+	cv2 := *(*C.Vector4)(unsafe.Pointer(&v2))
+	ret := C.Vector4DistanceSqr(cv1, cv2)
+	return float32(ret)
+}
+
+func cVector4Divide(v1, v2 Vector4) Vector4 {
+	cv1 := *(*C.Vector4)(unsafe.Pointer(&v1))
+	cv2 := *(*C.Vector4)(unsafe.Pointer(&v2))
+	ret := C.Vector4Divide(cv1, cv2)
+	return *(*Vector4)(unsafe.Pointer(&ret))
+}
+
+func cVector4DotProduct(v1, v2 Vector4) float32 {
+	cv1 := *(*C.Vector4)(unsafe.Pointer(&v1))
+	cv2 := *(*C.Vector4)(unsafe.Pointer(&v2))
+	ret := C.Vector4DotProduct(cv1, cv2)
+	return float32(ret)
+}
+
+func cVector4Equals(p Vector4, q Vector4) bool {
+	cp := *(*C.Vector4)(unsafe.Pointer(&p))
+	cq := *(*C.Vector4)(unsafe.Pointer(&q))
+	ret := C.Vector4Equals(cp, cq)
+	return ret != 0
+}
+
+func cVector4Invert(v Vector4) Vector4 {
+	cv := *(*C.Vector4)(unsafe.Pointer(&v))
+	ret := C.Vector4Invert(cv)
+	return *(*Vector4)(unsafe.Pointer(&ret))
+}
+
+func cVector4Length(v Vector4) float32 {
+	cv := *(*C.Vector4)(unsafe.Pointer(&v))
+	ret := C.Vector4Length(cv)
+	return float32(ret)
+}
+
+func cVector4LengthSqr(v Vector4) float32 {
+	cv := *(*C.Vector4)(unsafe.Pointer(&v))
+	ret := C.Vector4LengthSqr(cv)
+	return float32(ret)
+}
+
+func cVector4Lerp(v1, v2 Vector4, amount float32) Vector4 {
+	cv1 := *(*C.Vector4)(unsafe.Pointer(&v1))
+	cv2 := *(*C.Vector4)(unsafe.Pointer(&v2))
+	camount := C.float(amount)
+	ret := C.Vector4Lerp(cv1, cv2, camount)
+	return *(*Vector4)(unsafe.Pointer(&ret))
+}
+
+func cVector4Max(v1, v2 Vector4) Vector4 {
+	cv1 := *(*C.Vector4)(unsafe.Pointer(&v1))
+	cv2 := *(*C.Vector4)(unsafe.Pointer(&v2))
+	ret := C.Vector4Max(cv1, cv2)
+	return *(*Vector4)(unsafe.Pointer(&ret))
+}
+
+func cVector4Min(v1, v2 Vector4) Vector4 {
+	cv1 := *(*C.Vector4)(unsafe.Pointer(&v1))
+	cv2 := *(*C.Vector4)(unsafe.Pointer(&v2))
+	ret := C.Vector4Min(cv1, cv2)
+	return *(*Vector4)(unsafe.Pointer(&ret))
+}
+
+func cVector4MoveTowards(v Vector4, target Vector4, maxDistance float32) Vector4 {
+	cv := *(*C.Vector4)(unsafe.Pointer(&v))
+	ctarget := *(*C.Vector4)(unsafe.Pointer(&target))
+	cmaxDistance := C.float(maxDistance)
+	ret := C.Vector4MoveTowards(cv, ctarget, cmaxDistance)
+	return *(*Vector4)(unsafe.Pointer(&ret))
+}
+
+func cVector4Multiply(v1, v2 Vector4) Vector4 {
+	cv1 := *(*C.Vector4)(unsafe.Pointer(&v1))
+	cv2 := *(*C.Vector4)(unsafe.Pointer(&v2))
+	ret := C.Vector4Multiply(cv1, cv2)
+	return *(*Vector4)(unsafe.Pointer(&ret))
+}
+
+func cVector4Negate(v Vector4) Vector4 {
+	cv := *(*C.Vector4)(unsafe.Pointer(&v))
+	ret := C.Vector4Negate(cv)
+	return *(*Vector4)(unsafe.Pointer(&ret))
+}
+
+func cVector4Normalize(v Vector4) Vector4 {
+	cv := *(*C.Vector4)(unsafe.Pointer(&v))
+	ret := C.Vector4Normalize(cv)
+	return *(*Vector4)(unsafe.Pointer(&ret))
+}
+
+func cVector4One() Vector4 {
+	ret := C.Vector4One()
+	return *(*Vector4)(unsafe.Pointer(&ret))
+}
+
+func cVector4Scale(v Vector4, scale float32) Vector4 {
+	cv := *(*C.Vector4)(unsafe.Pointer(&v))
+	cscale := C.float(scale)
+	ret := C.Vector4Scale(cv, cscale)
+	return *(*Vector4)(unsafe.Pointer(&ret))
+}
+
+func cVector4Subtract(v1, v2 Vector4) Vector4 {
+	cv1 := *(*C.Vector4)(unsafe.Pointer(&v1))
+	cv2 := *(*C.Vector4)(unsafe.Pointer(&v2))
+	ret := C.Vector4Subtract(cv1, cv2)
+	return *(*Vector4)(unsafe.Pointer(&ret))
+}
+
+func cVector4SubtractValue(v Vector4, sub float32) Vector4 {
+	cv := *(*C.Vector4)(unsafe.Pointer(&v))
+	csub := C.float(sub)
+	ret := C.Vector4SubtractValue(cv, csub)
+	return *(*Vector4)(unsafe.Pointer(&ret))
+}
+
+func cVector4Zero() Vector4 {
+	ret := C.Vector4Zero()
+	return *(*Vector4)(unsafe.Pointer(&ret))
 }
 
 func cWrap(value, min, max float32) float32 {

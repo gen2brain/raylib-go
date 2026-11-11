@@ -37,6 +37,11 @@ func (m Matrix) Multiply(right Matrix) Matrix {
 	return MatrixMultiply(m, right)
 }
 
+// MultiplyValue - Multiply matrix components by value
+func (m Matrix) MultiplyValue(value float32) Matrix {
+	return MatrixMultiplyValue(m, value)
+}
+
 // Normalize - Normalize provided matrix
 func (m Matrix) Normalize() Matrix {
 	return MatrixNormalize(m)
@@ -75,6 +80,11 @@ func (q Quaternion) Add(q2 Quaternion) Quaternion {
 // AddValue - Add quaternion and float value
 func (q Quaternion) AddValue(add float32) Quaternion {
 	return QuaternionAddValue(q, add)
+}
+
+// CubicHermiteSpline - Calculate quaternion cubic spline interpolation using Cubic Hermite Spline algorithm (GLTF 2.0)
+func (q Quaternion) CubicHermiteSpline(outTangent1, q2, inTangent2 Quaternion, t float32) Quaternion {
+	return QuaternionCubicHermiteSpline(q, outTangent1, q2, inTangent2, t)
 }
 
 // Divide - Divide two quaternions
@@ -241,6 +251,16 @@ func (v Vector2) LineAngle(end Vector2) float32 {
 	return Vector2LineAngle(v, end)
 }
 
+// Max - Get max value for each pair of components
+func (v Vector2) Max(v2 Vector2) Vector2 {
+	return Vector2Max(v, v2)
+}
+
+// Min - Get min value for each pair of components
+func (v Vector2) Min(v2 Vector2) Vector2 {
+	return Vector2Min(v, v2)
+}
+
 // MoveTowards - Move Vector towards target
 func (v Vector2) MoveTowards(target Vector2, maxDistance float32) Vector2 {
 	return Vector2MoveTowards(v, target, maxDistance)
@@ -264,6 +284,11 @@ func (v Vector2) Normalize() Vector2 {
 // Reflect - Calculate reflected vector to normal
 func (v Vector2) Reflect(normal Vector2) Vector2 {
 	return Vector2Reflect(v, normal)
+}
+
+// Refract - Compute the direction of a refracted ray
+func (v Vector2) Refract(n Vector2, r float32) Vector2 {
+	return Vector2Refract(v, n, r)
 }
 
 // Rotate - Rotate vector by angle
@@ -326,6 +351,11 @@ func (v Vector3) CrossProduct(v2 Vector3) Vector3 {
 	return Vector3CrossProduct(v, v2)
 }
 
+// CubicHermite - Calculate cubic hermite interpolation between two vectors and their tangents (GLTF 2.0)
+func (v Vector3) CubicHermite(tangent1, v2, tangent2 Vector3, amount float32) Vector3 {
+	return Vector3CubicHermite(v, tangent1, v2, tangent2, amount)
+}
+
 // Distance - Calculate distance between two vectors
 func (v Vector3) Distance(v2 Vector3) float32 {
 	return Vector3Distance(v, v2)
@@ -379,6 +409,11 @@ func (v Vector3) Max(vec2 Vector3) Vector3 {
 // Min - Return min value for each pair of components
 func (v Vector3) Min(vec2 Vector3) Vector3 {
 	return Vector3Min(v, vec2)
+}
+
+// MoveTowards - Move Vector towards target
+func (v Vector3) MoveTowards(target Vector3, maxDistance float32) Vector3 {
+	return Vector3MoveTowards(v, target, maxDistance)
 }
 
 // Multiply - Multiply vector by vector
@@ -469,4 +504,44 @@ func (v Vector3) Transform(mat Matrix) Vector3 {
 // NOTE: We are avoiding calling other raymath functions despite available
 func (v Vector3) Unproject(projection Matrix, view Matrix) Vector3 {
 	return Vector3Unproject(v, projection, view)
+}
+
+// Distance - Calculate distance between two vectors
+func (v Vector4) Distance(v2 Vector4) float32 {
+	return Vector4Distance(v, v2)
+}
+
+// DistanceSqr - Calculate square distance between two vectors
+func (v Vector4) DistanceSqr(v2 Vector4) float32 {
+	return Vector4DistanceSqr(v, v2)
+}
+
+// DotProduct - Vectors dot product
+func (v Vector4) DotProduct(v2 Vector4) float32 {
+	return Vector4DotProduct(v, v2)
+}
+
+// LengthSqr - Vector square length
+func (v Vector4) LengthSqr() float32 {
+	return Vector4LengthSqr(v)
+}
+
+// Max - Get max value for each pair of components
+func (v Vector4) Max(v2 Vector4) Vector4 {
+	return Vector4Max(v, v2)
+}
+
+// Min - Get min value for each pair of components
+func (v Vector4) Min(v2 Vector4) Vector4 {
+	return Vector4Min(v, v2)
+}
+
+// MoveTowards - Move Vector towards target
+func (v Vector4) MoveTowards(target Vector4, maxDistance float32) Vector4 {
+	return Vector4MoveTowards(v, target, maxDistance)
+}
+
+// Negate - Negate vector
+func (v Vector4) Negate() Vector4 {
+	return Vector4Negate(v)
 }

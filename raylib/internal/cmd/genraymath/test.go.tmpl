@@ -154,6 +154,13 @@ func testQuaternionEquals(a, b Quaternion, scale float32) bool {
      testFloat32Equals(a.W, b.W, scale)
 }
 
+func testVector4Equals(a, b Vector4, scale float32) bool {
+  return testFloat32Equals(a.X, b.X, scale) &&
+     testFloat32Equals(a.Y, b.Y, scale) &&
+     testFloat32Equals(a.Z, b.Z, scale) &&
+     testFloat32Equals(a.W, b.W, scale)
+}
+
 func testMatrixEquals(a, b Matrix, scale float32) bool {
   return testFloat32Equals(a.M0, b.M0, scale) &&
      testFloat32Equals(a.M1, b.M1, scale) &&
