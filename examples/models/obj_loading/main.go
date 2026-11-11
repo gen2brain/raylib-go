@@ -77,7 +77,7 @@ func main() {
 		// Select model on mouse click
 		if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
 			// Check collision between ray and box
-			if rl.GetRayCollisionBox(rl.GetMouseRay(rl.GetMousePosition(), camera), bounds).Hit {
+			if rl.GetRayCollisionBox(rl.GetScreenToWorldRay(rl.GetMousePosition(), camera), bounds).Hit {
 				selected = !selected
 			} else {
 				selected = false

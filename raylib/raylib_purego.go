@@ -270,6 +270,10 @@ var (
 	drawEllipseLines            = dll.MustPrep("DrawEllipseLines", &ffi.TypeVoid, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeFloat, &ffi.TypeFloat, &typeColor)
 	drawEllipseLinesV           = dll.MustPrep("DrawEllipseLinesV", &ffi.TypeVoid, &typeVector2, &ffi.TypeFloat, &ffi.TypeFloat, &typeColor)
 	drawRing                    = dll.MustPrep("DrawRing", &ffi.TypeVoid, &typeVector2, &ffi.TypeFloat, &ffi.TypeFloat, &ffi.TypeFloat, &ffi.TypeFloat, &ffi.TypeSint32, &typeColor)
+	drawRingLinesEx             = dll.MustPrep("DrawRingLinesEx", &ffi.TypeVoid, &typeVector2, &ffi.TypeFloat, &ffi.TypeFloat, &ffi.TypeFloat, &ffi.TypeFloat, &ffi.TypeSint32, &ffi.TypeFloat, &typeColor)
+	drawCircleLinesEx           = dll.MustPrep("DrawCircleLinesEx", &ffi.TypeVoid, &typeVector2, &ffi.TypeFloat, &ffi.TypeFloat, &typeColor)
+	drawCircleSectorLinesEx     = dll.MustPrep("DrawCircleSectorLinesEx", &ffi.TypeVoid, &typeVector2, &ffi.TypeFloat, &ffi.TypeFloat, &ffi.TypeFloat, &ffi.TypeSint32, &ffi.TypeFloat, &typeColor)
+	drawEllipseLinesEx          = dll.MustPrep("DrawEllipseLinesEx", &ffi.TypeVoid, &typeVector2, &ffi.TypeFloat, &ffi.TypeFloat, &ffi.TypeFloat, &typeColor)
 	drawRingLines               = dll.MustPrep("DrawRingLines", &ffi.TypeVoid, &typeVector2, &ffi.TypeFloat, &ffi.TypeFloat, &ffi.TypeFloat, &ffi.TypeFloat, &ffi.TypeSint32, &typeColor)
 	drawRectangle               = dll.MustPrep("DrawRectangle", &ffi.TypeVoid, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &typeColor)
 	drawRectangleV              = dll.MustPrep("DrawRectangleV", &ffi.TypeVoid, &typeVector2, &typeVector2, &typeColor)
@@ -284,6 +288,8 @@ var (
 	drawRectangleRoundedLines   = dll.MustPrep("DrawRectangleRoundedLines", &ffi.TypeVoid, &typeRectangle, &ffi.TypeFloat, &ffi.TypeSint32, &typeColor)
 	drawRectangleRoundedLinesEx = dll.MustPrep("DrawRectangleRoundedLinesEx", &ffi.TypeVoid, &typeRectangle, &ffi.TypeFloat, &ffi.TypeSint32, &ffi.TypeFloat, &typeColor)
 	drawTriangle                = dll.MustPrep("DrawTriangle", &ffi.TypeVoid, &typeVector2, &typeVector2, &typeVector2, &typeColor)
+	drawTriangleGradient        = dll.MustPrep("DrawTriangleGradient", &ffi.TypeVoid, &typeVector2, &typeVector2, &typeVector2, &typeColor, &typeColor, &typeColor)
+	drawTriangleLinesEx         = dll.MustPrep("DrawTriangleLinesEx", &ffi.TypeVoid, &typeVector2, &typeVector2, &typeVector2, &ffi.TypeFloat, &typeColor)
 	drawTriangleLines           = dll.MustPrep("DrawTriangleLines", &ffi.TypeVoid, &typeVector2, &typeVector2, &typeVector2, &typeColor)
 	drawTriangleFan             = dll.MustPrep("DrawTriangleFan", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeSint32, &typeColor)
 	drawTriangleStrip           = dll.MustPrep("DrawTriangleStrip", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeSint32, &typeColor)
@@ -306,11 +312,11 @@ var (
 
 	// Spline segment point evaluation functions, for a given t [0.0f .. 1.0f]
 
-	getSplinePointLinear      = dll.MustPrep("GetSplinePointLinear", &typeVector2, &typeVector2, &typeVector2, &ffi.TypeFloat)
-	getSplinePointBasis       = dll.MustPrep("GetSplinePointBasis", &typeVector2, &typeVector2, &typeVector2, &typeVector2, &typeVector2, &ffi.TypeFloat)
-	getSplinePointCatmullRom  = dll.MustPrep("GetSplinePointCatmullRom", &typeVector2, &typeVector2, &typeVector2, &typeVector2, &typeVector2, &ffi.TypeFloat)
-	getSplinePointBezierQuad  = dll.MustPrep("GetSplinePointBezierQuad", &typeVector2, &typeVector2, &typeVector2, &typeVector2, &ffi.TypeFloat)
-	getSplinePointBezierCubic = dll.MustPrep("GetSplinePointBezierCubic", &typeVector2, &typeVector2, &typeVector2, &typeVector2, &typeVector2, &ffi.TypeFloat)
+	getSplinePointLinear          = dll.MustPrep("GetSplinePointLinear", &typeVector2, &typeVector2, &typeVector2, &ffi.TypeFloat)
+	getSplinePointBasis           = dll.MustPrep("GetSplinePointBasis", &typeVector2, &typeVector2, &typeVector2, &typeVector2, &typeVector2, &ffi.TypeFloat)
+	getSplinePointCatmullRom      = dll.MustPrep("GetSplinePointCatmullRom", &typeVector2, &typeVector2, &typeVector2, &typeVector2, &typeVector2, &ffi.TypeFloat)
+	getSplinePointBezierQuadratic = dll.MustPrep("GetSplinePointBezierQuadratic", &typeVector2, &typeVector2, &typeVector2, &typeVector2, &ffi.TypeFloat)
+	getSplinePointBezierCubic     = dll.MustPrep("GetSplinePointBezierCubic", &typeVector2, &typeVector2, &typeVector2, &typeVector2, &typeVector2, &ffi.TypeFloat)
 
 	// Basic shapes collision detection functions
 
@@ -381,7 +387,7 @@ var (
 	imageColorTint         = dll.MustPrep("ImageColorTint", &ffi.TypeVoid, &ffi.TypePointer, &typeColor)
 	imageColorInvert       = dll.MustPrep("ImageColorInvert", &ffi.TypeVoid, &ffi.TypePointer)
 	imageColorGrayscale    = dll.MustPrep("ImageColorGrayscale", &ffi.TypeVoid, &ffi.TypePointer)
-	imageColorContrast     = dll.MustPrep("ImageColorContrast", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeFloat)
+	imageColorContrast     = dll.MustPrep("ImageColorContrast", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeSint32)
 	imageColorBrightness   = dll.MustPrep("ImageColorBrightness", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeSint32)
 	imageColorReplace      = dll.MustPrep("ImageColorReplace", &ffi.TypeVoid, &ffi.TypePointer, &typeColor, &typeColor)
 	loadImageColors        = dll.MustPrep("LoadImageColors", &ffi.TypePointer, &typeImage)
@@ -393,28 +399,37 @@ var (
 
 	// Image drawing functions
 
-	imageClearBackground    = dll.MustPrep("ImageClearBackground", &ffi.TypeVoid, &ffi.TypePointer, &typeColor)
-	imageDrawPixel          = dll.MustPrep("ImageDrawPixel", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeSint32, &ffi.TypeSint32, &typeColor)
-	imageDrawPixelV         = dll.MustPrep("ImageDrawPixelV", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &typeColor)
-	imageDrawLine           = dll.MustPrep("ImageDrawLine", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &typeColor)
-	imageDrawLineV          = dll.MustPrep("ImageDrawLineV", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &typeVector2, &typeColor)
-	imageDrawLineEx         = dll.MustPrep("ImageDrawLineEx", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &typeVector2, &ffi.TypeSint32, &typeColor)
-	imageDrawCircle         = dll.MustPrep("ImageDrawCircle", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &typeColor)
-	imageDrawCircleV        = dll.MustPrep("ImageDrawCircleV", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &ffi.TypeSint32, &typeColor)
-	imageDrawCircleLines    = dll.MustPrep("ImageDrawCircleLines", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &typeColor)
-	imageDrawCircleLinesV   = dll.MustPrep("ImageDrawCircleLinesV", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &ffi.TypeSint32, &typeColor)
-	imageDrawRectangle      = dll.MustPrep("ImageDrawRectangle", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &typeColor)
-	imageDrawRectangleV     = dll.MustPrep("ImageDrawRectangleV", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &typeVector2, &typeColor)
-	imageDrawRectangleRec   = dll.MustPrep("ImageDrawRectangleRec", &ffi.TypeVoid, &ffi.TypePointer, &typeRectangle, &typeColor)
-	imageDrawRectangleLines = dll.MustPrep("ImageDrawRectangleLines", &ffi.TypeVoid, &ffi.TypePointer, &typeRectangle, &ffi.TypeSint32, &typeColor)
-	imageDrawTriangle       = dll.MustPrep("ImageDrawTriangle", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &typeVector2, &typeVector2, &typeColor)
-	imageDrawTriangleEx     = dll.MustPrep("ImageDrawTriangleEx", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &typeVector2, &typeVector2, &typeColor, &typeColor, &typeColor)
-	imageDrawTriangleLines  = dll.MustPrep("ImageDrawTriangleLines", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &typeVector2, &typeVector2, &typeColor)
-	imageDrawTriangleFan    = dll.MustPrep("ImageDrawTriangleFan", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypePointer, &ffi.TypeSint32, &typeColor)
-	imageDrawTriangleStrip  = dll.MustPrep("ImageDrawTriangleStrip", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypePointer, &ffi.TypeSint32, &typeColor)
-	imageDraw               = dll.MustPrep("ImageDraw", &ffi.TypeVoid, &ffi.TypePointer, &typeImage, &typeRectangle, &typeRectangle, &typeColor)
-	imageDrawText           = dll.MustPrep("ImageDrawText", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypePointer, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &typeColor)
-	imageDrawTextEx         = dll.MustPrep("ImageDrawTextEx", &ffi.TypeVoid, &ffi.TypePointer, &typeFont, &ffi.TypePointer, &typeVector2, &ffi.TypeFloat, &ffi.TypeFloat, &typeColor)
+	imageClearBackground         = dll.MustPrep("ImageClearBackground", &ffi.TypeVoid, &ffi.TypePointer, &typeColor)
+	imageDrawPixel               = dll.MustPrep("ImageDrawPixel", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeSint32, &ffi.TypeSint32, &typeColor)
+	imageDrawPixelV              = dll.MustPrep("ImageDrawPixelV", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &typeColor)
+	imageDrawLine                = dll.MustPrep("ImageDrawLine", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &typeColor)
+	imageDrawLineV               = dll.MustPrep("ImageDrawLineV", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &typeVector2, &typeColor)
+	imageDrawLineEx              = dll.MustPrep("ImageDrawLineEx", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &typeVector2, &ffi.TypeSint32, &typeColor)
+	imageDrawLineStrip           = dll.MustPrep("ImageDrawLineStrip", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypePointer, &ffi.TypeSint32, &typeColor)
+	imageDrawCircle              = dll.MustPrep("ImageDrawCircle", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &typeColor)
+	imageDrawCircleV             = dll.MustPrep("ImageDrawCircleV", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &ffi.TypeSint32, &typeColor)
+	imageDrawCircleLines         = dll.MustPrep("ImageDrawCircleLines", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &typeColor)
+	imageDrawCircleLinesV        = dll.MustPrep("ImageDrawCircleLinesV", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &ffi.TypeSint32, &typeColor)
+	imageDrawCircleGradient      = dll.MustPrep("ImageDrawCircleGradient", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &ffi.TypeFloat, &typeColor, &typeColor)
+	imageDrawRectangle           = dll.MustPrep("ImageDrawRectangle", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &typeColor)
+	imageDrawRectangleV          = dll.MustPrep("ImageDrawRectangleV", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &typeVector2, &typeColor)
+	imageDrawRectangleRec        = dll.MustPrep("ImageDrawRectangleRec", &ffi.TypeVoid, &ffi.TypePointer, &typeRectangle, &typeColor)
+	imageDrawRectangleLines      = dll.MustPrep("ImageDrawRectangleLines", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &typeColor)
+	imageDrawRectangleLinesEx    = dll.MustPrep("ImageDrawRectangleLinesEx", &ffi.TypeVoid, &ffi.TypePointer, &typeRectangle, &ffi.TypeSint32, &typeColor)
+	imageDrawRectanglePro        = dll.MustPrep("ImageDrawRectanglePro", &ffi.TypeVoid, &ffi.TypePointer, &typeRectangle, &typeVector2, &ffi.TypeFloat, &typeColor)
+	imageDrawRectangleGradientEx = dll.MustPrep("ImageDrawRectangleGradientEx", &ffi.TypeVoid, &ffi.TypePointer, &typeRectangle, &typeColor, &typeColor, &typeColor, &typeColor)
+	imageDrawTriangle            = dll.MustPrep("ImageDrawTriangle", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &typeVector2, &typeVector2, &typeColor)
+	imageDrawTriangleGradient    = dll.MustPrep("ImageDrawTriangleGradient", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &typeVector2, &typeVector2, &typeColor, &typeColor, &typeColor)
+	imageDrawTriangleLines       = dll.MustPrep("ImageDrawTriangleLines", &ffi.TypeVoid, &ffi.TypePointer, &typeVector2, &typeVector2, &typeVector2, &typeColor)
+	imageDrawTriangleFan         = dll.MustPrep("ImageDrawTriangleFan", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypePointer, &ffi.TypeSint32, &typeColor)
+	imageDrawTriangleStrip       = dll.MustPrep("ImageDrawTriangleStrip", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypePointer, &ffi.TypeSint32, &typeColor)
+	imageDrawImage               = dll.MustPrep("ImageDrawImage", &ffi.TypeVoid, &ffi.TypePointer, &typeImage, &ffi.TypeSint32, &ffi.TypeSint32, &typeColor)
+	imageDrawImageEx             = dll.MustPrep("ImageDrawImageEx", &ffi.TypeVoid, &ffi.TypePointer, &typeImage, &typeVector2, &ffi.TypeFloat, &ffi.TypeFloat, &typeColor)
+	imageDrawImageRec            = dll.MustPrep("ImageDrawImageRec", &ffi.TypeVoid, &ffi.TypePointer, &typeImage, &typeRectangle, &typeVector2, &typeColor)
+	imageDrawImagePro            = dll.MustPrep("ImageDrawImagePro", &ffi.TypeVoid, &ffi.TypePointer, &typeImage, &typeRectangle, &typeRectangle, &typeVector2, &ffi.TypeFloat, &typeColor)
+	imageDrawText                = dll.MustPrep("ImageDrawText", &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypePointer, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32, &typeColor)
+	imageDrawTextEx              = dll.MustPrep("ImageDrawTextEx", &ffi.TypeVoid, &ffi.TypePointer, &typeFont, &ffi.TypePointer, &typeVector2, &ffi.TypeFloat, &ffi.TypeFloat, &typeColor)
+	imageDrawTextPro             = dll.MustPrep("ImageDrawTextPro", &ffi.TypeVoid, &ffi.TypePointer, &typeFont, &ffi.TypePointer, &typeVector2, &typeVector2, &ffi.TypeFloat, &ffi.TypeFloat, &ffi.TypeFloat, &typeColor)
 
 	// Texture loading functions
 
@@ -422,6 +437,7 @@ var (
 	loadTextureFromImage = dll.MustPrep("LoadTextureFromImage", &typeTexture2D, &typeImage)
 	loadTextureCubemap   = dll.MustPrep("LoadTextureCubemap", &typeTexture2D, &typeImage, &ffi.TypeSint32)
 	loadRenderTexture    = dll.MustPrep("LoadRenderTexture", &typeRenderTexture2D, &ffi.TypeSint32, &ffi.TypeSint32)
+	loadRenderTextureEx  = dll.MustPrep("LoadRenderTextureEx", &typeRenderTexture2D, &ffi.TypeSint32, &ffi.TypeSint32, &ffi.TypeSint32)
 	isTextureValid       = dll.MustPrep("IsTextureValid", &ffi.TypeUint8, &typeTexture2D)
 	unloadTexture        = dll.MustPrep("UnloadTexture", &ffi.TypeVoid, &typeTexture2D)
 	isRenderTextureValid = dll.MustPrep("IsRenderTextureValid", &ffi.TypeUint8, &typeRenderTexture2D)
@@ -1189,13 +1205,6 @@ func UnloadShader(shader Shader) {
 	unloadShader.Call(nil, &shader)
 }
 
-// GetMouseRay - Get a ray trace from mouse position
-//
-// Deprecated: Use [GetScreenToWorldRay] instead.
-func GetMouseRay(mousePosition Vector2, camera Camera) Ray {
-	return GetScreenToWorldRay(mousePosition, camera)
-}
-
 // GetScreenToWorldRay - Get a ray trace from screen position (i.e mouse)
 func GetScreenToWorldRay(position Vector2, camera Camera) Ray {
 	var ret Ray
@@ -1861,6 +1870,26 @@ func DrawRing(center Vector2, innerRadius, outerRadius, startAngle, endAngle flo
 	drawRing.Call(nil, &center, &innerRadius, &outerRadius, &startAngle, &endAngle, &segments, &col)
 }
 
+// DrawRingLinesEx - Draw ring outline with line thickness
+func DrawRingLinesEx(center Vector2, innerRadius, outerRadius, startAngle, endAngle float32, segments int32, thick float32, col color.RGBA) {
+	drawRingLinesEx.Call(nil, &center, &innerRadius, &outerRadius, &startAngle, &endAngle, &segments, &thick, &col)
+}
+
+// DrawCircleLinesEx - Draw circle outline with line thickness
+func DrawCircleLinesEx(center Vector2, radius, thick float32, col color.RGBA) {
+	drawCircleLinesEx.Call(nil, &center, &radius, &thick, &col)
+}
+
+// DrawCircleSectorLinesEx - Draw circle sector outline with thickness
+func DrawCircleSectorLinesEx(center Vector2, radius, startAngle, endAngle float32, segments int32, thick float32, col color.RGBA) {
+	drawCircleSectorLinesEx.Call(nil, &center, &radius, &startAngle, &endAngle, &segments, &thick, &col)
+}
+
+// DrawEllipseLinesEx - Draw ellipse outline with line thickness
+func DrawEllipseLinesEx(center Vector2, radiusH, radiusV, thick float32, col color.RGBA) {
+	drawEllipseLinesEx.Call(nil, &center, &radiusH, &radiusV, &thick, &col)
+}
+
 // DrawRingLines - Draw ring outline
 func DrawRingLines(center Vector2, innerRadius, outerRadius, startAngle, endAngle float32, segments int32, col color.RGBA) {
 	drawRingLines.Call(nil, &center, &innerRadius, &outerRadius, &startAngle, &endAngle, &segments, &col)
@@ -1929,6 +1958,16 @@ func DrawRectangleRoundedLinesEx(rec Rectangle, roundness float32, segments int3
 // DrawTriangle - Draw a color-filled triangle (vertex in counter-clockwise order!)
 func DrawTriangle(v1, v2, v3 Vector2, col color.RGBA) {
 	drawTriangle.Call(nil, &v1, &v2, &v3, &col)
+}
+
+// DrawTriangleGradient - Draw triangle with interpolated colors, counter-clockwise vertex/color order
+func DrawTriangleGradient(v1, v2, v3 Vector2, c1, c2, c3 color.RGBA) {
+	drawTriangleGradient.Call(nil, &v1, &v2, &v3, &c1, &c2, &c3)
+}
+
+// DrawTriangleLinesEx - Draw triangle outline with line thickness, counter-clockwise vertex order
+func DrawTriangleLinesEx(v1, v2, v3 Vector2, thick float32, col color.RGBA) {
+	drawTriangleLinesEx.Call(nil, &v1, &v2, &v3, &thick, &col)
 }
 
 // DrawTriangleLines - Draw triangle outline (vertex in counter-clockwise order!)
@@ -2046,10 +2085,10 @@ func GetSplinePointCatmullRom(p1, p2, p3, p4 Vector2, t float32) Vector2 {
 	return ret
 }
 
-// GetSplinePointBezierQuad - Get (evaluate) spline point: Quadratic Bezier
-func GetSplinePointBezierQuad(p1, c2, p3 Vector2, t float32) Vector2 {
+// GetSplinePointBezierQuadratic - Get (evaluate) spline point: Quadratic Bezier
+func GetSplinePointBezierQuadratic(p1, c2, p3 Vector2, t float32) Vector2 {
 	var ret Vector2
-	getSplinePointBezierQuad.Call(&ret, &p1, &c2, &p3, &t)
+	getSplinePointBezierQuadratic.Call(&ret, &p1, &c2, &p3, &t)
 	return ret
 }
 
@@ -2458,7 +2497,7 @@ func ImageColorGrayscale(image *Image) {
 }
 
 // ImageColorContrast - Modify image color: contrast (-100 to 100)
-func ImageColorContrast(image *Image, contrast float32) {
+func ImageColorContrast(image *Image, contrast int32) {
 	imageColorContrast.Call(nil, &image, &contrast)
 }
 
@@ -2548,6 +2587,13 @@ func ImageDrawLineEx(dst *Image, start, end Vector2, thick int32, col color.RGBA
 	imageDrawLineEx.Call(nil, &dst, &start, &end, &thick, &col)
 }
 
+// ImageDrawLineStrip - Draw a lines sequence within an image
+func ImageDrawLineStrip(dst *Image, points []Vector2, col color.RGBA) {
+	pointCount := int32(len(points))
+	pointsPtr := unsafe.SliceData(points)
+	imageDrawLineStrip.Call(nil, &dst, &pointsPtr, &pointCount, &col)
+}
+
 // ImageDrawCircle - Draw a filled circle within an image
 func ImageDrawCircle(dst *Image, centerX, centerY, radius int32, col color.RGBA) {
 	imageDrawCircle.Call(nil, &dst, &centerX, &centerY, &radius, &col)
@@ -2568,6 +2614,11 @@ func ImageDrawCircleLinesV(dst *Image, center Vector2, radius int32, col color.R
 	imageDrawCircleLinesV.Call(nil, &dst, &center, &radius, &col)
 }
 
+// ImageDrawCircleGradient - Draw a gradient-filled circle within an image
+func ImageDrawCircleGradient(dst *Image, center Vector2, radius float32, inner, outer color.RGBA) {
+	imageDrawCircleGradient.Call(nil, &dst, &center, &radius, &inner, &outer)
+}
+
 // ImageDrawRectangle - Draw rectangle within an image
 func ImageDrawRectangle(dst *Image, posX, posY, width, height int32, col color.RGBA) {
 	imageDrawRectangle.Call(nil, &dst, &posX, &posY, &width, &height, &col)
@@ -2584,9 +2635,24 @@ func ImageDrawRectangleRec(dst *Image, rec Rectangle, col color.RGBA) {
 }
 
 // ImageDrawRectangleLines - Draw rectangle lines within an image
-func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int, col color.RGBA) {
+func ImageDrawRectangleLines(dst *Image, posX, posY, width, height int32, col color.RGBA) {
+	imageDrawRectangleLines.Call(nil, &dst, &posX, &posY, &width, &height, &col)
+}
+
+// ImageDrawRectangleLinesEx - Draw rectangle lines within an image with line thickness
+func ImageDrawRectangleLinesEx(dst *Image, rec Rectangle, thick int, col color.RGBA) {
 	t := int32(thick)
-	imageDrawRectangleLines.Call(nil, &dst, &rec, &t, &col)
+	imageDrawRectangleLinesEx.Call(nil, &dst, &rec, &t, &col)
+}
+
+// ImageDrawRectanglePro - Draw a color-filled rectangle with pro parameters within an image
+func ImageDrawRectanglePro(dst *Image, rec Rectangle, origin Vector2, rotation float32, col color.RGBA) {
+	imageDrawRectanglePro.Call(nil, &dst, &rec, &origin, &rotation, &col)
+}
+
+// ImageDrawRectangleGradientEx - Draw rectangle with gradient colors within an image, counter-clockwise color order
+func ImageDrawRectangleGradientEx(dst *Image, rec Rectangle, col1, col2, col3, col4 color.RGBA) {
+	imageDrawRectangleGradientEx.Call(nil, &dst, &rec, &col1, &col2, &col3, &col4)
 }
 
 // ImageDrawTriangle - Draw triangle within an image
@@ -2594,9 +2660,9 @@ func ImageDrawTriangle(dst *Image, v1, v2, v3 Vector2, col color.RGBA) {
 	imageDrawTriangle.Call(nil, &dst, &v1, &v2, &v3, &col)
 }
 
-// ImageDrawTriangleEx - Draw triangle with interpolated colors within an image
-func ImageDrawTriangleEx(dst *Image, v1, v2, v3 Vector2, c1, c2, c3 color.RGBA) {
-	imageDrawTriangleEx.Call(nil, &dst, &v1, &v2, &v3, &c1, &c2, &c3)
+// ImageDrawTriangleGradient - Draw triangle with interpolated colors within an image
+func ImageDrawTriangleGradient(dst *Image, v1, v2, v3 Vector2, c1, c2, c3 color.RGBA) {
+	imageDrawTriangleGradient.Call(nil, &dst, &v1, &v2, &v3, &c1, &c2, &c3)
 }
 
 // ImageDrawTriangleLines - Draw triangle outline within an image
@@ -2618,9 +2684,24 @@ func ImageDrawTriangleStrip(dst *Image, points []Vector2, col color.RGBA) {
 	imageDrawTriangleStrip.Call(nil, &dst, &pointsPtr, &pointCount, &col)
 }
 
-// ImageDraw - Draw a source image within a destination image (tint applied to source)
-func ImageDraw(dst, src *Image, srcRec, dstRec Rectangle, tint color.RGBA) {
-	imageDraw.Call(nil, &dst, src, &srcRec, &dstRec, &tint)
+// ImageDrawImage - Draw an image within an image
+func ImageDrawImage(dst *Image, src *Image, posX, posY int32, tint color.RGBA) {
+	imageDrawImage.Call(nil, &dst, src, &posX, &posY, &tint)
+}
+
+// ImageDrawImageEx - Draw an image with scaling and rotation within an image
+func ImageDrawImageEx(dst *Image, src *Image, position Vector2, rotation, scale float32, tint color.RGBA) {
+	imageDrawImageEx.Call(nil, &dst, src, &position, &rotation, &scale, &tint)
+}
+
+// ImageDrawImageRec - Draw a part of an image defined by a rectangle within an image
+func ImageDrawImageRec(dst *Image, src *Image, srcRec Rectangle, position Vector2, tint color.RGBA) {
+	imageDrawImageRec.Call(nil, &dst, src, &srcRec, &position, &tint)
+}
+
+// ImageDrawImagePro - Draw a part of an image defined by a rectangle into destination rectangle, with scaling and rotation, within an image
+func ImageDrawImagePro(dst *Image, src *Image, srcRec, dstRec Rectangle, origin Vector2, rotation float32, tint color.RGBA) {
+	imageDrawImagePro.Call(nil, &dst, src, &srcRec, &dstRec, &origin, &rotation, &tint)
 }
 
 // ImageDrawText - Draw text (using default font) within an image (destination)
@@ -2633,6 +2714,12 @@ func ImageDrawText(dst *Image, posX, posY int32, text string, fontSize int32, co
 func ImageDrawTextEx(dst *Image, position Vector2, font Font, text string, fontSize, spacing float32, tint color.RGBA) {
 	textPtr := convert.ToBytePtr(text)
 	imageDrawTextEx.Call(nil, &dst, &font, &textPtr, &position, &fontSize, &spacing, &tint)
+}
+
+// ImageDrawTextPro - Draw text using Font and pro parameters (rotation)
+func ImageDrawTextPro(dst *Image, font Font, text string, position, origin Vector2, rotation, fontSize, spacing float32, tint color.RGBA) {
+	textPtr := convert.ToBytePtr(text)
+	imageDrawTextPro.Call(nil, &dst, &font, &textPtr, &position, &origin, &rotation, &fontSize, &spacing, &tint)
 }
 
 // LoadTexture - Load texture from file into GPU memory (VRAM)
@@ -2661,6 +2748,14 @@ func LoadTextureCubemap(image *Image, layout int32) Texture2D {
 func LoadRenderTexture(width, height int32) RenderTexture2D {
 	var ret RenderTexture2D
 	loadRenderTexture.Call(&ret, &width, &height)
+	return ret
+}
+
+// LoadRenderTextureEx - Load texture for rendering (framebuffer), with specific format
+func LoadRenderTextureEx(width, height int32, format PixelFormat) RenderTexture2D {
+	var ret RenderTexture2D
+	f := int32(format)
+	loadRenderTextureEx.Call(&ret, &width, &height, &f)
 	return ret
 }
 
@@ -3143,13 +3238,13 @@ func DrawCylinderWiresEx(startPos Vector3, endPos Vector3, startRadius float32, 
 }
 
 // DrawCapsule - Draw a capsule with the center of its sphere caps at startPos and endPos
-func DrawCapsule(startPos, endPos Vector3, radius float32, slices, rings int32, col color.RGBA) {
-	drawCapsule.Call(nil, &startPos, &endPos, &radius, &slices, &rings, &col)
+func DrawCapsule(startPos, endPos Vector3, radius float32, rings, slices int32, col color.RGBA) {
+	drawCapsule.Call(nil, &startPos, &endPos, &radius, &rings, &slices, &col)
 }
 
 // DrawCapsuleWires - Draw capsule wireframe with the center of its sphere caps at startPos and endPos
-func DrawCapsuleWires(startPos, endPos Vector3, radius float32, slices, rings int32, col color.RGBA) {
-	drawCapsuleWires.Call(nil, &startPos, &endPos, &radius, &slices, &rings, &col)
+func DrawCapsuleWires(startPos, endPos Vector3, radius float32, rings, slices int32, col color.RGBA) {
+	drawCapsuleWires.Call(nil, &startPos, &endPos, &radius, &rings, &slices, &col)
 }
 
 // DrawPlane - Draw a plane XZ

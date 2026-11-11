@@ -30,7 +30,7 @@ func main() {
 
 		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
 			if !collision.Hit {
-				ray = rl.GetMouseRay(rl.GetMousePosition(), camera)
+				ray = rl.GetScreenToWorldRay(rl.GetMousePosition(), camera)
 
 				// Check collision between ray and box
 				min := rl.NewVector3(cubePosition.X-cubeSize.X/2, cubePosition.Y-cubeSize.Y/2, cubePosition.Z-cubeSize.Z/2)

@@ -19,7 +19,7 @@ func main() {
 	parrots := rl.LoadImage("parrots.png") // Load image in CPU memory (RAM)
 
 	// Draw one image over the other with a scaling of 1.5f
-	rl.ImageDraw(parrots, cat, rl.NewRectangle(0, 0, float32(cat.Width), float32(cat.Height)), rl.NewRectangle(30, 40, float32(cat.Width)*1.5, float32(cat.Height)*1.5), rl.White)
+	rl.ImageDrawImagePro(parrots, cat, rl.NewRectangle(0, 0, float32(cat.Width), float32(cat.Height)), rl.NewRectangle(30, 40, float32(cat.Width)*1.5, float32(cat.Height)*1.5), rl.Vector2{}, 0, rl.White)
 	rl.ImageCrop(parrots, rl.NewRectangle(0, 50, float32(parrots.Width), float32(parrots.Height-100))) // Crop resulting image
 
 	rl.UnloadImage(cat) // Unload image from RAM

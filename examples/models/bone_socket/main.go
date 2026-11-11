@@ -65,18 +65,18 @@ func main() {
 
 	// Search bones for sockets via characterModel.Skeleton
 	bones := unsafe.Slice(characterModel.Skeleton.Bones, characterModel.Skeleton.BoneCount)
-	for i := int32(0); i < characterModel.Skeleton.BoneCount; i++ {
+	for i := uint32(0); i < characterModel.Skeleton.BoneCount; i++ {
 		name := getBoneName(bones[i])
 		if name == "socket_hat" {
-			boneSocketIndex[boneSocketHat] = i
+			boneSocketIndex[boneSocketHat] = int32(i)
 			continue
 		}
 		if name == "socket_hand_R" {
-			boneSocketIndex[boneSocketHandR] = i
+			boneSocketIndex[boneSocketHandR] = int32(i)
 			continue
 		}
 		if name == "socket_hand_L" {
-			boneSocketIndex[boneSocketHandL] = i
+			boneSocketIndex[boneSocketHandL] = int32(i)
 			continue
 		}
 	}

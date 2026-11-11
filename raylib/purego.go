@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	requiredVersion = "6.0"
+	requiredVersion = "6.2"
 )
 
 var vsprintf ffi.Fun
@@ -48,11 +48,11 @@ func loadLibrary() ffi.Lib {
 	if len(libname) == 0 {
 		switch runtime.GOOS {
 		case "freebsd", "linux":
-			libname = "libraylib.so.6.0.0"
+			libname = "libraylib.so.6.2.0"
 		case "windows":
 			libname = "raylib.dll"
 		case "darwin":
-			libname = "libraylib.6.0.0.dylib"
+			libname = "libraylib.6.2.0.dylib"
 		}
 	}
 

@@ -215,6 +215,19 @@ func DrawRing(center Vector2, innerRadius, outerRadius, startAngle, endAngle flo
 	C.DrawRing(*ccenter, cinnerRadius, couterRadius, cstartAngle, cendAngle, csegments, *ccolor)
 }
 
+// DrawRingLinesEx - Draw ring outline with line thickness
+func DrawRingLinesEx(center Vector2, innerRadius, outerRadius, startAngle, endAngle float32, segments int32, thick float32, col color.RGBA) {
+	ccenter := center.cptr()
+	cinnerRadius := (C.float)(innerRadius)
+	couterRadius := (C.float)(outerRadius)
+	cstartAngle := (C.float)(startAngle)
+	cendAngle := (C.float)(endAngle)
+	csegments := (C.int)(segments)
+	cthick := (C.float)(thick)
+	ccolor := colorCptr(col)
+	C.DrawRingLinesEx(*ccenter, cinnerRadius, couterRadius, cstartAngle, cendAngle, csegments, cthick, *ccolor)
+}
+
 // DrawRingLines - Draw ring outline
 func DrawRingLines(center Vector2, innerRadius, outerRadius, startAngle, endAngle float32, segments int32, col color.RGBA) {
 	ccenter := center.cptr()
@@ -346,6 +359,27 @@ func DrawTriangle(v1, v2, v3 Vector2, col color.RGBA) {
 	cv3 := v3.cptr()
 	ccolor := colorCptr(col)
 	C.DrawTriangle(*cv1, *cv2, *cv3, *ccolor)
+}
+
+// DrawTriangleGradient - Draw triangle with interpolated colors, counter-clockwise vertex/color order
+func DrawTriangleGradient(v1, v2, v3 Vector2, c1, c2, c3 color.RGBA) {
+	cv1 := v1.cptr()
+	cv2 := v2.cptr()
+	cv3 := v3.cptr()
+	cc1 := colorCptr(c1)
+	cc2 := colorCptr(c2)
+	cc3 := colorCptr(c3)
+	C.DrawTriangleGradient(*cv1, *cv2, *cv3, *cc1, *cc2, *cc3)
+}
+
+// DrawTriangleLinesEx - Draw triangle outline with line thickness, counter-clockwise vertex order
+func DrawTriangleLinesEx(v1, v2, v3 Vector2, thick float32, col color.RGBA) {
+	cv1 := v1.cptr()
+	cv2 := v2.cptr()
+	cv3 := v3.cptr()
+	cthick := (C.float)(thick)
+	ccolor := colorCptr(col)
+	C.DrawTriangleLinesEx(*cv1, *cv2, *cv3, cthick, *ccolor)
 }
 
 // DrawTriangleLines - Draw triangle outline (vertex in counter-clockwise order!)
@@ -535,13 +569,13 @@ func GetSplinePointCatmullRom(p1, p2, p3, p4 Vector2, t float32) Vector2 {
 	return v
 }
 
-// GetSplinePointBezierQuad - Get (evaluate) spline point: Quadratic Bezier
-func GetSplinePointBezierQuad(p1, c2, p3 Vector2, t float32) Vector2 {
+// GetSplinePointBezierQuadratic - Get (evaluate) spline point: Quadratic Bezier
+func GetSplinePointBezierQuadratic(p1, c2, p3 Vector2, t float32) Vector2 {
 	cp1 := p1.cptr()
 	cc2 := c2.cptr()
 	cp3 := p3.cptr()
 	ct := (C.float)(t)
-	ret := C.GetSplinePointBezierQuad(*cp1, *cc2, *cp3, ct)
+	ret := C.GetSplinePointBezierQuadratic(*cp1, *cc2, *cp3, ct)
 	v := newVector2FromPointer(unsafe.Pointer(&ret))
 	return v
 }
@@ -671,4 +705,35 @@ func GetCollisionRec(rec1, rec2 Rectangle) Rectangle {
 	ret := C.GetCollisionRec(*crec1, *crec2)
 	v := newRectangleFromPointer(unsafe.Pointer(&ret))
 	return v
+}
+
+// DrawCircleLinesEx - Draw circle outline with line thickness
+func DrawCircleLinesEx(center Vector2, radius, thick float32, col color.RGBA) {
+	ccenter := center.cptr()
+	cradius := (C.float)(radius)
+	cthick := (C.float)(thick)
+	ccolor := colorCptr(col)
+	C.DrawCircleLinesEx(*ccenter, cradius, cthick, *ccolor)
+}
+
+// DrawCircleSectorLinesEx - Draw circle sector outline with thickness
+func DrawCircleSectorLinesEx(center Vector2, radius, startAngle, endAngle float32, segments int32, thick float32, col color.RGBA) {
+	ccenter := center.cptr()
+	cradius := (C.float)(radius)
+	cstartAngle := (C.float)(startAngle)
+	cendAngle := (C.float)(endAngle)
+	csegments := (C.int)(segments)
+	cthick := (C.float)(thick)
+	ccolor := colorCptr(col)
+	C.DrawCircleSectorLinesEx(*ccenter, cradius, cstartAngle, cendAngle, csegments, cthick, *ccolor)
+}
+
+// DrawEllipseLinesEx - Draw ellipse outline with line thickness
+func DrawEllipseLinesEx(center Vector2, radiusH, radiusV, thick float32, col color.RGBA) {
+	ccenter := center.cptr()
+	cradiusH := (C.float)(radiusH)
+	cradiusV := (C.float)(radiusV)
+	cthick := (C.float)(thick)
+	ccolor := colorCptr(col)
+	C.DrawEllipseLinesEx(*ccenter, cradiusH, cradiusV, cthick, *ccolor)
 }

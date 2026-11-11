@@ -1,6 +1,6 @@
 /**********************************************************************************************
 *
-*   rlsw v1.5 - An OpenGL 1.1-style software renderer implementation
+*   rlsw v1.6 - An OpenGL 1.1-style software renderer implementation
 *
 *   DESCRIPTION:
 *       rlsw is a custom OpenGL 1.1-style implementation on software, intended to provide all
@@ -51,13 +51,14 @@
 *       rlsw capabilities could be customized defining some internal
 *       values before library inclusion (default values listed):
 *
-*           #define SW_FRAMEBUFFER_OUTPUT_BGRA      true
-*           #define SW_FRAMEBUFFER_COLOR_TYPE       R8G8B8A8
-*           #define SW_FRAMEBUFFER_DEPTH_TYPE       D32
-*           #define SW_MAX_PROJECTION_STACK_SIZE    2
-*           #define SW_MAX_MODELVIEW_STACK_SIZE     8
-*           #define SW_MAX_TEXTURE_STACK_SIZE       2
-*           #define SW_MAX_TEXTURES                 128
+*           #define RLSW_FRAMEBUFFER_OUTPUT_BGRA      true
+*           #define RLSW_FRAMEBUFFER_COLOR_TYPE       R8G8B8A8
+*           #define RLSW_FRAMEBUFFER_DEPTH_TYPE       D32
+*           #define RLSW_MAX_PROJECTION_STACK_SIZE    2
+*           #define RLSW_MAX_MODELVIEW_STACK_SIZE     8
+*           #define RLSW_MAX_TEXTURE_STACK_SIZE       2
+*           #define RLSW_MAX_TEXTURES                 128
+*           #define RLSW_DOUBLE_BUFFERING             0
 *
 *
 *   LICENSE: MIT
@@ -87,10 +88,59 @@
 #ifndef RLSW_H
 #define RLSW_H
 
-#define RLSW_VERSION  "1.5"
+#define RLSW_VERSION  "1.6"
 
 #include <stdbool.h>
 #include <stdint.h>
+
+//----------------------------------------------------------------------------------
+// RLSW Configuration
+//----------------------------------------------------------------------------------
+#ifndef RLSW_FRAMEBUFFER_OUTPUT_BGRA
+    #define RLSW_FRAMEBUFFER_OUTPUT_BGRA    true
+#endif
+#ifndef RLSW_FRAMEBUFFER_COLOR_TYPE
+    #define RLSW_FRAMEBUFFER_COLOR_TYPE     R8G8B8A8    // Or R5G6B5, R3G3B2, etc; see `sw_pixelformat_t`
+#endif
+#ifndef RLSW_FRAMEBUFFER_DEPTH_TYPE
+    #define RLSW_FRAMEBUFFER_DEPTH_TYPE     D32         // Or D16, D8
+#endif
+#ifndef RLSW_MAX_PROJECTION_STACK_SIZE
+    #define RLSW_MAX_PROJECTION_STACK_SIZE  2
+#endif
+#ifndef RLSW_MAX_MODELVIEW_STACK_SIZE
+    #define RLSW_MAX_MODELVIEW_STACK_SIZE   8
+#endif
+#ifndef RLSW_MAX_TEXTURE_STACK_SIZE
+    #define RLSW_MAX_TEXTURE_STACK_SIZE     2
+#endif
+#ifndef RLSW_MAX_FRAMEBUFFERS
+    #define RLSW_MAX_FRAMEBUFFERS           8
+#endif
+#ifndef RLSW_MAX_TEXTURES
+    #define RLSW_MAX_TEXTURES               128
+#endif
+#ifndef RLSW_DOUBLE_BUFFERING
+    #define RLSW_DOUBLE_BUFFERING           0
+#endif
+
+// Enable the use of a lookup table for uint8_t to float conversion
+// Requires an additional 1KB of global memory
+// Disabled when SIMD intrinsics are enabled
+#ifndef RLSW_USE_COLOR_LUT
+    #if RLSW_USE_SIMD_INTRINSICS
+        #define RLSW_USE_COLOR_LUT          false
+    #else
+        #define RLSW_USE_COLOR_LUT          true
+    #endif
+#endif
+
+// Full NPOT texture support (enabled by default)
+// When disabled, SW_REPEAT requires POT on its axis (fast bitmask wrap)
+// SW_CLAMP remains supported for any dimension, per-axis
+#ifndef RLSW_SUPPORT_NPOT_TEXTURE
+#   define RLSW_SUPPORT_NPOT_TEXTURE true
+#endif
 
 //----------------------------------------------------------------------------------
 // Defines and Macros
@@ -118,49 +168,6 @@
         #define SW_RESTRICT __restrict
     #else
         #define SW_RESTRICT restrict
-    #endif
-#endif
-
-#ifndef SW_FRAMEBUFFER_OUTPUT_BGRA
-    #define SW_FRAMEBUFFER_OUTPUT_BGRA      true
-#endif
-
-#ifndef SW_FRAMEBUFFER_COLOR_TYPE
-    #define SW_FRAMEBUFFER_COLOR_TYPE       R8G8B8A8    // Or R5G6B5, R3G3B2, etc; see `sw_pixelformat_t`
-#endif
-
-#ifndef SW_FRAMEBUFFER_DEPTH_TYPE
-    #define SW_FRAMEBUFFER_DEPTH_TYPE       D32         // Or D16, D8
-#endif
-
-#ifndef SW_MAX_PROJECTION_STACK_SIZE
-    #define SW_MAX_PROJECTION_STACK_SIZE    2
-#endif
-
-#ifndef SW_MAX_MODELVIEW_STACK_SIZE
-    #define SW_MAX_MODELVIEW_STACK_SIZE     8
-#endif
-
-#ifndef SW_MAX_TEXTURE_STACK_SIZE
-    #define SW_MAX_TEXTURE_STACK_SIZE       2
-#endif
-
-#ifndef SW_MAX_FRAMEBUFFERS
-    #define SW_MAX_FRAMEBUFFERS             8
-#endif
-
-#ifndef SW_MAX_TEXTURES
-    #define SW_MAX_TEXTURES                 128
-#endif
-
-// Enables the use of a lookup table for uint8_t to float conversion
-// Requires an additional 1KB of global memory
-// Disabled when SIMD intrinsics are enabled
-#ifndef SW_USE_COLOR_LUT
-    #if RLSW_USE_SIMD_INTRINSICS
-        #define SW_USE_COLOR_LUT            false
-    #else
-        #define SW_USE_COLOR_LUT            true
     #endif
 #endif
 
@@ -200,6 +207,7 @@ typedef double              GLclampd;
 #define GL_RENDERER                         0x1F01
 #define GL_VERSION                          0x1F02
 #define GL_EXTENSIONS                       0x1F03
+#define GL_SHADING_LANGUAGE_VERSION         0x8B8C
 
 //#define GL_ATTRIB_STACK_DEPTH             0x0BB0
 //#define GL_CLIENT_ATTRIB_STACK_DEPTH      0x0BB1
@@ -507,6 +515,7 @@ typedef enum {
     SW_RENDERER = GL_RENDERER,
     SW_VERSION = GL_VERSION,
     SW_EXTENSIONS = GL_EXTENSIONS,
+    SW_SHADING_LANGUAGE_VERSION = GL_SHADING_LANGUAGE_VERSION,
     SW_COLOR_CLEAR_VALUE = GL_COLOR_CLEAR_VALUE,
     SW_DEPTH_CLEAR_VALUE = GL_DEPTH_CLEAR_VALUE,
     SW_CURRENT_COLOR = GL_CURRENT_COLOR,
@@ -670,6 +679,7 @@ SWAPI bool swResize(int w, int h);
 SWAPI void swReadPixels(int x, int y, int w, int h, SWformat format, SWtype type, void *pixels);
 SWAPI void swBlitPixels(int xDst, int yDst, int wDst, int hDst, int xSrc, int ySrc, int wSrc, int hSrc, SWformat format, SWtype type, void *pixels);
 SWAPI void *swGetColorBuffer(int *width, int *height); // Restored for ESP-IDF compatibility
+SWAPI void swSwapColorBuffers(void); // Swap software renderer color/back buffers by pointer only
 
 SWAPI void swEnable(SWstate state);
 SWAPI void swDisable(SWstate state);
@@ -763,8 +773,8 @@ SWAPI void swGetFramebufferAttachmentParameteriv(SWattachment attachment, SWatta
 
 // Simple log system to avoid printf() calls if required
 // NOTE: Avoiding those calls, also avoids const strings memory usage
-#define SW_SUPPORT_LOG_INFO
-#if defined(SW_SUPPORT_LOG_INFO) //&& defined(_DEBUG)      // WARNING: LOG() output required for this tool
+#define RLSW_SUPPORT_LOG_INFO
+#if defined(RLSW_SUPPORT_LOG_INFO)
     #include <stdio.h>
     #define SW_LOG(...) printf(__VA_ARGS__)
 #else
@@ -777,6 +787,18 @@ SWAPI void swGetFramebufferAttachmentParameteriv(SWattachment attachment, SWatta
     #define SW_ALIGN(x) __attribute__((aligned(x)))
 #else
     #define SW_ALIGN(x) // Do nothing if not available
+#endif
+
+#if defined(NDEBUG)
+    #if defined(_MSC_VER)
+        #define SW_INLINE __forceinline
+    #elif defined(__GNUC__) || defined(__clang__)
+        #define SW_INLINE inline __attribute__((always_inline))
+    #else
+        #define SW_INLINE inline
+    #endif
+#else
+    #define SW_INLINE inline
 #endif
 
 #if defined(_M_X64) || defined(__x86_64__)
@@ -844,6 +866,15 @@ SWAPI void swGetFramebufferAttachmentParameteriv(SWattachment attachment, SWatta
     #endif
 #endif
 
+// ESP-DSP acceleration: ESP-IDF ships an optimized math library that includes
+// `dspm_mult_4x4x4_f32` (4x4 matrix multiply) and `dspm_mult_4x4x1_f32` (matrix * vector)
+// These are S3-tuned hand-vectorized kernels that beat the scalar versions for both throughput and code-size
+// Detection is opt-in to keep the dependency optional: define SW_USE_ESP_DSP from your build system
+#if defined(ESP_PLATFORM) && defined(SW_USE_ESP_DSP)
+    #define SW_HAS_ESP_DSP
+    #include "dspm_mult.h"
+#endif
+
 #ifdef __cplusplus
     #define SW_CURLY_INIT(name) name
 #else
@@ -858,41 +889,43 @@ SWAPI void swGetFramebufferAttachmentParameteriv(SWattachment attachment, SWatta
 #define SW_DEG2RAD  (SW_PI/180.0f)
 #define SW_RAD2DEG  (180.0f/SW_PI)
 
-// When clipping a convex polygon against a plane, at most one vertex is added.
+// When clipping a convex polygon against a plane, at most one vertex is added
 // Starting from a quadrilateral (4 vertices), clipped sequentially against
 // the frustum (6 planes) then the scissor rectangle (4 planes):
-// 4 + 6 + 4 = 14 vertices maximum.
-#define SW_MAX_CLIPPED_POLYGON_VERTICES 14
-#define SW_CLIP_EPSILON                 1e-4f
+// 4 + 6 + 4 = 14 vertices maximum
+#define SW_MAX_CLIPPED_POLYGON_VERTICES     14
+#define SW_CLIP_EPSILON                     1e-4f
 
-#define SW_HANDLE_NULL          0u
-#define SW_POOL_SLOT_LIVE       0x80u   // bit7 of the generation byte
-#define SW_POOL_SLOT_VER_MASK   0x7Fu   // bits6:0 = anti-ABA counter
+#define SW_HANDLE_NULL                      0u
+#define SW_POOL_SLOT_LIVE                   0x80u   // bit7 of the generation byte
+#define SW_POOL_SLOT_VER_MASK               0x7Fu   // bits6:0 = anti-ABA counter
 
-#define SW_CONCAT(a, b) a##b
-#define SW_CONCATX(a, b) SW_CONCAT(a, b)
+#define SW_CONCAT(a, b)                     a##b
+#define SW_CONCATX(a, b)                    SW_CONCAT(a, b)
 
-#define SW_FRAMEBUFFER_COLOR8_GET(c,p,o) SW_CONCATX(sw_pixel_read_color8_, SW_FRAMEBUFFER_COLOR_TYPE)((c),(p),(o))
-#define SW_FRAMEBUFFER_COLOR_GET(c,p,o) SW_CONCATX(sw_pixel_read_color_, SW_FRAMEBUFFER_COLOR_TYPE)((c),(p),(o))
-#define SW_FRAMEBUFFER_COLOR_SET(p,c,o) SW_CONCATX(sw_pixel_write_color_, SW_FRAMEBUFFER_COLOR_TYPE)((p),(c),(o))
+#define SW_FRAMEBUFFER_COLOR8_GET(c,p,o)    SW_CONCATX(sw_pixel_read_color8_, RLSW_FRAMEBUFFER_COLOR_TYPE)((c),(p),(o))
+#define SW_FRAMEBUFFER_COLOR_GET(c,p,o)     SW_CONCATX(sw_pixel_read_color_, RLSW_FRAMEBUFFER_COLOR_TYPE)((c),(p),(o))
+#define SW_FRAMEBUFFER_COLOR_SET(p,c,o)     SW_CONCATX(sw_pixel_write_color_, RLSW_FRAMEBUFFER_COLOR_TYPE)((p),(c),(o))
 
-#define SW_FRAMEBUFFER_DEPTH_GET(p,o) SW_CONCATX(sw_pixel_read_depth_, SW_FRAMEBUFFER_DEPTH_TYPE)((p),(o))
-#define SW_FRAMEBUFFER_DEPTH_SET(p,d,o) SW_CONCATX(sw_pixel_write_depth_, SW_FRAMEBUFFER_DEPTH_TYPE)((p),(d),(o))
+#define SW_FRAMEBUFFER_DEPTH_GET(p,o)       SW_CONCATX(sw_pixel_read_depth_, RLSW_FRAMEBUFFER_DEPTH_TYPE)((p),(o))
+#define SW_FRAMEBUFFER_DEPTH_SET(p,d,o)     SW_CONCATX(sw_pixel_write_depth_, RLSW_FRAMEBUFFER_DEPTH_TYPE)((p),(d),(o))
 
-#define SW_FRAMEBUFFER_COLOR_FORMAT SW_CONCATX(SW_PIXELFORMAT_COLOR_, SW_FRAMEBUFFER_COLOR_TYPE)
-#define SW_FRAMEBUFFER_DEPTH_FORMAT SW_CONCATX(SW_PIXELFORMAT_DEPTH_, SW_FRAMEBUFFER_DEPTH_TYPE)
+#define SW_FRAMEBUFFER_COLOR_FORMAT         SW_CONCATX(SW_PIXELFORMAT_COLOR_, RLSW_FRAMEBUFFER_COLOR_TYPE)
+#define SW_FRAMEBUFFER_DEPTH_FORMAT         SW_CONCATX(SW_PIXELFORMAT_DEPTH_, RLSW_FRAMEBUFFER_DEPTH_TYPE)
 
-#define SW_FRAMEBUFFER_COLOR_SIZE SW_PIXELFORMAT_SIZE[SW_FRAMEBUFFER_COLOR_FORMAT]
-#define SW_FRAMEBUFFER_DEPTH_SIZE SW_PIXELFORMAT_SIZE[SW_FRAMEBUFFER_DEPTH_FORMAT]
+#define SW_FRAMEBUFFER_COLOR_SIZE           SW_PIXELFORMAT_SIZE[SW_FRAMEBUFFER_COLOR_FORMAT]
+#define SW_FRAMEBUFFER_DEPTH_SIZE           SW_PIXELFORMAT_SIZE[SW_FRAMEBUFFER_DEPTH_FORMAT]
 
-#define SW_STATE_SCISSOR_TEST   (1 << 0)
-#define SW_STATE_TEXTURE_2D     (1 << 1)
-#define SW_STATE_DEPTH_TEST     (1 << 2)
-#define SW_STATE_CULL_FACE      (1 << 3)
-#define SW_STATE_BLEND          (1 << 4)
+#define SW_STATE_NONE                             0     /* Pseudo state used for the rasterizer variant with no pipeline state enabled */
+#define SW_STATE_SCISSOR_TEST               (1 << 0)
+#define SW_STATE_COLOR_INTERP               (1 << 1)
+#define SW_STATE_TEXTURE_2D                 (1 << 2)
+#define SW_STATE_DEPTH_TEST                 (1 << 3)
+#define SW_STATE_CULL_FACE                  (1 << 4)
+#define SW_STATE_BLEND                      (1 << 5)
 
-#define SW_BLEND_FLAG_NOOP          (1 << 0)
-#define SW_BLEND_FLAG_NEEDS_ALPHA   (1 << 1)
+#define SW_BLEND_FLAG_NOOP                  (1 << 0)
+#define SW_BLEND_FLAG_NEEDS_ALPHA           (1 << 1)
 
 //----------------------------------------------------------------------------------
 // Module Types and Structures Definition
@@ -931,6 +964,7 @@ typedef enum {
 } sw_pixel_alpha_t;
 
 // Forward declarations
+typedef struct sw_texture sw_texture_t;
 typedef struct sw_vertex sw_vertex_t;
 
 // Pixel getter functions
@@ -940,6 +974,9 @@ typedef void (*sw_pixel_read_color_f)(float *SW_RESTRICT, const void *SW_RESTRIC
 // Pixel setter functions
 typedef void (*sw_pixel_write_color8_f)(void *SW_RESTRICT, const uint8_t *SW_RESTRICT, uint32_t);
 typedef void (*sw_pixel_write_color_f)(void *SW_RESTRICT, const float *SW_RESTRICT, uint32_t);
+
+// Texture sampler function
+typedef void (*sw_texture_sampler_f)(float *SW_RESTRICT, const sw_texture_t *SW_RESTRICT, float, float);
 
 // Color blending function
 typedef void (*sw_blend_f)(float *SW_RESTRICT, const float *SW_RESTRICT);
@@ -958,7 +995,7 @@ typedef struct sw_vertex {
     float texcoord[2];          // Texture coordinates
 } sw_vertex_t;
 
-typedef struct {
+typedef struct sw_texture {
     void *pixels;                       // Texture pixels
     sw_pixel_read_color8_f readColor8;  // Texel read RGBA8
     sw_pixel_read_color_f readColor;    // Texel read RGBA32F
@@ -977,6 +1014,9 @@ typedef struct {
 
 typedef struct {
     sw_texture_t color;         // Default framebuffer color texture
+#if RLSW_DOUBLE_BUFFERING
+    sw_texture_t backColor; // Back buffer for multicore.
+#endif
     sw_texture_t depth;         // Default framebuffer depth texture
 } sw_default_framebuffer_t;
 
@@ -1029,19 +1069,23 @@ typedef struct {
     float pointRadius;                                          // Rasterized point radius
     float lineWidth;                                            // Rasterized line width
 
-    sw_matrix_t stackProjection[SW_MAX_PROJECTION_STACK_SIZE];  // Projection matrix stack for push/pop operations
-    sw_matrix_t stackModelview[SW_MAX_MODELVIEW_STACK_SIZE];    // Modelview matrix stack for push/pop operations
-    sw_matrix_t stackTexture[SW_MAX_TEXTURE_STACK_SIZE];        // Texture matrix stack for push/pop operations
+    sw_matrix_t stackProjection[RLSW_MAX_PROJECTION_STACK_SIZE];  // Projection matrix stack for push/pop operations
+    sw_matrix_t stackModelview[RLSW_MAX_MODELVIEW_STACK_SIZE];    // Modelview matrix stack for push/pop operations
+    sw_matrix_t stackTexture[RLSW_MAX_TEXTURE_STACK_SIZE];        // Texture matrix stack for push/pop operations
     uint32_t stackProjectionCounter;                            // Counter for matrix stack operations
     uint32_t stackModelviewCounter;                             // Counter for matrix stack operations
     uint32_t stackTextureCounter;                               // Counter for matrix stack operations
     SWmatrix currentMatrixMode;                                 // Current matrix mode (e.g., sw_MODELVIEW, sw_PROJECTION)
     sw_matrix_t *currentMatrix;                                 // Pointer to the currently used matrix according to the mode
     sw_matrix_t matMVP;                                         // Model view projection matrix, calculated and used internally
+#ifdef SW_HAS_ESP_DSP
+    float matMVP_rm[16];                                        // Row-major MVP, kept in sync for esp-dsp dspm_mult_4x4x1_f32 vertex transform
+#endif
     bool isDirtyMVP;                                            // Indicates if the MVP matrix should be rebuilt
 
     sw_handle_t boundFramebufferId;                             // Framebuffer currently bound
     sw_texture_t *colorBuffer;                                  // Color buffer currently bound
+    // NOTE: don't need backBuffer because it's already in the sw_default_framebuffer_t struct.
     sw_texture_t *depthBuffer;                                  // Depth buffer currently bound
     sw_pool_t framebufferPool;                                  // Framebuffer object pool
 
@@ -1065,7 +1109,7 @@ typedef struct {
 //----------------------------------------------------------------------------------
 static sw_context_t RLSW = { 0 };
 
-#if SW_USE_COLOR_LUT
+#if RLSW_USE_COLOR_LUT
 static float SW_LUT_UINT8_TO_FLOAT[256] = { 0 };
 #endif
 
@@ -1129,9 +1173,16 @@ static const int SW_PRIMITIVE_VERTEX_COUNT[] =
 // Internal Functions Definitions
 //----------------------------------------------------------------------------------
 
+// Common helper macros
+//----------------------------------------------------------------------------------
+#define SW_VEC_OP(expr, i_name, count) do {                 \
+    for (int i_name = 0; i_name < (count); i_name++) expr;  \
+} while (0)
+//----------------------------------------------------------------------------------
+
 // Math helper functions
 //----------------------------------------------------------------------------------
-static inline void sw_matrix_id(sw_matrix_t dst)
+static SW_INLINE void sw_matrix_id(sw_matrix_t dst)
 {
     dst[0]  = 1, dst[1]  = 0, dst[2]  = 0, dst[3]  = 0;
     dst[4]  = 0, dst[5]  = 1, dst[6]  = 0, dst[7]  = 0;
@@ -1139,8 +1190,16 @@ static inline void sw_matrix_id(sw_matrix_t dst)
     dst[12] = 0, dst[13] = 0, dst[14] = 0, dst[15] = 1;
 }
 
-static inline void sw_matrix_mul_rst(float *SW_RESTRICT dst, const float *SW_RESTRICT left, const float *SW_RESTRICT right)
+static void sw_matrix_mul_rst(float *SW_RESTRICT dst, const float *SW_RESTRICT left, const float *SW_RESTRICT right)
 {
+#ifdef SW_HAS_ESP_DSP
+    // dspm_mult_4x4x4_f32 treats its operands as row-major. rlsw stores matrices
+    // column-major, so passing them flat is equivalent to passing transposes:
+    // dspm_mult(L^T, R^T) computes (L^T)*(R^T) = (R*L)^T, written back into a
+    // flat array gives the same bit pattern as the column-major product (R*L)
+    // -- exactly the semantic the scalar fallback below has
+    dspm_mult_4x4x4_f32(left, right, dst);
+#else
     float l00 = left[0],  l01 = left[1],  l02 = left[2],  l03 = left[3];
     float l10 = left[4],  l11 = left[5],  l12 = left[6],  l13 = left[7];
     float l20 = left[8],  l21 = left[9],  l22 = left[10], l23 = left[11];
@@ -1165,30 +1224,31 @@ static inline void sw_matrix_mul_rst(float *SW_RESTRICT dst, const float *SW_RES
     dst[7]  = l10*right[3] + l11*right[7] + l12*right[11] + l13*right[15];
     dst[11] = l20*right[3] + l21*right[7] + l22*right[11] + l23*right[15];
     dst[15] = l30*right[3] + l31*right[7] + l32*right[11] + l33*right[15];
+#endif
 }
 
-static inline void sw_matrix_mul(sw_matrix_t dst, const sw_matrix_t left, const sw_matrix_t right)
+static SW_INLINE void sw_matrix_mul(sw_matrix_t dst, const sw_matrix_t left, const sw_matrix_t right)
 {
     float result[16];
     sw_matrix_mul_rst(result, left, right);
     for (int i = 0; i < 16; i++) dst[i] = result[i];
 }
 
-static inline int sw_clamp_int(int v, int min, int max)
+static SW_INLINE int sw_clamp_int(int v, int min, int max)
 {
     if (v < min) return min;
     if (v > max) return max;
     return v;
 }
 
-static inline int sw_clamp(float v, float min, float max)
+static SW_INLINE int sw_clamp(float v, float min, float max)
 {
     if (v < min) return min;
     if (v > max) return max;
     return v;
 }
 
-static inline float sw_saturate(float x)
+static SW_INLINE float sw_saturate(float x)
 {
     union { float f; uint32_t u; } fb;
     fb.f = x;
@@ -1205,22 +1265,48 @@ static inline float sw_saturate(float x)
     return x;
 }
 
-static inline float sw_fract(float x)
+static SW_INLINE float sw_fract(float x)
 {
     return (x - floorf(x));
 }
 
-static inline uint8_t sw_luminance8(const uint8_t *color)
+static SW_INLINE float sw_rcp(float x)
+{
+#if defined(__XTENSA__)
+    // Xtensa architecture optimization
+    // Fast reciprocal: 1-ULP accurate in ~7 instructions using the
+    // hardware `recip0.s` seed + two Newton-Raphson refinement steps
+    // All work stays in FPU registers — no `__divsf3` software call
+    // Hot-path divisions in the rasterizer (span/triangle setup, perspective divide, etc.) call this
+    // On non-Xtensa targets it transparently expands to `1.0f / x`, so generated code is identical to before
+    float result, temp;
+    __asm__(
+        "recip0.s %0, %2\n"
+        "const.s  %1, 1\n"
+        "msub.s   %1, %2, %0\n"
+        "madd.s   %0, %0, %1\n"
+        "const.s  %1, 1\n"
+        "msub.s   %1, %2, %0\n"
+        "maddn.s  %0, %0, %1\n"
+        : "=&f"(result), "=&f"(temp) : "f"(x)
+    );
+    return result;
+#else
+    return 1.0f/x;
+#endif
+}
+
+static SW_INLINE uint8_t sw_luminance8(const uint8_t *color)
 {
     return (uint8_t)((color[0]*77 + color[1]*150 + color[2]*29) >> 8);
 }
 
-static inline float sw_luminance(const float *color)
+static SW_INLINE float sw_luminance(const float *color)
 {
     return color[0]*0.299f + color[1]*0.587f + color[2]*0.114f;
 }
 
-static inline void sw_lerp_vertex_PCT(sw_vertex_t *SW_RESTRICT out, const sw_vertex_t *SW_RESTRICT a, const sw_vertex_t *SW_RESTRICT b, float t)
+static void sw_lerp_vertex_PCT(sw_vertex_t *SW_RESTRICT out, const sw_vertex_t *SW_RESTRICT a, const sw_vertex_t *SW_RESTRICT b, float t)
 {
     const float tInv = 1.0f - t;
 
@@ -1241,110 +1327,8 @@ static inline void sw_lerp_vertex_PCT(sw_vertex_t *SW_RESTRICT out, const sw_ver
     out->texcoord[1] = a->texcoord[1]*tInv + b->texcoord[1]*t;
 }
 
-static inline void sw_get_vertex_grad_PCT(sw_vertex_t *SW_RESTRICT out, const sw_vertex_t *SW_RESTRICT a, const sw_vertex_t *SW_RESTRICT b, float scale)
-{
-    // Calculate gradients for Position
-    out->position[0] = (b->position[0] - a->position[0])*scale;
-    out->position[1] = (b->position[1] - a->position[1])*scale;
-    out->position[2] = (b->position[2] - a->position[2])*scale;
-    out->position[3] = (b->position[3] - a->position[3])*scale;
-
-    // Calculate gradients for Color
-    out->color[0] = (b->color[0] - a->color[0])*scale;
-    out->color[1] = (b->color[1] - a->color[1])*scale;
-    out->color[2] = (b->color[2] - a->color[2])*scale;
-    out->color[3] = (b->color[3] - a->color[3])*scale;
-
-    // Calculate gradients for Texture coordinates
-    out->texcoord[0] = (b->texcoord[0] - a->texcoord[0])*scale;
-    out->texcoord[1] = (b->texcoord[1] - a->texcoord[1])*scale;
-}
-
-static inline void sw_add_vertex_grad_PCT(sw_vertex_t *SW_RESTRICT out, const sw_vertex_t *SW_RESTRICT gradients)
-{
-    // Add gradients to Position
-    out->position[0] += gradients->position[0];
-    out->position[1] += gradients->position[1];
-    out->position[2] += gradients->position[2];
-    out->position[3] += gradients->position[3];
-
-    // Add gradients to Color
-    out->color[0] += gradients->color[0];
-    out->color[1] += gradients->color[1];
-    out->color[2] += gradients->color[2];
-    out->color[3] += gradients->color[3];
-
-    // Add gradients to Texture coordinates
-    out->texcoord[0] += gradients->texcoord[0];
-    out->texcoord[1] += gradients->texcoord[1];
-}
-
-static inline void sw_add_vertex_grad_scaled_PCT(sw_vertex_t *SW_RESTRICT out, const sw_vertex_t *SW_RESTRICT gradients, float scale)
-{
-    // Add gradients to Position
-    out->position[0] += gradients->position[0]*scale;
-    out->position[1] += gradients->position[1]*scale;
-    out->position[2] += gradients->position[2]*scale;
-    out->position[3] += gradients->position[3]*scale;
-
-    // Add gradients to Color
-    out->color[0] += gradients->color[0]*scale;
-    out->color[1] += gradients->color[1]*scale;
-    out->color[2] += gradients->color[2]*scale;
-    out->color[3] += gradients->color[3]*scale;
-
-    // Add gradients to Texture coordinates
-    out->texcoord[0] += gradients->texcoord[0]*scale;
-    out->texcoord[1] += gradients->texcoord[1]*scale;
-}
-
-static inline void sw_get_vertex_grad_PC(sw_vertex_t *SW_RESTRICT out, const sw_vertex_t *SW_RESTRICT a, const sw_vertex_t *SW_RESTRICT b, float scale)
-{
-    // Calculate gradients for Position
-    out->position[0] = (b->position[0] - a->position[0])*scale;
-    out->position[1] = (b->position[1] - a->position[1])*scale;
-    out->position[2] = (b->position[2] - a->position[2])*scale;
-    out->position[3] = (b->position[3] - a->position[3])*scale;
-
-    // Calculate gradients for Color
-    out->color[0] = (b->color[0] - a->color[0])*scale;
-    out->color[1] = (b->color[1] - a->color[1])*scale;
-    out->color[2] = (b->color[2] - a->color[2])*scale;
-    out->color[3] = (b->color[3] - a->color[3])*scale;
-}
-
-static inline void sw_add_vertex_grad_PC(sw_vertex_t *SW_RESTRICT out, const sw_vertex_t *SW_RESTRICT gradients)
-{
-    // Add gradients to Position
-    out->position[0] += gradients->position[0];
-    out->position[1] += gradients->position[1];
-    out->position[2] += gradients->position[2];
-    out->position[3] += gradients->position[3];
-
-    // Add gradients to Color
-    out->color[0] += gradients->color[0];
-    out->color[1] += gradients->color[1];
-    out->color[2] += gradients->color[2];
-    out->color[3] += gradients->color[3];
-}
-
-static inline void sw_add_vertex_grad_scaled_PC(sw_vertex_t *SW_RESTRICT out, const sw_vertex_t *SW_RESTRICT gradients, float scale)
-{
-    // Add gradients to Position
-    out->position[0] += gradients->position[0]*scale;
-    out->position[1] += gradients->position[1]*scale;
-    out->position[2] += gradients->position[2]*scale;
-    out->position[3] += gradients->position[3]*scale;
-
-    // Add gradients to Color
-    out->color[0] += gradients->color[0]*scale;
-    out->color[1] += gradients->color[1]*scale;
-    out->color[2] += gradients->color[2]*scale;
-    out->color[3] += gradients->color[3]*scale;
-}
-
 // Half conversion functions
-static inline uint16_t sw_float_to_half_ui(uint32_t ui)
+static SW_INLINE uint16_t sw_float_to_half_ui(uint32_t ui)
 {
     int32_t s = (ui >> 16) & 0x8000;
     int32_t em = ui & 0x7fffffff;
@@ -1364,7 +1348,7 @@ static inline uint16_t sw_float_to_half_ui(uint32_t ui)
     return (uint16_t)(s | h);
 }
 
-static inline uint32_t sw_half_to_float_ui(uint16_t h)
+static SW_INLINE uint32_t sw_half_to_float_ui(uint16_t h)
 {
     uint32_t s = (unsigned)(h & 0x8000) << 16;
     int32_t em = h & 0x7fff;
@@ -1382,35 +1366,35 @@ static inline uint32_t sw_half_to_float_ui(uint16_t h)
     return s | r;
 }
 
-static inline sw_half_t sw_float_to_half(float i)
+static SW_INLINE sw_half_t sw_float_to_half(float i)
 {
     union { float f; uint32_t i; } v;
     v.f = i;
     return sw_float_to_half_ui(v.i);
 }
 
-static inline float sw_half_to_float(sw_half_t y)
+static SW_INLINE float sw_half_to_float(sw_half_t y)
 {
     union { float f; uint32_t i; } v;
     v.i = sw_half_to_float_ui(y);
     return v.f;
 }
 
-static inline uint8_t sw_expand_1to8(uint32_t v) { return v? 255 : 0; }
-static inline uint8_t sw_expand_2to8(uint32_t v) { return (uint8_t)(v*85); }
-static inline uint8_t sw_expand_3to8(uint32_t v) { return (uint8_t)((v << 5) | (v << 2) | (v >> 1)); }
-static inline uint8_t sw_expand_4to8(uint32_t v) { return (uint8_t)((v << 4) | v); }
-static inline uint8_t sw_expand_5to8(uint32_t v) { return (uint8_t)((v << 3) | (v >> 2)); }
-static inline uint8_t sw_expand_6to8(uint32_t v) { return (uint8_t)((v << 2) | (v >> 4)); }
+static SW_INLINE uint8_t sw_expand_1to8(uint32_t v) { return v? 255 : 0; }
+static SW_INLINE uint8_t sw_expand_2to8(uint32_t v) { return (uint8_t)(v*85); }
+static SW_INLINE uint8_t sw_expand_3to8(uint32_t v) { return (uint8_t)((v << 5) | (v << 2) | (v >> 1)); }
+static SW_INLINE uint8_t sw_expand_4to8(uint32_t v) { return (uint8_t)((v << 4) | v); }
+static SW_INLINE uint8_t sw_expand_5to8(uint32_t v) { return (uint8_t)((v << 3) | (v >> 2)); }
+static SW_INLINE uint8_t sw_expand_6to8(uint32_t v) { return (uint8_t)((v << 2) | (v >> 4)); }
 
-static inline uint32_t sw_compress_8to1(uint8_t v) { return v >> 7; }
-static inline uint32_t sw_compress_8to2(uint8_t v) { return v >> 6; }
-static inline uint32_t sw_compress_8to3(uint8_t v) { return v >> 5; }
-static inline uint32_t sw_compress_8to4(uint8_t v) { return v >> 4; }
-static inline uint32_t sw_compress_8to5(uint8_t v) { return v >> 3; }
-static inline uint32_t sw_compress_8to6(uint8_t v) { return v >> 2; }
+static SW_INLINE uint32_t sw_compress_8to1(uint8_t v) { return v >> 7; }
+static SW_INLINE uint32_t sw_compress_8to2(uint8_t v) { return v >> 6; }
+static SW_INLINE uint32_t sw_compress_8to3(uint8_t v) { return v >> 5; }
+static SW_INLINE uint32_t sw_compress_8to4(uint8_t v) { return v >> 4; }
+static SW_INLINE uint32_t sw_compress_8to5(uint8_t v) { return v >> 3; }
+static SW_INLINE uint32_t sw_compress_8to6(uint8_t v) { return v >> 2; }
 
-static inline void sw_color8_to_color(float *SW_RESTRICT dst, const uint8_t *SW_RESTRICT src)
+static SW_INLINE void sw_color8_to_color(float *SW_RESTRICT dst, const uint8_t *SW_RESTRICT src)
 {
 #if defined(SW_HAS_NEON)
     uint8x8_t bytes = vreinterpret_u8_u32(vld1_dup_u32((const uint32_t *)src));
@@ -1418,12 +1402,10 @@ static inline void sw_color8_to_color(float *SW_RESTRICT dst, const uint8_t *SW_
     uint32x4_t dwords = vmovl_u16(vget_low_u16(words));
     float32x4_t fvals = vmulq_f32(vcvtq_f32_u32(dwords), vdupq_n_f32(SW_INV_255));
     vst1q_f32(dst, fvals);
-
 #elif defined(SW_HAS_SSE41)
     __m128i bytes = _mm_loadu_si32(src);
     __m128 fvals = _mm_mul_ps(_mm_cvtepi32_ps(_mm_cvtepu8_epi32(bytes)), _mm_set1_ps(SW_INV_255));
     _mm_storeu_ps(dst, fvals);
-
 #elif defined(SW_HAS_SSE2)
     __m128i zero = _mm_setzero_si128();
     __m128i bytes = _mm_loadu_si32(src);
@@ -1431,22 +1413,13 @@ static inline void sw_color8_to_color(float *SW_RESTRICT dst, const uint8_t *SW_
     __m128i dwords = _mm_unpacklo_epi16(words, zero);
     __m128 fvals = _mm_mul_ps(_mm_cvtepi32_ps(dwords), _mm_set1_ps(SW_INV_255));
     _mm_storeu_ps(dst, fvals);
-
 #elif defined(SW_HAS_RVV)
-    // TODO: WARNING: Sample code generated by AI, needs testing and review
-    size_t vl = __riscv_vsetvl_e8m1(4); // Set vector length for 8-bit input elements
-    vuint8m1_t vsrc_u8 = __riscv_vle8_v_u8m1(src, vl); // Load 4 unsigned 8-bit integers
-    vuint32m1_t vsrc_u32 = __riscv_vwcvt_xu_u_v_u32m1(vsrc_u8, vl); // Widen to 32-bit unsigned integers
-    vfloat32m1_t vsrc_f32 = __riscv_vfcvt_f_xu_v_f32m1(vsrc_u32, vl); // Convert to float32
-    vfloat32m1_t vnorm = __riscv_vfmul_vf_f32m1(vsrc_f32, SW_INV_255, vl); // Multiply by 1/255.0 to normalize
-    __riscv_vse32_v_f32m1(dst, vnorm, vl); // Store result
-
-#elif SW_USE_COLOR_LUT
+    // TODO: Implement RVV intrinsics
+#elif RLSW_USE_COLOR_LUT
     dst[0] = SW_LUT_UINT8_TO_FLOAT[src[0]];
     dst[1] = SW_LUT_UINT8_TO_FLOAT[src[1]];
     dst[2] = SW_LUT_UINT8_TO_FLOAT[src[2]];
     dst[3] = SW_LUT_UINT8_TO_FLOAT[src[3]];
-
 #else
     dst[0] = (float)src[0]*SW_INV_255;
     dst[1] = (float)src[1]*SW_INV_255;
@@ -1455,7 +1428,7 @@ static inline void sw_color8_to_color(float *SW_RESTRICT dst, const uint8_t *SW_
 #endif
 }
 
-static inline void sw_color_to_color8(uint8_t *SW_RESTRICT dst, const float *SW_RESTRICT src)
+static SW_INLINE void sw_color_to_color8(uint8_t *SW_RESTRICT dst, const float *SW_RESTRICT src)
 {
 #if defined(SW_HAS_NEON)
     float32x4_t fvals = vmulq_f32(vld1q_f32(src), vdupq_n_f32(255.0f));
@@ -1463,39 +1436,21 @@ static inline void sw_color_to_color8(uint8_t *SW_RESTRICT dst, const float *SW_
     uint16x4_t i16 = vmovn_u32(i32);
     uint8x8_t i8 = vmovn_u16(vcombine_u16(i16, i16));
     vst1_lane_u32((uint32_t *)dst, vreinterpret_u32_u8(i8), 0);
-
 #elif defined(SW_HAS_SSE41)
     __m128 fvals = _mm_mul_ps(_mm_loadu_ps(src), _mm_set1_ps(255.0f));
     __m128i i32 = _mm_cvttps_epi32(fvals);
     __m128i i16 = _mm_packus_epi32(i32, i32);
     __m128i i8 = _mm_packus_epi16(i16, i16);
     _mm_storeu_si32(dst, i8);
-
 #elif defined(SW_HAS_SSE2)
     __m128 fvals = _mm_mul_ps(_mm_loadu_ps(src), _mm_set1_ps(255.0f));
     __m128i i32 = _mm_cvttps_epi32(fvals);
     __m128i i16 = _mm_packs_epi32(i32, i32);
     __m128i i8 = _mm_packus_epi16(i16, i16);
     _mm_storeu_si32(dst, i8);
-
 #elif defined(SW_HAS_RVV)
-    // TODO: WARNING: Sample code generated by AI, needs testing and review
-    // REVIEW: It shouldn't perform so many operations; take inspiration from other versions
+    // TODO: Implement RVV intrinsics
     // NOTE: RVV 1.0 specs define the use of __riscv_ prefix for instrinsic functions
-    size_t vl = __riscv_vsetvl_e32m1(4); // Load up to 4 floats into a vector register
-    vfloat32m1_t vsrc = __riscv_vle32_v_f32m1(src, vl); // Load float32 values
-
-    // Multiply by 255.0f and add 0.5f for rounding
-    vfloat32m1_t vscaled = __riscv_vfmul_vf_f32m1(vsrc, 255.0f, vl);
-    vscaled = __riscv_vfadd_vf_f32m1(vscaled, 0.5f, vl);
-
-    // Convert to unsigned integer (truncate toward zero)
-    vuint32m1_t vu32 = __riscv_vfcvt_xu_f_v_u32m1(vscaled, vl);
-
-    // Narrow from u32 -> u8
-    vuint8m1_t vu8 = __riscv_vnclipu_wx_u8m1(vu32, 0, vl); // Round toward zero
-    __riscv_vse8_v_u8m1(dst, vu8, vl); // Store result
-
 #else
     dst[0] = (uint8_t)(src[0]*255.0f);
     dst[1] = (uint8_t)(src[1]*255.0f);
@@ -1588,27 +1543,27 @@ static bool sw_pool_free(sw_pool_t *pool, sw_handle_t handle)
 
 // Validity check helper functions
 //-------------------------------------------------------------------------------------------
-static inline bool sw_is_texture_valid(sw_handle_t id)
+static SW_INLINE bool sw_is_texture_valid(sw_handle_t id)
 {
     return sw_pool_valid(&RLSW.texturePool, id);
 }
 
-static inline bool sw_is_texture_complete(sw_texture_t *tex)
+static SW_INLINE bool sw_is_texture_complete(sw_texture_t *tex)
 {
     return (tex != NULL) && (tex->pixels != NULL);
 }
 
-static inline bool sw_is_texture_filter_valid(int filter)
+static SW_INLINE bool sw_is_texture_filter_valid(int filter)
 {
     return ((filter == SW_NEAREST) || (filter == SW_LINEAR));
 }
 
-static inline bool sw_is_texture_wrap_valid(int wrap)
+static SW_INLINE bool sw_is_texture_wrap_valid(int wrap)
 {
     return ((wrap == SW_REPEAT) || (wrap == SW_CLAMP));
 }
 
-static inline bool sw_is_draw_mode_valid(int mode)
+static bool sw_is_draw_mode_valid(int mode)
 {
     bool result = false;
 
@@ -1624,7 +1579,7 @@ static inline bool sw_is_draw_mode_valid(int mode)
     return result;
 }
 
-static inline bool sw_is_poly_mode_valid(int mode)
+static bool sw_is_poly_mode_valid(int mode)
 {
     bool result = false;
 
@@ -1639,12 +1594,12 @@ static inline bool sw_is_poly_mode_valid(int mode)
     return result;
 }
 
-static inline bool sw_is_face_valid(int face)
+static SW_INLINE bool sw_is_face_valid(int face)
 {
     return (face == SW_FRONT || face == SW_BACK);
 }
 
-static inline bool sw_is_ready_to_render(void)
+static SW_INLINE bool sw_is_ready_to_render(void)
 {
     return (swCheckFramebufferStatus() == SW_FRAMEBUFFER_COMPLETE);
 }
@@ -1652,7 +1607,7 @@ static inline bool sw_is_ready_to_render(void)
 
 // Pixel management functions
 //-------------------------------------------------------------------------------------------
-static inline int sw_pixel_get_format(SWformat format, SWtype type)
+static int sw_pixel_get_format(SWformat format, SWtype type)
 {
     int channels = 0;
     int bitsPerChannel = 8; // Default: 8 bits per channel
@@ -1730,7 +1685,7 @@ static inline int sw_pixel_get_format(SWformat format, SWtype type)
     return SW_PIXELFORMAT_UNKNOWN;
 }
 
-static inline bool sw_pixel_is_depth_format(sw_pixelformat_t format)
+static bool sw_pixel_is_depth_format(sw_pixelformat_t format)
 {
     switch (format)
     {
@@ -1743,7 +1698,7 @@ static inline bool sw_pixel_is_depth_format(sw_pixelformat_t format)
     return false;
 }
 
-static inline void sw_pixel_read_color8_GRAYSCALE(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color8_GRAYSCALE(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     uint8_t gray = ((const uint8_t *)pixels)[offset];
     color[0] = gray;
@@ -1752,7 +1707,7 @@ static inline void sw_pixel_read_color8_GRAYSCALE(uint8_t *SW_RESTRICT color, co
     color[3] = 255;
 }
 
-static inline void sw_pixel_read_color8_GRAYALPHA(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color8_GRAYALPHA(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     const uint8_t *src = &((const uint8_t *)pixels)[offset*2];
     color[0] = src[0];
@@ -1761,7 +1716,7 @@ static inline void sw_pixel_read_color8_GRAYALPHA(uint8_t *SW_RESTRICT color, co
     color[3] = src[1];
 }
 
-static inline void sw_pixel_read_color8_R3G3B2(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color8_R3G3B2(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     uint8_t pixel = ((const uint8_t *)pixels)[offset];
     color[0] = sw_expand_3to8((pixel >> 5) & 0x07);
@@ -1770,7 +1725,7 @@ static inline void sw_pixel_read_color8_R3G3B2(uint8_t *SW_RESTRICT color, const
     color[3] = 255;
 }
 
-static inline void sw_pixel_read_color8_R5G6B5(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color8_R5G6B5(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     uint16_t pixel = ((const uint16_t *)pixels)[offset];
     color[0] = sw_expand_5to8((pixel >> 11) & 0x1F);
@@ -1779,7 +1734,7 @@ static inline void sw_pixel_read_color8_R5G6B5(uint8_t *SW_RESTRICT color, const
     color[3] = 255;
 }
 
-static inline void sw_pixel_read_color8_R8G8B8(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color8_R8G8B8(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     const uint8_t *src = &((const uint8_t *)pixels)[offset*3];
     color[0] = src[0];
@@ -1788,7 +1743,7 @@ static inline void sw_pixel_read_color8_R8G8B8(uint8_t *SW_RESTRICT color, const
     color[3] = 255;
 }
 
-static inline void sw_pixel_read_color8_R5G5B5A1(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color8_R5G5B5A1(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     uint16_t pixel = ((const uint16_t *)pixels)[offset];
     color[0] = sw_expand_5to8((pixel >> 11) & 0x1F);
@@ -1797,7 +1752,7 @@ static inline void sw_pixel_read_color8_R5G5B5A1(uint8_t *SW_RESTRICT color, con
     color[3] = sw_expand_1to8( pixel        & 0x01);
 }
 
-static inline void sw_pixel_read_color8_R4G4B4A4(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color8_R4G4B4A4(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     uint16_t pixel = ((const uint16_t *)pixels)[offset];
     color[0] = sw_expand_4to8((pixel >> 12) & 0x0F);
@@ -1806,7 +1761,7 @@ static inline void sw_pixel_read_color8_R4G4B4A4(uint8_t *SW_RESTRICT color, con
     color[3] = sw_expand_4to8( pixel        & 0x0F);
 }
 
-static inline void sw_pixel_read_color8_R8G8B8A8(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color8_R8G8B8A8(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     const uint8_t *src = &((const uint8_t *)pixels)[offset*4];
     color[0] = src[0];
@@ -1815,7 +1770,7 @@ static inline void sw_pixel_read_color8_R8G8B8A8(uint8_t *SW_RESTRICT color, con
     color[3] = src[3];
 }
 
-static inline void sw_pixel_read_color8_R32(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color8_R32(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     uint8_t gray = (uint8_t)(((const float *)pixels)[offset]*255.0f);
     color[0] = gray;
@@ -1824,7 +1779,7 @@ static inline void sw_pixel_read_color8_R32(uint8_t *SW_RESTRICT color, const vo
     color[3] = 255;
 }
 
-static inline void sw_pixel_read_color8_R32G32B32(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color8_R32G32B32(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     const float *src = &((const float *)pixels)[offset*3];
     color[0] = (uint8_t)(src[0]*255.0f);
@@ -1833,7 +1788,7 @@ static inline void sw_pixel_read_color8_R32G32B32(uint8_t *SW_RESTRICT color, co
     color[3] = 255;
 }
 
-static inline void sw_pixel_read_color8_R32G32B32A32(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color8_R32G32B32A32(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     const float *src = &((const float *)pixels)[offset*4];
     color[0] = (uint8_t)(src[0]*255.0f);
@@ -1842,7 +1797,7 @@ static inline void sw_pixel_read_color8_R32G32B32A32(uint8_t *SW_RESTRICT color,
     color[3] = (uint8_t)(src[3]*255.0f);
 }
 
-static inline void sw_pixel_read_color8_R16(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color8_R16(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     uint8_t gray = (uint8_t)(sw_half_to_float(((const uint16_t *)pixels)[offset])*255.0f);
     color[0] = gray;
@@ -1851,7 +1806,7 @@ static inline void sw_pixel_read_color8_R16(uint8_t *SW_RESTRICT color, const vo
     color[3] = 255;
 }
 
-static inline void sw_pixel_read_color8_R16G16B16(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color8_R16G16B16(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     const uint16_t *src = &((const uint16_t *)pixels)[offset*3];
     color[0] = (uint8_t)(sw_half_to_float(src[0])*255.0f);
@@ -1860,7 +1815,7 @@ static inline void sw_pixel_read_color8_R16G16B16(uint8_t *SW_RESTRICT color, co
     color[3] = 255;
 }
 
-static inline void sw_pixel_read_color8_R16G16B16A16(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color8_R16G16B16A16(uint8_t *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     const uint16_t *src = &((const uint16_t *)pixels)[offset*4];
     color[0] = (uint8_t)(sw_half_to_float(src[0])*255.0f);
@@ -1869,7 +1824,7 @@ static inline void sw_pixel_read_color8_R16G16B16A16(uint8_t *SW_RESTRICT color,
     color[3] = (uint8_t)(sw_half_to_float(src[3])*255.0f);
 }
 
-static inline sw_pixel_read_color8_f sw_pixel_get_read_color8_func(sw_pixelformat_t format)
+static sw_pixel_read_color8_f sw_pixel_get_read_color8_func(sw_pixelformat_t format)
 {
     switch (format)
     {
@@ -1899,19 +1854,19 @@ static inline sw_pixel_read_color8_f sw_pixel_get_read_color8_func(sw_pixelforma
     return NULL;
 }
 
-static inline void sw_pixel_write_color8_GRAYSCALE(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color8_GRAYSCALE(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
 {
     ((uint8_t *)pixels)[offset] = sw_luminance8(color);
 }
 
-static inline void sw_pixel_write_color8_GRAYALPHA(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color8_GRAYALPHA(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
 {
     uint8_t *dst = &((uint8_t *)pixels)[offset*2];
     dst[0] = sw_luminance8(color);
     dst[1] = color[3];
 }
 
-static inline void sw_pixel_write_color8_R3G3B2(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color8_R3G3B2(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
 {
     uint8_t pixel = (sw_compress_8to3(color[0]) << 5)
                   | (sw_compress_8to3(color[1]) << 2)
@@ -1919,7 +1874,7 @@ static inline void sw_pixel_write_color8_R3G3B2(void *SW_RESTRICT pixels, const 
     ((uint8_t *)pixels)[offset] = pixel;
 }
 
-static inline void sw_pixel_write_color8_R5G6B5(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color8_R5G6B5(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
 {
     uint16_t pixel = (sw_compress_8to5(color[0]) << 11)
                    | (sw_compress_8to6(color[1]) <<  5)
@@ -1927,7 +1882,7 @@ static inline void sw_pixel_write_color8_R5G6B5(void *SW_RESTRICT pixels, const 
     ((uint16_t *)pixels)[offset] = pixel;
 }
 
-static inline void sw_pixel_write_color8_R8G8B8(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color8_R8G8B8(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
 {
     uint8_t *dst = &((uint8_t *)pixels)[offset*3];
     dst[0] = color[0];
@@ -1935,7 +1890,7 @@ static inline void sw_pixel_write_color8_R8G8B8(void *SW_RESTRICT pixels, const 
     dst[2] = color[2];
 }
 
-static inline void sw_pixel_write_color8_R5G5B5A1(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color8_R5G5B5A1(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
 {
     uint16_t pixel = (sw_compress_8to5(color[0]) << 11)
                    | (sw_compress_8to5(color[1]) <<  6)
@@ -1944,7 +1899,7 @@ static inline void sw_pixel_write_color8_R5G5B5A1(void *SW_RESTRICT pixels, cons
     ((uint16_t *)pixels)[offset] = pixel;
 }
 
-static inline void sw_pixel_write_color8_R4G4B4A4(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color8_R4G4B4A4(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
 {
     uint16_t pixel = (sw_compress_8to4(color[0]) << 12)
                    | (sw_compress_8to4(color[1]) <<  8)
@@ -1953,7 +1908,7 @@ static inline void sw_pixel_write_color8_R4G4B4A4(void *SW_RESTRICT pixels, cons
     ((uint16_t *)pixels)[offset] = pixel;
 }
 
-static inline void sw_pixel_write_color8_R8G8B8A8(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color8_R8G8B8A8(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
 {
     uint8_t *dst = &((uint8_t *)pixels)[offset*4];
     dst[0] = color[0];
@@ -1962,12 +1917,12 @@ static inline void sw_pixel_write_color8_R8G8B8A8(void *SW_RESTRICT pixels, cons
     dst[3] = color[3];
 }
 
-static inline void sw_pixel_write_color8_R32(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color8_R32(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
 {
     ((float *)pixels)[offset] = sw_luminance8(color)*SW_INV_255;
 }
 
-static inline void sw_pixel_write_color8_R32G32B32(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color8_R32G32B32(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
 {
     float *dst = &((float *)pixels)[offset*3];
     dst[0] = color[0]*SW_INV_255;
@@ -1975,7 +1930,7 @@ static inline void sw_pixel_write_color8_R32G32B32(void *SW_RESTRICT pixels, con
     dst[2] = color[2]*SW_INV_255;
 }
 
-static inline void sw_pixel_write_color8_R32G32B32A32(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color8_R32G32B32A32(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
 {
     float *dst = &((float *)pixels)[offset*4];
     dst[0] = color[0]*SW_INV_255;
@@ -1984,12 +1939,12 @@ static inline void sw_pixel_write_color8_R32G32B32A32(void *SW_RESTRICT pixels, 
     dst[3] = color[3]*SW_INV_255;
 }
 
-static inline void sw_pixel_write_color8_R16(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color8_R16(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
 {
     ((uint16_t *)pixels)[offset] = sw_float_to_half(sw_luminance8(color)*SW_INV_255);
 }
 
-static inline void sw_pixel_write_color8_R16G16B16(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color8_R16G16B16(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
 {
     uint16_t *dst = &((uint16_t *)pixels)[offset*3];
     dst[0] = sw_float_to_half(color[0]*SW_INV_255);
@@ -1997,7 +1952,7 @@ static inline void sw_pixel_write_color8_R16G16B16(void *SW_RESTRICT pixels, con
     dst[2] = sw_float_to_half(color[2]*SW_INV_255);
 }
 
-static inline void sw_pixel_write_color8_R16G16B16A16(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color8_R16G16B16A16(void *SW_RESTRICT pixels, const uint8_t *SW_RESTRICT color, uint32_t offset)
 {
     uint16_t *dst = &((uint16_t *)pixels)[offset*4];
     dst[0] = sw_float_to_half(color[0]*SW_INV_255);
@@ -2006,7 +1961,7 @@ static inline void sw_pixel_write_color8_R16G16B16A16(void *SW_RESTRICT pixels, 
     dst[3] = sw_float_to_half(color[3]*SW_INV_255);
 }
 
-static inline sw_pixel_write_color8_f sw_pixel_get_write_color8_func(sw_pixelformat_t format)
+static sw_pixel_write_color8_f sw_pixel_get_write_color8_func(sw_pixelformat_t format)
 {
     switch (format)
     {
@@ -2036,7 +1991,7 @@ static inline sw_pixel_write_color8_f sw_pixel_get_write_color8_func(sw_pixelfor
     return NULL;
 }
 
-static inline void sw_pixel_read_color_GRAYSCALE(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color_GRAYSCALE(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     float gray = ((const uint8_t *)pixels)[offset]*SW_INV_255;
     color[0] = gray;
@@ -2045,7 +2000,7 @@ static inline void sw_pixel_read_color_GRAYSCALE(float *SW_RESTRICT color, const
     color[3] = 1.0f;
 }
 
-static inline void sw_pixel_read_color_GRAYALPHA(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color_GRAYALPHA(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     const uint8_t *src = &((const uint8_t *)pixels)[offset*2];
     float gray = src[0]*SW_INV_255;
@@ -2055,47 +2010,47 @@ static inline void sw_pixel_read_color_GRAYALPHA(float *SW_RESTRICT color, const
     color[3] = src[1]*SW_INV_255;
 }
 
-static inline void sw_pixel_read_color_R3G3B2(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color_R3G3B2(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     uint8_t unpack[4];
     sw_pixel_read_color8_R3G3B2(unpack, pixels, offset);
     sw_color8_to_color(color, unpack);
 }
 
-static inline void sw_pixel_read_color_R5G6B5(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color_R5G6B5(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     uint8_t unpack[4];
     sw_pixel_read_color8_R5G6B5(unpack, pixels, offset);
     sw_color8_to_color(color, unpack);
 }
 
-static inline void sw_pixel_read_color_R8G8B8(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color_R8G8B8(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     uint8_t unpack[4];
     sw_pixel_read_color8_R8G8B8(unpack, pixels, offset);
     sw_color8_to_color(color, unpack);
 }
 
-static inline void sw_pixel_read_color_R5G5B5A1(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color_R5G5B5A1(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     uint8_t unpack[4];
     sw_pixel_read_color8_R5G5B5A1(unpack, pixels, offset);
     sw_color8_to_color(color, unpack);
 }
 
-static inline void sw_pixel_read_color_R4G4B4A4(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color_R4G4B4A4(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     uint8_t unpack[4];
     sw_pixel_read_color8_R4G4B4A4(unpack, pixels, offset);
     sw_color8_to_color(color, unpack);
 }
 
-static inline void sw_pixel_read_color_R8G8B8A8(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color_R8G8B8A8(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     sw_color8_to_color(color, &((const uint8_t *)pixels)[offset*4]);
 }
 
-static inline void sw_pixel_read_color_R32(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color_R32(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     float val = ((const float *)pixels)[offset];
     color[0] = val;
@@ -2104,7 +2059,7 @@ static inline void sw_pixel_read_color_R32(float *SW_RESTRICT color, const void 
     color[3] = 1.0f;
 }
 
-static inline void sw_pixel_read_color_R32G32B32(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color_R32G32B32(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     const float *src = &((const float *)pixels)[offset*3];
     color[0] = src[0];
@@ -2113,7 +2068,7 @@ static inline void sw_pixel_read_color_R32G32B32(float *SW_RESTRICT color, const
     color[3] = 1.0f;
 }
 
-static inline void sw_pixel_read_color_R32G32B32A32(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color_R32G32B32A32(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     const float *src = &((const float *)pixels)[offset*4];
     color[0] = src[0];
@@ -2122,7 +2077,7 @@ static inline void sw_pixel_read_color_R32G32B32A32(float *SW_RESTRICT color, co
     color[3] = src[3];
 }
 
-static inline void sw_pixel_read_color_R16(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color_R16(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     float val = sw_half_to_float(((const uint16_t *)pixels)[offset]);
     color[0] = val;
@@ -2131,7 +2086,7 @@ static inline void sw_pixel_read_color_R16(float *SW_RESTRICT color, const void 
     color[3] = 1.0f;
 }
 
-static inline void sw_pixel_read_color_R16G16B16(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color_R16G16B16(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     const uint16_t *src = &((const uint16_t *)pixels)[offset*3];
     color[0] = sw_half_to_float(src[0]);
@@ -2140,7 +2095,7 @@ static inline void sw_pixel_read_color_R16G16B16(float *SW_RESTRICT color, const
     color[3] = 1.0f;
 }
 
-static inline void sw_pixel_read_color_R16G16B16A16(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
+static void sw_pixel_read_color_R16G16B16A16(float *SW_RESTRICT color, const void *SW_RESTRICT pixels, uint32_t offset)
 {
     const uint16_t *src = &((const uint16_t *)pixels)[offset*4];
     color[0] = sw_half_to_float(src[0]);
@@ -2149,7 +2104,7 @@ static inline void sw_pixel_read_color_R16G16B16A16(float *SW_RESTRICT color, co
     color[3] = sw_half_to_float(src[3]);
 }
 
-static inline sw_pixel_read_color_f sw_pixel_get_read_color_func(sw_pixelformat_t format)
+static sw_pixel_read_color_f sw_pixel_get_read_color_func(sw_pixelformat_t format)
 {
     switch (format)
     {
@@ -2179,64 +2134,64 @@ static inline sw_pixel_read_color_f sw_pixel_get_read_color_func(sw_pixelformat_
     return NULL;
 }
 
-static inline void sw_pixel_write_color_GRAYSCALE(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color_GRAYSCALE(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
 {
     ((uint8_t *)pixels)[offset] = (uint8_t)(sw_luminance(color)*255.0f);
 }
 
-static inline void sw_pixel_write_color_GRAYALPHA(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color_GRAYALPHA(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
 {
     uint8_t *dst = &((uint8_t *)pixels)[offset*2];
     dst[0] = (uint8_t)(sw_luminance(color)*255.0f);
     dst[1] = (uint8_t)(color[3]*255.0f);
 }
 
-static inline void sw_pixel_write_color_R3G3B2(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color_R3G3B2(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
 {
     uint8_t color8[4];
     sw_color_to_color8(color8, color);
     sw_pixel_write_color8_R3G3B2(pixels, color8, offset);
 }
 
-static inline void sw_pixel_write_color_R5G6B5(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color_R5G6B5(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
 {
     uint8_t color8[4];
     sw_color_to_color8(color8, color);
     sw_pixel_write_color8_R5G6B5(pixels, color8, offset);
 }
 
-static inline void sw_pixel_write_color_R8G8B8(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color_R8G8B8(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
 {
     uint8_t color8[4];
     sw_color_to_color8(color8, color);
     sw_pixel_write_color8_R8G8B8(pixels, color8, offset);
 }
 
-static inline void sw_pixel_write_color_R5G5B5A1(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color_R5G5B5A1(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
 {
     uint8_t color8[4];
     sw_color_to_color8(color8, color);
     sw_pixel_write_color8_R5G5B5A1(pixels, color8, offset);
 }
 
-static inline void sw_pixel_write_color_R4G4B4A4(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color_R4G4B4A4(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
 {
     uint8_t color8[4];
     sw_color_to_color8(color8, color);
     sw_pixel_write_color8_R4G4B4A4(pixels, color8, offset);
 }
 
-static inline void sw_pixel_write_color_R8G8B8A8(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color_R8G8B8A8(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
 {
     sw_color_to_color8(&((uint8_t *)pixels)[offset*4], color);
 }
 
-static inline void sw_pixel_write_color_R32(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color_R32(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
 {
     ((float *)pixels)[offset] = sw_luminance(color);
 }
 
-static inline void sw_pixel_write_color_R32G32B32(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color_R32G32B32(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
 {
     float *dst = &((float *)pixels)[offset*3];
     dst[0] = color[0];
@@ -2244,7 +2199,7 @@ static inline void sw_pixel_write_color_R32G32B32(void *SW_RESTRICT pixels, cons
     dst[2] = color[2];
 }
 
-static inline void sw_pixel_write_color_R32G32B32A32(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color_R32G32B32A32(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
 {
     float *dst = &((float *)pixels)[offset*4];
     dst[0] = color[0];
@@ -2253,12 +2208,12 @@ static inline void sw_pixel_write_color_R32G32B32A32(void *SW_RESTRICT pixels, c
     dst[3] = color[3];
 }
 
-static inline void sw_pixel_write_color_R16(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color_R16(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
 {
     ((uint16_t *)pixels)[offset] = sw_float_to_half(sw_luminance(color));
 }
 
-static inline void sw_pixel_write_color_R16G16B16(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color_R16G16B16(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
 {
     uint16_t *dst = &((uint16_t *)pixels)[offset*3];
     dst[0] = sw_float_to_half(color[0]);
@@ -2266,7 +2221,7 @@ static inline void sw_pixel_write_color_R16G16B16(void *SW_RESTRICT pixels, cons
     dst[2] = sw_float_to_half(color[2]);
 }
 
-static inline void sw_pixel_write_color_R16G16B16A16(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
+static void sw_pixel_write_color_R16G16B16A16(void *SW_RESTRICT pixels, const float *SW_RESTRICT color, uint32_t offset)
 {
     uint16_t *dst = &((uint16_t *)pixels)[offset*4];
     dst[0] = sw_float_to_half(color[0]);
@@ -2275,7 +2230,7 @@ static inline void sw_pixel_write_color_R16G16B16A16(void *SW_RESTRICT pixels, c
     dst[3] = sw_float_to_half(color[3]);
 }
 
-static inline sw_pixel_write_color_f sw_pixel_get_write_color_func(sw_pixelformat_t format)
+static sw_pixel_write_color_f sw_pixel_get_write_color_func(sw_pixelformat_t format)
 {
     switch (format)
     {
@@ -2305,32 +2260,32 @@ static inline sw_pixel_write_color_f sw_pixel_get_write_color_func(sw_pixelforma
     return NULL;
 }
 
-static inline float sw_pixel_read_depth_D8(const void *pixels, uint32_t offset)
+static float sw_pixel_read_depth_D8(const void *pixels, uint32_t offset)
 {
     return (float)((uint8_t *)pixels)[offset]*SW_INV_255;
 }
 
-static inline float sw_pixel_read_depth_D16(const void *pixels, uint32_t offset)
+static float sw_pixel_read_depth_D16(const void *pixels, uint32_t offset)
 {
     return (float)((uint16_t *)pixels)[offset]/UINT16_MAX;
 }
 
-static inline float sw_pixel_read_depth_D32(const void *pixels, uint32_t offset)
+static float sw_pixel_read_depth_D32(const void *pixels, uint32_t offset)
 {
     return ((float *)pixels)[offset];
 }
 
-static inline void sw_pixel_write_depth_D8(void *pixels, float depth, uint32_t offset)
+static void sw_pixel_write_depth_D8(void *pixels, float depth, uint32_t offset)
 {
     ((uint8_t *)pixels)[offset] = (uint8_t)(depth*UINT8_MAX);
 }
 
-static inline void sw_pixel_write_depth_D16(void *pixels, float depth, uint32_t offset)
+static void sw_pixel_write_depth_D16(void *pixels, float depth, uint32_t offset)
 {
     ((uint16_t *)pixels)[offset] = (uint16_t)(depth*UINT16_MAX);
 }
 
-static inline void sw_pixel_write_depth_D32(void *pixels, float depth, uint32_t offset)
+static void sw_pixel_write_depth_D32(void *pixels, float depth, uint32_t offset)
 {
     ((float *)pixels)[offset] = depth;
 }
@@ -2338,11 +2293,19 @@ static inline void sw_pixel_write_depth_D32(void *pixels, float depth, uint32_t 
 
 // Texture functionality
 //-------------------------------------------------------------------------------------------
-static inline bool sw_texture_alloc(sw_texture_t *texture, const void *data, int w, int h, sw_pixelformat_t format)
+static bool sw_texture_alloc(sw_texture_t *texture, const void *data, int w, int h, sw_pixelformat_t format)
 {
     bool isDepth = sw_pixel_is_depth_format(format);
     int bpp = SW_PIXELFORMAT_SIZE[format];
     int newSize = w*h*bpp;
+
+    if (texture->pixels == NULL)
+    {
+        texture->minFilter = SW_NEAREST;
+        texture->magFilter = SW_NEAREST;
+        texture->sWrap = SW_CLAMP;
+        texture->tWrap = SW_CLAMP;
+    }
 
     if (newSize > texture->allocSz)
     {
@@ -2399,27 +2362,34 @@ static inline bool sw_texture_alloc(sw_texture_t *texture, const void *data, int
     return true;
 }
 
-static inline void sw_texture_free(sw_texture_t *texture)
+static void sw_texture_free(sw_texture_t *texture)
 {
     SW_FREE(texture->pixels);
 }
 
-static inline void sw_texture_sample_nearest(float *SW_RESTRICT color, const sw_texture_t *SW_RESTRICT tex, float u, float v)
+static void sw_texture_sample_nearest(float *SW_RESTRICT color, const sw_texture_t *SW_RESTRICT tex, float u, float v)
 {
-    u = (tex->sWrap == SW_REPEAT)? sw_fract(u) : sw_saturate(u);
-    v = (tex->tWrap == SW_REPEAT)? sw_fract(v) : sw_saturate(v);
+    int x, y;
 
-    int x = u*tex->width;
-    int y = v*tex->height;
+#if RLSW_SUPPORT_NPOT_TEXTURE
+    if (tex->sWrap == SW_REPEAT) x = (int)(sw_fract(u)*tex->width);
+    else x = (int)(sw_saturate(u)*tex->width);
+
+    if (tex->tWrap == SW_REPEAT) y = (int)(sw_fract(v)*tex->height);
+    else y = (int)(sw_saturate(v)*tex->height);
+#else
+    if (tex->sWrap == SW_REPEAT) x = (int)(u*tex->width) & tex->wMinus1;
+    else x = (int)(sw_saturate(u)*tex->width);
+
+    if (tex->tWrap == SW_REPEAT) y = (int)(v*tex->height) & tex->hMinus1;
+    else y = (int)(sw_saturate(v)*tex->height);
+#endif
 
     tex->readColor(color, tex->pixels, y*tex->width + x);
 }
 
-static inline void sw_texture_sample_linear(float *SW_RESTRICT color, const sw_texture_t *SW_RESTRICT tex, float u, float v)
+static void sw_texture_sample_linear(float *SW_RESTRICT color, const sw_texture_t *SW_RESTRICT tex, float u, float v)
 {
-    // TODO: With a bit more cleverness the number of operations can
-    // be clearly reduced, but for now it works fine
-
     float xf = (u*tex->width) - 0.5f;
     float yf = (v*tex->height) - 0.5f;
 
@@ -2432,28 +2402,36 @@ static inline void sw_texture_sample_linear(float *SW_RESTRICT color, const sw_t
     int x1 = x0 + 1;
     int y1 = y0 + 1;
 
-    // NOTE: If the textures are POT, avoid the division for SW_REPEAT
-
-    if (tex->sWrap == SW_CLAMP)
+    if (tex->sWrap == SW_REPEAT)
     {
-        x0 = (x0 > tex->wMinus1)? tex->wMinus1 : x0;
-        x1 = (x1 > tex->wMinus1)? tex->wMinus1 : x1;
-    }
-    else
-    {
+    #if RLSW_SUPPORT_NPOT_TEXTURE
         x0 = (x0%tex->width + tex->width)%tex->width;
         x1 = (x1%tex->width + tex->width)%tex->width;
-    }
-
-    if (tex->tWrap == SW_CLAMP)
-    {
-        y0 = (y0 > tex->hMinus1)? tex->hMinus1 : y0;
-        y1 = (y1 > tex->hMinus1)? tex->hMinus1 : y1;
+    #else
+        x0 = x0 & tex->wMinus1;
+        x1 = x1 & tex->wMinus1;
+    #endif
     }
     else
     {
+        x0 = sw_clamp_int(x0, 0, tex->wMinus1);
+        x1 = sw_clamp_int(x1, 0, tex->wMinus1);
+    }
+
+    if (tex->tWrap == SW_REPEAT)
+    {
+    #if RLSW_SUPPORT_NPOT_TEXTURE
         y0 = (y0%tex->height + tex->height)%tex->height;
         y1 = (y1%tex->height + tex->height)%tex->height;
+    #else
+        y0 = y0 & tex->hMinus1;
+        y1 = y1 & tex->hMinus1;
+    #endif
+    }
+    else
+    {
+        y0 = sw_clamp_int(y0, 0, tex->hMinus1);
+        y1 = sw_clamp_int(y1, 0, tex->hMinus1);
     }
 
     float c00[4], c10[4], c01[4], c11[4];
@@ -2470,8 +2448,8 @@ static inline void sw_texture_sample_linear(float *SW_RESTRICT color, const sw_t
     }
 }
 
-static inline void sw_texture_sample(float *SW_RESTRICT color, const sw_texture_t *SW_RESTRICT tex,
-                                     float u, float v, float dUdx, float dUdy, float dVdx, float dVdy)
+// Resolves which sample function to use from the texel-to-pixel derivative magnitude
+static sw_texture_sampler_f sw_texture_pick_sampler(const sw_texture_t *tex, const float dTdx[2], const float dTdy[2])
 {
     // NOTE: Commented there is the previous method used
     // There was no need to compute the square root because
@@ -2480,30 +2458,30 @@ static inline void sw_texture_sample(float *SW_RESTRICT color, const sw_texture_
     //float dv = sqrtf(dVdx*dVdx + dVdy*dVdy);
     //float L = (du > dv)? du : dv;
 
-    // Calculate the derivatives for each axis
-    float dU2 = dUdx*dUdx + dUdy*dUdy;
-    float dV2 = dVdx*dVdx + dVdy*dVdy;
+    float dU2 = dTdx[0]*dTdx[0] + dTdy[0]*dTdy[0];
+    float dV2 = dTdx[1]*dTdx[1] + dTdy[1]*dTdy[1];
     float L2 = (dU2 > dV2)? dU2 : dV2;
 
     SWfilter filter = (L2 > 1.0f)? tex->minFilter : tex->magFilter;
-
-    switch (filter)
-    {
-        case SW_NEAREST: sw_texture_sample_nearest(color, tex, u, v); break;
-        case SW_LINEAR: sw_texture_sample_linear(color, tex, u, v); break;
-        default: break;
-    }
+    return (filter == SW_LINEAR)? sw_texture_sample_linear : sw_texture_sample_nearest;
 }
 //-------------------------------------------------------------------------------------------
 
 // Framebuffer management functions
 //-------------------------------------------------------------------------------------------
-static inline bool sw_default_framebuffer_alloc(sw_default_framebuffer_t *fb, int w, int h)
+static bool sw_default_framebuffer_alloc(sw_default_framebuffer_t *fb, int w, int h)
 {
     if (!sw_texture_alloc(&fb->color, NULL, w, h, SW_FRAMEBUFFER_COLOR_FORMAT))
     {
         return false;
     }
+
+#if RLSW_DOUBLE_BUFFERING
+    if (!sw_texture_alloc(&fb->backColor, NULL, w, h, SW_FRAMEBUFFER_COLOR_FORMAT))
+    {
+        return false;
+    }
+#endif
 
     if (!sw_texture_alloc(&fb->depth, NULL, w, h, SW_FRAMEBUFFER_DEPTH_FORMAT))
     {
@@ -2513,13 +2491,16 @@ static inline bool sw_default_framebuffer_alloc(sw_default_framebuffer_t *fb, in
     return true;
 }
 
-static inline void sw_default_framebuffer_free(sw_default_framebuffer_t *fb)
+static void sw_default_framebuffer_free(sw_default_framebuffer_t *fb)
 {
     sw_texture_free(&fb->color);
     sw_texture_free(&fb->depth);
+#if RLSW_DOUBLE_BUFFERING
+    sw_texture_free(&fb->backColor);
+#endif
 }
 
-static inline void sw_framebuffer_fill_color(sw_texture_t *colorBuffer, const float color[4])
+static void sw_framebuffer_fill_color(sw_texture_t *colorBuffer, const float color[4])
 {
     // NOTE: MSVC doesn't support VLA, so the largest possible size is allocated: 16 bytes
     //uint8_t pixel[SW_FRAMEBUFFER_COLOR_SIZE] = { 0 };
@@ -2558,7 +2539,7 @@ static inline void sw_framebuffer_fill_color(sw_texture_t *colorBuffer, const fl
     }
 }
 
-static inline void sw_framebuffer_fill_depth(sw_texture_t *depthBuffer, float depth)
+static void sw_framebuffer_fill_depth(sw_texture_t *depthBuffer, float depth)
 {
     // NOTE: MSVC doesn't support VLA, so the largest possible size is allocated: 4 bytes
     //uint8_t pixel[SW_FRAMEBUFFER_DEPTH_SIZE] = { 0 };
@@ -2597,14 +2578,14 @@ static inline void sw_framebuffer_fill_depth(sw_texture_t *depthBuffer, float de
     }
 }
 
-static inline void sw_framebuffer_output_fast(void *dst, const sw_texture_t *buffer)
+static void sw_framebuffer_output_fast(void *dst, const sw_texture_t *buffer)
 {
     int width = buffer->width;
     int height = buffer->height;
 
     uint8_t *d = (uint8_t *)dst;
 
-#if SW_FRAMEBUFFER_OUTPUT_BGRA && (SW_FRAMEBUFFER_COLOR_FORMAT == SW_PIXELFORMAT_COLOR_R8G8B8A8)
+#if RLSW_FRAMEBUFFER_OUTPUT_BGRA && (SW_FRAMEBUFFER_COLOR_FORMAT == SW_PIXELFORMAT_COLOR_R8G8B8A8)
     for (int y = height - 1; y >= 0; y--)
     {
         const uint8_t *src = (uint8_t *)(buffer->pixels) + y*width*4;
@@ -2616,7 +2597,7 @@ static inline void sw_framebuffer_output_fast(void *dst, const sw_texture_t *buf
             d[3] = src[3];
         }
     }
-#elif SW_FRAMEBUFFER_OUTPUT_BGRA && (SW_FRAMEBUFFER_COLOR_FORMAT == SW_PIXELFORMAT_COLOR_R8G8B8)
+#elif RLSW_FRAMEBUFFER_OUTPUT_BGRA && (SW_FRAMEBUFFER_COLOR_FORMAT == SW_PIXELFORMAT_COLOR_R8G8B8)
     for (int y = height - 1; y >= 0; y--)
     {
         const uint8_t *src = (uint8_t *)(buffer->pixels) + y*width*3;
@@ -2638,7 +2619,7 @@ static inline void sw_framebuffer_output_fast(void *dst, const sw_texture_t *buf
 #endif
 }
 
-static inline void sw_framebuffer_output_copy(void *dst, const sw_texture_t *buffer, int x, int y, int w, int h, sw_pixelformat_t format)
+static void sw_framebuffer_output_copy(void *dst, const sw_texture_t *buffer, int x, int y, int w, int h, sw_pixelformat_t format)
 {
     int stride = buffer->width;
     int dstPixelSize = SW_PIXELFORMAT_SIZE[format];
@@ -2657,7 +2638,7 @@ static inline void sw_framebuffer_output_copy(void *dst, const sw_texture_t *buf
             uint8_t color[4];
             SW_FRAMEBUFFER_COLOR8_GET(color, line, 0);
 
-            #if SW_FRAMEBUFFER_OUTPUT_BGRA
+            #if RLSW_FRAMEBUFFER_OUTPUT_BGRA
             if (format == SW_PIXELFORMAT_COLOR_R8G8B8A8 || format == SW_PIXELFORMAT_COLOR_R8G8B8)
             {
                 uint8_t tmp = color[0]; color[0] = color[2]; color[2] = tmp;
@@ -2674,7 +2655,7 @@ static inline void sw_framebuffer_output_copy(void *dst, const sw_texture_t *buf
     }
 }
 
-static inline void sw_framebuffer_output_blit(void *dst, const sw_texture_t *buffer,
+static void sw_framebuffer_output_blit(void *dst, const sw_texture_t *buffer,
     int xDst, int yDst, int wDst, int hDst, int xSrc, int ySrc, int wSrc, int hSrc, sw_pixelformat_t format)
 {
     const uint8_t *srcBase = buffer->pixels;
@@ -2703,7 +2684,7 @@ static inline void sw_framebuffer_output_blit(void *dst, const sw_texture_t *buf
             uint8_t color[4];
             SW_FRAMEBUFFER_COLOR8_GET(color, pixel, 0);
 
-            #if SW_FRAMEBUFFER_OUTPUT_BGRA
+            #if RLSW_FRAMEBUFFER_OUTPUT_BGRA
             if (format == SW_PIXELFORMAT_COLOR_R8G8B8A8 || format == SW_PIXELFORMAT_COLOR_R8G8B8)
             {
                 uint8_t tmp = color[0]; color[0] = color[2]; color[2] = tmp;
@@ -2802,7 +2783,7 @@ static const sw_blend_f SW_BLEND_TABLE[SW_BLEND_FACTOR_COUNT][SW_BLEND_FACTOR_CO
 #undef GEN_TABLE_ROW
 
 // Maps a GL blend factor enum to its compact table index
-static inline int sw_blend_factor_index(SWfactor f)
+static int sw_blend_factor_index(SWfactor f)
 {
     switch (f)
     {
@@ -2852,7 +2833,7 @@ static uint32_t sw_blend_compute_flags(SWfactor src, SWfactor dst)
 
 // Projection helper functions
 //-------------------------------------------------------------------------------------------
-static inline void sw_project_ndc_to_screen(float ndc[4])
+static void sw_project_ndc_to_screen(float ndc[4])
 {
     ndc[0] = RLSW.vpCenter[0] + ndc[0]*RLSW.vpHalf[0] + 0.5f;
     ndc[1] = RLSW.vpCenter[1] + ndc[1]*RLSW.vpHalf[1] + 0.5f;
@@ -2978,335 +2959,303 @@ static bool sw_polygon_clip(sw_vertex_t polygon[SW_MAX_CLIPPED_POLYGON_VERTICES]
     return (n >= 3);
 }
 
+// Rasterizer variant generation macros
+//-------------------------------------------------------------------------------------------
+// Argument count (1-4)
+#define SW_NARGS_(_1,_2,_3,_4,N,...) N
+#define SW_NARGS(...) SW_NARGS_(__VA_ARGS__,4,3,2,1)
+
+// State tokens -> OR'd SW_STATE_xxx flags
+#define SW_OR1(a)       (SW_STATE_##a)
+#define SW_OR2(a,b)     (SW_STATE_##a | SW_STATE_##b)
+#define SW_OR3(a,b,c)   (SW_STATE_##a | SW_STATE_##b | SW_STATE_##c)
+#define SW_OR4(a,b,c,d) (SW_STATE_##a | SW_STATE_##b | SW_STATE_##c | SW_STATE_##d)
+#define SW_FLAGS_(N, ...) SW_CONCATX(SW_OR, N)(__VA_ARGS__)
+#define SW_FLAGS(...)     SW_FLAGS_(SW_NARGS(__VA_ARGS__), __VA_ARGS__)
+
+// State tokens -> function name suffix
+#define SW_CAT1(a)       a
+#define SW_CAT2(a,b)     a##_##b
+#define SW_CAT3(a,b,c)   a##_##b##_##c
+#define SW_CAT4(a,b,c,d) a##_##b##_##c##_##d
+#define SW_NAME_(N, ...) SW_CONCATX(SW_CAT, N)(__VA_ARGS__)
+#define SW_NAME(...)     SW_NAME_(SW_NARGS(__VA_ARGS__), __VA_ARGS__)
+
+// Forward decl for one variant; SIG is a parenthesized param list
+#define SW_RASTER_FWD(PREFIX, SIG, ...) \
+    static void SW_CONCATX(PREFIX, SW_NAME(__VA_ARGS__)) SIG;
+
+// Dispatch table entry for one variant
+#define SW_RASTER_ENTRY(PREFIX, ...) \
+    [SW_FLAGS(__VA_ARGS__)] = SW_CONCATX(PREFIX, SW_NAME(__VA_ARGS__)),
+
+// Variant lists: X(STATES...) invoked once per specialization
+// Triangle/quad: COLOR_INTERP, TEXTURE_2D, DEPTH_TEST, BLEND
+#define SW_RASTER_VARIANTS_4(X, ...)                            \
+    X(__VA_ARGS__, NONE)                                        \
+    X(__VA_ARGS__, COLOR_INTERP)                                \
+    X(__VA_ARGS__, TEXTURE_2D)                                  \
+    X(__VA_ARGS__, DEPTH_TEST)                                  \
+    X(__VA_ARGS__, BLEND)                                       \
+    X(__VA_ARGS__, COLOR_INTERP, TEXTURE_2D)                    \
+    X(__VA_ARGS__, COLOR_INTERP, DEPTH_TEST)                    \
+    X(__VA_ARGS__, COLOR_INTERP, BLEND)                         \
+    X(__VA_ARGS__, TEXTURE_2D, DEPTH_TEST)                      \
+    X(__VA_ARGS__, TEXTURE_2D, BLEND)                           \
+    X(__VA_ARGS__, DEPTH_TEST, BLEND)                           \
+    X(__VA_ARGS__, COLOR_INTERP, TEXTURE_2D, DEPTH_TEST)        \
+    X(__VA_ARGS__, COLOR_INTERP, TEXTURE_2D, BLEND)             \
+    X(__VA_ARGS__, COLOR_INTERP, DEPTH_TEST, BLEND)             \
+    X(__VA_ARGS__, TEXTURE_2D, DEPTH_TEST, BLEND)               \
+    X(__VA_ARGS__, COLOR_INTERP, TEXTURE_2D, DEPTH_TEST, BLEND)
+
+// Variant lists: X(STATES...) invoked once per specialization
+// Line: COLOR_INTERP, DEPTH_TEST, BLEND
+#define SW_RASTER_VARIANTS_3(X, ...)                \
+    X(__VA_ARGS__, NONE)                            \
+    X(__VA_ARGS__, COLOR_INTERP)                    \
+    X(__VA_ARGS__, DEPTH_TEST)                      \
+    X(__VA_ARGS__, BLEND)                           \
+    X(__VA_ARGS__, COLOR_INTERP, DEPTH_TEST)        \
+    X(__VA_ARGS__, COLOR_INTERP, BLEND)             \
+    X(__VA_ARGS__, DEPTH_TEST, BLEND)               \
+    X(__VA_ARGS__, COLOR_INTERP, DEPTH_TEST, BLEND)
+
+// Point: DEPTH_TEST, BLEND
+#define SW_RASTER_VARIANTS_2(X, ...)    \
+    X(__VA_ARGS__, NONE)                \
+    X(__VA_ARGS__, DEPTH_TEST)          \
+    X(__VA_ARGS__, BLEND)               \
+    X(__VA_ARGS__, DEPTH_TEST, BLEND)
+//-------------------------------------------------------------------------------------------
+
 // Triangle rasterizer variant dispatch
 //-------------------------------------------------------------------------------------------
-#ifndef RLSW_TEMPLATE_RASTER_TRIANGLE_EXPANDING
-#define RLSW_TEMPLATE_RASTER_TRIANGLE_EXPANDING
+#define SW_RASTER_TRIANGLE_STATE_MASK SW_FLAGS(COLOR_INTERP, TEXTURE_2D, DEPTH_TEST, BLEND)
 
-    // State mask to apply before indexing the dispatch table
-    #define SW_RASTER_TRIANGLE_STATE_MASK \
-        (SW_STATE_TEXTURE_2D | SW_STATE_DEPTH_TEST | SW_STATE_BLEND)
+#define SW_RASTER_TRIANGLE_STATES NONE
+#include __FILE__ // IWYU pragma: keep
+#undef SW_RASTER_TRIANGLE_STATES
 
-    // Single source of truth for all rasterizer specializations
-    // X(NAME, STATE_FLAGS)
-    #define SW_RASTER_VARIANTS(X)                                                       \
-        X(BASE,            0)                                                           \
-        X(TEX,             SW_STATE_TEXTURE_2D)                                         \
-        X(DEPTH,           SW_STATE_DEPTH_TEST)                                         \
-        X(BLEND,           SW_STATE_BLEND)                                              \
-        X(TEX_DEPTH,       SW_STATE_TEXTURE_2D | SW_STATE_DEPTH_TEST)                   \
-        X(TEX_BLEND,       SW_STATE_TEXTURE_2D | SW_STATE_BLEND)                        \
-        X(DEPTH_BLEND,     SW_STATE_DEPTH_TEST | SW_STATE_BLEND)                        \
-        X(TEX_DEPTH_BLEND, SW_STATE_TEXTURE_2D | SW_STATE_DEPTH_TEST | SW_STATE_BLEND)
+#define SW_RASTER_TRIANGLE_STATES COLOR_INTERP
+#include __FILE__
+#undef SW_RASTER_TRIANGLE_STATES
 
-    // Forward declarations because clangd does not follow #include __FILE__ to avoid infinite recursion
-    // These declarations make all variants visible to static analysis tools without affecting compilation
-    #define SW_FWD_DECL(NAME, _FLAGS) \
-        static void sw_raster_triangle_##NAME(const sw_vertex_t*, const sw_vertex_t*, const sw_vertex_t*);
-    SW_RASTER_VARIANTS(SW_FWD_DECL) // NOLINT
-    #undef SW_FWD_DECL
+#define SW_RASTER_TRIANGLE_STATES TEXTURE_2D
+#include __FILE__
+#undef SW_RASTER_TRIANGLE_STATES
 
-    // Specialization generation via self-inclusion
+#define SW_RASTER_TRIANGLE_STATES DEPTH_TEST
+#include __FILE__
+#undef SW_RASTER_TRIANGLE_STATES
 
-    #define RLSW_TEMPLATE_RASTER_TRIANGLE BASE
-    #include __FILE__ // IWYU pragma: keep
-    #undef RLSW_TEMPLATE_RASTER_TRIANGLE
+#define SW_RASTER_TRIANGLE_STATES BLEND
+#include __FILE__
+#undef SW_RASTER_TRIANGLE_STATES
 
-    #define RLSW_TEMPLATE_RASTER_TRIANGLE TEX
-    #define SW_ENABLE_TEXTURE
-    #include __FILE__
-    #undef SW_ENABLE_TEXTURE
-    #undef RLSW_TEMPLATE_RASTER_TRIANGLE
+#define SW_RASTER_TRIANGLE_STATES COLOR_INTERP, TEXTURE_2D
+#include __FILE__
+#undef SW_RASTER_TRIANGLE_STATES
 
-    #define RLSW_TEMPLATE_RASTER_TRIANGLE DEPTH
-    #define SW_ENABLE_DEPTH_TEST
-    #include __FILE__
-    #undef SW_ENABLE_DEPTH_TEST
-    #undef RLSW_TEMPLATE_RASTER_TRIANGLE
+#define SW_RASTER_TRIANGLE_STATES COLOR_INTERP, DEPTH_TEST
+#include __FILE__
+#undef SW_RASTER_TRIANGLE_STATES
 
-    #define RLSW_TEMPLATE_RASTER_TRIANGLE BLEND
-    #define SW_ENABLE_BLEND
-    #include __FILE__
-    #undef SW_ENABLE_BLEND
-    #undef RLSW_TEMPLATE_RASTER_TRIANGLE
+#define SW_RASTER_TRIANGLE_STATES COLOR_INTERP, BLEND
+#include __FILE__
+#undef SW_RASTER_TRIANGLE_STATES
 
-    #define RLSW_TEMPLATE_RASTER_TRIANGLE TEX_DEPTH
-    #define SW_ENABLE_TEXTURE
-    #define SW_ENABLE_DEPTH_TEST
-    #include __FILE__
-    #undef SW_ENABLE_DEPTH_TEST
-    #undef SW_ENABLE_TEXTURE
-    #undef RLSW_TEMPLATE_RASTER_TRIANGLE
+#define SW_RASTER_TRIANGLE_STATES TEXTURE_2D, DEPTH_TEST
+#include __FILE__
+#undef SW_RASTER_TRIANGLE_STATES
 
-    #define RLSW_TEMPLATE_RASTER_TRIANGLE TEX_BLEND
-    #define SW_ENABLE_TEXTURE
-    #define SW_ENABLE_BLEND
-    #include __FILE__
-    #undef SW_ENABLE_BLEND
-    #undef SW_ENABLE_TEXTURE
-    #undef RLSW_TEMPLATE_RASTER_TRIANGLE
+#define SW_RASTER_TRIANGLE_STATES TEXTURE_2D, BLEND
+#include __FILE__
+#undef SW_RASTER_TRIANGLE_STATES
 
-    #define RLSW_TEMPLATE_RASTER_TRIANGLE DEPTH_BLEND
-    #define SW_ENABLE_DEPTH_TEST
-    #define SW_ENABLE_BLEND
-    #include __FILE__
-    #undef SW_ENABLE_BLEND
-    #undef SW_ENABLE_DEPTH_TEST
-    #undef RLSW_TEMPLATE_RASTER_TRIANGLE
+#define SW_RASTER_TRIANGLE_STATES DEPTH_TEST, BLEND
+#include __FILE__
+#undef SW_RASTER_TRIANGLE_STATES
 
-    #define RLSW_TEMPLATE_RASTER_TRIANGLE TEX_DEPTH_BLEND
-    #define SW_ENABLE_TEXTURE
-    #define SW_ENABLE_DEPTH_TEST
-    #define SW_ENABLE_BLEND
-    #include __FILE__
-    #undef SW_ENABLE_BLEND
-    #undef SW_ENABLE_DEPTH_TEST
-    #undef SW_ENABLE_TEXTURE
-    #undef RLSW_TEMPLATE_RASTER_TRIANGLE
+#define SW_RASTER_TRIANGLE_STATES COLOR_INTERP, TEXTURE_2D, DEPTH_TEST
+#include __FILE__
+#undef SW_RASTER_TRIANGLE_STATES
 
-    // Dispatch table (auto-generated from SW_RASTER_VARIANTS)
-    #define SW_TABLE_ENTRY(NAME, FLAGS) [FLAGS] = sw_raster_triangle_##NAME,
-    static const sw_raster_triangle_f SW_RASTER_TRIANGLE_TABLE[] = {
-        SW_RASTER_VARIANTS(SW_TABLE_ENTRY)
-    };
-    #undef SW_TABLE_ENTRY
+#define SW_RASTER_TRIANGLE_STATES COLOR_INTERP, DEPTH_TEST, BLEND
+#include __FILE__
+#undef SW_RASTER_TRIANGLE_STATES
 
-#undef SW_RASTER_VARIANTS
-#undef RLSW_TEMPLATE_RASTER_TRIANGLE_EXPANDING
+#define SW_RASTER_TRIANGLE_STATES COLOR_INTERP, TEXTURE_2D, BLEND
+#include __FILE__
+#undef SW_RASTER_TRIANGLE_STATES
 
-#endif // RLSW_TEMPLATE_RASTER_TRIANGLE_EXPANDING
+#define SW_RASTER_TRIANGLE_STATES TEXTURE_2D, DEPTH_TEST, BLEND
+#include __FILE__
+#undef SW_RASTER_TRIANGLE_STATES
+
+#define SW_RASTER_TRIANGLE_STATES COLOR_INTERP, TEXTURE_2D, DEPTH_TEST, BLEND
+#include __FILE__
+#undef SW_RASTER_TRIANGLE_STATES
+
+// Forward declarations for static analyzer like clangd that do not handle self-inclusion correctly
+SW_RASTER_VARIANTS_4(SW_RASTER_FWD, sw_raster_triangle_, (const sw_vertex_t*, const sw_vertex_t*, const sw_vertex_t*)) // NOLINT
+
+static const sw_raster_triangle_f SW_RASTER_TRIANGLE_TABLE[] = {
+    SW_RASTER_VARIANTS_4(SW_RASTER_ENTRY, sw_raster_triangle_)
+};
 //-------------------------------------------------------------------------------------------
 
 // Quad rasterizer variant dispatch
 //-------------------------------------------------------------------------------------------
-#ifndef RLSW_TEMPLATE_RASTER_QUAD_EXPANDING
-#define RLSW_TEMPLATE_RASTER_QUAD_EXPANDING
+#define SW_RASTER_QUAD_STATE_MASK SW_FLAGS(COLOR_INTERP, TEXTURE_2D, DEPTH_TEST, BLEND)
 
-    // State mask to apply before indexing the dispatch table
-    #define SW_RASTER_QUAD_STATE_MASK \
-        (SW_STATE_TEXTURE_2D | SW_STATE_DEPTH_TEST | SW_STATE_BLEND)
+#define SW_RASTER_QUAD_STATES NONE
+#include __FILE__ // IWYU pragma: keep
+#undef SW_RASTER_QUAD_STATES
 
-    // Single source of truth for all rasterizer specializations
-    // X(NAME, STATE_FLAGS)
-    #define SW_RASTER_VARIANTS(X)                                                       \
-        X(BASE,            0)                                                           \
-        X(TEX,             SW_STATE_TEXTURE_2D)                                         \
-        X(DEPTH,           SW_STATE_DEPTH_TEST)                                         \
-        X(BLEND,           SW_STATE_BLEND)                                              \
-        X(TEX_DEPTH,       SW_STATE_TEXTURE_2D | SW_STATE_DEPTH_TEST)                   \
-        X(TEX_BLEND,       SW_STATE_TEXTURE_2D | SW_STATE_BLEND)                        \
-        X(DEPTH_BLEND,     SW_STATE_DEPTH_TEST | SW_STATE_BLEND)                        \
-        X(TEX_DEPTH_BLEND, SW_STATE_TEXTURE_2D | SW_STATE_DEPTH_TEST | SW_STATE_BLEND)
+#define SW_RASTER_QUAD_STATES COLOR_INTERP
+#include __FILE__
+#undef SW_RASTER_QUAD_STATES
 
-    // Forward declarations because clangd does not follow #include __FILE__ to avoid infinite recursion
-    // These declarations make all variants visible to static analysis tools without affecting compilation
-    #define SW_FWD_DECL(NAME, _FLAGS) \
-        static void sw_raster_quad_##NAME(const sw_vertex_t *v0, const sw_vertex_t *v1, const sw_vertex_t *v2, const sw_vertex_t *v3);
-    SW_RASTER_VARIANTS(SW_FWD_DECL) // NOLINT
-    #undef SW_FWD_DECL
+#define SW_RASTER_QUAD_STATES TEXTURE_2D
+#include __FILE__
+#undef SW_RASTER_QUAD_STATES
 
-    // Specialization generation via self-inclusion
+#define SW_RASTER_QUAD_STATES DEPTH_TEST
+#include __FILE__
+#undef SW_RASTER_QUAD_STATES
 
-    #define RLSW_TEMPLATE_RASTER_QUAD BASE
-    #include __FILE__ // IWYU pragma: keep
-    #undef RLSW_TEMPLATE_RASTER_QUAD
+#define SW_RASTER_QUAD_STATES BLEND
+#include __FILE__
+#undef SW_RASTER_QUAD_STATES
 
-    #define RLSW_TEMPLATE_RASTER_QUAD TEX
-    #define SW_ENABLE_TEXTURE
-    #include __FILE__
-    #undef SW_ENABLE_TEXTURE
-    #undef RLSW_TEMPLATE_RASTER_QUAD
+#define SW_RASTER_QUAD_STATES COLOR_INTERP, TEXTURE_2D
+#include __FILE__
+#undef SW_RASTER_QUAD_STATES
 
-    #define RLSW_TEMPLATE_RASTER_QUAD DEPTH
-    #define SW_ENABLE_DEPTH_TEST
-    #include __FILE__
-    #undef SW_ENABLE_DEPTH_TEST
-    #undef RLSW_TEMPLATE_RASTER_QUAD
+#define SW_RASTER_QUAD_STATES COLOR_INTERP, DEPTH_TEST
+#include __FILE__
+#undef SW_RASTER_QUAD_STATES
 
-    #define RLSW_TEMPLATE_RASTER_QUAD BLEND
-    #define SW_ENABLE_BLEND
-    #include __FILE__
-    #undef SW_ENABLE_BLEND
-    #undef RLSW_TEMPLATE_RASTER_QUAD
+#define SW_RASTER_QUAD_STATES COLOR_INTERP, BLEND
+#include __FILE__
+#undef SW_RASTER_QUAD_STATES
 
-    #define RLSW_TEMPLATE_RASTER_QUAD TEX_DEPTH
-    #define SW_ENABLE_TEXTURE
-    #define SW_ENABLE_DEPTH_TEST
-    #include __FILE__
-    #undef SW_ENABLE_DEPTH_TEST
-    #undef SW_ENABLE_TEXTURE
-    #undef RLSW_TEMPLATE_RASTER_QUAD
+#define SW_RASTER_QUAD_STATES TEXTURE_2D, DEPTH_TEST
+#include __FILE__
+#undef SW_RASTER_QUAD_STATES
 
-    #define RLSW_TEMPLATE_RASTER_QUAD TEX_BLEND
-    #define SW_ENABLE_TEXTURE
-    #define SW_ENABLE_BLEND
-    #include __FILE__
-    #undef SW_ENABLE_BLEND
-    #undef SW_ENABLE_TEXTURE
-    #undef RLSW_TEMPLATE_RASTER_QUAD
+#define SW_RASTER_QUAD_STATES TEXTURE_2D, BLEND
+#include __FILE__
+#undef SW_RASTER_QUAD_STATES
 
-    #define RLSW_TEMPLATE_RASTER_QUAD DEPTH_BLEND
-    #define SW_ENABLE_DEPTH_TEST
-    #define SW_ENABLE_BLEND
-    #include __FILE__
-    #undef SW_ENABLE_BLEND
-    #undef SW_ENABLE_DEPTH_TEST
-    #undef RLSW_TEMPLATE_RASTER_QUAD
+#define SW_RASTER_QUAD_STATES DEPTH_TEST, BLEND
+#include __FILE__
+#undef SW_RASTER_QUAD_STATES
 
-    #define RLSW_TEMPLATE_RASTER_QUAD TEX_DEPTH_BLEND
-    #define SW_ENABLE_TEXTURE
-    #define SW_ENABLE_DEPTH_TEST
-    #define SW_ENABLE_BLEND
-    #include __FILE__
-    #undef SW_ENABLE_BLEND
-    #undef SW_ENABLE_DEPTH_TEST
-    #undef SW_ENABLE_TEXTURE
-    #undef RLSW_TEMPLATE_RASTER_QUAD
+#define SW_RASTER_QUAD_STATES COLOR_INTERP, TEXTURE_2D, DEPTH_TEST
+#include __FILE__
+#undef SW_RASTER_QUAD_STATES
 
-    // Dispatch table (auto-generated from SW_RASTER_VARIANTS)
-    #define SW_TABLE_ENTRY(NAME, FLAGS) [FLAGS] = sw_raster_quad_##NAME,
-    static const sw_raster_quad_f SW_RASTER_QUAD_TABLE[] = {
-        SW_RASTER_VARIANTS(SW_TABLE_ENTRY)
-    };
-    #undef SW_TABLE_ENTRY
+#define SW_RASTER_QUAD_STATES COLOR_INTERP, TEXTURE_2D, BLEND
+#include __FILE__
+#undef SW_RASTER_QUAD_STATES
 
-#undef SW_RASTER_VARIANTS
-#undef RLSW_TEMPLATE_RASTER_QUAD_EXPANDING
+#define SW_RASTER_QUAD_STATES COLOR_INTERP, DEPTH_TEST, BLEND
+#include __FILE__
+#undef SW_RASTER_QUAD_STATES
 
-#endif // RLSW_TEMPLATE_RASTER_QUAD_EXPANDING
+#define SW_RASTER_QUAD_STATES TEXTURE_2D, DEPTH_TEST, BLEND
+#include __FILE__
+#undef SW_RASTER_QUAD_STATES
+
+#define SW_RASTER_QUAD_STATES COLOR_INTERP, TEXTURE_2D, DEPTH_TEST, BLEND
+#include __FILE__
+#undef SW_RASTER_QUAD_STATES
+
+// Forward declarations for static analyzer like clangd that do not handle self-inclusion correctly
+SW_RASTER_VARIANTS_4(SW_RASTER_FWD, sw_raster_quad_, (const sw_vertex_t*, const sw_vertex_t*, const sw_vertex_t*, const sw_vertex_t*)) // NOLINT
+
+static const sw_raster_quad_f SW_RASTER_QUAD_TABLE[] = {
+    SW_RASTER_VARIANTS_4(SW_RASTER_ENTRY, sw_raster_quad_)
+};
 //-------------------------------------------------------------------------------------------
 
 // Line rasterizer variant dispatch
 //-------------------------------------------------------------------------------------------
-#ifndef RLSW_TEMPLATE_RASTER_LINE_EXPANDING
-#define RLSW_TEMPLATE_RASTER_LINE_EXPANDING
+#define SW_RASTER_LINE_STATE_MASK SW_FLAGS(COLOR_INTERP, DEPTH_TEST, BLEND)
 
-    // State mask to apply before indexing the dispatch table
-    #define SW_RASTER_LINE_STATE_MASK \
-        (SW_STATE_DEPTH_TEST | SW_STATE_BLEND)
+#define SW_RASTER_LINE_STATES NONE
+#include __FILE__ // IWYU pragma: keep
+#undef SW_RASTER_LINE_STATES
 
-    // Single source of truth for all rasterizer specializations
-    // X(NAME, STATE_FLAGS)
-    #define SW_RASTER_VARIANTS(X)                                                       \
-        X(BASE,            0)                                                           \
-        X(DEPTH,           SW_STATE_DEPTH_TEST)                                         \
-        X(BLEND,           SW_STATE_BLEND)                                              \
-        X(DEPTH_BLEND,     SW_STATE_DEPTH_TEST | SW_STATE_BLEND)
+#define SW_RASTER_LINE_STATES COLOR_INTERP
+#include __FILE__
+#undef SW_RASTER_LINE_STATES
 
-    // Forward declarations because clangd does not follow #include __FILE__ to avoid infinite recursion
-    // These declarations make all variants visible to static analysis tools without affecting compilation
-    #define SW_FWD_DECL(NAME, _FLAGS)                                                       \
-        static void sw_raster_line_##NAME(const sw_vertex_t *v0, const sw_vertex_t *v1);    \
-        static void sw_raster_line_thick_##NAME(const sw_vertex_t *v0, const sw_vertex_t *v1);
-    SW_RASTER_VARIANTS(SW_FWD_DECL) // NOLINT
-    #undef SW_FWD_DECL
+#define SW_RASTER_LINE_STATES DEPTH_TEST
+#include __FILE__
+#undef SW_RASTER_LINE_STATES
 
-    // Specialization generation via self-inclusion
+#define SW_RASTER_LINE_STATES BLEND
+#include __FILE__
+#undef SW_RASTER_LINE_STATES
 
-    #define RLSW_TEMPLATE_RASTER_LINE BASE
-    #include __FILE__ // IWYU pragma: keep
-    #undef RLSW_TEMPLATE_RASTER_LINE
+#define SW_RASTER_LINE_STATES COLOR_INTERP, DEPTH_TEST
+#include __FILE__
+#undef SW_RASTER_LINE_STATES
 
-    #define RLSW_TEMPLATE_RASTER_LINE DEPTH
-    #define SW_ENABLE_DEPTH_TEST
-    #include __FILE__
-    #undef SW_ENABLE_DEPTH_TEST
-    #undef RLSW_TEMPLATE_RASTER_LINE
+#define SW_RASTER_LINE_STATES COLOR_INTERP, BLEND
+#include __FILE__
+#undef SW_RASTER_LINE_STATES
 
-    #define RLSW_TEMPLATE_RASTER_LINE BLEND
-    #define SW_ENABLE_BLEND
-    #include __FILE__
-    #undef SW_ENABLE_BLEND
-    #undef RLSW_TEMPLATE_RASTER_LINE
+#define SW_RASTER_LINE_STATES DEPTH_TEST, BLEND
+#include __FILE__
+#undef SW_RASTER_LINE_STATES
 
-    #define RLSW_TEMPLATE_RASTER_LINE DEPTH_BLEND
-    #define SW_ENABLE_DEPTH_TEST
-    #define SW_ENABLE_BLEND
-    #include __FILE__
-    #undef SW_ENABLE_BLEND
-    #undef SW_ENABLE_DEPTH_TEST
-    #undef RLSW_TEMPLATE_RASTER_LINE
+#define SW_RASTER_LINE_STATES COLOR_INTERP, DEPTH_TEST, BLEND
+#include __FILE__
+#undef SW_RASTER_LINE_STATES
 
-    // Dispatch table (auto-generated from SW_RASTER_VARIANTS)
-    #define SW_TABLE_ENTRY0(NAME, FLAGS) [FLAGS] = sw_raster_line_##NAME,
-    #define SW_TABLE_ENTRY1(NAME, FLAGS) [FLAGS] = sw_raster_line_thick_##NAME,
-    static const sw_raster_line_f SW_RASTER_LINE_TABLE[] = {  SW_RASTER_VARIANTS(SW_TABLE_ENTRY0) };
-    static const sw_raster_line_f SW_RASTER_LINE_THICK_TABLE[] = { SW_RASTER_VARIANTS(SW_TABLE_ENTRY1) };
-    #undef SW_TABLE_ENTRY0
-    #undef SW_TABLE_ENTRY1
+// Forward declarations for static analyzer like clangd that do not handle self-inclusion correctly
+SW_RASTER_VARIANTS_3(SW_RASTER_FWD, sw_raster_line_, (const sw_vertex_t*, const sw_vertex_t*)) // NOLINT
 
-#undef SW_RASTER_VARIANTS
-#undef RLSW_TEMPLATE_RASTER_LINE_EXPANDING
-
-#endif // RLSW_TEMPLATE_RASTER_LINE_EXPANDING
+static const sw_raster_line_f SW_RASTER_LINE_TABLE[] = {
+    SW_RASTER_VARIANTS_3(SW_RASTER_ENTRY, sw_raster_line_)
+};
 //-------------------------------------------------------------------------------------------
 
 // Point rasterizer variant dispatch
 //-------------------------------------------------------------------------------------------
-#ifndef RLSW_TEMPLATE_RASTER_POINT_EXPANDING
-#define RLSW_TEMPLATE_RASTER_POINT_EXPANDING
+#define SW_RASTER_POINT_STATE_MASK SW_FLAGS(DEPTH_TEST, BLEND)
 
-    // State mask to apply before indexing the dispatch table
-    #define SW_RASTER_POINT_STATE_MASK \
-        (SW_STATE_DEPTH_TEST | SW_STATE_BLEND)
+#define SW_RASTER_POINT_STATES NONE
+#include __FILE__ // IWYU pragma: keep
+#undef SW_RASTER_POINT_STATES
 
-    // Single source of truth for all rasterizer specializations
-    // X(NAME, STATE_FLAGS)
-    #define SW_RASTER_VARIANTS(X)                                                       \
-        X(BASE,            0)                                                           \
-        X(DEPTH,           SW_STATE_DEPTH_TEST)                                         \
-        X(BLEND,           SW_STATE_BLEND)                                              \
-        X(DEPTH_BLEND,     SW_STATE_DEPTH_TEST | SW_STATE_BLEND)
+#define SW_RASTER_POINT_STATES DEPTH_TEST
+#include __FILE__
+#undef SW_RASTER_POINT_STATES
 
-    // Forward declarations because clangd does not follow #include __FILE__ to avoid infinite recursion
-    // These declarations make all variants visible to static analysis tools without affecting compilation
-    #define SW_FWD_DECL(NAME, _FLAGS) \
-        static void sw_raster_point_##NAME(const sw_vertex_t *v);
-    SW_RASTER_VARIANTS(SW_FWD_DECL) // NOLINT
-    #undef SW_FWD_DECL
+#define SW_RASTER_POINT_STATES BLEND
+#include __FILE__
+#undef SW_RASTER_POINT_STATES
 
-    // Specialization generation via self-inclusion
+#define SW_RASTER_POINT_STATES DEPTH_TEST, BLEND
+#include __FILE__
+#undef SW_RASTER_POINT_STATES
 
-    #define RLSW_TEMPLATE_RASTER_POINT BASE
-    #include __FILE__ // IWYU pragma: keep
-    #undef RLSW_TEMPLATE_RASTER_POINT
+// Forward declarations for static analyzer like clangd that do not handle self-inclusion correctly
+SW_RASTER_VARIANTS_2(SW_RASTER_FWD, sw_raster_point_, (const sw_vertex_t*)) // NOLINT
 
-    #define RLSW_TEMPLATE_RASTER_POINT DEPTH
-    #define SW_ENABLE_DEPTH_TEST
-    #include __FILE__
-    #undef SW_ENABLE_DEPTH_TEST
-    #undef RLSW_TEMPLATE_RASTER_POINT
-
-    #define RLSW_TEMPLATE_RASTER_POINT BLEND
-    #define SW_ENABLE_BLEND
-    #include __FILE__
-    #undef SW_ENABLE_BLEND
-    #undef RLSW_TEMPLATE_RASTER_POINT
-
-    #define RLSW_TEMPLATE_RASTER_POINT DEPTH_BLEND
-    #define SW_ENABLE_DEPTH_TEST
-    #define SW_ENABLE_BLEND
-    #include __FILE__
-    #undef SW_ENABLE_BLEND
-    #undef SW_ENABLE_DEPTH_TEST
-    #undef RLSW_TEMPLATE_RASTER_POINT
-
-    // Dispatch table (auto-generated from SW_RASTER_VARIANTS)
-    #define SW_TABLE_ENTRY(NAME, FLAGS) [FLAGS] = sw_raster_point_##NAME,
-    static const sw_raster_point_f SW_RASTER_POINT_TABLE[] = {
-        SW_RASTER_VARIANTS(SW_TABLE_ENTRY)
-    };
-    #undef SW_TABLE_ENTRY
-
-#undef SW_RASTER_VARIANTS
-#undef RLSW_TEMPLATE_RASTER_POINT_EXPANDING
-
-#endif // RLSW_TEMPLATE_RASTER_POINT_EXPANDING
+static const sw_raster_point_f SW_RASTER_POINT_TABLE[] = {
+    SW_RASTER_VARIANTS_2(SW_RASTER_ENTRY, sw_raster_point_)
+};
 //-------------------------------------------------------------------------------------------
 
 // Triangle rendering logic
 //-------------------------------------------------------------------------------------------
-static inline bool sw_triangle_face_culling(void)
+static bool sw_triangle_face_culling(void)
 {
     // NOTE: Face culling is done before clipping to avoid unnecessary computations
     // To handle triangles crossing the w=0 plane correctly,
@@ -3366,7 +3315,7 @@ static void sw_triangle_clip_and_project(void)
 
             // Calculation of the reciprocal of W for normalization
             // as well as perspective-correct attributes
-            const float wRcp = 1.0f/v->position[3];
+            const float wRcp = sw_rcp(v->position[3]);
 
             // Division of XYZ coordinates by weight
             v->position[0] *= wRcp;
@@ -3415,7 +3364,7 @@ static void sw_triangle_render(uint32_t state)
 
 // Quad rendering logic
 //-------------------------------------------------------------------------------------------
-static inline bool sw_quad_face_culling(void)
+static bool sw_quad_face_culling(void)
 {
     // NOTE: Face culling is done before clipping to avoid unnecessary computations
     // To handle quads crossing the w=0 plane correctly,
@@ -3460,8 +3409,8 @@ static inline bool sw_quad_face_culling(void)
     // winding in the projected space when all w > 0
     // A value of 0 for sgnArea means P0, P1, P2 are collinear in (x, y, w)
     // space, which corresponds to a degenerate triangle projection
-    // Such quads might also be degenerate or non-planar. They are typically
-    // not culled by this test (0 < 0 is false, 0 > 0 is false)
+    // Such quads might also be degenerate or non-planar
+    // They are typically not culled by this test (0 < 0 is false, 0 > 0 is false)
     // and should be handled by the clipper if necessary
 
     return (RLSW.cullFace == SW_FRONT)? (sgnArea < 0.0f) : (sgnArea > 0.0f); // Cull if winding is "clockwise" : "counter-clockwise"
@@ -3481,7 +3430,7 @@ static void sw_quad_clip_and_project(void)
 
             // Calculation of the reciprocal of W for normalization
             // as well as perspective-correct attributes
-            const float wRcp = 1.0f/v->position[3];
+            const float wRcp = sw_rcp(v->position[3]);
 
             // Division of XYZ coordinates by weight
             v->position[0] *= wRcp;
@@ -3578,7 +3527,7 @@ static void sw_quad_render(uint32_t state)
 
 // Line rendering logic
 //-------------------------------------------------------------------------------------------
-static inline bool sw_line_clip_coord(float q, float p, float *t0, float *t1)
+static bool sw_line_clip_coord(float q, float p, float *t0, float *t1)
 {
     if (fabsf(p) < SW_CLIP_EPSILON)
     {
@@ -3659,8 +3608,8 @@ static bool sw_line_clip_and_project(sw_vertex_t *v0, sw_vertex_t *v1)
     if (!sw_line_clip(v0, v1)) return false;
 
     // Convert clip coordinates to NDC
-    v0->position[3] = 1.0f/v0->position[3];
-    v1->position[3] = 1.0f/v1->position[3];
+    v0->position[3] = sw_rcp(v0->position[3]);
+    v1->position[3] = sw_rcp(v1->position[3]);
     for (int i = 0; i < 3; i++)
     {
         v0->position[i] *= v0->position[3];
@@ -3684,17 +3633,8 @@ static bool sw_line_clip_and_project(sw_vertex_t *v0, sw_vertex_t *v1)
 static void sw_line_render(uint32_t state, sw_vertex_t *vertices)
 {
     if (!sw_line_clip_and_project(&vertices[0], &vertices[1])) return;
-
     state &= SW_RASTER_LINE_STATE_MASK;
-
-    if (RLSW.lineWidth >= 2.0f)
-    {
-        SW_RASTER_LINE_THICK_TABLE[state](&vertices[0], &vertices[1]);
-    }
-    else
-    {
-        SW_RASTER_LINE_TABLE[state](&vertices[0], &vertices[1]);
-    }
+    SW_RASTER_LINE_TABLE[state](&vertices[0], &vertices[1]);
 }
 //-------------------------------------------------------------------------------------------
 
@@ -3709,7 +3649,7 @@ static bool sw_point_clip_and_project(sw_vertex_t *v)
             if ((v->position[i] < -v->position[3]) || (v->position[i] > v->position[3])) return false;
         }
 
-        v->position[3] = 1.0f/v->position[3];
+        v->position[3] = sw_rcp(v->position[3]);
         v->position[0] *= v->position[3];
         v->position[1] *= v->position[3];
         v->position[2] *= v->position[3];
@@ -3744,12 +3684,12 @@ static void sw_point_render(uint32_t state, sw_vertex_t *v)
 
 // Polygon modes rendering logic
 //-------------------------------------------------------------------------------------------
-static inline void sw_poly_point_render(uint32_t state)
+static void sw_poly_point_render(uint32_t state)
 {
     for (int i = 0; i < RLSW.primitive.vertexCount; i++) sw_point_render(state, &RLSW.primitive.buffer[i]);
 }
 
-static inline void sw_poly_line_render(uint32_t state)
+static void sw_poly_line_render(uint32_t state)
 {
     const sw_vertex_t *vertices = RLSW.primitive.buffer;
     int cm1 = RLSW.primitive.vertexCount - 1;
@@ -3764,7 +3704,7 @@ static inline void sw_poly_line_render(uint32_t state)
     sw_line_render(state, verts);
 }
 
-static inline void sw_poly_fill_render(uint32_t state)
+static void sw_poly_fill_render(uint32_t state)
 {
     switch (RLSW.drawMode)
     {
@@ -3781,8 +3721,7 @@ static inline void sw_poly_fill_render(uint32_t state)
 //-------------------------------------------------------------------------------------------
 static void sw_immediate_begin(SWdraw mode)
 {
-    // NOTE: Any checks to ensure command recording can start
-    //       must be performed before calling this function.
+    // NOTE: Any checks to ensure command recording can start must be performed before calling this function
 
     // Recalculate the MVP if this is needed
     if (RLSW.isDirtyMVP)
@@ -3790,6 +3729,19 @@ static void sw_immediate_begin(SWdraw mode)
         sw_matrix_mul_rst(RLSW.matMVP,
             RLSW.stackModelview[RLSW.stackModelviewCounter - 1],
             RLSW.stackProjection[RLSW.stackProjectionCounter - 1]);
+
+#ifdef SW_HAS_ESP_DSP
+        // Pre-transpose to row-major so dspm_mult_4x4x1_f32(matMVP_rm, v, out)
+        // computes M*v directly in the per-vertex hot path; 16 scalar copies
+        // per MVP update vs saving ~20 cycles per vertex transform
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 4; j++)
+            {
+                RLSW.matMVP_rm[4*i + j] = RLSW.matMVP[4*j + i];
+            }
+        }
+#endif
 
         RLSW.isDirtyMVP = false;
     }
@@ -3818,8 +3770,6 @@ static void sw_immediate_set_color(const float color[4])
     RLSW.primitive.color[1] = color[1];
     RLSW.primitive.color[2] = color[2];
     RLSW.primitive.color[3] = color[3];
-
-    RLSW.primitive.hasColorAlpha |= (color[3] < 1.0f);
 }
 
 static void sw_immediate_set_texcoord(const float texcoord[2])
@@ -3842,15 +3792,24 @@ static void sw_immediate_push_vertex(const float position[4])
     sw_vertex_t *vertex = &RLSW.primitive.buffer[RLSW.primitive.vertexCount++];
 
     // Calculate clip coordinates
+#ifdef SW_HAS_ESP_DSP
+    // dspm_mult_4x4x1_f32 declares its inputs non-const; rlsw treats them as
+    // read-only and the cast is safe (the kernel only loads from B)
+    dspm_mult_4x4x1_f32(RLSW.matMVP_rm, (float *)position, vertex->position);
+#else
     const float *m = RLSW.matMVP;
     vertex->position[0] = m[0]*position[0] + m[4]*position[1] + m[8]*position[2] + m[12]*position[3];
     vertex->position[1] = m[1]*position[0] + m[5]*position[1] + m[9]*position[2] + m[13]*position[3];
     vertex->position[2] = m[2]*position[0] + m[6]*position[1] + m[10]*position[2] + m[14]*position[3];
     vertex->position[3] = m[3]*position[0] + m[7]*position[1] + m[11]*position[2] + m[15]*position[3];
+#endif
 
     // Copy the attributes in the current vertex
     for (int i = 0; i < 4; i++) vertex->color[i] = RLSW.primitive.color[i];
     for (int i = 0; i < 2; i++) vertex->texcoord[i] = RLSW.primitive.texcoord[i];
+
+    // Track whether any vertex in this primitive has alpha < 1.0
+    RLSW.primitive.hasColorAlpha |= (vertex->color[3] < 1.0f);
 
     // Immediate rendering of the primitive if the required number is reached
     if (RLSW.primitive.vertexCount == SW_PRIMITIVE_VERTEX_COUNT[RLSW.drawMode])
@@ -3864,6 +3823,18 @@ static void sw_immediate_push_vertex(const float position[4])
             else if ((RLSW.blendFlags & SW_BLEND_FLAG_NEEDS_ALPHA) && (!RLSW.primitive.hasColorAlpha))
             {
                 if (!(state & SW_STATE_TEXTURE_2D) || (RLSW.boundTexture->alpha == SW_PIXEL_ALPHA_NONE)) state &= ~SW_STATE_BLEND;
+            }
+        }
+
+        // Determine whether colors should be interpolated
+        const float *ref = RLSW.primitive.buffer[0].color;
+        for (int i = 1; i < RLSW.primitive.vertexCount; ++i)
+        {
+            const float *c = RLSW.primitive.buffer[i].color;
+            if (c[0] != ref[0] || c[1] != ref[1] || c[2] != ref[2] || c[3] != ref[3])
+            {
+                state |= SW_STATE_COLOR_INTERP;
+                break;
             }
         }
 
@@ -3897,13 +3868,13 @@ bool swInit(int w, int h)
         return false;
     }
 
-    if (!sw_pool_init(&RLSW.framebufferPool, SW_MAX_FRAMEBUFFERS, sizeof(sw_framebuffer_t)))
+    if (!sw_pool_init(&RLSW.framebufferPool, RLSW_MAX_FRAMEBUFFERS, sizeof(sw_framebuffer_t)))
     {
         swClose();
         return false;
     }
 
-    if (!sw_pool_init(&RLSW.texturePool, SW_MAX_TEXTURES, sizeof(sw_texture_t)))
+    if (!sw_pool_init(&RLSW.texturePool, RLSW_MAX_TEXTURES, sizeof(sw_texture_t)))
     {
         swClose();
         return false;
@@ -3950,7 +3921,7 @@ bool swInit(int w, int h)
     RLSW.polyMode = SW_FILL;
     RLSW.cullFace = SW_BACK;
 
-#if SW_USE_COLOR_LUT
+#if RLSW_USE_COLOR_LUT
     for (int i = 0; i < 256; i++) SW_LUT_UINT8_TO_FLOAT[i] = (float)i*SW_INV_255;
 #endif
 
@@ -4062,6 +4033,20 @@ void *swGetColorBuffer(int *width, int *height)
     return RLSW.framebuffer.color.pixels;
 }
 
+void swSwapColorBuffers(void)
+{
+#if RLSW_DOUBLE_BUFFERING
+    sw_texture_t tmp = RLSW.framebuffer.color;
+    RLSW.framebuffer.color = RLSW.framebuffer.backColor;
+    RLSW.framebuffer.backColor = tmp;
+
+    // Only needs to know about current colorBuffer.
+    RLSW.colorBuffer = &RLSW.framebuffer.color;
+#else
+    SW_LOG("WARNING: RLSW: swSwapColorBuffers not enabled (Define RLSW_DOUBLE_BUFFERING=1)\n");
+#endif
+}
+
 void swEnable(SWstate state)
 {
     switch (state)
@@ -4164,6 +4149,7 @@ const char *swGetString(SWget name)
         case SW_RENDERER: result = "RLSW OpenGL Software Renderer"; break;
         case SW_VERSION: result = RLSW_VERSION; break;
         case SW_EXTENSIONS: result = "None"; break;
+        case SW_SHADING_LANGUAGE_VERSION: result = "Not supported"; break;
         default: RLSW.errCode = SW_INVALID_ENUM; break;
     }
 
@@ -4210,8 +4196,8 @@ void swScissor(int x, int y, int width, int height)
 
     RLSW.scClipMin[0] = (2.0f*(float)RLSW.scMin[0]/(float)RLSW.vpSize[0]) - 1.0f;
     RLSW.scClipMax[0] = (2.0f*(float)RLSW.scMax[0]/(float)RLSW.vpSize[0]) - 1.0f;
-    RLSW.scClipMax[1] = 1.0f - (2.0f*(float)RLSW.scMin[1]/(float)RLSW.vpSize[1]);
-    RLSW.scClipMin[1] = 1.0f - (2.0f*(float)RLSW.scMax[1]/(float)RLSW.vpSize[1]);
+    RLSW.scClipMin[1] = (2.0f*(float)RLSW.scMin[1]/(float)RLSW.vpSize[1]) - 1.0f;
+    RLSW.scClipMax[1] = (2.0f*(float)RLSW.scMax[1]/(float)RLSW.vpSize[1]) - 1.0f;
 }
 
 void swClearColor(float r, float g, float b, float a)
@@ -4235,6 +4221,8 @@ void swClear(uint32_t bitmask)
     {
         sw_framebuffer_fill_color(RLSW.colorBuffer, RLSW.clearColor);
     }
+
+    // Don't clear back buffer, it might be locked by another core.
 
     if ((bitmask & (SW_DEPTH_BUFFER_BIT)) && (RLSW.depthBuffer != NULL) && (RLSW.depthBuffer->pixels != NULL))
     {
@@ -4307,7 +4295,7 @@ void swPushMatrix(void)
     {
         case SW_PROJECTION:
         {
-            if (RLSW.stackProjectionCounter >= SW_MAX_PROJECTION_STACK_SIZE)
+            if (RLSW.stackProjectionCounter >= RLSW_MAX_PROJECTION_STACK_SIZE)
             {
                 RLSW.errCode = SW_STACK_OVERFLOW;
                 return;
@@ -4325,7 +4313,7 @@ void swPushMatrix(void)
         } break;
         case SW_MODELVIEW:
         {
-            if (RLSW.stackModelviewCounter >= SW_MAX_MODELVIEW_STACK_SIZE)
+            if (RLSW.stackModelviewCounter >= RLSW_MAX_MODELVIEW_STACK_SIZE)
             {
                 RLSW.errCode = SW_STACK_OVERFLOW;
                 return;
@@ -4343,7 +4331,7 @@ void swPushMatrix(void)
         } break;
         case SW_TEXTURE:
         {
-            if (RLSW.stackTextureCounter >= SW_MAX_TEXTURE_STACK_SIZE)
+            if (RLSW.stackTextureCounter >= RLSW_MAX_TEXTURE_STACK_SIZE)
             {
                 RLSW.errCode = SW_STACK_OVERFLOW;
                 return;
@@ -4943,10 +4931,16 @@ void swTexStorage2D(int width, int height, SWinternalformat format)
         case SW_R32F: pixelFormat = SW_PIXELFORMAT_COLOR_R32; break;
         case SW_RGB32F: pixelFormat = SW_PIXELFORMAT_COLOR_R32G32B32; break;
         case SW_RGBA32F: pixelFormat = SW_PIXELFORMAT_COLOR_R32G32B32A32; break;
-        case SW_DEPTH_COMPONENT16: pixelFormat = SW_PIXELFORMAT_DEPTH_D16; break;
-        case SW_DEPTH_COMPONENT24: pixelFormat = SW_PIXELFORMAT_DEPTH_D32; break;
-        case SW_DEPTH_COMPONENT32: pixelFormat = SW_PIXELFORMAT_DEPTH_D32; break;
-        case SW_DEPTH_COMPONENT32F: pixelFormat = SW_PIXELFORMAT_DEPTH_D32; break;
+        case SW_DEPTH_COMPONENT16:
+        case SW_DEPTH_COMPONENT24:
+        case SW_DEPTH_COMPONENT32:
+        case SW_DEPTH_COMPONENT32F:
+        {
+            pixelFormat = SW_FRAMEBUFFER_DEPTH_FORMAT;
+            int requestedFormat = (format == SW_DEPTH_COMPONENT16)? SW_PIXELFORMAT_DEPTH_D16 : SW_PIXELFORMAT_DEPTH_D32;
+            if (requestedFormat != pixelFormat) SW_LOG("WARNING: RLSW: Coercing depth internalformat %d to framebuffer depth format\n", format);
+            break;
+        }
         default: RLSW.errCode = SW_INVALID_ENUM; return;
     }
 
@@ -5073,11 +5067,25 @@ void swTexParameteri(int param, int value)
         case SW_TEXTURE_WRAP_S:
         {
             if (!sw_is_texture_wrap_valid(value)) { RLSW.errCode = SW_INVALID_ENUM; return; }
+        #if !RLSW_SUPPORT_NPOT_TEXTURE
+            if (value == SW_REPEAT && (RLSW.boundTexture->width & RLSW.boundTexture->wMinus1) != 0)
+            {
+                RLSW.errCode = SW_INVALID_OPERATION;
+                return;
+            }
+        #endif
             RLSW.boundTexture->sWrap = (SWwrap)value;
         } break;
         case SW_TEXTURE_WRAP_T:
         {
             if (!sw_is_texture_wrap_valid(value)) { RLSW.errCode = SW_INVALID_ENUM; return; }
+        #if !RLSW_SUPPORT_NPOT_TEXTURE
+            if (value == SW_REPEAT && (RLSW.boundTexture->height & RLSW.boundTexture->hMinus1) != 0)
+            {
+                RLSW.errCode = SW_INVALID_OPERATION;
+                return;
+            }
+        #endif
             RLSW.boundTexture->tWrap = (SWwrap)value;
         } break;
         default: RLSW.errCode = SW_INVALID_ENUM; break;
@@ -5153,6 +5161,7 @@ void swBindFramebuffer(uint32_t id)
 
     RLSW.boundFramebufferId = id;
     RLSW.colorBuffer = sw_pool_get(&RLSW.texturePool, fb->colorAttachment);
+    // No back buffer available for binding rendertextures.
     RLSW.depthBuffer = sw_pool_get(&RLSW.texturePool, fb->depthAttachment);
 }
 
@@ -5243,197 +5252,222 @@ void swGetFramebufferAttachmentParameteriv(SWattachment attachment, SWattachget 
 
 // Triangle rasterization functions
 //-------------------------------------------------------------------------------------------
-#ifdef RLSW_TEMPLATE_RASTER_TRIANGLE
+#ifdef SW_RASTER_TRIANGLE_STATES
 
-// Options:
-//  - RLSW_TEMPLATE_RASTER_TRIANGLE     -> Contains the suffix name
-//  - SW_ENABLE_DEPTH_TEST
-//  - SW_ENABLE_TEXTURE
-//  - SW_ENABLE_BLEND
+#define SW_RASTER_TRIANGLE_FLAGS SW_FLAGS(SW_RASTER_TRIANGLE_STATES)
+#define SW_RASTER_TRIANGLE_SPAN  SW_CONCATX(sw_raster_triangle_span_, SW_NAME(SW_RASTER_TRIANGLE_STATES))
+#define SW_RASTER_TRIANGLE       SW_CONCATX(sw_raster_triangle_, SW_NAME(SW_RASTER_TRIANGLE_STATES))
+#define SW_SPAN_CTX              SW_CONCATX(sw_span_ctx_, SW_NAME(SW_RASTER_TRIANGLE_STATES))
 
-#define SW_RASTER_TRIANGLE_SPAN SW_CONCATX(sw_raster_triangle_span_, RLSW_TEMPLATE_RASTER_TRIANGLE)
-#define SW_RASTER_TRIANGLE      SW_CONCATX(sw_raster_triangle_, RLSW_TEMPLATE_RASTER_TRIANGLE)
+// True when a perspective-correct interpolation pass is needed (color or UVs);
+// lets SPAN skip all w-tracking and block subdivision otherwise
+#define SW_RASTER_TRIANGLE_NEEDS_PERSPECTIVE \
+    (((SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_COLOR_INTERP) || ((SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_TEXTURE_2D))
 
-#ifdef SW_ENABLE_TEXTURE
-    #define SW_GET_GRAD         sw_get_vertex_grad_PCT
-    #define SW_ADD_GRAD         sw_add_vertex_grad_PCT
-    #define SW_ADD_GRAD_SCALED  sw_add_vertex_grad_scaled_PCT
-#else
-    #define SW_GET_GRAD         sw_get_vertex_grad_PC
-    #define SW_ADD_GRAD         sw_add_vertex_grad_PC
-    #define SW_ADD_GRAD_SCALED  sw_add_vertex_grad_scaled_PC
-#endif
+#define SW_GRAD SW_CONCATX(sw_grad_, SW_NAME(SW_RASTER_TRIANGLE_STATES))
+#define SW_VADD SW_CONCATX(sw_vadd_, SW_NAME(SW_RASTER_TRIANGLE_STATES))
+#define SW_VMAD SW_CONCATX(sw_vmad_, SW_NAME(SW_RASTER_TRIANGLE_STATES))
 
-static void SW_RASTER_TRIANGLE_SPAN(const sw_vertex_t *start, const sw_vertex_t *end, float dUdy, float dVdy)
+// Per-triangle constants reused by every scanline: attribute x-derivatives
+// (constant across a planar triangle) plus whatever is fixed once and for
+// all when its interpolation is disabled (flat color, resolved sampler)
+typedef struct
 {
+#if SW_RASTER_TRIANGLE_NEEDS_PERSPECTIVE
+    float dWdx;
+#endif
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_DEPTH_TEST
+    float dZdx;
+#endif
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_COLOR_INTERP
+    float dCdx[4];
+#else
+    float flatColor[4];
+#endif
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_TEXTURE_2D
+    float dTdx[2];
+    float dTdy[2];
+    sw_texture_sampler_f sample;
+#endif
+} SW_SPAN_CTX;
+
+static SW_INLINE void SW_GRAD(sw_vertex_t *SW_RESTRICT out, const sw_vertex_t *SW_RESTRICT a, const sw_vertex_t *SW_RESTRICT b, float scale)
+{
+    SW_VEC_OP(out->position[i] = (b->position[i] - a->position[i])*scale, i, 4);
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_COLOR_INTERP
+    SW_VEC_OP(out->color[i] = (b->color[i] - a->color[i])*scale, i, 4);
+#endif
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_TEXTURE_2D
+    SW_VEC_OP(out->texcoord[i] = (b->texcoord[i] - a->texcoord[i])*scale, i, 2);
+#endif
+}
+
+static SW_INLINE void SW_VADD(sw_vertex_t *SW_RESTRICT out, const sw_vertex_t *SW_RESTRICT inc)
+{
+    SW_VEC_OP(out->position[i] += inc->position[i], i, 4);
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_COLOR_INTERP
+    SW_VEC_OP(out->color[i] += inc->color[i], i, 4);
+#endif
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_TEXTURE_2D
+    SW_VEC_OP(out->texcoord[i] += inc->texcoord[i], i, 2);
+#endif
+}
+
+static SW_INLINE void SW_VMAD(sw_vertex_t *SW_RESTRICT out, const sw_vertex_t *SW_RESTRICT inc, float scale)
+{
+    SW_VEC_OP(out->position[i] += inc->position[i]*scale, i, 4);
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_COLOR_INTERP
+    SW_VEC_OP(out->color[i] += inc->color[i]*scale, i, 4);
+#endif
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_TEXTURE_2D
+    SW_VEC_OP(out->texcoord[i] += inc->texcoord[i]*scale, i, 2);
+#endif
+}
+
+static void SW_RASTER_TRIANGLE_SPAN(const sw_vertex_t *start, const sw_vertex_t *end, const SW_SPAN_CTX *ctx)
+{
+    // Skip rows outside the framebuffer; can only trigger on FP rounding at
+    // clip boundaries since triangles are already clipped to the viewport
+    int y = (int)start->position[1];
+    if (y < 0 || y >= RLSW.colorBuffer->height) return;
+
     // Gets the start/end coordinates and skip empty lines
     int xStart = (int)start->position[0];
     int xEnd = (int)end->position[0];
     if (xStart == xEnd) return;
 
-    // Compute the inverse horizontal distance along the X axis
-    float dxRcp = 1.0f/(end->position[0] - start->position[0]);
-
-    // Compute the interpolation steps along the X axis
-    float dWdx = (end->position[3] - start->position[3])*dxRcp;
-    float dCdx[4] = {
-        (end->color[0] - start->color[0])*dxRcp,
-        (end->color[1] - start->color[1])*dxRcp,
-        (end->color[2] - start->color[2])*dxRcp,
-        (end->color[3] - start->color[3])*dxRcp
-    };
-#ifdef SW_ENABLE_DEPTH_TEST
-    float dZdx = (end->position[2] - start->position[2])*dxRcp;
-#endif
-#ifdef SW_ENABLE_TEXTURE
-    float dUdx = (end->texcoord[0] - start->texcoord[0])*dxRcp;
-    float dVdx = (end->texcoord[1] - start->texcoord[1])*dxRcp;
-#endif
+    // Intercept the span bounds to ensure to not write before the framebuffer
+    int xLoopStart = (xStart >= 0)? xStart : 0;
+    int xLoopEnd = (xEnd <= RLSW.colorBuffer->width)? xEnd : RLSW.colorBuffer->width;
+    if (xLoopStart >= xLoopEnd) return; // Nothing to draw
 
     // Compute the subpixel distance to traverse before the first pixel
+    // Also step further into them to move away from the colorbuffer edge
     float xSubstep = 1.0f - sw_fract(start->position[0]);
-
-    // Initializing the interpolation starting values
-    float w = start->position[3] + dWdx*xSubstep;
-    float color[4] = {
-        start->color[0] + dCdx[0]*xSubstep,
-        start->color[1] + dCdx[1]*xSubstep,
-        start->color[2] + dCdx[2]*xSubstep,
-        start->color[3] + dCdx[3]*xSubstep
-    };
-#ifdef SW_ENABLE_DEPTH_TEST
-    float z = start->position[2] + dZdx*xSubstep;
-#endif
-#ifdef SW_ENABLE_TEXTURE
-    float u = start->texcoord[0] + dUdx*xSubstep;
-    float v = start->texcoord[1] + dVdx*xSubstep;
-#endif
+    float dxStart = (float)(xLoopStart - xStart);
+    float xOffset = xSubstep + dxStart;
 
     // Pre-calculate the starting pointers for the framebuffer row
-    int y = (int)start->position[1];
-    int baseOffset = y*RLSW.colorBuffer->width + xStart;
+    int baseOffset = y*RLSW.colorBuffer->width + xLoopStart;
     uint8_t *cPtr = (uint8_t *)(RLSW.colorBuffer->pixels) + baseOffset*SW_FRAMEBUFFER_COLOR_SIZE;
-#ifdef SW_ENABLE_DEPTH_TEST
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_DEPTH_TEST
     uint8_t *dPtr = (uint8_t *)(RLSW.depthBuffer->pixels) + baseOffset*SW_FRAMEBUFFER_DEPTH_SIZE;
+#endif
+
+    // Initializing the interpolation starting values
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_DEPTH_TEST
+    float z = start->position[2] + ctx->dZdx*xOffset;
+#endif
+#if SW_RASTER_TRIANGLE_NEEDS_PERSPECTIVE
+    float w = start->position[3] + ctx->dWdx*xOffset;
+#endif
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_COLOR_INTERP
+    float color[4];
+    SW_VEC_OP(color[i] = start->color[i] + ctx->dCdx[i]*xOffset, i, 4);
+#else
+    // Flat: constant across the whole triangle, computed once for the whole span
+    const float *srcColor = ctx->flatColor;
+#endif
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_TEXTURE_2D
+    float texcoord[2];
+    SW_VEC_OP(texcoord[i] = start->texcoord[i] + ctx->dTdx[i]*xOffset, i, 2);
 #endif
 
 #define SW_AFFINE_BLOCK 16
 
-    int x = xStart;
-    while (x < xEnd)
+    int x = xLoopStart;
+    while (x < xLoopEnd)
     {
+    #if SW_RASTER_TRIANGLE_NEEDS_PERSPECTIVE
         // Clamp last block to remaining pixels
         int blockEnd = x + SW_AFFINE_BLOCK;
-        if (blockEnd > xEnd) blockEnd = xEnd;
+        if (blockEnd > xLoopEnd) blockEnd = xLoopEnd;
         float blockLenF = (float)(blockEnd - x);
-        float blockLenRcp = 1.0f/blockLenF;
+        float blockLenRcp = sw_rcp(blockLenF);
 
         // Only 2 '1/w' here; none inside the pixel loop
-        float wRcpA = 1.0f/w;
-        float wB = w + dWdx*blockLenF;
-        float wRcpB = 1.0f/wB;
+        float wRcpA = sw_rcp(w);
+        float wB = w + ctx->dWdx*blockLenF;
+        float wRcpB = sw_rcp(wB);
+    #else
+        // Nothing perspective-correct to interpolate: one block covers the whole span
+        int blockEnd = xLoopEnd;
+    #endif
 
+    #if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_COLOR_INTERP
         // Perspective-correct color at both block endpoints, then affine gradient
-        float srcColor[4] = {
-            color[0]*wRcpA,
-            color[1]*wRcpA,
-            color[2]*wRcpA,
-            color[3]*wRcpA
-        };
-        float dSrcColordx[4] = {
-            ((color[0] + dCdx[0]*blockLenF)*wRcpB - srcColor[0])*blockLenRcp,
-            ((color[1] + dCdx[1]*blockLenF)*wRcpB - srcColor[1])*blockLenRcp,
-            ((color[2] + dCdx[2]*blockLenF)*wRcpB - srcColor[2])*blockLenRcp,
-            ((color[3] + dCdx[3]*blockLenF)*wRcpB - srcColor[3])*blockLenRcp
-        };
+        float srcColor[4], dSrcColor[4];
+        SW_VEC_OP(srcColor[i] = color[i]*wRcpA, i, 4);
+        SW_VEC_OP(dSrcColor[i] = ((color[i] + ctx->dCdx[i]*blockLenF)*wRcpB - srcColor[i])*blockLenRcp, i, 4);
+    #endif
 
-    #ifdef SW_ENABLE_TEXTURE
+    #if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_TEXTURE_2D
         // Perspective-correct UVs at both endpoints, then affine gradient
-        float uAffine  = u*wRcpA;
-        float vAffine  = v*wRcpA;
-        float dUaffine = ((u + dUdx*blockLenF)*wRcpB - uAffine)*blockLenRcp;
-        float dVaffine = ((v + dVdx*blockLenF)*wRcpB - vAffine)*blockLenRcp;
+        float tcAffine[2], dTcAffine[2];
+        SW_VEC_OP(tcAffine[i] = texcoord[i]*wRcpA, i, 2);
+        SW_VEC_OP(dTcAffine[i] = ((texcoord[i] + ctx->dTdx[i]*blockLenF)*wRcpB - tcAffine[i])*blockLenRcp, i, 2);
     #endif
 
         // Inner span pixel loop
         for (; x < blockEnd; x++)
         {
-            #ifdef SW_ENABLE_DEPTH_TEST
+        #if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_DEPTH_TEST
+            float depth = SW_FRAMEBUFFER_DEPTH_GET(dPtr, 0);
+            if (z <= depth)
             {
-                float depth = SW_FRAMEBUFFER_DEPTH_GET(dPtr, 0);
-                if (z > depth) goto discard;
                 SW_FRAMEBUFFER_DEPTH_SET(dPtr, z, 0);
-            }
+        #endif
+
+            #if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_TEXTURE_2D
+                float finalColor[4];
+                ctx->sample(finalColor, RLSW.boundTexture, tcAffine[0], tcAffine[1]);
+                SW_VEC_OP(finalColor[i] *= srcColor[i], i, 4);
+                #define SW_FINAL_COLOR finalColor
+            #else
+                #define SW_FINAL_COLOR srcColor
             #endif
 
-            #ifdef SW_ENABLE_TEXTURE
+            #if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_BLEND
             {
-                float texColor[4];
-                sw_texture_sample(texColor, RLSW.boundTexture, uAffine, vAffine, dUdx, dUdy, dVdx, dVdy);
-                float finalColor[4] = {
-                    srcColor[0]*texColor[0],
-                    srcColor[1]*texColor[1],
-                    srcColor[2]*texColor[2],
-                    srcColor[3]*texColor[3]
-                };
-                #ifdef SW_ENABLE_BLEND
-                {
-                    float dstColor[4];
-                    SW_FRAMEBUFFER_COLOR_GET(dstColor, cPtr, 0);
-                    RLSW.blendFunc(dstColor, finalColor);
-                    SW_FRAMEBUFFER_COLOR_SET(cPtr, dstColor, 0);
-                }
-                #else
-                    SW_FRAMEBUFFER_COLOR_SET(cPtr, finalColor, 0);
-                #endif
+                float dstColor[4];
+                SW_FRAMEBUFFER_COLOR_GET(dstColor, cPtr, 0);
+                RLSW.blendFunc(dstColor, SW_FINAL_COLOR);
+                SW_FRAMEBUFFER_COLOR_SET(cPtr, dstColor, 0);
             }
             #else
-            {
-                #ifdef SW_ENABLE_BLEND
-                {
-                    float dstColor[4];
-                    SW_FRAMEBUFFER_COLOR_GET(dstColor, cPtr, 0);
-                    RLSW.blendFunc(dstColor, srcColor);
-                    SW_FRAMEBUFFER_COLOR_SET(cPtr, dstColor, 0);
-                }
-                #else
-                    SW_FRAMEBUFFER_COLOR_SET(cPtr, srcColor, 0);
-                #endif
-            }
+                SW_FRAMEBUFFER_COLOR_SET(cPtr, SW_FINAL_COLOR, 0);
             #endif
 
-        discard:
-            srcColor[0] += dSrcColordx[0];
-            srcColor[1] += dSrcColordx[1];
-            srcColor[2] += dSrcColordx[2];
-            srcColor[3] += dSrcColordx[3];
+            #undef SW_FINAL_COLOR
+
+        #if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_DEPTH_TEST
+            }
+        #endif
+
+            // Advance unconditionally: depth test only guards the write above
             cPtr += SW_FRAMEBUFFER_COLOR_SIZE;
-
-            #ifdef SW_ENABLE_DEPTH_TEST
-            {
-                z += dZdx;
-                dPtr += SW_FRAMEBUFFER_DEPTH_SIZE;
-            }
-            #endif
-
-            #ifdef SW_ENABLE_TEXTURE
-            {
-                uAffine += dUaffine;
-                vAffine += dVaffine;
-            }
-            #endif
+        #if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_DEPTH_TEST
+            dPtr += SW_FRAMEBUFFER_DEPTH_SIZE;
+            z += ctx->dZdx;
+        #endif
+        #if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_COLOR_INTERP
+            SW_VEC_OP(srcColor[i] += dSrcColor[i], i, 4);
+        #endif
+        #if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_TEXTURE_2D
+            SW_VEC_OP(tcAffine[i] += dTcAffine[i], i, 2);
+        #endif
         }
 
+#if SW_RASTER_TRIANGLE_NEEDS_PERSPECTIVE
         // Advance perspective-space accumulators by the full block width
         w = wB;
-        color[0] += dCdx[0]*blockLenF;
-        color[1] += dCdx[1]*blockLenF;
-        color[2] += dCdx[2]*blockLenF;
-        color[3] += dCdx[3]*blockLenF;
-        #ifdef SW_ENABLE_TEXTURE
-        u += dUdx*blockLenF;
-        v += dVdx*blockLenF;
-        #endif
+    #if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_COLOR_INTERP
+        SW_VEC_OP(color[i] += ctx->dCdx[i]*blockLenF, i, 4);
+    #endif
+    #if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_TEXTURE_2D
+        SW_VEC_OP(texcoord[i] += ctx->dTdx[i]*blockLenF, i, 2);
+    #endif
+#endif
     }
 
 #undef SW_AFFINE_BLOCK
@@ -5446,28 +5480,62 @@ static void SW_RASTER_TRIANGLE(const sw_vertex_t *v0, const sw_vertex_t *v1, con
     if (v1->position[1] > v2->position[1]) { const sw_vertex_t *tmp = v1; v1 = v2; v2 = tmp; }
     if (v0->position[1] > v1->position[1]) { const sw_vertex_t *tmp = v0; v0 = v1; v1 = tmp; }
 
-    // Extracting coordinates from the sorted vertices
-    float x0 = v0->position[0], y0 = v0->position[1];
-    float x1 = v1->position[0], y1 = v1->position[1];
-    float x2 = v2->position[0], y2 = v2->position[1];
+    // Extracting Y coordinates from the sorted vertices
+    float y0 = v0->position[1];
+    float y1 = v1->position[1];
+    float y2 = v2->position[1];
 
     // Compute height differences
     float h02 = y2 - y0;
     float h01 = y1 - y0;
     float h12 = y2 - y1;
 
-    if (h02 < 1e-6f) return;
+    if (h02 < 1e-6f) return; // Degenerate (zero screen height): nothing to rasterize
 
     // Inverse edge dy for per-edge dV/dy (scanline interpolation)
-    float h02Rcp = 1.0f/h02;
-    float h01Rcp = (h01 > 1e-6f)? 1.0f/h01 : 0.0f;
-    float h12Rcp = (h12 > 1e-6f)? 1.0f/h12 : 0.0f;
+    float h02Rcp = sw_rcp(h02);
+    float h01Rcp = (h01 > 1e-6f)? sw_rcp(h01) : 0.0f;
+    float h12Rcp = (h12 > 1e-6f)? sw_rcp(h12) : 0.0f;
+
+    // D = twice the signed screen area; also the shared denominator of the
+    // barycentric plane solve used below for whole-triangle x/y derivatives
+    float e1x = v1->position[0] - v0->position[0];
+    float e2x = v2->position[0] - v0->position[0];
+    float D = e1x*h02 - e2x*h01;
+    if (fabsf(D) < 1e-9f) return; // Degenerate (zero screen area): nothing to rasterize
+    float DRcp = sw_rcp(D);
+
+    // Whole-triangle xy-derivatives of an affine attribute (constant for every scanline)
+    #define SW_DADX(A0, A1, A2) ((((A1)-(A0))*h02 - ((A2)-(A0))*h01)*DRcp)
+    #define SW_DADY(A0, A1, A2) ((((A2)-(A0))*e1x - ((A1)-(A0))*e2x)*DRcp)
+
+    SW_SPAN_CTX ctx;
+#if SW_RASTER_TRIANGLE_NEEDS_PERSPECTIVE
+    ctx.dWdx = SW_DADX(v0->position[3], v1->position[3], v2->position[3]);
+#endif
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_DEPTH_TEST
+    ctx.dZdx = SW_DADX(v0->position[2], v1->position[2], v2->position[2]);
+#endif
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_COLOR_INTERP
+    SW_VEC_OP(ctx.dCdx[i] = SW_DADX(v0->color[i], v1->color[i], v2->color[i]), i, 4);
+#else
+    float flatWRcp = sw_rcp(v0->position[3]);
+    SW_VEC_OP(ctx.flatColor[i] = v0->color[i]*flatWRcp, i, 4);
+#endif
+#if (SW_RASTER_TRIANGLE_FLAGS) & SW_STATE_TEXTURE_2D
+    SW_VEC_OP(ctx.dTdx[i] = SW_DADX(v0->texcoord[i], v1->texcoord[i], v2->texcoord[i]), i, 2);
+    SW_VEC_OP(ctx.dTdy[i] = SW_DADY(v0->texcoord[i], v1->texcoord[i], v2->texcoord[i]), i, 2);
+    ctx.sample = sw_texture_pick_sampler(RLSW.boundTexture, ctx.dTdx, ctx.dTdy);
+#endif
+
+    #undef SW_DADX
+    #undef SW_DADY
 
     // Compute gradients for each side of the triangle
     sw_vertex_t dVXdy02, dVXdy01, dVXdy12;
-    SW_GET_GRAD(&dVXdy02, v0, v2, h02Rcp);
-    SW_GET_GRAD(&dVXdy01, v0, v1, h01Rcp);
-    SW_GET_GRAD(&dVXdy12, v1, v2, h12Rcp);
+    SW_GRAD(&dVXdy02, v0, v2, h02Rcp);
+    SW_GRAD(&dVXdy01, v0, v1, h01Rcp);
+    SW_GRAD(&dVXdy12, v1, v2, h12Rcp);
 
     // Y subpixel correction
     float y0Substep = 1.0f - sw_fract(y0);
@@ -5475,8 +5543,8 @@ static void SW_RASTER_TRIANGLE(const sw_vertex_t *v0, const sw_vertex_t *v1, con
 
     // Get a copy of vertices for interpolation and apply substep correction
     sw_vertex_t lVert = *v0, rVert = *v0;
-    SW_ADD_GRAD_SCALED(&lVert, &dVXdy02, y0Substep);
-    SW_ADD_GRAD_SCALED(&rVert, &dVXdy01, y0Substep);
+    SW_VMAD(&lVert, &dVXdy02, y0Substep);
+    SW_VMAD(&rVert, &dVXdy01, y0Substep);
 
     // Y bounds (vertical clipping)
     int yTop = (int)y0;
@@ -5490,14 +5558,14 @@ static void SW_RASTER_TRIANGLE(const sw_vertex_t *v0, const sw_vertex_t *v1, con
         bool longSideIsLeft = (lVert.position[0] < rVert.position[0]);
         const sw_vertex_t *a = longSideIsLeft? &lVert : &rVert;
         const sw_vertex_t *b = longSideIsLeft? &rVert : &lVert;
-        SW_RASTER_TRIANGLE_SPAN(a, b, dVXdy02.texcoord[0], dVXdy02.texcoord[1]);
-        SW_ADD_GRAD(&lVert, &dVXdy02);
-        SW_ADD_GRAD(&rVert, &dVXdy01);
+        SW_RASTER_TRIANGLE_SPAN(a, b, &ctx);
+        SW_VADD(&lVert, &dVXdy02);
+        SW_VADD(&rVert, &dVXdy01);
     }
 
     // Get a copy of next right for interpolation and apply substep correction
     rVert = *v1;
-    SW_ADD_GRAD_SCALED(&rVert, &dVXdy12, y1Substep);
+    SW_VMAD(&rVert, &dVXdy12, y1Substep);
 
     // Scanline for the lower part of the triangle
     for (int y = yMid; y < yBot; y++)
@@ -5506,30 +5574,21 @@ static void SW_RASTER_TRIANGLE(const sw_vertex_t *v0, const sw_vertex_t *v1, con
         bool longSideIsLeft = (lVert.position[0] < rVert.position[0]);
         const sw_vertex_t *a = longSideIsLeft? &lVert : &rVert;
         const sw_vertex_t *b = longSideIsLeft? &rVert : &lVert;
-        SW_RASTER_TRIANGLE_SPAN(a, b, dVXdy02.texcoord[0], dVXdy02.texcoord[1]);
-        SW_ADD_GRAD(&lVert, &dVXdy02);
-        SW_ADD_GRAD(&rVert, &dVXdy12);
+        SW_RASTER_TRIANGLE_SPAN(a, b, &ctx);
+        SW_VADD(&lVert, &dVXdy02);
+        SW_VADD(&rVert, &dVXdy12);
     }
 }
 
-#undef SW_GET_GRAD
-#undef SW_ADD_GRAD
-#undef SW_ADD_GRAD_SCALED
-
-#endif // RLSW_TEMPLATE_RASTER_TRIANGLE
+#endif // SW_RASTER_TRIANGLE_STATES
 //-------------------------------------------------------------------------------------------
 
 // Quad rasterization functions
 //-------------------------------------------------------------------------------------------
-#ifdef RLSW_TEMPLATE_RASTER_QUAD
+#ifdef SW_RASTER_QUAD_STATES
 
-// Options:
-//  - RLSW_TEMPLATE_RASTER_QUAD     -> Contains the suffix name
-//  - SW_ENABLE_DEPTH_TEST
-//  - SW_ENABLE_TEXTURE
-//  - SW_ENABLE_BLEND
-
-#define SW_RASTER_QUAD SW_CONCATX(sw_raster_quad_, RLSW_TEMPLATE_RASTER_QUAD)
+#define SW_RASTER_QUAD_FLAGS SW_FLAGS(SW_RASTER_QUAD_STATES)
+#define SW_RASTER_QUAD       SW_CONCATX(sw_raster_quad_, SW_NAME(SW_RASTER_QUAD_STATES))
 
 // NOTE: This function should only render affine axis-aligned quads
 //       No perspective divide is applied after interpolation
@@ -5541,14 +5600,18 @@ static void SW_RASTER_QUAD(const sw_vertex_t *a, const sw_vertex_t *b,
     // For axis-aligned quads x+y and x-y uniquely identify each corner
     const sw_vertex_t *verts[4] = { a, b, c, d };
     const sw_vertex_t *tl = verts[0], *tr = verts[0], *br = verts[0], *bl = verts[0];
+    float tlSum = tl->position[0] + tl->position[1];
+    float trDiff = tr->position[0] - tr->position[1];
+    float brSum = br->position[0] + br->position[1];
+    float blDiff = bl->position[0] - bl->position[1];
     for (int i = 1; i < 4; i++)
     {
         float sum  = verts[i]->position[0] + verts[i]->position[1];
         float diff = verts[i]->position[0] - verts[i]->position[1];
-        if (sum  < tl->position[0] + tl->position[1]) tl = verts[i];
-        if (diff > tr->position[0] - tr->position[1]) tr = verts[i];
-        if (sum  > br->position[0] + br->position[1]) br = verts[i];
-        if (diff < bl->position[0] - bl->position[1]) bl = verts[i];
+        if (sum  < tlSum)  { tl = verts[i]; tlSum = sum; }
+        if (diff > trDiff) { tr = verts[i]; trDiff = diff; }
+        if (sum  > brSum)  { br = verts[i]; brSum = sum; }
+        if (diff < blDiff) { bl = verts[i]; blDiff = diff; }
     }
 
     int xMin = (int)tl->position[0];
@@ -5556,168 +5619,167 @@ static void SW_RASTER_QUAD(const sw_vertex_t *a, const sw_vertex_t *b,
     int xMax = (int)br->position[0];
     int yMax = (int)br->position[1];
 
+    // Exit early if no pixels to draw.  Use these later for loop boundaries
+    int yLoopMin = (yMin >= 0)? yMin : 0;
+    int xLoopMin = (xMin >= 0)? xMin : 0;
+    int yLoopMax = (yMax <= RLSW.colorBuffer->height)? yMax : RLSW.colorBuffer->height;
+    int xLoopMax = (xMax <= RLSW.colorBuffer->width)?  xMax : RLSW.colorBuffer->width;
+
+    if (yLoopMin >= yLoopMax || xLoopMin >= xLoopMax) return;
+
     float w = (float)(xMax - xMin);
     float h = (float)(yMax - yMin);
     if ((w <= 0) || (h <= 0)) return;
 
-    float wRcp = 1.0f/w;
-    float hRcp = 1.0f/h;
-
-    // Subpixel corrections
+    // Per-quad setup, independent of pipeline state
+    float wRcp = sw_rcp(w);
+    float hRcp = sw_rcp(h);
     float xSubstep = 1.0f - sw_fract(tl->position[0]);
     float ySubstep = 1.0f - sw_fract(tl->position[1]);
-
-    // Gradients along X (tl->tr) and Y (tl->bl)
-    float dCdx[4] = {
-        (tr->color[0] - tl->color[0])*wRcp,
-        (tr->color[1] - tl->color[1])*wRcp,
-        (tr->color[2] - tl->color[2])*wRcp,
-        (tr->color[3] - tl->color[3])*wRcp,
-    };
-    float dCdy[4] = {
-        (bl->color[0] - tl->color[0])*hRcp,
-        (bl->color[1] - tl->color[1])*hRcp,
-        (bl->color[2] - tl->color[2])*hRcp,
-        (bl->color[3] - tl->color[3])*hRcp,
-    };
-
-#ifdef SW_ENABLE_DEPTH_TEST
-    float dZdx = (tr->position[2] - tl->position[2])*wRcp;
-    float dZdy = (bl->position[2] - tl->position[2])*hRcp;
-    float zRow = tl->position[2] + dZdx*xSubstep + dZdy*ySubstep;
-#endif
-
-#ifdef SW_ENABLE_TEXTURE
-    float dUdx = (tr->texcoord[0] - tl->texcoord[0])*wRcp;
-    float dVdx = (tr->texcoord[1] - tl->texcoord[1])*wRcp;
-    float dUdy = (bl->texcoord[0] - tl->texcoord[0])*hRcp;
-    float dVdy = (bl->texcoord[1] - tl->texcoord[1])*hRcp;
-    float uRow = tl->texcoord[0] + dUdx*xSubstep + dUdy*ySubstep;
-    float vRow = tl->texcoord[1] + dVdx*xSubstep + dVdy*ySubstep;
-#endif
-
-    float cRow[4] = {
-        tl->color[0] + dCdx[0]*xSubstep + dCdy[0]*ySubstep,
-        tl->color[1] + dCdx[1]*xSubstep + dCdy[1]*ySubstep,
-        tl->color[2] + dCdx[2]*xSubstep + dCdy[2]*ySubstep,
-        tl->color[3] + dCdx[3]*xSubstep + dCdy[3]*ySubstep,
-    };
-
+    // Distance the in-bounds boundary is from the quad's edges, only on the left and top
+    float dxMin = (float)(xLoopMin - xMin);
+    float dyMin = (float)(yLoopMin - yMin);
     int stride = RLSW.colorBuffer->width;
     uint8_t *cPixels = RLSW.colorBuffer->pixels;
-#ifdef SW_ENABLE_DEPTH_TEST
+#if (SW_RASTER_QUAD_FLAGS) & SW_STATE_DEPTH_TEST
     uint8_t *dPixels = RLSW.depthBuffer->pixels;
 #endif
 
-    for (int y = yMin; y < yMax; y++)
+#if (SW_RASTER_QUAD_FLAGS) & SW_STATE_DEPTH_TEST
+    // Gradients along X (tl->tr) and Y (tl->bl)
+    float dZdx = (tr->position[2] - tl->position[2])*wRcp;
+    float dZdy = (bl->position[2] - tl->position[2])*hRcp;
+    float zRow = tl->position[2] + dZdx*xSubstep + dZdy*ySubstep;
+    // Correct start by how far it's clipped outside the framebuffer
+    zRow += dZdy*dyMin + dZdx*dxMin;
+#endif
+
+#if (SW_RASTER_QUAD_FLAGS) & SW_STATE_COLOR_INTERP
+    float dCdx[4], dCdy[4], cRow[4];
+    SW_VEC_OP(dCdx[i] = (tr->color[i] - tl->color[i])*wRcp, i, 4);
+    SW_VEC_OP(dCdy[i] = (bl->color[i] - tl->color[i])*hRcp, i, 4);
+    SW_VEC_OP(cRow[i] = tl->color[i] + dCdx[i]*xSubstep + dCdy[i]*ySubstep, i, 4);
+    SW_VEC_OP(cRow[i] += dCdx[i]*dxMin + dCdy[i]*dyMin, i, 4);
+#else
+    const float *flatColor = tl->color;
+#endif
+
+#if (SW_RASTER_QUAD_FLAGS) & SW_STATE_TEXTURE_2D
+    float dTdx[2], dTdy[2], tcRow[2];
+    SW_VEC_OP(dTdx[i] = (tr->texcoord[i] - tl->texcoord[i])*wRcp, i, 2);
+    SW_VEC_OP(dTdy[i] = (bl->texcoord[i] - tl->texcoord[i])*hRcp, i, 2);
+    SW_VEC_OP(tcRow[i] = tl->texcoord[i] + dTdx[i]*xSubstep + dTdy[i]*ySubstep, i, 2);
+    SW_VEC_OP(tcRow[i] += dTdy[i]*dyMin + dTdx[i]*dxMin, i, 2);
+
+    // Constant across the whole quad: resolved once, called directly per pixel
+    sw_texture_sampler_f sample = sw_texture_pick_sampler(RLSW.boundTexture, dTdx, dTdy);
+#endif
+
+    for (int y = yLoopMin; y < yLoopMax; y++)
     {
-        int baseOffset = y*stride + xMin;
+        int baseOffset = y*stride + xLoopMin;
         uint8_t *cPtr = cPixels + baseOffset*SW_FRAMEBUFFER_COLOR_SIZE;
-    #ifdef SW_ENABLE_DEPTH_TEST
+    #if (SW_RASTER_QUAD_FLAGS) & SW_STATE_DEPTH_TEST
         uint8_t *dPtr = dPixels + baseOffset*SW_FRAMEBUFFER_DEPTH_SIZE;
         float z = zRow;
     #endif
-    #ifdef SW_ENABLE_TEXTURE
-        float u = uRow;
-        float v = vRow;
+    #if (SW_RASTER_QUAD_FLAGS) & SW_STATE_TEXTURE_2D
+        float tc[2] = { tcRow[0], tcRow[1] };
     #endif
+    #if (SW_RASTER_QUAD_FLAGS) & SW_STATE_COLOR_INTERP
         float color[4] = { cRow[0], cRow[1], cRow[2], cRow[3] };
+    #endif
 
-        for (int x = xMin; x < xMax; x++)
+        for (int x = xLoopMin; x < xLoopMax; x++)
         {
-            float srcColor[4] = { color[0], color[1], color[2], color[3] };
+        #if (SW_RASTER_QUAD_FLAGS) & SW_STATE_COLOR_INTERP
+            #define SW_QUAD_BASE_COLOR color
+        #else
+            #define SW_QUAD_BASE_COLOR flatColor
+        #endif
 
-            #ifdef SW_ENABLE_DEPTH_TEST
+        #if (SW_RASTER_QUAD_FLAGS) & SW_STATE_TEXTURE_2D
+            // Mutable copy: about to be modulated by the sampled texel below
+            float srcColor[4];
+            SW_VEC_OP(srcColor[i] = SW_QUAD_BASE_COLOR[i], i, 4);
+        #else
+            // Never mutated past this point: alias directly, no copy needed
+            const float *srcColor = SW_QUAD_BASE_COLOR;
+        #endif
+
+        #if (SW_RASTER_QUAD_FLAGS) & SW_STATE_DEPTH_TEST
+            float depth = SW_FRAMEBUFFER_DEPTH_GET(dPtr, 0);
+            if (z <= depth)
             {
-                float depth = SW_FRAMEBUFFER_DEPTH_GET(dPtr, 0);
-                if (z > depth) goto discard;
                 SW_FRAMEBUFFER_DEPTH_SET(dPtr, z, 0);
-            }
-            #endif
+        #endif
 
-            #ifdef SW_ENABLE_TEXTURE
-            {
+            #if (SW_RASTER_QUAD_FLAGS) & SW_STATE_TEXTURE_2D
                 float texColor[4];
-                sw_texture_sample(texColor, RLSW.boundTexture, u, v, dUdx, dUdy, dVdx, dVdy);
-                srcColor[0] *= texColor[0];
-                srcColor[1] *= texColor[1];
-                srcColor[2] *= texColor[2];
-                srcColor[3] *= texColor[3];
-            }
+                sample(texColor, RLSW.boundTexture, tc[0], tc[1]);
+                SW_VEC_OP(srcColor[i] *= texColor[i], i, 4);
             #endif
 
-            #ifdef SW_ENABLE_BLEND
-            {
+            #if (SW_RASTER_QUAD_FLAGS) & SW_STATE_BLEND
                 float dstColor[4];
                 SW_FRAMEBUFFER_COLOR_GET(dstColor, cPtr, 0);
                 RLSW.blendFunc(dstColor, srcColor);
                 SW_FRAMEBUFFER_COLOR_SET(cPtr, dstColor, 0);
-            }
             #else
-            {
                 SW_FRAMEBUFFER_COLOR_SET(cPtr, srcColor, 0);
-            }
             #endif
 
-        discard:
-            color[0] += dCdx[0];
-            color[1] += dCdx[1];
-            color[2] += dCdx[2];
-            color[3] += dCdx[3];
-
-            #ifdef SW_ENABLE_DEPTH_TEST
-            {
-                z += dZdx;
-                dPtr += SW_FRAMEBUFFER_DEPTH_SIZE;
+        #if (SW_RASTER_QUAD_FLAGS) & SW_STATE_DEPTH_TEST
             }
-            #endif
+        #endif
 
-            #ifdef SW_ENABLE_TEXTURE
-            {
-                u += dUdx;
-                v += dVdx;
-            }
-            #endif
+            // Move one pixel over without touching the original "start offset"
+        #if (SW_RASTER_QUAD_FLAGS) & SW_STATE_COLOR_INTERP
+            SW_VEC_OP(color[i] += dCdx[i], i, 4);
+        #endif
+
+        #if (SW_RASTER_QUAD_FLAGS) & SW_STATE_DEPTH_TEST
+            z += dZdx;
+            dPtr += SW_FRAMEBUFFER_DEPTH_SIZE;
+        #endif
+
+        #if (SW_RASTER_QUAD_FLAGS) & SW_STATE_TEXTURE_2D
+            SW_VEC_OP(tc[i] += dTdx[i], i, 2);
+        #endif
 
             cPtr += SW_FRAMEBUFFER_COLOR_SIZE;
         }
 
-        cRow[0] += dCdy[0];
-        cRow[1] += dCdy[1];
-        cRow[2] += dCdy[2];
-        cRow[3] += dCdy[3];
-
-        #ifdef SW_ENABLE_DEPTH_TEST
-        {
-            zRow += dZdy;
-        }
-        #endif
-
-        #ifdef SW_ENABLE_TEXTURE
-        {
-            uRow += dUdy;
-            vRow += dVdy;
-        }
-        #endif
+        // The for loop is clamped to the right side of the screen
+        // However, these cursor start vars are still on the left
+        // That's fine, advancing to the next row
+    #if (SW_RASTER_QUAD_FLAGS) & SW_STATE_DEPTH_TEST
+        zRow += dZdy;
+    #endif
+    #if (SW_RASTER_QUAD_FLAGS) & SW_STATE_COLOR_INTERP
+        SW_VEC_OP(cRow[i] += dCdy[i], i, 4);
+    #endif
+    #if (SW_RASTER_QUAD_FLAGS) & SW_STATE_TEXTURE_2D
+        SW_VEC_OP(tcRow[i] += dTdy[i], i, 2);
+    #endif
     }
+
+#undef SW_QUAD_BASE_COLOR
 }
 
-#endif // RLSW_TEMPLATE_RASTER_QUAD
+#endif // SW_RASTER_QUAD_STATES
 //-------------------------------------------------------------------------------------------
 
-// Quad rasterization functions
+// Line rasterization functions
 //-------------------------------------------------------------------------------------------
-#ifdef RLSW_TEMPLATE_RASTER_LINE
+#ifdef SW_RASTER_LINE_STATES
 
-// Options:
-//  - RLSW_TEMPLATE_RASTER_LINE     -> Contains the suffix name
-//  - SW_ENABLE_DEPTH_TEST
-//  - SW_ENABLE_BLEND
+#define SW_RASTER_LINE_FLAGS SW_FLAGS(SW_RASTER_LINE_STATES)
+#define SW_RASTER_LINE_THIN  SW_CONCATX(sw_raster_line_thin_, SW_NAME(SW_RASTER_LINE_STATES))
+#define SW_RASTER_LINE       SW_CONCATX(sw_raster_line_, SW_NAME(SW_RASTER_LINE_STATES))
 
-#define SW_RASTER_LINE       SW_CONCATX(sw_raster_line_, RLSW_TEMPLATE_RASTER_LINE)
-#define SW_RASTER_LINE_THICK SW_CONCATX(sw_raster_line_thick_, RLSW_TEMPLATE_RASTER_LINE)
-
-static void SW_RASTER_LINE(const sw_vertex_t *v0, const sw_vertex_t *v1)
+// Renders a single-pixel-wide line; internal building block for SW_RASTER_LINE
+static void SW_RASTER_LINE_THIN(const sw_vertex_t *v0, const sw_vertex_t *v1)
 {
     // Convert from pixel-center convention (n+0.5) to pixel-origin convention (n)
     float x0 = v0->position[0] - 0.5f;
@@ -5743,37 +5805,32 @@ static void SW_RASTER_LINE(const sw_vertex_t *v0, const sw_vertex_t *v1)
         substep = (dy >= 0.0f)? (1.0f - sw_fract(y0)) : sw_fract(y0);
     }
 
-    // Compute per pixel increments
-    float xInc = dx/steps;
-    float yInc = dy/steps;
-    float stepRcp = 1.0f/steps;
-#ifdef SW_ENABLE_DEPTH_TEST
-    float zInc = (v1->position[2] - v0->position[2])*stepRcp;
+    // Line setup, independent of pipeline state
+    float stepRcp = sw_rcp(steps);
+    float xInc = dx*stepRcp;
+    float yInc = dy*stepRcp;
+    int numPixels = (int)(steps - substep) + 1;
+    const int fbWidth = RLSW.colorBuffer->width;
+    uint8_t *cPixels = RLSW.colorBuffer->pixels;
+#if (SW_RASTER_LINE_FLAGS) & SW_STATE_DEPTH_TEST
+    uint8_t *dPixels = RLSW.depthBuffer->pixels;
 #endif
-    float rInc = (v1->color[0] - v0->color[0])*stepRcp;
-    float gInc = (v1->color[1] - v0->color[1])*stepRcp;
-    float bInc = (v1->color[2] - v0->color[2])*stepRcp;
-    float aInc = (v1->color[3] - v0->color[3])*stepRcp;
 
     // Initializing the interpolation starting values
     float x = x0 + xInc*substep;
     float y = y0 + yInc*substep;
-#ifdef SW_ENABLE_DEPTH_TEST
+#if (SW_RASTER_LINE_FLAGS) & SW_STATE_DEPTH_TEST
+    float zInc = (v1->position[2] - v0->position[2])*stepRcp;
     float z = v0->position[2] + zInc*substep;
 #endif
-    float r = v0->color[0] + rInc*substep;
-    float g = v0->color[1] + gInc*substep;
-    float b = v0->color[2] + bInc*substep;
-    float a = v0->color[3] + aInc*substep;
-
-    // Start line rasterization
-    const int fbWidth = RLSW.colorBuffer->width;
-    uint8_t *cPixels = RLSW.colorBuffer->pixels;
-#ifdef SW_ENABLE_DEPTH_TEST
-    uint8_t *dPixels = RLSW.depthBuffer->pixels;
+#if (SW_RASTER_LINE_FLAGS) & SW_STATE_COLOR_INTERP
+    float cInc[4], color[4];
+    SW_VEC_OP(cInc[i] = (v1->color[i] - v0->color[i])*stepRcp, i, 4);
+    SW_VEC_OP(color[i] = v0->color[i] + cInc[i]*substep, i, 4);
+#else
+    // Flat: constant across the whole line, computed once for the whole loop
+    const float *srcColor = v0->color;
 #endif
-
-    int numPixels = (int)(steps - substep) + 1;
 
     for (int i = 0; i < numPixels; i++)
     {
@@ -5782,53 +5839,56 @@ static void SW_RASTER_LINE(const sw_vertex_t *v0, const sw_vertex_t *v1)
 
         int baseOffset = py*fbWidth + px;
         uint8_t *cPtr = cPixels + baseOffset*SW_FRAMEBUFFER_COLOR_SIZE;
-    #ifdef SW_ENABLE_DEPTH_TEST
+    #if (SW_RASTER_LINE_FLAGS) & SW_STATE_DEPTH_TEST
         uint8_t *dPtr = dPixels + baseOffset*SW_FRAMEBUFFER_DEPTH_SIZE;
     #endif
 
-        #ifdef SW_ENABLE_DEPTH_TEST
+    #if (SW_RASTER_LINE_FLAGS) & SW_STATE_DEPTH_TEST
+        // TODO: Implement different depth funcs?
+        float depth = SW_FRAMEBUFFER_DEPTH_GET(dPtr, 0);
+        if (z <= depth)
         {
-            // TODO: Implement different depth funcs?
-            float depth = SW_FRAMEBUFFER_DEPTH_GET(dPtr, 0);
-            if (z > depth) goto discard;
-
             // TODO: Implement depth mask
             SW_FRAMEBUFFER_DEPTH_SET(dPtr, z, 0);
-        }
+    #endif
+
+        #if (SW_RASTER_LINE_FLAGS) & SW_STATE_COLOR_INTERP
+            const float *srcColor = color;
         #endif
 
-        float srcColor[4] = {r, g, b, a};
-
-        #ifdef SW_ENABLE_BLEND
-        {
+        #if (SW_RASTER_LINE_FLAGS) & SW_STATE_BLEND
             float dstColor[4];
             SW_FRAMEBUFFER_COLOR_GET(dstColor, cPtr, 0);
             RLSW.blendFunc(dstColor, srcColor);
             SW_FRAMEBUFFER_COLOR_SET(cPtr, dstColor, 0);
-        }
         #else
-        {
             SW_FRAMEBUFFER_COLOR_SET(cPtr, srcColor, 0);
-        }
         #endif
 
-    discard:
+    #if (SW_RASTER_LINE_FLAGS) & SW_STATE_DEPTH_TEST
+        }
+    #endif
+
+        // Advance unconditionally: depth test only guards the write above
         x += xInc;
         y += yInc;
-        #ifdef SW_ENABLE_DEPTH_TEST
-        {
-            z += zInc;
-        }
-        #endif
-        r += rInc;
-        g += gInc;
-        b += bInc;
-        a += aInc;
+    #if (SW_RASTER_LINE_FLAGS) & SW_STATE_DEPTH_TEST
+        z += zInc;
+    #endif
+    #if (SW_RASTER_LINE_FLAGS) & SW_STATE_COLOR_INTERP
+        SW_VEC_OP(color[i] += cInc[i], i, 4);
+    #endif
     }
 }
 
-static void SW_RASTER_LINE_THICK(const sw_vertex_t *v0, const sw_vertex_t *v1)
+static void SW_RASTER_LINE(const sw_vertex_t *v0, const sw_vertex_t *v1)
 {
+    if (RLSW.lineWidth < 2.0f)
+    {
+        SW_RASTER_LINE_THIN(v0, v1);
+        return;
+    }
+
     sw_vertex_t tv0, tv1;
 
     int x0 = (int)v0->position[0];
@@ -5839,7 +5899,7 @@ static void SW_RASTER_LINE_THICK(const sw_vertex_t *v0, const sw_vertex_t *v1)
     int dx = x1 - x0;
     int dy = y1 - y0;
 
-    SW_RASTER_LINE(v0, v1);
+    SW_RASTER_LINE_THIN(v0, v1);
 
     if ((dx != 0) && (abs(dy/dx) < 1))
     {
@@ -5850,11 +5910,11 @@ static void SW_RASTER_LINE_THICK(const sw_vertex_t *v0, const sw_vertex_t *v1)
             tv0 = *v0, tv1 = *v1;
             tv0.position[1] -= i;
             tv1.position[1] -= i;
-            SW_RASTER_LINE(&tv0, &tv1);
+            SW_RASTER_LINE_THIN(&tv0, &tv1);
             tv0 = *v0, tv1 = *v1;
             tv0.position[1] += i;
             tv1.position[1] += i;
-            SW_RASTER_LINE(&tv0, &tv1);
+            SW_RASTER_LINE_THIN(&tv0, &tv1);
         }
     }
     else if (dy != 0)
@@ -5866,35 +5926,31 @@ static void SW_RASTER_LINE_THICK(const sw_vertex_t *v0, const sw_vertex_t *v1)
             tv0 = *v0, tv1 = *v1;
             tv0.position[0] -= i;
             tv1.position[0] -= i;
-            SW_RASTER_LINE(&tv0, &tv1);
+            SW_RASTER_LINE_THIN(&tv0, &tv1);
             tv0 = *v0, tv1 = *v1;
             tv0.position[0] += i;
             tv1.position[0] += i;
-            SW_RASTER_LINE(&tv0, &tv1);
+            SW_RASTER_LINE_THIN(&tv0, &tv1);
         }
     }
 }
 
-#endif // RLSW_TEMPLATE_RASTER_LINE
+#endif // SW_RASTER_LINE_STATES
 //-------------------------------------------------------------------------------------------
 
 // Point rasterization functions
 //-------------------------------------------------------------------------------------------
-#ifdef RLSW_TEMPLATE_RASTER_POINT
+#ifdef SW_RASTER_POINT_STATES
 
-// Options:
-//  - RLSW_TEMPLATE_RASTER_POINT    -> Contains the suffix name
-//  - SW_ENABLE_DEPTH_TEST
-//  - SW_ENABLE_BLEND
-
-#define SW_RASTER_POINT_PIXEL SW_CONCATX(sw_raster_point_pixel_, RLSW_TEMPLATE_RASTER_POINT)
-#define SW_RASTER_POINT       SW_CONCATX(sw_raster_point_, RLSW_TEMPLATE_RASTER_POINT)
+#define SW_RASTER_POINT_FLAGS SW_FLAGS(SW_RASTER_POINT_STATES)
+#define SW_RASTER_POINT_PIXEL SW_CONCATX(sw_raster_point_pixel_, SW_NAME(SW_RASTER_POINT_STATES))
+#define SW_RASTER_POINT       SW_CONCATX(sw_raster_point_, SW_NAME(SW_RASTER_POINT_STATES))
 
 static void SW_RASTER_POINT_PIXEL(int x, int y, float z, const float color[4])
 {
     int offset = y*RLSW.colorBuffer->width + x;
 
-    #ifdef SW_ENABLE_DEPTH_TEST
+    #if (SW_RASTER_POINT_FLAGS) & SW_STATE_DEPTH_TEST
     {
         uint8_t *dPtr = (uint8_t *)(RLSW.depthBuffer->pixels) + offset*SW_FRAMEBUFFER_DEPTH_SIZE;
 
@@ -5909,7 +5965,7 @@ static void SW_RASTER_POINT_PIXEL(int x, int y, float z, const float color[4])
 
     uint8_t *cPtr = (uint8_t *)(RLSW.colorBuffer->pixels) + offset*SW_FRAMEBUFFER_COLOR_SIZE;
 
-    #ifdef SW_ENABLE_BLEND
+    #if (SW_RASTER_POINT_FLAGS) & SW_STATE_BLEND
     {
         float dstColor[4];
         SW_FRAMEBUFFER_COLOR_GET(dstColor, cPtr, 0);
@@ -5940,5 +5996,5 @@ static void SW_RASTER_POINT(const sw_vertex_t *v)
     }
 }
 
-#endif // RLSW_TEMPLATE_RASTER_POINT
+#endif // SW_RASTER_POINT_STATES
 //-------------------------------------------------------------------------------------------

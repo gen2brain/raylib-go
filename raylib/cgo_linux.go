@@ -4,39 +4,70 @@
 package rl
 
 /*
-#include "external/glfw/src/context.c"
+#if (_POSIX_C_SOURCE < 199309L)
+#undef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 199309L
+#endif
+#if !defined(_GNU_SOURCE)
+#define _GNU_SOURCE
+#endif
+#include <features.h>
+#if defined(__GLIBC__)
+#undef __GLIBC_USE_C2X_STRTOL
+#define __GLIBC_USE_C2X_STRTOL 0
+#undef __GLIBC_USE_C23_STRTOL
+#define __GLIBC_USE_C23_STRTOL 0
+#endif
+
 #include "external/glfw/src/init.c"
-#include "external/glfw/src/input.c"
-#include "external/glfw/src/monitor.c"
 #include "external/glfw/src/platform.c"
-#include "external/glfw/src/vulkan.c"
+#include "external/glfw/src/context.c"
+#include "external/glfw/src/monitor.c"
 #include "external/glfw/src/window.c"
-
-#if defined _GLFW_WAYLAND
-#include "external/glfw/src/wl_init.c"
-#include "external/glfw/src/wl_monitor.c"
-#include "external/glfw/src/wl_window.c"
-#endif
-
-#if defined _GLFW_X11
-#include "external/glfw/src/x11_init.c"
-#include "external/glfw/src/x11_monitor.c"
-#include "external/glfw/src/x11_window.c"
-#include "external/glfw/src/glx_context.c"
-#endif
-
-#include "external/glfw/src/linux_joystick.c"
-#include "external/glfw/src/posix_module.c"
-#include "external/glfw/src/posix_poll.c"
-#include "external/glfw/src/posix_thread.c"
-#include "external/glfw/src/posix_time.c"
-#include "external/glfw/src/xkb_unicode.c"
+#include "external/glfw/src/input.c"
+#include "external/glfw/src/vulkan.c"
 #include "external/glfw/src/egl_context.c"
 #include "external/glfw/src/osmesa_context.c"
 
 GLFWbool _glfwConnectNull(int platformID, _GLFWplatform* platform) {
-	return GLFW_TRUE;
+	return GLFW_FALSE;
 }
+
+#include "external/glfw/src/posix_module.c"
+#include "external/glfw/src/posix_thread.c"
+#include "external/glfw/src/posix_time.c"
+#include "external/glfw/src/posix_poll.c"
+#include "external/glfw/src/linux_joystick.c"
+#include "external/glfw/src/xkb_unicode.c"
+
+#if defined(_GLFW_WAYLAND)
+#define createKeyTables createKeyTablesWayland
+#define translateKey translateKeyWayland
+#define acquireMonitor acquireMonitorWayland
+#define releaseMonitor releaseMonitorWayland
+#include "external/glfw/src/wl_init.c"
+#include "external/glfw/src/wl_monitor.c"
+#include "external/glfw/src/wl_window.c"
+#undef createKeyTables
+#undef translateKey
+#undef acquireMonitor
+#undef releaseMonitor
+#endif
+
+#if defined(_GLFW_X11)
+#define createKeyTables createKeyTablesX11
+#define translateKey translateKeyX11
+#define acquireMonitor acquireMonitorX11
+#define releaseMonitor releaseMonitorX11
+#include "external/glfw/src/x11_init.c"
+#include "external/glfw/src/x11_monitor.c"
+#include "external/glfw/src/x11_window.c"
+#include "external/glfw/src/glx_context.c"
+#undef createKeyTables
+#undef translateKey
+#undef acquireMonitor
+#undef releaseMonitor
+#endif
 
 #cgo linux CFLAGS: -Iexternal/glfw/include -DPLATFORM_DESKTOP -Wno-stringop-overflow
 #cgo linux LDFLAGS: -lm -pthread -ldl -lrt -lxkbcommon

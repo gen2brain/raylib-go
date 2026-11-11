@@ -190,7 +190,7 @@ func main() {
 		if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
 			// TODO : Missing function, see issue https://github.com/gen2brain/raylib-go/issues/457
 			//ray := rl.GetScreenToWorldRay(rl.GetMousePosition(), camera)
-			ray := rl.GetMouseRay(rl.GetMousePosition(), camera)
+			ray := rl.GetScreenToWorldRay(rl.GetMousePosition(), camera)
 
 			// Check collision between ray and box
 			v1 := rl.Vector3{

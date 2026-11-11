@@ -830,7 +830,7 @@ type Mesh struct {
 	// Vertex indices (in case vertex data comes indexed)
 	Indices *uint16
 	// Number of bones (MAX: 256 bones)
-	BoneCount int32
+	BoneCount uint32
 	// Vertex bone indices, up to 4 bones influence by vertex (skinning) (shader-location = 6)
 	BoneIndices *uint8
 	// Vertex bone weight, up to 4 bones influence by vertex (skinning) (shader-location = 7)
@@ -939,7 +939,7 @@ type ModelAnimPose = *Transform
 // ModelSkeleton, animation bones hierarchy
 type ModelSkeleton struct {
 	// Number of bones
-	BoneCount int32
+	BoneCount uint32
 	// Bones information (skeleton) (c array)
 	//
 	// Use ModelSkeleton.GetBones instead (go slice)
@@ -978,7 +978,7 @@ type ModelAnimation struct {
 	// Animation name
 	Name [32]uint8
 	// Number of bones (per pose)
-	BoneCount int32
+	BoneCount uint32
 	// Number of animation key frames
 	KeyframeCount int32
 	// Animation sequence keyframe poses [keyframe][pose]

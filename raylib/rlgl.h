@@ -56,8 +56,8 @@
 *       #define RL_CULL_DISTANCE_NEAR              0.05    // Default projection matrix near cull distance
 *       #define RL_CULL_DISTANCE_FAR             4000.0    // Default projection matrix far cull distance
 *
-*       When loading a shader, the following vertex attributes and uniform
-*       location names are tried to be set automatically:
+*       When loading a shader, the following vertex attributes and uniform location names are tried to be set automatically:
+*       WARNING: Pre-defined names can not be changed, they are used by default shaders and all raylib examples shaders, they are just listed here for reference
 *
 *       #define RL_DEFAULT_SHADER_ATTRIB_NAME_POSITION     "vertexPosition"    // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_POSITION
 *       #define RL_DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD     "vertexTexCoord"    // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD
@@ -67,6 +67,8 @@
 *       #define RL_DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD2    "vertexTexCoord2"   // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD2
 *       #define RL_DEFAULT_SHADER_ATTRIB_NAME_BONEINDICES  "vertexBoneIndices" // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_BONEINDICES
 *       #define RL_DEFAULT_SHADER_ATTRIB_NAME_BONEWEIGHTS  "vertexBoneWeights" // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_BONEWEIGHTS
+*       #define RL_DEFAULT_SHADER_ATTRIB_NAME_INSTANCETRANSFORM "instanceTransform" // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_INSTANCETRANSFORM
+*
 *       #define RL_DEFAULT_SHADER_UNIFORM_NAME_MVP         "mvp"               // model-view-projection matrix
 *       #define RL_DEFAULT_SHADER_UNIFORM_NAME_VIEW        "matView"           // view matrix
 *       #define RL_DEFAULT_SHADER_UNIFORM_NAME_PROJECTION  "matProjection"     // projection matrix
@@ -74,6 +76,7 @@
 *       #define RL_DEFAULT_SHADER_UNIFORM_NAME_NORMAL      "matNormal"         // normal matrix (transpose(inverse(matModelView)))
 *       #define RL_DEFAULT_SHADER_UNIFORM_NAME_COLOR       "colDiffuse"        // color diffuse (base tint color, multiplied by texture color)
 *       #define RL_DEFAULT_SHADER_UNIFORM_NAME_BONEMATRICES "boneMatrices"     // bone matrices
+*
 *       #define RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE0  "texture0"          // texture0 (texture slot active 0)
 *       #define RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE1  "texture1"          // texture1 (texture slot active 1)
 *       #define RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE2  "texture2"          // texture2 (texture slot active 2)
@@ -324,6 +327,7 @@
 #define RL_DRAW_FRAMEBUFFER                     0x8CA9      // GL_DRAW_FRAMEBUFFER
 
 // Default shader vertex attribute locations
+// NOTE: Locations can be redefined by user if required
 #ifndef RL_DEFAULT_SHADER_ATTRIB_LOCATION_POSITION
     #define RL_DEFAULT_SHADER_ATTRIB_LOCATION_POSITION    0
 #endif
@@ -358,11 +362,13 @@
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
 //----------------------------------------------------------------------------------
+#if !defined(__cplusplus)
 #if (defined(__STDC__) && __STDC_VERSION__ >= 199901L) || (defined(_MSC_VER) && _MSC_VER >= 1800)
     #include <stdbool.h>
-#elif !defined(__cplusplus) && !defined(bool) && !defined(RL_BOOL_TYPE)
-    // Boolean type
-typedef enum bool { false = 0, true = !false } bool;
+#elif !defined(bool)
+    typedef enum bool { false = 0, true = !false } bool;
+    #define RL_BOOL_TYPE
+#endif
 #endif
 
 #if !defined(RL_MATRIX_TYPE)
@@ -841,11 +847,11 @@ RLAPI void rlLoadDrawQuad(void);     // Load and draw a quad
         #define SW_CALLOC(n,sz) RL_CALLOC(n, sz)
         #define SW_REALLOC(ptr, newSz) RL_REALLOC(ptr, newSz)
         #define SW_FREE(ptr) RL_FREE(ptr)
-        #include "external/rlsw.h"          // OpenGL 1.1 software implementation
+        #include "external/rlsw.h"      // OpenGL 1.1 software implementation
     #else
         #if defined(__APPLE__)
-            #include <OpenGL/gl.h>          // OpenGL 1.1 library for OSX
-            #include <OpenGL/glext.h>       // OpenGL extensions library
+            #include <OpenGL/gl.h>      // OpenGL 1.1 library for OSX
+            #include <OpenGL/glext.h>   // OpenGL extensions library
         #else
             // APIENTRY for OpenGL function pointer declarations is required
             #if !defined(APIENTRY)
@@ -860,7 +866,7 @@ RLAPI void rlLoadDrawQuad(void);     // Load and draw a quad
                 #define WINGDIAPI __declspec(dllimport)
             #endif
 
-            #include <GL/gl.h>              // OpenGL 1.1 library
+            #include <GL/gl.h>          // OpenGL 1.1 library
         #endif
     #endif
 #endif
@@ -880,7 +886,7 @@ RLAPI void rlLoadDrawQuad(void);     // Load and draw a quad
 #elif defined(GRAPHICS_API_OPENGL_ES2)
     // NOTE: OpenGL ES 2.0 can be enabled on Desktop platforms,
     // in that case, functions are loaded from a custom glad for OpenGL ES 2.0
-    // TODO: OpenGL ES 2.0 support shouldn't be platform-dependent, neither require GLAD
+    // TODO: rlgl OpenGL ES 2.0 selection shouldn't depend on raylib platform macros, a specific GLAD shouldn't be neither required
     #if defined(PLATFORM_DESKTOP_GLFW) || defined(PLATFORM_DESKTOP_SDL)
         #define GLAD_GLES2_IMPLEMENTATION
         #include "external/glad_gles2.h"
@@ -894,16 +900,17 @@ RLAPI void rlLoadDrawQuad(void);     // Load and draw a quad
     // It seems OpenGL ES 2.0 instancing entry points are not defined on Raspberry Pi
     // provided headers (despite being defined in official Khronos GLES2 headers)
     // TODO: Avoid raylib platform-dependent code on rlgl, it should be a completely portable library
-    #if defined(PLATFORM_DRM)
+    #if defined(PLATFORM_DRM)           // Use CONFIG_DRM?
     typedef void (GL_APIENTRYP PFNGLDRAWARRAYSINSTANCEDEXTPROC) (GLenum mode, GLint start, GLsizei count, GLsizei primcount);
     typedef void (GL_APIENTRYP PFNGLDRAWELEMENTSINSTANCEDEXTPROC) (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount);
     typedef void (GL_APIENTRYP PFNGLVERTEXATTRIBDIVISOREXTPROC) (GLuint index, GLuint divisor);
     #endif
 #endif
 
-#include <stdlib.h>                     // Required for: calloc(), free()
-#include <string.h>                     // Required for: strcmp(), strlen() [Used in rlglInit(), on extensions loading]
-#include <math.h>                       // Required for: sqrtf(), sinf(), cosf(), floor(), log()
+#include <stdlib.h>             // Required for: calloc(), free()
+#include <string.h>             // Required for: strcmp(), strlen() [Used in rlglInit(), on extensions loading]
+#include <math.h>               // Required for: sqrtf(), sinf(), cosf(), floor(), log()
+#include <limits.h>             // Required for: INT_MAX
 
 //----------------------------------------------------------------------------------
 // Defines and Macros
@@ -987,69 +994,33 @@ RLAPI void rlLoadDrawQuad(void);     // Load and draw a quad
     #if !defined(GRAPHICS_API_OPENGL_ES3)
         #define GL_READ_FRAMEBUFFER         GL_FRAMEBUFFER
         #define GL_DRAW_FRAMEBUFFER         GL_FRAMEBUFFER
+        #define GL_DRAW_FRAMEBUFFER_BINDING GL_FRAMEBUFFER_BINDING
     #endif
 #endif
 
 // Default shader vertex attribute names to set location points
-#ifndef RL_DEFAULT_SHADER_ATTRIB_NAME_POSITION
-    #define RL_DEFAULT_SHADER_ATTRIB_NAME_POSITION     "vertexPosition"    // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_POSITION
-#endif
-#ifndef RL_DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD
-    #define RL_DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD     "vertexTexCoord"    // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD
-#endif
-#ifndef RL_DEFAULT_SHADER_ATTRIB_NAME_NORMAL
-    #define RL_DEFAULT_SHADER_ATTRIB_NAME_NORMAL       "vertexNormal"      // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_NORMAL
-#endif
-#ifndef RL_DEFAULT_SHADER_ATTRIB_NAME_COLOR
-    #define RL_DEFAULT_SHADER_ATTRIB_NAME_COLOR        "vertexColor"       // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_COLOR
-#endif
-#ifndef RL_DEFAULT_SHADER_ATTRIB_NAME_TANGENT
-    #define RL_DEFAULT_SHADER_ATTRIB_NAME_TANGENT      "vertexTangent"     // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_TANGENT
-#endif
-#ifndef RL_DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD2
-    #define RL_DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD2    "vertexTexCoord2"   // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD2
-#endif
-#ifndef RL_DEFAULT_SHADER_ATTRIB_NAME_BONEINDICES
-    #define RL_DEFAULT_SHADER_ATTRIB_NAME_BONEINDICES  "vertexBoneIndices" // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_BONEINDICES
-#endif
-#ifndef RL_DEFAULT_SHADER_ATTRIB_NAME_BONEWEIGHTS
-    #define RL_DEFAULT_SHADER_ATTRIB_NAME_BONEWEIGHTS  "vertexBoneWeights" // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_BONEWEIGHTS
-#endif
+// WARNING: Pre-defined names can not be changed, they are used by default shaders and all raylib examples shaders, they are just listed here for reference
+#define RL_DEFAULT_SHADER_ATTRIB_NAME_POSITION          "vertexPosition"    // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_POSITION
+#define RL_DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD          "vertexTexCoord"    // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD
+#define RL_DEFAULT_SHADER_ATTRIB_NAME_NORMAL            "vertexNormal"      // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_NORMAL
+#define RL_DEFAULT_SHADER_ATTRIB_NAME_COLOR             "vertexColor"       // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_COLOR
+#define RL_DEFAULT_SHADER_ATTRIB_NAME_TANGENT           "vertexTangent"     // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_TANGENT
+#define RL_DEFAULT_SHADER_ATTRIB_NAME_TEXCOORD2         "vertexTexCoord2"   // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD2
+#define RL_DEFAULT_SHADER_ATTRIB_NAME_BONEINDICES       "vertexBoneIndices" // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_BONEINDICES
+#define RL_DEFAULT_SHADER_ATTRIB_NAME_BONEWEIGHTS       "vertexBoneWeights" // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_BONEWEIGHTS
+#define RL_DEFAULT_SHADER_ATTRIB_NAME_INSTANCETRANSFORM "instanceTransform" // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_INSTANCETRANSFORM
 
-#ifndef RL_DEFAULT_SHADER_ATTRIB_NAME_INSTANCETRANSFORM
-    #define RL_DEFAULT_SHADER_ATTRIB_NAME_INSTANCETRANSFORM "instanceTransform" // Bound by default to shader location: RL_DEFAULT_SHADER_ATTRIB_LOCATION_INSTANCETRANSFORM
-#endif
+#define RL_DEFAULT_SHADER_UNIFORM_NAME_MVP              "mvp"               // model-view-projection matrix
+#define RL_DEFAULT_SHADER_UNIFORM_NAME_VIEW             "matView"           // view matrix
+#define RL_DEFAULT_SHADER_UNIFORM_NAME_PROJECTION       "matProjection"     // projection matrix
+#define RL_DEFAULT_SHADER_UNIFORM_NAME_MODEL            "matModel"          // model matrix
+#define RL_DEFAULT_SHADER_UNIFORM_NAME_NORMAL           "matNormal"         // normal matrix (transpose(inverse(matModelView))
+#define RL_DEFAULT_SHADER_UNIFORM_NAME_COLOR            "colDiffuse"        // color diffuse (base tint color, multiplied by texture color)
+#define RL_DEFAULT_SHADER_UNIFORM_NAME_BONEMATRICES     "boneMatrices"      // bone matrices (required for GPU skinning)
 
-#ifndef RL_DEFAULT_SHADER_UNIFORM_NAME_MVP
-    #define RL_DEFAULT_SHADER_UNIFORM_NAME_MVP         "mvp"               // model-view-projection matrix
-#endif
-#ifndef RL_DEFAULT_SHADER_UNIFORM_NAME_VIEW
-    #define RL_DEFAULT_SHADER_UNIFORM_NAME_VIEW        "matView"           // view matrix
-#endif
-#ifndef RL_DEFAULT_SHADER_UNIFORM_NAME_PROJECTION
-    #define RL_DEFAULT_SHADER_UNIFORM_NAME_PROJECTION  "matProjection"     // projection matrix
-#endif
-#ifndef RL_DEFAULT_SHADER_UNIFORM_NAME_MODEL
-    #define RL_DEFAULT_SHADER_UNIFORM_NAME_MODEL       "matModel"          // model matrix
-#endif
-#ifndef RL_DEFAULT_SHADER_UNIFORM_NAME_NORMAL
-    #define RL_DEFAULT_SHADER_UNIFORM_NAME_NORMAL      "matNormal"         // normal matrix (transpose(inverse(matModelView))
-#endif
-#ifndef RL_DEFAULT_SHADER_UNIFORM_NAME_COLOR
-    #define RL_DEFAULT_SHADER_UNIFORM_NAME_COLOR       "colDiffuse"        // color diffuse (base tint color, multiplied by texture color)
-#endif
-#ifndef RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE0
-    #define RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE0  "texture0"          // texture0 (texture slot active 0)
-#endif
-#ifndef RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE1
-    #define RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE1  "texture1"          // texture1 (texture slot active 1)
-#endif
-#ifndef RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE2
-    #define RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE2  "texture2"          // texture2 (texture slot active 2)
-#endif
-#ifndef RL_DEFAULT_SHADER_UNIFORM_NAME_BONEMATRICES
-    #define RL_DEFAULT_SHADER_UNIFORM_NAME_BONEMATRICES "boneMatrices"     // bone matrices (required for GPU skinning)
-#endif
+#define RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE0       "texture0"          // texture0 (texture slot active 0)
+#define RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE1       "texture1"          // texture1 (texture slot active 1)
+#define RL_DEFAULT_SHADER_SAMPLER2D_NAME_TEXTURE2       "texture2"          // texture2 (texture slot active 2)
 
 //----------------------------------------------------------------------------------
 // Module Types and Structures Definition
@@ -1235,7 +1206,11 @@ void rlMatrixMode(int mode)
 // Push the current matrix into RLGL.State.stack
 void rlPushMatrix(void)
 {
-    if (RLGL.State.stackCounter >= RL_MAX_MATRIX_STACK_SIZE) TRACELOG(RL_LOG_ERROR, "RLGL: Matrix stack overflow (RL_MAX_MATRIX_STACK_SIZE)");
+    if (RLGL.State.stackCounter >= RL_MAX_MATRIX_STACK_SIZE)
+    {
+        TRACELOG(RL_LOG_ERROR, "RLGL: Matrix stack overflow (RL_MAX_MATRIX_STACK_SIZE)");
+        return;
+    }
 
     if (RLGL.State.currentMatrixMode == RL_MODELVIEW)
     {
@@ -1873,7 +1848,7 @@ void rlEnableFramebuffer(unsigned int id)
 unsigned int rlGetActiveFramebuffer(void)
 {
     GLint fboId = 0;
-#if (defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES3) || defined(GRAPHICS_API_OPENGL_SOFTWARE))
+#if (defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2) || defined(GRAPHICS_API_OPENGL_SOFTWARE))
     glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &fboId);
 #endif
     return fboId;
@@ -2403,7 +2378,7 @@ void rlglClose(void)
 // NOTE: External loader function must be provided
 void rlLoadExtensions(void *loader)
 {
-#if defined(GRAPHICS_API_OPENGL_33)     // Also defined for GRAPHICS_API_OPENGL_21
+#if defined(GRAPHICS_API_OPENGL_33) // Also defined for GRAPHICS_API_OPENGL_21
     // NOTE: glad is generated and contains only required OpenGL 3.3 Core extensions (and lower versions)
     if (gladLoadGL((GLADloadfunc)loader) == 0) TRACELOG(RL_LOG_WARNING, "GLAD: Cannot load OpenGL extensions");
     else TRACELOG(RL_LOG_INFO, "GLAD: OpenGL extensions loaded successfully");
@@ -2496,7 +2471,7 @@ void rlLoadExtensions(void *loader)
     // NOTE: String duplication rquired because glGetString() returns a const string
     int extensionsLength = (int)strlen(extensions); // Get extensions string size in bytes
     char *extensionsDup = (char *)RL_CALLOC(extensionsLength + 1, sizeof(char)); // Allocate space for copy with additional EOL byte
-    strncpy(extensionsDup, extensions, extensionsLength);
+    snprintf(extensionsDup, extensionsLength, "%s", extensions);
     extList[numExt] = extensionsDup;
 
     for (int i = 0; i < extensionsLength; i++)
@@ -2534,7 +2509,7 @@ void rlLoadExtensions(void *loader)
         }
 
         // Check instanced rendering support
-        if (strstr(extList[i], (const char *)"instanced_arrays") != NULL)   // Broad check for instanced_arrays
+        if (strstr(extList[i], (const char *)"instanced_arrays") != NULL) // Broad check for instanced_arrays
         {
             // Specific check
             if (strcmp(extList[i], (const char *)"GL_ANGLE_instanced_arrays") == 0)      // ANGLE
@@ -2991,8 +2966,9 @@ void rlDrawRenderBatch(rlRenderBatch *batch)
         // Activate elements VAO
         if (RLGL.ExtSupported.vao) glBindVertexArray(batch->vertexBuffer[batch->currentBuffer].vaoId);
 
-        // TODO: If no data changed on the CPU arrays there is no need to re-upload data to GPU,
-        // a flag can be used to detect changes but it would imply keeping a copy buffer and memcmp() both, does it worth it?
+        // NOTE: If no data changed on the CPU arrays there is no need to re-upload data to GPU,
+        // a flag can be used to detect changes but it would imply keeping a copy buffer and memcmp() both
+        // It was tested and the gain seemed to be minimal or nothing at all, probably driver already takes care of that
 
         // Vertex positions buffer
         glBindBuffer(GL_ARRAY_BUFFER, batch->vertexBuffer[batch->currentBuffer].vboId[0]);
@@ -3016,7 +2992,7 @@ void rlDrawRenderBatch(rlRenderBatch *batch)
 
         // NOTE: glMapBuffer() causes sync issue
         // If GPU is working with this buffer, glMapBuffer() will wait(stall) until GPU to finish its job
-        // To avoid waiting (idle), glBufferData() can bee called first with NULL pointer before glMapBuffer()
+        // To avoid waiting (idle), glBufferData() can be called first with NULL pointer before glMapBuffer()
         // Doing that, the previous data in PBO will be discarded and glMapBuffer() returns a new
         // allocated pointer immediately even if GPU is still working with the previous data
 
@@ -3265,7 +3241,6 @@ unsigned int rlLoadTexture(const void *data, int width, int height, int format, 
 #if defined(GRAPHICS_API_OPENGL_11)
     if (format >= RL_PIXELFORMAT_COMPRESSED_DXT1_RGB)
     {
-        // TODO: Support texture data decompression
         TRACELOG(RL_LOG_WARNING, "GL: OpenGL 1.1 does not support GPU compressed texture formats");
         return id;
     }
@@ -3366,8 +3341,15 @@ unsigned int rlLoadTexture(const void *data, int width, int height, int format, 
     // Texture parameters configuration
     // NOTE: glTexParameteri does NOT affect texture uploading
 #if defined(GRAPHICS_API_OPENGL_ES2)
+
+    // Check if texture is power-of-two (POT)
+    bool texIsPOT = false;
+
+    if (((width > 0) && ((width & (width - 1)) == 0)) &&
+        ((height > 0) && ((height & (height - 1)) == 0))) texIsPOT = true;
+
     // NOTE: OpenGL ES 2.0 with no GL_OES_texture_npot support (i.e. WebGL) has limited NPOT support, so CLAMP_TO_EDGE must be used
-    if (RLGL.ExtSupported.texNPOT)
+    if ((texIsPOT) || (RLGL.ExtSupported.texNPOT))
     {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);       // Set texture to repeat on x-axis
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);       // Set texture to repeat on y-axis
@@ -3535,8 +3517,8 @@ unsigned int rlLoadTextureCubemap(const void *data, int size, int format, int mi
             }
             else
             {
-                if (format < RL_PIXELFORMAT_COMPRESSED_DXT1_RGB) glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, mipmapLevel, glInternalFormat, mipSize, mipSize, 0, glFormat, glType, (unsigned char *)dataPtr + face*dataSize);
-                else glCompressedTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, mipmapLevel, glInternalFormat, mipSize, mipSize, 0, dataSize, (unsigned char *)dataPtr + face*dataSize);
+                if (format < RL_PIXELFORMAT_COMPRESSED_DXT1_RGB) glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, mipmapLevel, glInternalFormat, mipSize, mipSize, 0, glFormat, glType, dataPtr + face*dataSize);
+                else glCompressedTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, mipmapLevel, glInternalFormat, mipSize, mipSize, 0, dataSize, dataPtr + face*dataSize);
             }
 
 #if defined(GRAPHICS_API_OPENGL_33)
@@ -3638,7 +3620,7 @@ void rlGetGlTextureFormats(int format, unsigned int *glInternalFormat, unsigned 
         case RL_PIXELFORMAT_UNCOMPRESSED_R16: if (RLGL.ExtSupported.texFloat16) *glInternalFormat = GL_LUMINANCE; *glFormat = GL_LUMINANCE; *glType = GL_HALF_FLOAT_ARB; break;
         case RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16: if (RLGL.ExtSupported.texFloat16) *glInternalFormat = GL_RGB; *glFormat = GL_RGB; *glType = GL_HALF_FLOAT_ARB; break;
         case RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16: if (RLGL.ExtSupported.texFloat16) *glInternalFormat = GL_RGBA; *glFormat = GL_RGBA; *glType = GL_HALF_FLOAT_ARB; break;
-        #else // defined(GRAPHICS_API_OPENGL_ES2)
+        #else // GRAPHICS_API_OPENGL_ES2
         case RL_PIXELFORMAT_UNCOMPRESSED_R16: if (RLGL.ExtSupported.texFloat16) *glInternalFormat = GL_LUMINANCE; *glFormat = GL_LUMINANCE; *glType = GL_HALF_FLOAT_OES; break;   // NOTE: Requires extension OES_texture_half_float
         case RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16: if (RLGL.ExtSupported.texFloat16) *glInternalFormat = GL_RGB; *glFormat = GL_RGB; *glType = GL_HALF_FLOAT_OES; break;         // NOTE: Requires extension OES_texture_half_float
         case RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16: if (RLGL.ExtSupported.texFloat16) *glInternalFormat = GL_RGBA; *glFormat = GL_RGBA; *glType = GL_HALF_FLOAT_OES; break;    // NOTE: Requires extension OES_texture_half_float
@@ -3768,9 +3750,17 @@ void *rlReadTexturePixels(unsigned int id, int width, int height, int format)
     // Attach our texture to FBO
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, id, 0);
 
+#if defined(FBO_READ_TEXTURE_AS_RGBA)
     // Reading data as RGBA because FBO texture is configured as RGBA, despite binding another texture format
     pixels = RL_CALLOC(rlGetPixelDataSize(width, height, RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8), 1);
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+#else
+    // Reading data as original texture format, in some platforms (RPI, Wasm) it works
+    pixels = (unsigned char *)RL_MALLOC(rlGetPixelDataSize(width, height, format));
+    unsigned int glInternalFormat = 0, glFormat = 0, glType = 0;
+    rlGetGlTextureFormats(format, &glInternalFormat, &glFormat, &glType);
+    glReadPixels(0, 0, width, height, glFormat, glType, pixels);
+#endif
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -3803,6 +3793,10 @@ void rlResizeFramebuffer(int width, int height)
 unsigned char *rlReadScreenPixels(int width, int height)
 {
     unsigned char *imgData = (unsigned char *)RL_CALLOC(width*height*4, sizeof(unsigned char));
+
+    // NOTE: Buffer retrieved is GL_FRONT in single-buffered configurations
+    // and GL_BACK in double-buffered configurations, make sure to call it at the end of frame
+    //glReadBuffer(GL_BACK);
 
     // NOTE: glReadPixels() returns image flipped vertically -> (0,0) is the bottom left corner of the framebuffer
     // WARNING: Getting alpha channel! Be careful, it can be transparent if not cleared properly!
@@ -5019,7 +5013,7 @@ static void rlLoadShaderDefault(void)
 
 #if defined(GRAPHICS_API_OPENGL_ES3)
     "#version 300 es                    \n"
-    "precision mediump float;           \n"     // Precision required for OpenGL ES3 (WebGL 2) (on some browsers)
+    "precision highp float;             \n"     // Precision highp is mandatory in vertex shaders, mediump may run as fp16 and misplace vertices
     "in vec3 vertexPosition;            \n"
     "in vec2 vertexTexCoord;            \n"
     "in vec4 vertexColor;               \n"
@@ -5027,7 +5021,7 @@ static void rlLoadShaderDefault(void)
     "out vec4 fragColor;                \n"
 #elif defined(GRAPHICS_API_OPENGL_ES2)
     "#version 100                       \n"
-    "precision mediump float;           \n"     // Precision required for OpenGL ES2 (WebGL) (on some browsers)
+    "precision highp float;             \n"     // Precision highp is mandatory in vertex shaders, mediump may run as fp16 and misplace vertices
     "attribute vec3 vertexPosition;     \n"
     "attribute vec2 vertexTexCoord;     \n"
     "attribute vec4 vertexColor;        \n"
@@ -5072,7 +5066,11 @@ static void rlLoadShaderDefault(void)
 
 #if defined(GRAPHICS_API_OPENGL_ES3)
     "#version 300 es                    \n"
-    "precision mediump float;           \n"     // Precision required for OpenGL ES3 (WebGL 2)
+    "#ifdef GL_FRAGMENT_PRECISION_HIGH  \n"
+    "precision highp float;             \n"
+    "#else                              \n"
+    "precision mediump float;           \n"
+    "#endif                             \n"
     "in vec2 fragTexCoord;              \n"
     "in vec4 fragColor;                 \n"
     "out vec4 finalColor;               \n"
@@ -5085,7 +5083,11 @@ static void rlLoadShaderDefault(void)
     "}                                  \n";
 #elif defined(GRAPHICS_API_OPENGL_ES2)
     "#version 100                       \n"
-    "precision mediump float;           \n"     // Precision required for OpenGL ES2 (WebGL)
+    "#ifdef GL_FRAGMENT_PRECISION_HIGH  \n"
+    "precision highp float;             \n"
+    "#else                              \n"
+    "precision mediump float;           \n"
+    "#endif                             \n"
     "varying vec2 fragTexCoord;         \n"
     "varying vec4 fragColor;            \n"
     "uniform sampler2D texture0;        \n"
@@ -5223,6 +5225,8 @@ static int rlGetPixelDataSize(int width, int height, int format)
 {
     int dataSize = 0;       // Size in bytes
     int bpp = 0;            // Bits per pixel
+    
+    if ((width <= 0) || (height <= 0)) return dataSize;
 
     switch (format)
     {
@@ -5248,7 +5252,9 @@ static int rlGetPixelDataSize(int width, int height, int format)
         {
             int blockWidth = (width + 3)/4;
             int blockHeight = (height + 3)/4;
-            dataSize = blockWidth*blockHeight*8;
+            unsigned long long dataSizeBytes = (unsigned long long)blockWidth*blockHeight*8;
+            if (dataSizeBytes < INT_MAX) dataSize = (int)dataSizeBytes;
+
         } break;
         case RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA:
         case RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA:
@@ -5257,13 +5263,17 @@ static int rlGetPixelDataSize(int width, int height, int format)
         {
             int blockWidth = (width + 3)/4;
             int blockHeight = (height + 3)/4;
-            dataSize = blockWidth*blockHeight*16;
+            unsigned long long dataSizeBytes = (unsigned long long)blockWidth*blockHeight*16;
+            if (dataSizeBytes < INT_MAX) dataSize = (int)dataSizeBytes;
+
         } break;
         case RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA: // 4 bytes per each 4x4 block
         {
             int blockWidth = (width + 3)/4;
             int blockHeight = (height + 3)/4;
-            dataSize = blockWidth*blockHeight*4;
+            unsigned long long dataSizeBytes = (unsigned long long)blockWidth*blockHeight*4;
+            if (dataSizeBytes < INT_MAX) dataSize = (int)dataSizeBytes;
+
         } break;
         default: break;
     }
@@ -5272,8 +5282,9 @@ static int rlGetPixelDataSize(int width, int height, int format)
     if ((format >= RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE) &&
         (format <= RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16))
     {
-        double bytesPerPixel = (double)bpp/8.0;
-        dataSize = (int)(bytesPerPixel*width*height); // Total data size in bytes
+        unsigned long long dataSizeBytes = ((unsigned long long)width*height*bpp) >> 3;  // Get size in bytes (dividing by 8)
+        if (dataSizeBytes < INT_MAX) dataSize = (int)dataSizeBytes;
+        else TRACELOG(LOG_WARNING, "Requested image size is larger than 2GB, it can not be allocated");
     }
 
     return dataSize;

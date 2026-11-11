@@ -185,6 +185,16 @@ func LoadRenderTexture(width, height int32) RenderTexture2D {
 	return v
 }
 
+// LoadRenderTextureEx - Load texture for rendering (framebuffer), with specific format
+func LoadRenderTextureEx(width, height int32, format PixelFormat) RenderTexture2D {
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	cformat := (C.int)(format)
+	ret := C.LoadRenderTextureEx(cwidth, cheight, cformat)
+	v := newRenderTexture2DFromPointer(unsafe.Pointer(&ret))
+	return v
+}
+
 // LoadTextureCubemap - Load cubemap from image, multiple image cubemap layouts supported
 func LoadTextureCubemap(image *Image, layout int32) Texture2D {
 	cimage := image.cptr()
@@ -523,9 +533,9 @@ func ImageColorGrayscale(image *Image) {
 }
 
 // ImageColorContrast - Modify image color: contrast (-100 to 100)
-func ImageColorContrast(image *Image, contrast float32) {
+func ImageColorContrast(image *Image, contrast int32) {
 	cimage := image.cptr()
-	ccontrast := (C.float)(contrast)
+	ccontrast := (C.int)(contrast)
 	C.ImageColorContrast(cimage, ccontrast)
 }
 
@@ -571,14 +581,47 @@ func ImageClearBackground(dst *Image, col color.RGBA) {
 	C.ImageClearBackground(cdst, *ccolor)
 }
 
-// ImageDraw - Draw a source image within a destination image (tint applied to source)
-func ImageDraw(dst, src *Image, srcRec, dstRec Rectangle, tint color.RGBA) {
+// ImageDrawImage - Draw an image within an image
+func ImageDrawImage(dst *Image, src *Image, posX, posY int32, tint color.RGBA) {
+	cdst := dst.cptr()
+	csrc := src.cptr()
+	cposX := (C.int)(posX)
+	cposY := (C.int)(posY)
+	ctint := colorCptr(tint)
+	C.ImageDrawImage(cdst, *csrc, cposX, cposY, *ctint)
+}
+
+// ImageDrawImageEx - Draw an image with scaling and rotation within an image
+func ImageDrawImageEx(dst *Image, src *Image, position Vector2, rotation, scale float32, tint color.RGBA) {
+	cdst := dst.cptr()
+	csrc := src.cptr()
+	cposition := position.cptr()
+	crotation := (C.float)(rotation)
+	cscale := (C.float)(scale)
+	ctint := colorCptr(tint)
+	C.ImageDrawImageEx(cdst, *csrc, *cposition, crotation, cscale, *ctint)
+}
+
+// ImageDrawImageRec - Draw a part of an image defined by a rectangle within an image
+func ImageDrawImageRec(dst *Image, src *Image, srcRec Rectangle, position Vector2, tint color.RGBA) {
+	cdst := dst.cptr()
+	csrc := src.cptr()
+	csrcRec := srcRec.cptr()
+	cposition := position.cptr()
+	ctint := colorCptr(tint)
+	C.ImageDrawImageRec(cdst, *csrc, *csrcRec, *cposition, *ctint)
+}
+
+// ImageDrawImagePro - Draw a part of an image defined by a rectangle into destination rectangle, with scaling and rotation, within an image
+func ImageDrawImagePro(dst *Image, src *Image, srcRec, dstRec Rectangle, origin Vector2, rotation float32, tint color.RGBA) {
 	cdst := dst.cptr()
 	csrc := src.cptr()
 	csrcRec := srcRec.cptr()
 	cdstRec := dstRec.cptr()
+	corigin := origin.cptr()
+	crotation := (C.float)(rotation)
 	ctint := colorCptr(tint)
-	C.ImageDraw(cdst, *csrc, *csrcRec, *cdstRec, *ctint)
+	C.ImageDrawImagePro(cdst, *csrc, *csrcRec, *cdstRec, *corigin, crotation, *ctint)
 }
 
 // ImageDrawLine - Draw line within an image
@@ -609,6 +652,15 @@ func ImageDrawLineEx(dst *Image, start, end Vector2, thick int32, col color.RGBA
 	cthick := C.int(thick)
 	ccolor := colorCptr(col)
 	C.ImageDrawLineEx(cdst, *cstart, *cend, cthick, *ccolor)
+}
+
+// ImageDrawLineStrip - Draw a lines sequence within an image
+func ImageDrawLineStrip(dst *Image, points []Vector2, col color.RGBA) {
+	cdst := dst.cptr()
+	cpoints := (*C.Vector2)(unsafe.Pointer(unsafe.SliceData(points)))
+	cpointCount := (C.int)(len(points))
+	ccolor := colorCptr(col)
+	C.ImageDrawLineStrip(cdst, cpoints, cpointCount, *ccolor)
 }
 
 // ImageDrawCircle - Draw a filled circle within an image
@@ -649,6 +701,16 @@ func ImageDrawCircleLinesV(dst *Image, center Vector2, radius int32, col color.R
 	C.ImageDrawCircleLinesV(cdst, *ccenter, cradius, *ccolor)
 }
 
+// ImageDrawCircleGradient - Draw a gradient-filled circle within an image
+func ImageDrawCircleGradient(dst *Image, center Vector2, radius float32, inner, outer color.RGBA) {
+	cdst := dst.cptr()
+	ccenter := center.cptr()
+	cradius := (C.float)(radius)
+	cinner := colorCptr(inner)
+	couter := colorCptr(outer)
+	C.ImageDrawCircleGradient(cdst, *ccenter, cradius, *cinner, *couter)
+}
+
 // ImageDrawPixel - Draw pixel within an image
 func ImageDrawPixel(dst *Image, posX, posY int32, col color.RGBA) {
 	cdst := dst.cptr()
@@ -687,12 +749,44 @@ func ImageDrawRectangleV(dst *Image, position, size Vector2, col color.RGBA) {
 }
 
 // ImageDrawRectangleLines - Draw rectangle lines within an image
-func ImageDrawRectangleLines(dst *Image, rec Rectangle, thick int, col color.RGBA) {
+func ImageDrawRectangleLines(dst *Image, posX, posY, width, height int32, col color.RGBA) {
+	cdst := dst.cptr()
+	cposX := (C.int)(posX)
+	cposY := (C.int)(posY)
+	cwidth := (C.int)(width)
+	cheight := (C.int)(height)
+	ccolor := colorCptr(col)
+	C.ImageDrawRectangleLines(cdst, cposX, cposY, cwidth, cheight, *ccolor)
+}
+
+// ImageDrawRectangleLinesEx - Draw rectangle lines within an image with line thickness
+func ImageDrawRectangleLinesEx(dst *Image, rec Rectangle, thick int, col color.RGBA) {
 	cdst := dst.cptr()
 	crec := rec.cptr()
 	cthick := (C.int)(thick)
 	ccolor := colorCptr(col)
-	C.ImageDrawRectangleLines(cdst, *crec, cthick, *ccolor)
+	C.ImageDrawRectangleLinesEx(cdst, *crec, cthick, *ccolor)
+}
+
+// ImageDrawRectanglePro - Draw a color-filled rectangle with pro parameters within an image
+func ImageDrawRectanglePro(dst *Image, rec Rectangle, origin Vector2, rotation float32, col color.RGBA) {
+	cdst := dst.cptr()
+	crec := rec.cptr()
+	corigin := origin.cptr()
+	crotation := (C.float)(rotation)
+	ccolor := colorCptr(col)
+	C.ImageDrawRectanglePro(cdst, *crec, *corigin, crotation, *ccolor)
+}
+
+// ImageDrawRectangleGradientEx - Draw rectangle with gradient colors within an image, counter-clockwise color order
+func ImageDrawRectangleGradientEx(dst *Image, rec Rectangle, col1, col2, col3, col4 color.RGBA) {
+	cdst := dst.cptr()
+	crec := rec.cptr()
+	ccol1 := colorCptr(col1)
+	ccol2 := colorCptr(col2)
+	ccol3 := colorCptr(col3)
+	ccol4 := colorCptr(col4)
+	C.ImageDrawRectangleGradientEx(cdst, *crec, *ccol1, *ccol2, *ccol3, *ccol4)
 }
 
 // ImageDrawTriangle - Draw triangle within an image
@@ -705,8 +799,8 @@ func ImageDrawTriangle(dst *Image, v1, v2, v3 Vector2, col color.RGBA) {
 	C.ImageDrawTriangle(cdst, *cv1, *cv2, *cv3, *ccol)
 }
 
-// ImageDrawTriangleEx - Draw triangle with interpolated colors within an image
-func ImageDrawTriangleEx(dst *Image, v1, v2, v3 Vector2, c1, c2, c3 color.RGBA) {
+// ImageDrawTriangleGradient - Draw triangle with interpolated colors within an image
+func ImageDrawTriangleGradient(dst *Image, v1, v2, v3 Vector2, c1, c2, c3 color.RGBA) {
 	cdst := dst.cptr()
 	cv1 := v1.cptr()
 	cv2 := v2.cptr()
@@ -714,7 +808,7 @@ func ImageDrawTriangleEx(dst *Image, v1, v2, v3 Vector2, c1, c2, c3 color.RGBA) 
 	cc1 := colorCptr(c1)
 	cc2 := colorCptr(c2)
 	cc3 := colorCptr(c3)
-	C.ImageDrawTriangleEx(cdst, *cv1, *cv2, *cv3, *cc1, *cc2, *cc3)
+	C.ImageDrawTriangleGradient(cdst, *cv1, *cv2, *cv3, *cc1, *cc2, *cc3)
 }
 
 // ImageDrawTriangleLines - Draw triangle outline within an image
@@ -776,6 +870,21 @@ func ImageDrawTextEx(dst *Image, position Vector2, font Font, text string, fontS
 	cspacing := (C.float)(spacing)
 	ctint := colorCptr(tint)
 	C.ImageDrawTextEx(cdst, *cfont, ctext, *cposition, cfontSize, cspacing, *ctint)
+}
+
+// ImageDrawTextPro - Draw text using Font and pro parameters (rotation)
+func ImageDrawTextPro(dst *Image, font Font, text string, position, origin Vector2, rotation, fontSize, spacing float32, tint color.RGBA) {
+	cdst := dst.cptr()
+	cfont := font.cptr()
+	ctext := C.CString(text)
+	defer C.free(unsafe.Pointer(ctext))
+	cposition := position.cptr()
+	corigin := origin.cptr()
+	crotation := (C.float)(rotation)
+	cfontSize := (C.float)(fontSize)
+	cspacing := (C.float)(spacing)
+	ctint := colorCptr(tint)
+	C.ImageDrawTextPro(cdst, *cfont, ctext, *cposition, *corigin, crotation, cfontSize, cspacing, *ctint)
 }
 
 // GenImageColor - Generate image: plain color

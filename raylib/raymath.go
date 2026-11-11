@@ -1570,16 +1570,30 @@ func QuaternionSlerp(q1, q2 Quaternion, amount float32) Quaternion {
 func QuaternionFromVector3ToVector3(from Vector3, to Vector3) Quaternion {
 	var result = Quaternion{}
 
-	cos2Theta := from.X*to.X + from.Y*to.Y + from.Z*to.Z                                                       // Vector3DotProduct(from, to)
-	cross := Vector3{X: from.Y*to.Z - from.Z*to.Y, Y: from.Z*to.X - from.X*to.Z, Z: from.X*to.Y - from.Y*to.X} // Vector3CrossProduct(from, to)
+	cos2Theta := from.X*to.X + from.Y*to.Y + from.Z*to.Z
+	cross := Vector3{X: from.Y*to.Z - from.Z*to.Y, Y: from.Z*to.X - from.X*to.Z, Z: from.X*to.Y - from.Y*to.X}
+
+	lengths := float32(math.Sqrt(float64(cross.X*cross.X + cross.Y*cross.Y + cross.Z*cross.Z + cos2Theta*cos2Theta)))
 
 	result.X = cross.X
 	result.Y = cross.Y
 	result.Z = cross.Z
-	result.W = 1.0 + cos2Theta
+	result.W = lengths + cos2Theta
 
-	// QuaternionNormalize(q);
-	// NOTE: Normalize to essentially nlerp the original and identity to 0.5
+	if lengths > 0 && result.W <= lengths*epsilon {
+		if math.Abs(float64(from.X)) > math.Abs(float64(from.Z)) {
+			result.X = -from.Y
+			result.Y = from.X
+			result.Z = 0
+		} else {
+			result.X = 0
+			result.Y = -from.Z
+			result.Z = from.Y
+		}
+
+		result.W = 0
+	}
+
 	q := result
 	length := float32(math.Sqrt(float64(q.X*q.X + q.Y*q.Y + q.Z*q.Z + q.W*q.W)))
 	if length == 0.0 {
@@ -1803,9 +1817,9 @@ func MatrixDecompose(mat Matrix, translation *Vector3, rotation *Quaternion, sca
 	translation.Z = mat.M14
 
 	cols := [3]Vector3{
-		{mat.M0, mat.M4, mat.M8},
-		{mat.M1, mat.M5, mat.M9},
-		{mat.M2, mat.M6, mat.M10},
+		{mat.M0, mat.M1, mat.M2},
+		{mat.M4, mat.M5, mat.M6},
+		{mat.M8, mat.M9, mat.M10},
 	}
 
 	stabilizer := eps
@@ -1848,9 +1862,9 @@ func MatrixDecompose(mat Matrix, translation *Vector3, rotation *Quaternion, sca
 	*scale = Vector3Scale(scl, stabilizer)
 
 	*rotation = QuaternionFromMatrix(NewMatrix(
-		cols[0].X, cols[0].Y, cols[0].Z, 0,
-		cols[1].X, cols[1].Y, cols[1].Z, 0,
-		cols[2].X, cols[2].Y, cols[2].Z, 0,
+		cols[0].X, cols[1].X, cols[2].X, 0,
+		cols[0].Y, cols[1].Y, cols[2].Y, 0,
+		cols[0].Z, cols[1].Z, cols[2].Z, 0,
 		0, 0, 0, 1,
 	))
 }

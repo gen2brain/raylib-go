@@ -91,7 +91,7 @@ bool InitGraphicsDevice(void);          // Initialize graphics device
 // Module Internal Functions Declaration
 //----------------------------------------------------------------------------------
 #if !defined(_WIN32)
-static int kbhit(void);                         // Check if a key has been pressed
+static int kbhit(void);                         // Check if key has been pressed
 static char getch(void) { return getchar(); }   // Get pressed character
 #endif
 
@@ -324,13 +324,13 @@ void ShowCursor(void)
     CORE.Input.Mouse.cursorHidden = false;
 }
 
-// Hides mouse cursor
+// Hide mouse cursor
 void HideCursor(void)
 {
     CORE.Input.Mouse.cursorHidden = true;
 }
 
-// Enables cursor (unlock cursor)
+// Enable cursor (unlock cursor)
 void EnableCursor(void)
 {
     // Set cursor position in the middle
@@ -339,7 +339,7 @@ void EnableCursor(void)
     CORE.Input.Mouse.cursorHidden = false;
 }
 
-// Disables cursor (lock cursor)
+// Disable cursor (lock cursor)
 void DisableCursor(void)
 {
     // Set cursor position in the middle
@@ -364,14 +364,18 @@ double GetTime(void)
 {
     double time = 0.0;
 #if defined(_WIN32)
-    LARGE_INTEGER now = { 0 };
-    QueryPerformanceCounter(&now);
-    return (double)(now.QuadPart - CORE.Time.base)/(double)platform.timerFrequency.QuadPart;
+    LARGE_INTEGER currentTicks = { 0 };
+    QueryPerformanceCounter(&currentTicks);
+
+    time = (double)(currentTicks.QuadPart - CORE.Time.base)/(double)platform.timerFrequency.QuadPart;
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__EMSCRIPTEN__)
     struct timespec ts = { 0 };
     clock_gettime(CLOCK_MONOTONIC, &ts);
-    unsigned long long int nanoSeconds = (unsigned long long int)ts.tv_sec*1000000000LLU + (unsigned long long int)ts.tv_nsec;
-    time = (double)(nanoSeconds - CORE.Time.base)*1e-9;  // Elapsed time since InitTimer()
+    unsigned long long nanoSeconds = (unsigned long long)ts.tv_sec*1000000000LLU + (unsigned long long)ts.tv_nsec;
+
+    time = (double)(nanoSeconds - CORE.Time.base)*1e-9; // Elapsed time since InitTimer()
+#elif defined(PICO_RP2350)
+    time = (double)to_ms_since_boot(get_absolute_time())/1000.0;
 #endif
     return time;
 }
@@ -416,7 +420,6 @@ void SetGamepadVibration(int gamepad, float leftMotor, float rightMotor, float d
 void SetMousePosition(int x, int y)
 {
     CORE.Input.Mouse.currentPosition = (Vector2){ (float)x, (float)y };
-    CORE.Input.Mouse.previousPosition = CORE.Input.Mouse.currentPosition;
 }
 
 // Set mouse cursor
@@ -474,7 +477,7 @@ void PollInputEvents(void)
     if (kbhit())
     {
         int key = getch();
-        if (key == 27) CORE.Window.shouldClose = true; // KEY_SCAPE
+        if (key == 27) CORE.Window.shouldClose = true; // KEY_ESCAPE
     }
 }
 
@@ -558,7 +561,7 @@ void ClosePlatform(void)
 // Module Internal Functions Definition
 //----------------------------------------------------------------------------------
 #if !defined(_WIN32)
-// Check if a key has been pressed
+// Check if key has been pressed
 static int kbhit(void)
 {
     struct termios oldt = { 0 };

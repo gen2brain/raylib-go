@@ -124,7 +124,7 @@ func main() {
 		// Get ray and test against objects
 		// See issue : https://github.com/gen2brain/raylib-go/issues/457
 		//ray = rl.GetScreenToWorldRay(rl.GetMousePosition(), camera)
-		ray = rl.GetMouseRay(rl.GetMousePosition(), camera)
+		ray = rl.GetScreenToWorldRay(rl.GetMousePosition(), camera)
 
 		// Check ray collision against ground quad
 		groundHitInfo := rl.GetRayCollisionQuad(ray, g0, g1, g2, g3)
