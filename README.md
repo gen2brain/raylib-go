@@ -83,13 +83,13 @@ Graphics API (cgo, default is OpenGL 3.3 on desktop):
 
 Options:
 
-| Tag       | Description                                                                   |
-|-----------|-------------------------------------------------------------------------------|
-| `x11`     | Force X11 compatibility mode on Wayland (GLFW)                                |
-| `wayland` | Force Wayland only mode (GLFW)                                                |
-| `noaudio` | Disable audio functions                                                       |
-| `nocgo`   | Use the purego backend even when cgo is enabled                               |
-| `extlib`  | Load the system raylib library instead of the embedded one (used with purego) |
+| Tag            | Description                                                                   |
+|----------------|-------------------------------------------------------------------------------|
+| `glfw_x11`     | Force X11 compatibility mode on Wayland (GLFW)                                |
+| `glfw_wayland` | Force Wayland only mode (GLFW)                                                |
+| `noaudio`      | Disable audio functions                                                       |
+| `nocgo`        | Use the purego backend even when cgo is enabled                               |
+| `extlib`       | Load the system raylib library instead of the embedded one (used with purego) |
 
 ### Documentation
 
