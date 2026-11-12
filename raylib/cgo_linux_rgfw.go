@@ -1,5 +1,12 @@
-//go:build linux && rgfw && !drm && !sdl && !sdl3 && !android && !memory && !nocgo
-// +build linux,rgfw,!drm,!sdl,!sdl3,!android,!memory,!nocgo
+//go:build linux && rgfw && !drm && !sdl && !sdl3 && (!android || termux) && !memory && !nocgo
+// +build linux
+// +build rgfw
+// +build !drm
+// +build !sdl
+// +build !sdl3
+// +build !android termux
+// +build !memory
+// +build !nocgo
 
 package rl
 

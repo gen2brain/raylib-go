@@ -1,9 +1,9 @@
-//go:build linux && (sdl || sdl3) && !rgfw && !drm && !android && !memory && !nocgo
+//go:build linux && (sdl || sdl3) && !rgfw && !drm && (!android || termux) && !memory && !nocgo
 // +build linux
 // +build sdl sdl3
 // +build !rgfw
 // +build !drm
-// +build !android
+// +build !android termux
 // +build !memory
 // +build !nocgo
 

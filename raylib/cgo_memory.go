@@ -1,5 +1,7 @@
-//go:build memory && !android && !nocgo
-// +build memory,!android,!nocgo
+//go:build memory && (!android || termux) && !nocgo
+// +build memory
+// +build !android termux
+// +build !nocgo
 
 package rl
 

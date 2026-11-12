@@ -82,13 +82,14 @@ Graphics API (cgo, default is OpenGL 3.3 on desktop):
 
 Options:
 
-| Tag       | Description                                                                   |
-|-----------|-------------------------------------------------------------------------------|
-| `x11`     | Force X11 compatibility mode on Wayland (GLFW)                                |
-| `wayland` | Force Wayland only mode (GLFW)                                                |
-| `noaudio` | Disable audio functions                                                       |
-| `nocgo`   | Use the purego backend even when cgo is enabled                               |
-| `extlib`  | Load the system raylib library instead of the embedded one (used with purego) |
+| Tag       | Description                                                                                      |
+|-----------|--------------------------------------------------------------------------------------------------|
+| `x11`     | Force X11 compatibility mode on Wayland (GLFW)                                                   |
+| `wayland` | Force Wayland only mode (GLFW)                                                                   |
+| `noaudio` | Disable audio functions                                                                          |
+| `nocgo`   | Use the purego backend even when cgo is enabled                                                  |
+| `extlib`  | Load the system raylib library instead of the embedded one (used with purego)                    |
+| `termux`  | Android in [Termux](https://termux.dev/) as a desktop X11 application, instead of NativeActivity |
 
 ### Documentation
 

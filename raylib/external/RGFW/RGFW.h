@@ -8498,7 +8498,7 @@ i32 RGFW_initPlatform_X11(void) {
 	#if !defined(RGFW_NO_X11_CURSOR) && !defined(RGFW_NO_X11_CURSOR_PRELOAD)
 	#if defined(__CYGWIN__)
 				RGFW_LOAD_LIBRARY(X11Cursorhandle, "libXcursor-1.so");
-	#elif defined(__OpenBSD__) || defined(__NetBSD__)
+	#elif defined(__OpenBSD__) || defined(__NetBSD__) || defined(__ANDROID__)
 				RGFW_LOAD_LIBRARY(X11Cursorhandle, "libXcursor.so");
 	#else
 				RGFW_LOAD_LIBRARY(X11Cursorhandle, "libXcursor.so.1");
@@ -8511,7 +8511,7 @@ i32 RGFW_initPlatform_X11(void) {
 	#if !defined(RGFW_NO_X11_XI_PRELOAD)
 	#if defined(__CYGWIN__)
 			RGFW_LOAD_LIBRARY(X11Xihandle, "libXi-6.so");
-	#elif defined(__OpenBSD__) || defined(__NetBSD__)
+	#elif defined(__OpenBSD__) || defined(__NetBSD__) || defined(__ANDROID__)
 			RGFW_LOAD_LIBRARY(X11Xihandle, "libXi.so");
 	#else
 			RGFW_LOAD_LIBRARY(X11Xihandle, "libXi.so.6");
@@ -8522,7 +8522,7 @@ i32 RGFW_initPlatform_X11(void) {
 	#if !defined(RGFW_NO_X11_EXT_PRELOAD)
 	#if defined(__CYGWIN__)
 			RGFW_LOAD_LIBRARY(X11XEXThandle, "libXext-6.so");
-	#elif defined(__OpenBSD__) || defined(__NetBSD__)
+	#elif defined(__OpenBSD__) || defined(__NetBSD__) || defined(__ANDROID__)
 	        RGFW_LOAD_LIBRARY(X11XEXThandle, "libXext.so");
 	#else
 			RGFW_LOAD_LIBRARY(X11XEXThandle, "libXext.so.6");

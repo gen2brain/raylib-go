@@ -1,5 +1,6 @@
-//go:build !android && !nocgo
-// +build !android,!nocgo
+//go:build (!android || termux) && !nocgo
+// +build !android termux
+// +build !nocgo
 
 package rl
 

@@ -1,5 +1,12 @@
-//go:build linux && !rgfw && !drm && !sdl && !sdl3 && !android && !memory && !nocgo
-// +build linux,!rgfw,!drm,!sdl,!sdl3,!android,!memory,!nocgo
+//go:build linux && !rgfw && !drm && !sdl && !sdl3 && (!android || termux) && !memory && !nocgo
+// +build linux
+// +build !rgfw
+// +build !drm
+// +build !sdl
+// +build !sdl3
+// +build !android termux
+// +build !memory
+// +build !nocgo
 
 package rl
 
@@ -71,14 +78,14 @@ GLFWbool _glfwConnectNull(int platformID, _GLFWplatform* platform) {
 
 #cgo linux CFLAGS: -Iexternal/glfw/include -DPLATFORM_DESKTOP_GLFW -Wno-stringop-overflow
 #cgo linux LDFLAGS: -lm -pthread -ldl -lrt -lxkbcommon
-#cgo linux,!x11 LDFLAGS: -lwayland-client -lwayland-cursor -lwayland-egl
-#cgo linux,!wayland LDFLAGS: -lX11
+#cgo linux,!x11,!termux LDFLAGS: -lwayland-client -lwayland-cursor -lwayland-egl
+#cgo linux,!wayland linux,termux LDFLAGS: -lX11
 
-#cgo linux,x11 CFLAGS: -D_GLFW_X11
-#cgo linux,wayland CFLAGS: -D_GLFW_WAYLAND
-#cgo linux,!x11,!wayland CFLAGS: -D_GLFW_X11 -D_GLFW_WAYLAND
+#cgo linux,x11 linux,termux CFLAGS: -D_GLFW_X11
+#cgo linux,wayland,!termux CFLAGS: -D_GLFW_WAYLAND
+#cgo linux,!x11,!wayland,!termux CFLAGS: -D_GLFW_X11 -D_GLFW_WAYLAND
 
-#cgo linux,!es2,!es3,!wayland LDFLAGS: -lGL
+#cgo linux,!es2,!es3,!wayland linux,!es2,!es3,termux LDFLAGS: -lGL
 
 #cgo linux,opengl11,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_11
 #cgo linux,opengl21,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_21
