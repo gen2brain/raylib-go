@@ -791,7 +791,6 @@ const (
 	MapOcclusion
 	MapEmission
 	MapHeight
-	MapBrdg
 	MapCubemap
 	MapIrradiance
 	MapPrefilter
@@ -1123,6 +1122,12 @@ const (
 	UncompressedR32g32b32
 	// 32*4 bpp (4 channels - float)
 	UncompressedR32g32b32a32
+	// 16 bpp (1 channel - half float)
+	UncompressedR16
+	// 16*3 bpp (3 channels - half float)
+	UncompressedR16g16b16
+	// 16*4 bpp (4 channels - half float)
+	UncompressedR16g16b16a16
 	// 4 bpp (no alpha)
 	CompressedDxt1Rgb
 	// 4 bpp (1 bit alpha)
