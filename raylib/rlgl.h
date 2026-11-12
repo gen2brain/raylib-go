@@ -3798,6 +3798,22 @@ unsigned char *rlReadScreenPixels(int width, int height)
     // and GL_BACK in double-buffered configurations, make sure to call it at the end of frame
     //glReadBuffer(GL_BACK);
 
+#if defined(GRAPHICS_API_OPENGL_SOFTWARE)
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, imgData);
+
+    for (int i = 0; i < width*height*4; i += 4)
+    {
+    #if RLSW_FRAMEBUFFER_OUTPUT_BGRA
+        unsigned char b = imgData[i];
+        imgData[i] = imgData[i+2];
+        imgData[i+2] = b;
+    #endif
+        imgData[i+3] = 255;
+    }
+
+    return imgData;
+#endif
+
     // NOTE: glReadPixels() returns image flipped vertically -> (0,0) is the bottom left corner of the framebuffer
     // WARNING: Getting alpha channel! Be careful, it can be transparent if not cleared properly!
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, imgData);
