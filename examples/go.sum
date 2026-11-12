@@ -4,5 +4,5 @@ github.com/jakecoffman/cp v1.2.1 h1:zkhc2Gpo9l4NLUZfeG3j33+3bQD7MkqPa+n5PdX+5mI=
 github.com/jakecoffman/cp v1.2.1/go.mod h1:JjY/Fp6d8E1CHnu74gWNnU0+b9VzEdUVPoJxg2PsTQg=
 github.com/jupiterrider/ffi v0.8.0 h1:IH6lto8OZaRIulQYObtZibII4tq71hXT6Z+KLBcxCcQ=
 github.com/jupiterrider/ffi v0.8.0/go.mod h1:9dauhpOfNqrqk28fxuu0kkdeFtT9Qr4vbfigiuIXN7c=
-github.com/neguse/go-box2d-lite v0.0.0-20170921151050-5d8ed9b7272b h1:+67TGbwfgeB5o03Rx+ZBW44zAQ+wUujcwdRA0p9CbJI=
-github.com/neguse/go-box2d-lite v0.0.0-20170921151050-5d8ed9b7272b/go.mod h1:kvKwD9codtns5mvpA53V3vLnqFb/Ahcu8zgkGM0SIbI=
+github.com/neguse/go-box2d-lite v0.0.0-20260315142500-8c06e40d0e7b h1:NS8iXMOgDJld6wNedUr0DYumbtLip48XBWiPUR9Th/o=
+github.com/neguse/go-box2d-lite v0.0.0-20260315142500-8c06e40d0e7b/go.mod h1:kvKwD9codtns5mvpA53V3vLnqFb/Ahcu8zgkGM0SIbI=

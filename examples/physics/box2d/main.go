@@ -23,7 +23,7 @@ func NewGame() (g Game) {
 
 // Init - Initialize game
 func (g *Game) Init() {
-	gravity := box2d.Vec2{0.0, -10.0}
+	gravity := box2d.Vec2{X: 0.0, Y: -10.0}
 	g.World = box2d.NewWorld(gravity, 10) // 10 iterations
 }
 
@@ -75,13 +75,13 @@ func (g *Game) DrawBody(b *box2d.Body) {
 	x := b.Position
 	h := box2d.MulSV(0.5, b.Width)
 
-	o := box2d.Vec2{400, 400}
-	S := box2d.Mat22{box2d.Vec2{20.0, 0.0}, box2d.Vec2{0.0, -20.0}}
+	o := box2d.Vec2{X: 400, Y: 400}
+	S := box2d.Mat22{Col1: box2d.Vec2{X: 20.0, Y: 0.0}, Col2: box2d.Vec2{X: 0.0, Y: -20.0}}
 
-	v1 := o.Add(S.MulV(x.Add(R.MulV(box2d.Vec2{-h.X, -h.Y}))))
-	v2 := o.Add(S.MulV(x.Add(R.MulV(box2d.Vec2{h.X, -h.Y}))))
-	v3 := o.Add(S.MulV(x.Add(R.MulV(box2d.Vec2{h.X, h.Y}))))
-	v4 := o.Add(S.MulV(x.Add(R.MulV(box2d.Vec2{-h.X, h.Y}))))
+	v1 := o.Add(S.MulV(x.Add(R.MulV(box2d.Vec2{X: -h.X, Y: -h.Y}))))
+	v2 := o.Add(S.MulV(x.Add(R.MulV(box2d.Vec2{X: h.X, Y: -h.Y}))))
+	v3 := o.Add(S.MulV(x.Add(R.MulV(box2d.Vec2{X: h.X, Y: h.Y}))))
+	v4 := o.Add(S.MulV(x.Add(R.MulV(box2d.Vec2{X: -h.X, Y: h.Y}))))
 
 	rl.DrawLine(int32(v1.X), int32(v1.Y), int32(v2.X), int32(v2.Y), rl.RayWhite)
 	rl.DrawLine(int32(v2.X), int32(v2.Y), int32(v3.X), int32(v3.Y), rl.RayWhite)
@@ -103,8 +103,8 @@ func (g *Game) DrawJoint(j *box2d.Joint) {
 	x2 := b2.Position
 	p2 := x2.Add(R2.MulV(j.LocalAnchor2))
 
-	o := box2d.Vec2{400, 400}
-	S := box2d.Mat22{box2d.Vec2{20.0, 0.0}, box2d.Vec2{0.0, -20.0}}
+	o := box2d.Vec2{X: 400, Y: 400}
+	S := box2d.Mat22{Col1: box2d.Vec2{X: 20.0, Y: 0.0}, Col2: box2d.Vec2{X: 0.0, Y: -20.0}}
 
 	x1 = o.Add(S.MulV(x1))
 	p1 = o.Add(S.MulV(p1))
@@ -121,12 +121,12 @@ func (g *Game) Demo1() {
 
 	var b1, b2 box2d.Body
 
-	b1.Set(&box2d.Vec2{100.0, 20.0}, math.MaxFloat64)
-	b1.Position = box2d.Vec2{0.0, -0.5 * b1.Width.Y}
+	b1.Set(&box2d.Vec2{X: 100.0, Y: 20.0}, math.MaxFloat64)
+	b1.Position = box2d.Vec2{X: 0.0, Y: -0.5 * b1.Width.Y}
 	g.World.AddBody(&b1)
 
-	b2.Set(&box2d.Vec2{1.0, 1.0}, 200.0)
-	b2.Position = box2d.Vec2{0.0, 4.0}
+	b2.Set(&box2d.Vec2{X: 1.0, Y: 1.0}, 200.0)
+	b2.Position = box2d.Vec2{X: 0.0, Y: 4.0}
 	g.World.AddBody(&b2)
 }
 
@@ -137,19 +137,19 @@ func (g *Game) Demo2() {
 	var b2, b1 box2d.Body
 	var j box2d.Joint
 
-	b1.Set(&box2d.Vec2{100.0, 20.0}, math.MaxFloat64)
+	b1.Set(&box2d.Vec2{X: 100.0, Y: 20.0}, math.MaxFloat64)
 	b1.Friction = 0.2
-	b1.Position = box2d.Vec2{0.0, -0.5 * b1.Width.Y}
+	b1.Position = box2d.Vec2{X: 0.0, Y: -0.5 * b1.Width.Y}
 	b1.Rotation = 0.0
 	g.World.AddBody(&b1)
 
-	b2.Set(&box2d.Vec2{1.0, 1.0}, 100.0)
+	b2.Set(&box2d.Vec2{X: 1.0, Y: 1.0}, 100.0)
 	b2.Friction = 0.2
-	b2.Position = box2d.Vec2{9.0, 11.0}
+	b2.Position = box2d.Vec2{X: 9.0, Y: 11.0}
 	b2.Rotation = 0.0
 	g.World.AddBody(&b2)
 
-	j.Set(&b1, &b2, &box2d.Vec2{0.0, 11.0})
+	j.Set(&b1, &b2, &box2d.Vec2{X: 0.0, Y: 11.0})
 	g.World.AddJoint(&j)
 }
 
@@ -159,47 +159,47 @@ func (g *Game) Demo3() {
 
 	{
 		var b box2d.Body
-		b.Set(&box2d.Vec2{100.0, 20.0}, math.MaxFloat64)
-		b.Position = box2d.Vec2{0.0, -0.5 * b.Width.Y}
+		b.Set(&box2d.Vec2{X: 100.0, Y: 20.0}, math.MaxFloat64)
+		b.Position = box2d.Vec2{X: 0.0, Y: -0.5 * b.Width.Y}
 		g.World.AddBody(&b)
 	}
 
 	{
 		var b box2d.Body
-		b.Set(&box2d.Vec2{13.0, 0.25}, math.MaxFloat64)
-		b.Position = box2d.Vec2{-2.0, 11.0}
+		b.Set(&box2d.Vec2{X: 13.0, Y: 0.25}, math.MaxFloat64)
+		b.Position = box2d.Vec2{X: -2.0, Y: 11.0}
 		b.Rotation = -0.25
 		g.World.AddBody(&b)
 	}
 
 	{
 		var b box2d.Body
-		b.Set(&box2d.Vec2{0.25, 1.0}, math.MaxFloat64)
-		b.Position = box2d.Vec2{5.25, 9.5}
+		b.Set(&box2d.Vec2{X: 0.25, Y: 1.0}, math.MaxFloat64)
+		b.Position = box2d.Vec2{X: 5.25, Y: 9.5}
 		g.World.AddBody(&b)
 	}
 
 	{
 		var b box2d.Body
-		b.Set(&box2d.Vec2{13.0, 0.25}, math.MaxFloat64)
-		b.Position = box2d.Vec2{2.0, 7.0}
+		b.Set(&box2d.Vec2{X: 13.0, Y: 0.25}, math.MaxFloat64)
+		b.Position = box2d.Vec2{X: 2.0, Y: 7.0}
 		b.Rotation = 0.25
 		g.World.AddBody(&b)
 	}
 
 	{
 		var b box2d.Body
-		b.Set(&box2d.Vec2{0.25, 1.0}, math.MaxFloat64)
-		b.Position = box2d.Vec2{-5.25, 5.5}
+		b.Set(&box2d.Vec2{X: 0.25, Y: 1.0}, math.MaxFloat64)
+		b.Position = box2d.Vec2{X: -5.25, Y: 5.5}
 		g.World.AddBody(&b)
 	}
 
 	frictions := []float64{0.75, 0.5, 0.35, 0.1, 0.0}
 	for i := 0; i < 5; i++ {
 		var b box2d.Body
-		b.Set(&box2d.Vec2{0.5, 0.5}, 25.0)
+		b.Set(&box2d.Vec2{X: 0.5, Y: 0.5}, 25.0)
 		b.Friction = frictions[i]
-		b.Position = box2d.Vec2{-7.5 + 2.0*float64(i), 14.0}
+		b.Position = box2d.Vec2{X: -7.5 + 2.0*float64(i), Y: 14.0}
 		g.World.AddBody(&b)
 	}
 
@@ -211,19 +211,19 @@ func (g *Game) Demo4() {
 
 	{
 		var b box2d.Body
-		b.Set(&box2d.Vec2{100.0, 20.0}, math.MaxFloat64)
+		b.Set(&box2d.Vec2{X: 100.0, Y: 20.0}, math.MaxFloat64)
 		b.Friction = 0.2
-		b.Position = box2d.Vec2{0.0, -0.5 * b.Width.Y}
+		b.Position = box2d.Vec2{X: 0.0, Y: -0.5 * b.Width.Y}
 		b.Rotation = 0.0
 		g.World.AddBody(&b)
 	}
 
 	for i := 0; i < 10; i++ {
 		var b box2d.Body
-		b.Set(&box2d.Vec2{1.0, 1.0}, 1.0)
+		b.Set(&box2d.Vec2{X: 1.0, Y: 1.0}, 1.0)
 		b.Friction = 0.2
 		x := rand.Float64()*0.2 - 0.1
-		b.Position = box2d.Vec2{x, 0.51 + 1.05*float64(i)}
+		b.Position = box2d.Vec2{X: x, Y: 0.51 + 1.05*float64(i)}
 		g.World.AddBody(&b)
 	}
 
@@ -235,28 +235,28 @@ func (g *Game) Demo5() {
 
 	{
 		var b box2d.Body
-		b.Set(&box2d.Vec2{100.0, 20.0}, math.MaxFloat64)
+		b.Set(&box2d.Vec2{X: 100.0, Y: 20.0}, math.MaxFloat64)
 		b.Friction = 0.2
-		b.Position = box2d.Vec2{0.0, -0.5 * b.Width.Y}
+		b.Position = box2d.Vec2{X: 0.0, Y: -0.5 * b.Width.Y}
 		b.Rotation = 0.0
 		g.World.AddBody(&b)
 	}
 
-	x := box2d.Vec2{-6.0, 0.75}
+	x := box2d.Vec2{X: -6.0, Y: 0.75}
 
 	for i := 0; i < 12; i++ {
 		y := x
 		for j := i; j < 12; j++ {
 			var b box2d.Body
-			b.Set(&box2d.Vec2{1.0, 1.0}, 10.0)
+			b.Set(&box2d.Vec2{X: 1.0, Y: 1.0}, 10.0)
 			b.Friction = 0.2
 			b.Position = y
 			g.World.AddBody(&b)
 
-			y = y.Add(box2d.Vec2{1.125, 0.0})
+			y = y.Add(box2d.Vec2{X: 1.125, Y: 0.0})
 		}
 
-		x = x.Add(box2d.Vec2{0.5625, 2.0})
+		x = x.Add(box2d.Vec2{X: 0.5625, Y: 2.0})
 	}
 }
 
@@ -265,29 +265,29 @@ func (g *Game) Demo6() {
 	g.World.Clear()
 
 	var b1, b2, b3, b4, b5 box2d.Body
-	b1.Set(&box2d.Vec2{100.0, 20.0}, math.MaxFloat64)
-	b1.Position = box2d.Vec2{0.0, -0.5 * b1.Width.Y}
+	b1.Set(&box2d.Vec2{X: 100.0, Y: 20.0}, math.MaxFloat64)
+	b1.Position = box2d.Vec2{X: 0.0, Y: -0.5 * b1.Width.Y}
 	g.World.AddBody(&b1)
 
-	b2.Set(&box2d.Vec2{12.0, 0.25}, 100)
-	b2.Position = box2d.Vec2{0.0, 1.0}
+	b2.Set(&box2d.Vec2{X: 12.0, Y: 0.25}, 100)
+	b2.Position = box2d.Vec2{X: 0.0, Y: 1.0}
 	g.World.AddBody(&b2)
 
-	b3.Set(&box2d.Vec2{0.5, 0.5}, 25.0)
-	b3.Position = box2d.Vec2{-5.0, 2.0}
+	b3.Set(&box2d.Vec2{X: 0.5, Y: 0.5}, 25.0)
+	b3.Position = box2d.Vec2{X: -5.0, Y: 2.0}
 	g.World.AddBody(&b3)
 
-	b4.Set(&box2d.Vec2{0.5, 0.5}, 25.0)
-	b4.Position = box2d.Vec2{-5.5, 2.0}
+	b4.Set(&box2d.Vec2{X: 0.5, Y: 0.5}, 25.0)
+	b4.Position = box2d.Vec2{X: -5.5, Y: 2.0}
 	g.World.AddBody(&b4)
 
-	b5.Set(&box2d.Vec2{1.0, 1.0}, 100)
-	b5.Position = box2d.Vec2{5.5, 15.0}
+	b5.Set(&box2d.Vec2{X: 1.0, Y: 1.0}, 100)
+	b5.Position = box2d.Vec2{X: 5.5, Y: 15.0}
 	g.World.AddBody(&b5)
 
 	{
 		var j box2d.Joint
-		j.Set(&b1, &b2, &box2d.Vec2{0.0, 1.0})
+		j.Set(&b1, &b2, &box2d.Vec2{X: 0.0, Y: 1.0})
 		g.World.AddJoint(&j)
 	}
 
@@ -301,9 +301,9 @@ func (g *Game) Demo7() {
 
 	{
 		var b box2d.Body
-		b.Set(&box2d.Vec2{100.0, 20.0}, math.MaxFloat64)
+		b.Set(&box2d.Vec2{X: 100.0, Y: 20.0}, math.MaxFloat64)
 		b.Friction = 0.2
-		b.Position = box2d.Vec2{0.0, -0.5 * b.Width.Y}
+		b.Position = box2d.Vec2{X: 0.0, Y: -0.5 * b.Width.Y}
 		b.Rotation = 0.0
 		g.World.AddBody(&b)
 		ba = append(ba, &b)
@@ -314,9 +314,9 @@ func (g *Game) Demo7() {
 
 	for i := 0; i < numPlunks; i++ {
 		var b box2d.Body
-		b.Set(&box2d.Vec2{1.0, 0.25}, mass)
+		b.Set(&box2d.Vec2{X: 1.0, Y: 0.25}, mass)
 		b.Friction = 0.2
-		b.Position = box2d.Vec2{-8.5 + 1.25*float64(i), 5.0}
+		b.Position = box2d.Vec2{X: -8.5 + 1.25*float64(i), Y: 5.0}
 		g.World.AddBody(&b)
 		ba = append(ba, &b)
 	}
@@ -340,7 +340,7 @@ func (g *Game) Demo7() {
 
 	for i := 0; i <= numPlunks; i++ {
 		var j box2d.Joint
-		j.Set(ba[i], ba[(i+1)%(numPlunks+1)], &box2d.Vec2{-9.125 + 1.25*float64(i), 5.0})
+		j.Set(ba[i], ba[(i+1)%(numPlunks+1)], &box2d.Vec2{X: -9.125 + 1.25*float64(i), Y: 5.0})
 		j.Softness = softness
 		j.BiasFactor = biasFactor
 		g.World.AddJoint(&j)
@@ -353,80 +353,80 @@ func (g *Game) Demo8() {
 	g.World.Clear()
 
 	var b1 box2d.Body
-	b1.Set(&box2d.Vec2{100.0, 20.0}, math.MaxFloat64)
-	b1.Position = box2d.Vec2{0.0, -0.5 * b1.Width.Y}
+	b1.Set(&box2d.Vec2{X: 100.0, Y: 20.0}, math.MaxFloat64)
+	b1.Position = box2d.Vec2{X: 0.0, Y: -0.5 * b1.Width.Y}
 	g.World.AddBody(&b1)
 
 	{
 		var b box2d.Body
-		b.Set(&box2d.Vec2{12.0, 0.5}, math.MaxFloat64)
-		b.Position = box2d.Vec2{-1.5, 10.0}
+		b.Set(&box2d.Vec2{X: 12.0, Y: 0.5}, math.MaxFloat64)
+		b.Position = box2d.Vec2{X: -1.5, Y: 10.0}
 		g.World.AddBody(&b)
 	}
 
 	for i := 0; i < 10; i++ {
 		var b box2d.Body
-		b.Set(&box2d.Vec2{0.2, 2.0}, 10.0)
-		b.Position = box2d.Vec2{-6.0 + 1.0*float64(i), 11.125}
+		b.Set(&box2d.Vec2{X: 0.2, Y: 2.0}, 10.0)
+		b.Position = box2d.Vec2{X: -6.0 + 1.0*float64(i), Y: 11.125}
 		b.Friction = 0.1
 		g.World.AddBody(&b)
 	}
 
 	{
 		var b box2d.Body
-		b.Set(&box2d.Vec2{14.0, 0.5}, math.MaxFloat64)
-		b.Position = box2d.Vec2{1.0, 6.0}
+		b.Set(&box2d.Vec2{X: 14.0, Y: 0.5}, math.MaxFloat64)
+		b.Position = box2d.Vec2{X: 1.0, Y: 6.0}
 		b.Rotation = 0.3
 		g.World.AddBody(&b)
 	}
 
 	var b2 box2d.Body
-	b2.Set(&box2d.Vec2{0.5, 3.0}, math.MaxFloat64)
-	b2.Position = box2d.Vec2{-7.0, 4.0}
+	b2.Set(&box2d.Vec2{X: 0.5, Y: 3.0}, math.MaxFloat64)
+	b2.Position = box2d.Vec2{X: -7.0, Y: 4.0}
 	g.World.AddBody(&b2)
 
 	var b3 box2d.Body
-	b3.Set(&box2d.Vec2{12.0, 0.25}, 20.0)
-	b3.Position = box2d.Vec2{-0.9, 1.0}
+	b3.Set(&box2d.Vec2{X: 12.0, Y: 0.25}, 20.0)
+	b3.Position = box2d.Vec2{X: -0.9, Y: 1.0}
 	g.World.AddBody(&b3)
 
 	{
 		var j box2d.Joint
-		j.Set(&b1, &b3, &box2d.Vec2{-2.0, 1.0})
+		j.Set(&b1, &b3, &box2d.Vec2{X: -2.0, Y: 1.0})
 		g.World.AddJoint(&j)
 	}
 
 	var b4 box2d.Body
-	b4.Set(&box2d.Vec2{0.5, 0.5}, 10.0)
-	b4.Position = box2d.Vec2{-10.0, 15.0}
+	b4.Set(&box2d.Vec2{X: 0.5, Y: 0.5}, 10.0)
+	b4.Position = box2d.Vec2{X: -10.0, Y: 15.0}
 	g.World.AddBody(&b4)
 
 	{
 		var j box2d.Joint
-		j.Set(&b2, &b4, &box2d.Vec2{-7.0, 15.0})
+		j.Set(&b2, &b4, &box2d.Vec2{X: -7.0, Y: 15.0})
 		g.World.AddJoint(&j)
 	}
 
 	var b5 box2d.Body
-	b5.Set(&box2d.Vec2{2.0, 2.0}, 20.0)
-	b5.Position = box2d.Vec2{6.0, 2.5}
+	b5.Set(&box2d.Vec2{X: 2.0, Y: 2.0}, 20.0)
+	b5.Position = box2d.Vec2{X: 6.0, Y: 2.5}
 	b5.Friction = 0.1
 	g.World.AddBody(&b5)
 
 	{
 		var j box2d.Joint
-		j.Set(&b1, &b5, &box2d.Vec2{6.0, 2.6})
+		j.Set(&b1, &b5, &box2d.Vec2{X: 6.0, Y: 2.6})
 		g.World.AddJoint(&j)
 	}
 
 	var b6 box2d.Body
-	b6.Set(&box2d.Vec2{2.0, 0.2}, 10.0)
-	b6.Position = box2d.Vec2{6.0, 3.6}
+	b6.Set(&box2d.Vec2{X: 2.0, Y: 0.2}, 10.0)
+	b6.Position = box2d.Vec2{X: 6.0, Y: 3.6}
 	g.World.AddBody(&b6)
 
 	{
 		var j box2d.Joint
-		j.Set(&b5, &b6, &box2d.Vec2{7.0, 3.5})
+		j.Set(&b5, &b6, &box2d.Vec2{X: 7.0, Y: 3.5})
 		g.World.AddJoint(&j)
 	}
 
@@ -440,8 +440,8 @@ func (g *Game) Demo9() {
 
 	{
 		var b box2d.Body
-		b.Set(&box2d.Vec2{100.0, 20.0}, math.MaxFloat64)
-		b.Position = box2d.Vec2{0.0, -0.5 * b.Width.Y}
+		b.Set(&box2d.Vec2{X: 100.0, Y: 20.0}, math.MaxFloat64)
+		b.Position = box2d.Vec2{X: 0.0, Y: -0.5 * b.Width.Y}
 		g.World.AddBody(&b)
 		b1 = &b
 	}
@@ -468,17 +468,17 @@ func (g *Game) Demo9() {
 	const y = 12.0
 
 	for i := 0; i < 15; i++ {
-		x := box2d.Vec2{0.5 + float64(i), y}
+		x := box2d.Vec2{X: 0.5 + float64(i), Y: y}
 
 		var b box2d.Body
-		b.Set(&box2d.Vec2{0.75, 0.25}, mass)
+		b.Set(&box2d.Vec2{X: 0.75, Y: 0.25}, mass)
 		b.Friction = 0.2
 		b.Position = x
 		b.Rotation = 0.0
 		g.World.AddBody(&b)
 
 		var j box2d.Joint
-		j.Set(b1, &b, &box2d.Vec2{float64(i), y})
+		j.Set(b1, &b, &box2d.Vec2{X: float64(i), Y: y})
 		j.Softness = softness
 		j.BiasFactor = biasFactor
 		g.World.AddJoint(&j)
