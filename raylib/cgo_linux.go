@@ -86,6 +86,7 @@ GLFWbool _glfwConnectNull(int platformID, _GLFWplatform* platform) {
 #cgo linux,!x11,!wayland,!termux CFLAGS: -D_GLFW_X11 -D_GLFW_WAYLAND
 
 #cgo linux,!es2,!es3,!wayland linux,!es2,!es3,termux LDFLAGS: -lGL
+#cgo linux,es3 LDFLAGS: -lGLESv2
 
 #cgo linux,opengl11,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_11
 #cgo linux,opengl21,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_21

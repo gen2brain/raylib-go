@@ -10,7 +10,7 @@
 package rl
 
 /*
-#cgo linux,!es2 LDFLAGS: -lm
+#cgo linux LDFLAGS: -lm
 #cgo linux CFLAGS: -Wno-stringop-overflow
 #cgo linux,sdl CFLAGS: -DPLATFORM_DESKTOP_SDL
 #cgo linux,sdl3 CFLAGS: -DPLATFORM_DESKTOP_SDL -DPLATFORM_DESKTOP_SDL3 -DUSING_SDL3_PROJECT
@@ -18,6 +18,7 @@ package rl
 #cgo linux,sdl3 pkg-config: sdl3
 
 #cgo linux,!es2,!es3,!software LDFLAGS: -lGL
+#cgo linux,es3,!software LDFLAGS: -lGLESv2
 
 #cgo linux,opengl11,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_11
 #cgo linux,opengl21,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_21

@@ -20,6 +20,7 @@ package rl
 #cgo freebsd,sdl3 pkg-config: sdl3
 
 #cgo freebsd,!es2,!es3,!software LDFLAGS: -lGL
+#cgo freebsd,es3,!software LDFLAGS: -lGLESv2
 
 #cgo freebsd,opengl11,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_11
 #cgo freebsd,opengl21,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_21

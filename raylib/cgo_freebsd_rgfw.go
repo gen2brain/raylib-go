@@ -7,7 +7,8 @@ package rl
 #cgo freebsd CFLAGS: -I. -I/usr/local/include -DPLATFORM_DESKTOP_RGFW
 #cgo freebsd LDFLAGS: -L/usr/local/lib -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor -lm -lpthread -ldl -lrt
 
-#cgo freebsd,!es2,!es3 LDFLAGS: -lGL
+#cgo freebsd LDFLAGS: -lGL
+#cgo freebsd,es2,!software freebsd,es3,!software LDFLAGS: -lGLESv2
 
 #cgo freebsd,opengl11,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_11
 #cgo freebsd,opengl21,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_21

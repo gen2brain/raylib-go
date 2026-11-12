@@ -1797,6 +1797,18 @@ int InitPlatform(void)
         hints->major = 4;
         hints->minor = 3;
     }
+    else if (rlGetVersion() == RL_OPENGL_ES_20)
+    {
+        hints->major = 2;
+        hints->minor = 0;
+        hints->profile = RGFW_glES;
+    }
+    else if (rlGetVersion() == RL_OPENGL_ES_30)
+    {
+        hints->major = 3;
+        hints->minor = 0;
+        hints->profile = RGFW_glES;
+    }
     else if (rlGetVersion() == RL_OPENGL_SOFTWARE)
     {
         hints->major = 1;

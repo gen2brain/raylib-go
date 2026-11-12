@@ -7,7 +7,8 @@ package rl
 #cgo openbsd CFLAGS: -I. -I/usr/X11R6/include -DPLATFORM_DESKTOP_RGFW
 #cgo openbsd LDFLAGS: -L/usr/X11R6/lib -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor -lm -lpthread -ldl -lrt
 
-#cgo openbsd,!es2,!es3 LDFLAGS: -lGL
+#cgo openbsd LDFLAGS: -lGL
+#cgo openbsd,es2,!software openbsd,es3,!software LDFLAGS: -lGLESv2
 
 #cgo openbsd,opengl11,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_11
 #cgo openbsd,opengl21,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_21

@@ -33,6 +33,7 @@ GLFWbool _glfwConnectNull(int platformID, _GLFWplatform* platform) {
 #cgo freebsd LDFLAGS: -L/usr/local/lib -lm -pthread -ldl -lrt -lX11
 
 #cgo freebsd,!es2,!es3 LDFLAGS: -lGL
+#cgo freebsd,es3 LDFLAGS: -lGLESv2
 
 #cgo freebsd,opengl11,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_11
 #cgo freebsd,opengl21,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_21
