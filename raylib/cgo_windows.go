@@ -28,7 +28,7 @@ GLFWbool _glfwConnectNull(int platformID, _GLFWplatform* platform) {
 #include "external/glfw/src/wgl_context.c"
 
 #cgo windows LDFLAGS: -lgdi32 -lwinmm -lole32
-#cgo windows CFLAGS: -Iexternal -Iexternal/glfw/include -DPLATFORM_DESKTOP -D_GLFW_WIN32 -Wno-stringop-overflow
+#cgo windows CFLAGS: -Iexternal -Iexternal/glfw/include -DPLATFORM_DESKTOP_GLFW -D_GLFW_WIN32 -Wno-stringop-overflow
 
 #cgo windows,!es2,!es3 LDFLAGS: -lopengl32
 

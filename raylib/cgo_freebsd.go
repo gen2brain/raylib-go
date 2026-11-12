@@ -29,7 +29,7 @@ GLFWbool _glfwConnectNull(int platformID, _GLFWplatform* platform) {
 #include "external/glfw/src/x11_window.c"
 #include "external/glfw/src/glx_context.c"
 
-#cgo freebsd CFLAGS: -I. -I/usr/local/include -Iexternal/glfw/include -DPLATFORM_DESKTOP -D_GLFW_X11
+#cgo freebsd CFLAGS: -I. -I/usr/local/include -Iexternal/glfw/include -DPLATFORM_DESKTOP_GLFW -D_GLFW_X11
 #cgo freebsd LDFLAGS: -L/usr/local/lib -lm -pthread -ldl -lrt -lX11
 
 #cgo freebsd,!es2,!es3 LDFLAGS: -lGL
