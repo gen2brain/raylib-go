@@ -39,7 +39,7 @@ To remove console window, build with `-ldflags "-H=windowsgui"`.
 
 ##### Wasm
 
-For web bindings, refer to [Raylib-Go-Wasm](https://github.com/BrownNPC/Raylib-Go-Wasm); it should be largely compatible with this repository.
+[Wasm example](https://github.com/gen2brain/raylib-go/tree/master/examples/others/wasm/example).
 
 #### purego (without cgo)
 

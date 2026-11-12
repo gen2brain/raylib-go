@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>raylib-go</title>
+<style>
+html, body { margin: 0; background: #181818; }
+body { display: flex; min-height: 100vh; }
+canvas { display: block; margin: auto; outline: none; }
+</style>
+</head>
+<body>
+<canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+<script src="wasm_exec.js"></script>
+<script type="module">
+import { run } from './raylib-go.js';
+
+run({ wasm: 'app.wasm', assets: 'resources.tar.gz' });
+</script>
+</body>
+</html>

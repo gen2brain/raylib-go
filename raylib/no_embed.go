@@ -1,5 +1,6 @@
-//go:build (!cgo || nocgo) && (extlib || (!windows && !linux && !darwin) || (!amd64 && !arm64))
+//go:build (!cgo || nocgo) && !js && (extlib || (!windows && !linux && !darwin) || (!amd64 && !arm64))
 // +build !cgo nocgo
+// +build !js
 // +build extlib !windows,!linux,!darwin !amd64,!arm64
 
 package rl

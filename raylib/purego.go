@@ -1,5 +1,6 @@
-//go:build !cgo || nocgo
+//go:build (!cgo || nocgo) && !js
 // +build !cgo nocgo
+// +build !js
 
 package rl
 
