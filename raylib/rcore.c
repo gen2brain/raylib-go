@@ -21,6 +21,8 @@
 *           - Others (not tested)
 *       > PLATFORM_DESKTOP_WIN32 (native Win32):
 *           - Windows (Win32, Win64)
+*       > PLATFORM_DESKTOP_WAYLAND (native Wayland):
+*           - Linux (Wayland compositors)
 *       > PLATFORM_WEB (GLFW + Emscripten):
 *           - HTML5 (WebAssembly)
 *       > PLATFORM_WEB_EMSCRIPTEN (Emscripten):
@@ -524,6 +526,8 @@ const char *TextFormat(const char *text, ...); // Formatting of text with variab
     #include "platforms/rcore_desktop_rgfw.c"
 #elif defined(PLATFORM_DESKTOP_WIN32)
     #include "platforms/rcore_desktop_win32.c"
+#elif defined(PLATFORM_DESKTOP_WAYLAND)
+    #include "platforms/rcore_desktop_wayland.c"
 #elif defined(PLATFORM_WEB)
     #include "platforms/rcore_web.c"
 #elif defined(PLATFORM_DRM)
@@ -596,6 +600,8 @@ void InitWindow(int width, int height, const char *title)
     TRACELOG(LOG_INFO, "Platform backend: DESKTOP (RGFW)");
 #elif defined(PLATFORM_DESKTOP_WIN32)
     TRACELOG(LOG_INFO, "Platform backend: DESKTOP (WIN32)");
+#elif defined(PLATFORM_DESKTOP_WAYLAND)
+    TRACELOG(LOG_INFO, "Platform backend: DESKTOP (WAYLAND)");
 #elif defined(PLATFORM_WEB_RGFW)
     TRACELOG(LOG_INFO, "Platform backend: WEB (RGFW) (HTML5)");
 #elif defined(PLATFORM_WEB)

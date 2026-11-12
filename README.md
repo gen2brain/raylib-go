@@ -60,15 +60,16 @@ On FreeBSD nothing is embedded, the system raylib library (`libraylib.so.6.2.0`)
 
 Platforms (cgo, default is [GLFW](https://www.glfw.org/)):
 
-| Tag      | Description                                                                                                                                |
-|----------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| `drm`    | Linux native [DRM](https://en.wikipedia.org/wiki/Direct_Rendering_Manager) mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM) |
-| `sdl`    | [SDL](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL)                                                                    |
-| `sdl3`   | [SDL3](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL3)                                                                  |
-| `rgfw`   | [RGFW](https://github.com/ColleagueRiley/RGFW) backend (PLATFORM_DESKTOP_RGFW)                                                             |
-| `win32`  | Native Win32 backend, Windows only (PLATFORM_DESKTOP_WIN32)                                                                                |
-| `memory` | Headless, renders to memory (PLATFORM_MEMORY)                                                                                              |
-| `termux` | [Termux](https://termux.dev/) on Android (X11)                                                                                             |
+| Tag       | Description                                                                                                                                |
+|-----------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| `drm`     | Linux native [DRM](https://en.wikipedia.org/wiki/Direct_Rendering_Manager) mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM) |
+| `sdl`     | [SDL](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL)                                                                    |
+| `sdl3`    | [SDL3](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL3)                                                                  |
+| `rgfw`    | [RGFW](https://github.com/ColleagueRiley/RGFW) backend (PLATFORM_DESKTOP_RGFW)                                                             |
+| `win32`   | Native Win32 backend, Windows only (PLATFORM_DESKTOP_WIN32)                                                                                |
+| `wayland` | Native Wayland backend, Linux only (PLATFORM_DESKTOP_WAYLAND)                                                                              |
+| `memory`  | Headless, renders to memory (PLATFORM_MEMORY)                                                                                              |
+| `termux`  | [Termux](https://termux.dev/) on Android (X11)                                                                                             |
 
 Graphics API (cgo, default is OpenGL 3.3 on desktop):
 
