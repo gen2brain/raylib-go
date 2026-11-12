@@ -353,7 +353,7 @@ zwp_pointer_constraints_v1_destroy(struct zwp_pointer_constraints_v1 *zwp_pointe
  *
  * The request creates a new object wp_locked_pointer which is used to
  * interact with the lock as well as receive updates about its state. See
- * the the description of wp_locked_pointer for further information.
+ * the description of wp_locked_pointer for further information.
  *
  * Note that while a pointer is locked, the wl_pointer objects of the
  * corresponding seat will not emit any wl_pointer.motion events, but
@@ -390,7 +390,7 @@ zwp_pointer_constraints_v1_lock_pointer(struct zwp_pointer_constraints_v1 *zwp_p
  *
  * The request will create a new object wp_confined_pointer which is used
  * to interact with the confinement as well as receive updates about its
- * state. See the the description of wp_confined_pointer for further
+ * state. See the description of wp_confined_pointer for further
  * information.
  */
 static inline struct zwp_confined_pointer_v1 *

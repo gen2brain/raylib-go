@@ -77,7 +77,7 @@ GLFWbool _glfwConnectNull(int platformID, _GLFWplatform* platform) {
 #undef releaseMonitor
 #endif
 
-#cgo linux CFLAGS: -Iexternal/glfw/include -DPLATFORM_DESKTOP_GLFW -Wno-stringop-overflow
+#cgo linux CFLAGS: -Iexternal/glfw/include -Iexternal/wayland -DPLATFORM_DESKTOP_GLFW -Wno-stringop-overflow
 #cgo linux LDFLAGS: -lm -pthread -ldl -lrt -lxkbcommon
 #cgo linux,!glfw_x11,!termux LDFLAGS: -lwayland-client -lwayland-cursor -lwayland-egl
 #cgo linux,!glfw_wayland linux,termux LDFLAGS: -lX11
