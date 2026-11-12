@@ -4,7 +4,7 @@
 package rl
 
 /*
-#cgo darwin LDFLAGS: -framework Foundation -framework AppKit -framework CoreVideo
+#cgo darwin LDFLAGS: -framework Foundation -framework AppKit -framework IOKit -framework CoreVideo -framework QuartzCore
 #cgo darwin CFLAGS: -DPLATFORM_DESKTOP_RGFW -Wno-deprecated-declarations -Wno-implicit-const-int-float-conversion -Wno-typedef-redefinition -Wno-extern-initializer -Wno-unused-value
 #cgo darwin CFLAGS: -Wno-incompatible-pointer-types -Wno-incompatible-function-pointer-types -Wno-incompatible-pointer-types-discards-qualifiers -Wno-macro-redefined
 
