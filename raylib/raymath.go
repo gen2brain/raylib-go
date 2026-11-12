@@ -2121,7 +2121,11 @@ func MatrixDecompose(mat Matrix, translation *Vector3, rotation *Quaternion, sca
 
 	stabilizer := eps
 	for _, c := range cols {
-		stabilizer = max(stabilizer, float32(math.Abs(float64(c.X))), float32(math.Abs(float64(c.Y))), float32(math.Abs(float64(c.Z))))
+		for _, v := range [3]float32{float32(math.Abs(float64(c.X))), float32(math.Abs(float64(c.Y))), float32(math.Abs(float64(c.Z)))} {
+			if v > stabilizer {
+				stabilizer = v
+			}
+		}
 	}
 	for i := range cols {
 		cols[i] = Vector3Scale(cols[i], 1/stabilizer)

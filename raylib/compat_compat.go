@@ -11,8 +11,6 @@ import "C"
 
 import (
 	"runtime"
-
-	"golang.org/x/exp/slices"
 )
 
 // List of VaoIDs of meshes created by calling UploadMesh()
@@ -50,7 +48,7 @@ func UploadMesh(mesh *Mesh, dynamic bool) {
 // UnloadMesh - Unload mesh data from CPU and GPU
 func UnloadMesh(mesh *Mesh) {
 	// Check list of go-managed mesh IDs
-	if slices.Contains(goManagedMeshIDs, mesh.VaoID) {
+	if containsMeshID(goManagedMeshIDs, mesh.VaoID) {
 		// C.UnloadMesh() only needs to read the VaoID & VboID
 		// passing a temporary struct with all other fields nil makes it safe for the C code to call free()
 		tempMesh := Mesh{
@@ -61,9 +59,28 @@ func UnloadMesh(mesh *Mesh) {
 		C.UnloadMesh(*cmesh)
 
 		// remove mesh VaoID from list
-		goManagedMeshIDs = slices.DeleteFunc(goManagedMeshIDs, func(id uint32) bool { return id == mesh.VaoID })
+		goManagedMeshIDs = deleteMeshID(goManagedMeshIDs, mesh.VaoID)
 	} else {
 		cmesh := mesh.cptr()
 		C.UnloadMesh(*cmesh)
 	}
+}
+
+func containsMeshID(ids []uint32, id uint32) bool {
+	for _, v := range ids {
+		if v == id {
+			return true
+		}
+	}
+	return false
+}
+
+func deleteMeshID(ids []uint32, id uint32) []uint32 {
+	out := ids[:0]
+	for _, v := range ids {
+		if v != id {
+			out = append(out, v)
+		}
+	}
+	return out
 }

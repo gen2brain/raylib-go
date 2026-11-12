@@ -199,7 +199,7 @@ func FuzzMatrixDecompose(f *testing.F) {
 			t.Errorf("translation: got %v; want %v", gotTranslation, wantTranslation)
 		}
 		sx, sy, sz := math.Abs(float64(gotScale.X)), math.Abs(float64(gotScale.Y)), math.Abs(float64(gotScale.Z))
-		if !(min(sx, sy, sz) > 1e-3*max(sx, sy, sz)) {
+		if !(math.Min(math.Min(sx, sy), sz) > 1e-3*math.Max(math.Max(sx, sy), sz)) {
 			return // singular: rotation and scale are rounding noise
 		}
 		if !testQuaternionEquals(wantRotation, gotRotation, inputScale) {
