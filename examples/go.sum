@@ -6,5 +6,3 @@ github.com/jupiterrider/ffi v0.8.0 h1:IH6lto8OZaRIulQYObtZibII4tq71hXT6Z+KLBcxCc
 github.com/jupiterrider/ffi v0.8.0/go.mod h1:9dauhpOfNqrqk28fxuu0kkdeFtT9Qr4vbfigiuIXN7c=
 github.com/neguse/go-box2d-lite v0.0.0-20170921151050-5d8ed9b7272b h1:+67TGbwfgeB5o03Rx+ZBW44zAQ+wUujcwdRA0p9CbJI=
 github.com/neguse/go-box2d-lite v0.0.0-20170921151050-5d8ed9b7272b/go.mod h1:kvKwD9codtns5mvpA53V3vLnqFb/Ahcu8zgkGM0SIbI=
-golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a h1:+3jdDGGB8NGb1Zktc737jlt3/A5f6UlwSzmvqUuufxw=
-golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a/go.mod h1:d2fgXJLVs4dYDHUk5lwMIfzRzSrWCfGZb0ZqeLa/Vcw=
