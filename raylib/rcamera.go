@@ -1,5 +1,17 @@
 package rl
 
+import "math"
+
+const (
+	cameraMoveSpeed            = 5.4
+	cameraRotationSpeed        = 0.03
+	cameraPanSpeed             = 2.0
+	cameraMouseMoveSensitivity = 0.003
+	cameraOrbitalSpeed         = 0.5
+	cameraCullDistanceNear     = 0.05
+	cameraCullDistanceFar      = 4000.0
+)
+
 // GetCameraForward - Returns the cameras forward vector (normalized)
 func GetCameraForward(camera *Camera) Vector3 {
 	return Vector3Normalize(Vector3Subtract(camera.Target, camera.Position))
@@ -16,7 +28,7 @@ func GetCameraRight(camera *Camera) Vector3 {
 	forward := GetCameraForward(camera)
 	up := GetCameraUp(camera)
 
-	return Vector3CrossProduct(forward, up)
+	return Vector3Normalize(Vector3CrossProduct(forward, up))
 }
 
 // CameraMoveForward - Moves the camera in its forward direction
@@ -24,8 +36,14 @@ func CameraMoveForward(camera *Camera, distance float32, moveInWorldPlane uint8)
 	forward := GetCameraForward(camera)
 
 	if moveInWorldPlane != 0 {
-		// Project vector onto world plane
-		forward.Y = float32(0)
+		// Project vector onto world plane (the plane defined by the up vector)
+		if math.Abs(float64(camera.Up.Z)) > 0.7071 {
+			forward.Z = 0
+		} else if math.Abs(float64(camera.Up.X)) > 0.7071 {
+			forward.X = 0
+		} else {
+			forward.Y = 0
+		}
 		forward = Vector3Normalize(forward)
 	}
 
@@ -54,8 +72,14 @@ func CameraMoveRight(camera *Camera, distance float32, moveInWorldPlane uint8) {
 	right := GetCameraRight(camera)
 
 	if moveInWorldPlane != 0 {
-		// Project vector onto world plane
-		right.Y = float32(0)
+		// Project vector onto world plane (the plane defined by the up vector)
+		if math.Abs(float64(camera.Up.Z)) > 0.7071 {
+			right.Z = 0
+		} else if math.Abs(float64(camera.Up.X)) > 0.7071 {
+			right.X = 0
+		} else {
+			right.Y = 0
+		}
 		right = Vector3Normalize(right)
 	}
 
@@ -179,12 +203,12 @@ func GetCameraViewMatrix(camera *Camera) Matrix {
 // GetCameraProjectionMatrix - Returns the camera projection matrix
 func GetCameraProjectionMatrix(camera *Camera, aspect float32) Matrix {
 	if camera.Projection == CameraPerspective {
-		return MatrixPerspective(camera.Fovy*(Pi/180.0), aspect, 0.01, 1000.0)
+		return MatrixPerspective(camera.Fovy*Deg2rad, aspect, cameraCullDistanceNear, cameraCullDistanceFar)
 	} else if camera.Projection == CameraOrthographic {
-		top := camera.Fovy / 2.0
-		right := top * aspect
+		top := float64(camera.Fovy) / 2.0
+		right := top * float64(aspect)
 
-		return MatrixOrtho(-right, right, -top, top, 0.01, 1000.0)
+		return MatrixOrtho(float32(-right), float32(right), float32(-top), float32(top), cameraCullDistanceNear, cameraCullDistanceFar)
 	}
 
 	return MatrixIdentity()
@@ -195,114 +219,113 @@ func GetCameraProjectionMatrix(camera *Camera, aspect float32) Matrix {
 func UpdateCamera(camera *Camera, mode CameraMode) {
 	var mousePositionDelta = GetMouseDelta()
 
-	moveInWorldPlaneBool := mode == CameraFirstPerson || mode == CameraThirdPerson
-	var moveInWorldPlane uint8
-	if moveInWorldPlaneBool {
+	var moveInWorldPlane, rotateAroundTarget, lockView, rotateUp uint8
+	if mode == CameraFirstPerson || mode == CameraThirdPerson {
 		moveInWorldPlane = 1
 	}
-
-	rotateAroundTargetBool := mode == CameraThirdPerson || mode == CameraOrbital
-	var rotateAroundTarget uint8
-	if rotateAroundTargetBool {
+	if mode == CameraThirdPerson || mode == CameraOrbital {
 		rotateAroundTarget = 1
 	}
-
-	lockViewBool := mode == CameraFirstPerson || mode == CameraThirdPerson || mode == CameraOrbital
-	var lockView uint8
-	if lockViewBool {
+	if mode == CameraFree || mode == CameraFirstPerson || mode == CameraThirdPerson || mode == CameraOrbital {
 		lockView = 1
 	}
 
-	var rotateUp uint8
+	// Camera speeds based on frame time
+	moveSpeed := cameraMoveSpeed * GetFrameTime()
+	rotationSpeed := cameraRotationSpeed * GetFrameTime()
+	panSpeed := cameraPanSpeed * GetFrameTime()
+	orbitalSpeed := cameraOrbitalSpeed * GetFrameTime()
 
-	if mode == CameraOrbital {
+	if mode == CameraCustom {
+	} else if mode == CameraOrbital {
 		// Orbital can just orbit
-		var rotation = MatrixRotate(GetCameraUp(camera), 0.5*GetFrameTime())
+		var rotation = MatrixRotate(GetCameraUp(camera), orbitalSpeed)
 		var view = Vector3Subtract(camera.Position, camera.Target)
 		view = Vector3Transform(view, rotation)
 		camera.Position = Vector3Add(camera.Target, view)
 	} else {
 		// Camera rotation
 		if IsKeyDown(KeyDown) {
-			CameraPitch(camera, -0.03, lockView, rotateAroundTarget, rotateUp)
+			CameraPitch(camera, -rotationSpeed, lockView, rotateAroundTarget, rotateUp)
 		}
 		if IsKeyDown(KeyUp) {
-			CameraPitch(camera, 0.03, lockView, rotateAroundTarget, rotateUp)
+			CameraPitch(camera, rotationSpeed, lockView, rotateAroundTarget, rotateUp)
 		}
 		if IsKeyDown(KeyRight) {
-			CameraYaw(camera, -0.03, rotateAroundTarget)
+			CameraYaw(camera, -rotationSpeed, rotateAroundTarget)
 		}
 		if IsKeyDown(KeyLeft) {
-			CameraYaw(camera, 0.03, rotateAroundTarget)
+			CameraYaw(camera, rotationSpeed, rotateAroundTarget)
 		}
 		if IsKeyDown(KeyQ) {
-			CameraRoll(camera, -0.03)
+			CameraRoll(camera, -rotationSpeed)
 		}
 		if IsKeyDown(KeyE) {
-			CameraRoll(camera, 0.03)
+			CameraRoll(camera, rotationSpeed)
 		}
 
 		// Camera movement
-		if !(IsGamepadAvailable(0)) {
-			// Camera pan (for CameraFree)
-			if mode == CameraFree && IsMouseButtonDown(MouseMiddleButton) {
-				var mouseDelta = GetMouseDelta()
-				if mouseDelta.X > 0.0 {
-					CameraMoveRight(camera, 0.2, moveInWorldPlane)
-				}
-				if mouseDelta.X < 0.0 {
-					CameraMoveRight(camera, -0.2, moveInWorldPlane)
-				}
-				if mouseDelta.Y > 0.0 {
-					CameraMoveUp(camera, -0.2)
-				}
-				if mouseDelta.Y < 0.0 {
-					CameraMoveUp(camera, 0.2)
-				}
-			} else {
-				// Mouse support
-				CameraYaw(camera, -mousePositionDelta.X*0.003, rotateAroundTarget)
-				CameraPitch(camera, -mousePositionDelta.Y*0.003, lockView, rotateAroundTarget, rotateUp)
+		// Camera pan (for CameraFree)
+		if mode == CameraFree && IsMouseButtonDown(MouseButtonMiddle) {
+			var mouseDelta = GetMouseDelta()
+			if mouseDelta.X > 0.0 {
+				CameraMoveRight(camera, panSpeed, moveInWorldPlane)
 			}
-
-			// Keyboard support
-			if IsKeyDown(KeyW) {
-				CameraMoveForward(camera, 0.09, moveInWorldPlane)
+			if mouseDelta.X < 0.0 {
+				CameraMoveRight(camera, -panSpeed, moveInWorldPlane)
 			}
-			if IsKeyDown(KeyA) {
-				CameraMoveRight(camera, -0.09, moveInWorldPlane)
+			if mouseDelta.Y > 0.0 {
+				CameraMoveUp(camera, -panSpeed)
 			}
-			if IsKeyDown(KeyS) {
-				CameraMoveForward(camera, -0.09, moveInWorldPlane)
-			}
-			if IsKeyDown(KeyD) {
-				CameraMoveRight(camera, 0.09, moveInWorldPlane)
+			if mouseDelta.Y < 0.0 {
+				CameraMoveUp(camera, panSpeed)
 			}
 		} else {
+			// Mouse support
+			CameraYaw(camera, -mousePositionDelta.X*cameraMouseMoveSensitivity, rotateAroundTarget)
+			CameraPitch(camera, -mousePositionDelta.Y*cameraMouseMoveSensitivity, lockView, rotateAroundTarget, rotateUp)
+		}
+
+		// Keyboard support
+		if IsKeyDown(KeyW) {
+			CameraMoveForward(camera, moveSpeed, moveInWorldPlane)
+		}
+		if IsKeyDown(KeyA) {
+			CameraMoveRight(camera, -moveSpeed, moveInWorldPlane)
+		}
+		if IsKeyDown(KeyS) {
+			CameraMoveForward(camera, -moveSpeed, moveInWorldPlane)
+		}
+		if IsKeyDown(KeyD) {
+			CameraMoveRight(camera, moveSpeed, moveInWorldPlane)
+		}
+
+		// Gamepad movement
+		if IsGamepadAvailable(0) {
 			// Gamepad controller support
-			CameraYaw(camera, -(GetGamepadAxisMovement(0, GamepadAxisRightX)*float32(2))*0.003, rotateAroundTarget)
-			CameraPitch(camera, -(GetGamepadAxisMovement(0, GamepadAxisRightY)*float32(2))*0.003, lockView, rotateAroundTarget, rotateUp)
+			CameraYaw(camera, -(GetGamepadAxisMovement(0, GamepadAxisRightX)*2)*cameraMouseMoveSensitivity, rotateAroundTarget)
+			CameraPitch(camera, -(GetGamepadAxisMovement(0, GamepadAxisRightY)*2)*cameraMouseMoveSensitivity, lockView, rotateAroundTarget, rotateUp)
 
 			if GetGamepadAxisMovement(0, GamepadAxisLeftY) <= -0.25 {
-				CameraMoveForward(camera, 0.09, moveInWorldPlane)
+				CameraMoveForward(camera, moveSpeed, moveInWorldPlane)
 			}
 			if GetGamepadAxisMovement(0, GamepadAxisLeftX) <= -0.25 {
-				CameraMoveRight(camera, -0.09, moveInWorldPlane)
+				CameraMoveRight(camera, -moveSpeed, moveInWorldPlane)
 			}
 			if GetGamepadAxisMovement(0, GamepadAxisLeftY) >= 0.25 {
-				CameraMoveForward(camera, -0.09, moveInWorldPlane)
+				CameraMoveForward(camera, -moveSpeed, moveInWorldPlane)
 			}
 			if GetGamepadAxisMovement(0, GamepadAxisLeftX) >= 0.25 {
-				CameraMoveRight(camera, 0.09, moveInWorldPlane)
+				CameraMoveRight(camera, moveSpeed, moveInWorldPlane)
 			}
 		}
 
 		if mode == CameraFree {
 			if IsKeyDown(KeySpace) {
-				CameraMoveUp(camera, 0.09)
+				CameraMoveUp(camera, moveSpeed)
 			}
 			if IsKeyDown(KeyLeftControl) {
-				CameraMoveUp(camera, -0.09)
+				CameraMoveUp(camera, -moveSpeed)
 			}
 		}
 	}
@@ -336,9 +359,9 @@ func UpdateCameraPro(camera *Camera, movement Vector3, rotation Vector3, zoom fl
 	moveInWorldPlane := uint8(1)
 
 	// Camera rotation
-	CameraPitch(camera, -rotation.Y*(Pi/180.0), lockView, rotateAroundTarget, rotateUp)
-	CameraYaw(camera, -rotation.X*(Pi/180.0), rotateAroundTarget)
-	CameraRoll(camera, rotation.Z*(Pi/180.0))
+	CameraPitch(camera, -rotation.Y*Deg2rad, lockView, rotateAroundTarget, rotateUp)
+	CameraYaw(camera, -rotation.X*Deg2rad, rotateAroundTarget)
+	CameraRoll(camera, rotation.Z*Deg2rad)
 
 	// Camera movement
 	CameraMoveForward(camera, movement.X, moveInWorldPlane)
