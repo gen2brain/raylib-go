@@ -44,12 +44,12 @@ For web bindings, refer to [Raylib-Go-Wasm](https://github.com/BrownNPC/Raylib-G
 #### purego (without cgo)
 
 You can use raylib-go on `Linux`, `macOS`, `Windows` and `FreeBSD` without the need of [cgo](https://go.dev/blog/cgo), i.e. with `CGO_ENABLED=0`,
-or with the `nocgo` build tag when cgo is enabled, for example when raylib's C symbols clash with another cgo library. 32-bit is not supported.
+or with the `nocgo` build tag when cgo is enabled. 32-bit is not supported.
 
 The shared libraries (.so, .dylib, .dll) of raylib are embedded for Linux, macOS and Windows on amd64 and arm64, built from the same bundled C sources.
 They are unpacked to a temporary directory at startup and removed again. With the build tag `extlib` nothing is embedded and the system raylib library is loaded instead.
 
-On FreeBSD build with `-gcflags="github.com/ebitengine/purego/internal/fakecgo=-std"`.
+On FreeBSD nothing is embedded, the system raylib library (`libraylib.so.6.2.0`) is loaded; build with `-gcflags="github.com/ebitengine/purego/internal/fakecgo=-std"`.
 
 
 ### Installation
@@ -67,7 +67,7 @@ Platforms (cgo, default is [GLFW](https://www.glfw.org/)):
 | `sdl3`   | [SDL3](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL3)                                                                  |
 | `rgfw`   | [RGFW](https://github.com/ColleagueRiley/RGFW) backend (PLATFORM_DESKTOP_RGFW)                                                             |
 | `win32`  | Native Win32 backend, Windows only (PLATFORM_DESKTOP_WIN32)                                                                                |
-| `memory` | Headless, renders to memory with the software renderer, no window or GPU (PLATFORM_MEMORY)                                                 |
+| `memory` | Headless, renders to memory (PLATFORM_MEMORY)                                                                                              |
 
 Graphics API (cgo, default is OpenGL 3.3 on desktop):
 
@@ -78,18 +78,18 @@ Graphics API (cgo, default is OpenGL 3.3 on desktop):
 | `opengl11` | OpenGL 1.1 (pseudo OpenGL 1.1 style)                                                          |
 | `es2`      | OpenGL ES 2.0 (can be used to link against [Google's ANGLE](https://github.com/google/angle)) |
 | `es3`      | OpenGL ES 3.0 (experimental)                                                                  |
-| `software` | Software renderer, no GPU needed (with `sdl`, `sdl3`, `rgfw`, `drm` or `win32`)               |
+| `software` | Software renderer (rlsw)                                                                      |
 
 Options:
 
-| Tag       | Description                                                                                      |
-|-----------|--------------------------------------------------------------------------------------------------|
-| `x11`     | Force X11 compatibility mode on Wayland (GLFW)                                                   |
-| `wayland` | Force Wayland only mode (GLFW)                                                                   |
-| `noaudio` | Disable audio functions                                                                          |
-| `nocgo`   | Use the purego backend even when cgo is enabled                                                  |
-| `extlib`  | Load the system raylib library instead of the embedded one (used with purego)                    |
-| `termux`  | Android in [Termux](https://termux.dev/) as a desktop X11 application, instead of NativeActivity |
+| Tag       | Description                                                                   |
+|-----------|-------------------------------------------------------------------------------|
+| `x11`     | Force X11 compatibility mode on Wayland (GLFW)                                |
+| `wayland` | Force Wayland only mode (GLFW)                                                |
+| `noaudio` | Disable audio functions                                                       |
+| `nocgo`   | Use the purego backend even when cgo is enabled                               |
+| `extlib`  | Load the system raylib library instead of the embedded one (used with purego) |
+| `termux`  | [Termux](https://termux.dev/) on Android (X11)                                |
 
 ### Documentation
 
