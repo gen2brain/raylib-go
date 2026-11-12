@@ -12,15 +12,12 @@ func main() {
 
 	rl.SetTargetFPS(60)
 
-	var button bool
-
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
 
 		rl.ClearBackground(rl.Black)
 
-		button = gui.Button(rl.NewRectangle(50, 150, 100, 40), "Click")
-		if button {
+		if gui.Button(rl.NewRectangle(50, 150, 100, 40), "Click") != 0 {
 			fmt.Println("Clicked on button")
 		}
 

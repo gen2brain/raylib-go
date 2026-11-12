@@ -14,7 +14,7 @@ func main() {
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.RayWhite)
-		raygui.DrawIcon(raygui.ICON_255, 100, 100, 8, rl.Gray)
+		raygui.DrawIcon(255, 100, 100, 8, rl.Gray)
 		rl.EndDrawing()
 	}
 }

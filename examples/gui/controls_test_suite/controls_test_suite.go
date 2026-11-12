@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 
 	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
@@ -11,118 +13,82 @@ import (
 *
 *   raygui - controls test suite
 *
-*   TEST CONTROLS:
-*       - gui.DropdownBox()
-*       - gui.CheckBox()
-*       - gui.Spinner()
-*       - gui.ValueBox()
-*       - gui.TextBox()
-*       - gui.Button()
-*       - gui.ComboBox()
-*       - gui.ListView()
-*       - gui.ToggleGroup()
-*       - gui.ColorPicker()
-*       - gui.Slider()
-*       - gui.SliderBar()
-*       - gui.ProgressBar()
-*       - gui.ColorBarAlpha()
-*       - gui.ScrollPanel()
-*
-*
 *   DEPENDENCIES:
-*       raylib 4.0 - Windowing/input management and drawing.
-*       raygui 3.2 - Immediate-mode GUI controls.
-*
-*   COMPILATION (Windows - MinGW):
-*       gcc -o $(NAME_PART).exe $(FILE_NAME) -I../../src -lraylib -lopengl32 -lgdi32 -std=c99
+*       raylib 6.2 - Windowing/input management and drawing.
+*       raygui 5.1-dev - Immediate-mode GUI controls.
 *
 *   LICENSE: zlib/libpng
 *
-*   Copyright (c) 2016-2022 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2016-2026 Ramon Santamaria (@raysan5)
 *
 **********************************************************************************************/
 
-//#define RAYGUI_CUSTOM_ICONS     // It requires providing gui_icons.h in the same directory
-//#include "gui_icons.h"          // External icons data provided, it can be generated with rGuiIcons tool
+var styles = []string{"", "jungle", "lavanda", "dark", "bluish", "cyber", "terminal", "candy", "cherry", "ashes", "enefete", "sunny", "amber", "genesis", "brick", "pocket", "turbo", "wisteria", "advance", "rltech"}
 
-// ------------------------------------------------------------------------------------
-// Program main entry point
-// ------------------------------------------------------------------------------------
 func main() {
-	// Initialization
-	//---------------------------------------------------------------------------------------
-	const (
-		screenWidth  = 690
-		screenHeight = 560
-	)
+	const screenWidth = 960
+	const screenHeight = 580
 
 	rl.InitWindow(screenWidth, screenHeight, "raygui - controls test suite")
 	rl.SetExitKey(0)
 
-	// GUI controls initialization
-	//----------------------------------------------------------------------------------
-	var (
-		dropdownBox000Active int32 = 0
-		dropDown000EditMode  bool  = false
+	var tabActive int32
 
-		dropdownBox001Active int32 = 0
-		dropDown001EditMode  bool  = false
+	var dropdownBox000Active int32
+	dropDown000EditMode := false
 
-		spinner001Value int32 = 0
-		spinnerEditMode bool  = false
+	var dropdownBox001Active int32
+	dropDown001EditMode := false
 
-		valueBox002Value int32 = 0
-		valueBoxEditMode bool  = false
+	var spinner001Value int32
+	spinnerEditMode := false
 
-		textBoxText          = "Text box"
-		textBoxEditMode bool = false
+	var valueBox002Value int32
+	valueBoxEditMode := false
 
-		listViewScrollIndex int32 = 0
-		listViewActive      int32 = -1
+	textBoxText := "Text box"
+	textBoxEditMode := false
 
-		listViewExScrollIndex int32 = 0
-		listViewExActive      int32 = 2
-		listViewExFocus       int32 = -1
-		listViewExList              = []string{"This", "is", "a", "list view", "with", "disable", "elements", "amazing!"}
+	textBoxMultiText := "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\n\nThisisastringlongerthanexpectedwithoutspacestotestcharbreaksforthosecases,checkingifworkingasexpected.\n\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+	textBoxMultiEditMode := false
 
-		colorPickerValue = rl.Red
+	var listViewScrollIndex int32
+	listViewActive := int32(-1)
 
-		sliderValue    float32 = 50
-		sliderBarValue float32 = 60
-		progressValue  float32 = 0.4
+	var listViewExScrollIndex int32
+	listViewExActive := int32(2)
+	listViewExFocus := int32(-1)
+	listViewExList := []string{"This", "is", "a", "list view", "with", "disable", "elements", "amazing!"}
 
-		forceSquaredChecked bool = false
+	colorPickerValue := rl.Red
 
-		alphaValue float32 = 0.5
+	sliderValue := float32(50.0)
+	sliderBarValue := float32(60)
+	progressValue := float32(0.1)
 
-		comboBoxActive int32 = 1
+	forceSquaredChecked := false
 
-		toggleGroupActive int32 = 0
+	alphaValue := float32(0.5)
 
-		viewScroll = rl.NewVector2(0, 0)
+	var visualStyleActive int32
+	var prevVisualStyleActive int32
 
-		//----------------------------------------------------------------------------------
+	var toggleGroupActive int32
+	var toggleSliderActive int32
 
-		// Custom GUI font loading
-		//Font font = LoadFontEx("fonts/rainyhearts16.ttf", 12, 0, 0);
-		//GuiSetFont(font);
+	var viewScroll rl.Vector2
 
-		exitWindow     bool = false
-		showMessageBox bool = false
+	exitWindow := false
+	showMessageBox := false
 
-		textInput        string
-		showTextInputBox bool = false
+	textInput := ""
+	showTextInputBox := false
 
-		// TODO textInputFileName string
-	)
+	alpha := float32(1.0)
 
 	rl.SetTargetFPS(60)
-	//--------------------------------------------------------------------------------------
 
-	// Main game loop
-	for !exitWindow { // Detect window close button or ESC key
-		// Update
-		//----------------------------------------------------------------------------------
+	for !exitWindow {
 		exitWindow = rl.WindowShouldClose()
 
 		if rl.IsKeyPressed(rl.KeyEscape) {
@@ -133,149 +99,183 @@ func main() {
 			showTextInputBox = true
 		}
 
-		// TODO if rl.IsFileDropped() {
-		// TODO var droppedFiles gui.FilePathList = rl.LoadDroppedFiles()
-		// TODO if (droppedFiles.count > 0) && rl.IsFileExtension(droppedFiles.paths[0], ".rgs") {
-		// TODO 	gui.LoadStyle(droppedFiles.paths[0])
-		// TODO }
-		// TODO rl.UnloadDroppedFiles(droppedFiles) // Clear internal buffers
-		// TODO }
-		//----------------------------------------------------------------------------------
+		if rl.IsFileDropped() {
+			droppedFiles := rl.LoadDroppedFiles()
 
-		// Draw
-		//----------------------------------------------------------------------------------
+			if len(droppedFiles) > 0 && strings.EqualFold(filepath.Ext(droppedFiles[0]), ".rgs") {
+				gui.LoadStyle(droppedFiles[0])
+			}
+
+			rl.UnloadDroppedFiles()
+		}
+
+		if alpha < 0.0 {
+			alpha = 0.0
+		}
+		if rl.IsKeyPressed(rl.KeySpace) {
+			alpha = 1.0
+		}
+
+		gui.SetAlpha(alpha)
+
+		if rl.IsKeyPressed(rl.KeyLeft) {
+			progressValue -= 0.1
+		} else if rl.IsKeyPressed(rl.KeyRight) {
+			progressValue += 0.1
+		}
+		if progressValue > 1.0 {
+			progressValue = 1.0
+		} else if progressValue < 0.0 {
+			progressValue = 0.0
+		}
+
+		if visualStyleActive != prevVisualStyleActive {
+			gui.LoadStyleDefault()
+
+			if visualStyleActive > 0 && int(visualStyleActive) < len(styles) {
+				gui.LoadStyle(filepath.Join("styles", "style_"+styles[visualStyleActive]+".rgs"))
+			}
+
+			gui.SetStyle(gui.LABEL, gui.TEXT_ALIGNMENT, gui.TEXT_ALIGN_LEFT)
+
+			prevVisualStyleActive = visualStyleActive
+		}
+
 		rl.BeginDrawing()
 
 		rl.ClearBackground(rl.GetColor(uint(gui.GetStyle(gui.DEFAULT, gui.BACKGROUND_COLOR))))
 
-		// raygui: controls drawing
-		//----------------------------------------------------------------------------------
 		if dropDown000EditMode || dropDown001EditMode {
 			gui.Lock()
-		} else if !dropDown000EditMode && !dropDown001EditMode {
-			gui.Unlock()
 		}
-		//GuiDisable();
+		if showTextInputBox {
+			gui.Lock()
+		}
 
-		// First GUI column
-		//GuiSetStyle(CHECKBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
-		gui.CheckBox(rl.NewRectangle(25, 108, 15, 15), "FORCE CHECK!", &forceSquaredChecked)
+		gui.SetStyle(gui.TABBAR, gui.TAB_ITEMS_WIDTH, 140)
+		gui.TabBar(rl.Rectangle{X: 0, Y: 8, Width: float32(rl.GetScreenWidth()), Height: 26}, "#176#TAB_01;#177#TAB_02;#178#TAB_03;#179#TAB_04;#180#TAB_05;#181#TAB_06", nil, &tabActive)
+
+		gui.CheckBox(rl.Rectangle{X: 25, Y: 108 + 20, Width: 15, Height: 15}, "FORCE CHECK!", &forceSquaredChecked)
 
 		gui.SetStyle(gui.TEXTBOX, gui.TEXT_ALIGNMENT, gui.TEXT_ALIGN_CENTER)
-		//GuiSetStyle(VALUEBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
-		gui.Spinner(rl.NewRectangle(25, 135, 125, 30), "", &spinner001Value, 0, 100, spinnerEditMode)
-
-		if gui.ValueBox(rl.NewRectangle(25, 175, 125, 30), "", &valueBox002Value, 0, 100, valueBoxEditMode) {
+		if gui.Spinner(rl.Rectangle{X: 25, Y: 135 + 20, Width: 125, Height: 30}, "", &spinner001Value, 0, 100, spinnerEditMode) != 0 {
+			spinnerEditMode = !spinnerEditMode
+		}
+		if gui.ValueBox(rl.Rectangle{X: 25, Y: 175 + 20, Width: 125, Height: 30}, "", &valueBox002Value, 0, 100, valueBoxEditMode) != 0 {
 			valueBoxEditMode = !valueBoxEditMode
 		}
 		gui.SetStyle(gui.TEXTBOX, gui.TEXT_ALIGNMENT, gui.TEXT_ALIGN_LEFT)
-		if gui.TextBox(rl.NewRectangle(25, 215, 125, 30), &textBoxText, 64, textBoxEditMode) {
+		if gui.TextBox(rl.Rectangle{X: 25, Y: 215 + 20, Width: 125, Height: 30}, &textBoxText, 64, textBoxEditMode) != 0 {
 			textBoxEditMode = !textBoxEditMode
 		}
 
 		gui.SetStyle(gui.BUTTON, gui.TEXT_ALIGNMENT, gui.TEXT_ALIGN_CENTER)
 
-		if gui.Button(rl.NewRectangle(25, 255, 125, 30), gui.IconText(gui.ICON_FILE_SAVE, "Save File")) {
+		if gui.Button(rl.Rectangle{X: 25, Y: 255 + 20, Width: 125, Height: 30}, gui.IconText(gui.ICON_FILE_SAVE, "Save File")) != 0 {
 			showTextInputBox = true
 		}
 
-		gui.GroupBox(rl.NewRectangle(25, 310, 125, 150), "STATES")
-		//GuiLock();
+		gui.GroupBox(rl.Rectangle{X: 25, Y: 310 + 20, Width: 125, Height: 150}, "STATES")
 		gui.SetState(gui.STATE_NORMAL)
-		if gui.Button(rl.NewRectangle(30, 320, 115, 30), "NORMAL") {
-		}
+		gui.Button(rl.Rectangle{X: 30, Y: 320 + 20, Width: 115, Height: 30}, "NORMAL")
 		gui.SetState(gui.STATE_FOCUSED)
-		if gui.Button(rl.NewRectangle(30, 355, 115, 30), "FOCUSED") {
-		}
+		gui.Button(rl.Rectangle{X: 30, Y: 355 + 20, Width: 115, Height: 30}, "FOCUSED")
 		gui.SetState(gui.STATE_PRESSED)
-		if gui.Button(rl.NewRectangle(30, 390, 115, 30), "#15#PRESSED") {
-		}
+		gui.Button(rl.Rectangle{X: 30, Y: 390 + 20, Width: 115, Height: 30}, "#15#PRESSED")
 		gui.SetState(gui.STATE_DISABLED)
-		if gui.Button(rl.NewRectangle(30, 425, 115, 30), "DISABLED") {
-		}
+		gui.Button(rl.Rectangle{X: 30, Y: 425 + 20, Width: 115, Height: 30}, "DISABLED")
 		gui.SetState(gui.STATE_NORMAL)
-		//GuiUnlock();
 
-		gui.ComboBox(rl.NewRectangle(25, 470, 125, 30), "ONE;TWO;THREE;FOUR", &comboBoxActive)
+		gui.SetStyle(gui.COMBOBOX, gui.COMBO_BUTTON_WIDTH, 40)
+		gui.ComboBox(rl.Rectangle{X: 25, Y: 480 + 20, Width: 125, Height: 30},
+			"default;Jungle;Lavanda;Dark;Bluish;Cyber;Terminal;Candy;Cherry;Ashes;Enefete;Sunny;Amber;Genesis;Brick;Pocket;Turbo;Wisteria;Advance;RLTech", &visualStyleActive)
 
-		// NOTE: gui.DropdownBox must draw after any other control that can be covered on unfolding
+		if dropDown000EditMode || dropDown001EditMode {
+			gui.Unlock()
+		}
+		if showTextInputBox {
+			gui.Lock()
+		}
+
+		gui.SetStyle(gui.DROPDOWNBOX, gui.TEXT_PADDING, 4)
 		gui.SetStyle(gui.DROPDOWNBOX, gui.TEXT_ALIGNMENT, gui.TEXT_ALIGN_LEFT)
-		if gui.DropdownBox(rl.NewRectangle(25, 65, 125, 30), "#01#ONE;#02#TWO;#03#THREE;#04#FOUR", &dropdownBox001Active, dropDown001EditMode) {
+		if gui.DropdownBox(rl.Rectangle{X: 25, Y: 65 + 20, Width: 125, Height: 30}, "#01#ONE;#02#TWO;#03#THREE;#04#FOUR", &dropdownBox001Active, dropDown001EditMode) != 0 {
 			dropDown001EditMode = !dropDown001EditMode
 		}
-
 		gui.SetStyle(gui.DROPDOWNBOX, gui.TEXT_ALIGNMENT, gui.TEXT_ALIGN_CENTER)
-		if gui.DropdownBox(rl.NewRectangle(25, 25, 125, 30), "ONE;TWO;THREE", &dropdownBox000Active, dropDown000EditMode) {
+		gui.SetStyle(gui.DROPDOWNBOX, gui.TEXT_PADDING, 0)
+
+		if gui.DropdownBox(rl.Rectangle{X: 25, Y: 25 + 20, Width: 125, Height: 30}, "#27#ONE;#28#TWO;#29#THREE", &dropdownBox000Active, dropDown000EditMode) != 0 {
 			dropDown000EditMode = !dropDown000EditMode
 		}
 
-		// Second GUI column
-		gui.ListView(rl.NewRectangle(165, 25, 140, 140), "Charmander;Bulbasaur;#18#Squirtel;Pikachu;Eevee;Pidgey", &listViewScrollIndex, &listViewActive)
-		gui.ListViewEx(rl.NewRectangle(165, 180, 140, 200), listViewExList, &listViewExFocus, &listViewExScrollIndex, &listViewExActive)
+		gui.ListView(rl.Rectangle{X: 165, Y: 25 + 20, Width: 140, Height: 124}, "Charmander;Bulbasaur;#18#Squirtle;Pikachu;Eevee;Pidgey", &listViewScrollIndex, &listViewActive)
+		gui.ListViewEx(rl.Rectangle{X: 165, Y: 162 + 20, Width: 140, Height: 184}, listViewExList, &listViewExScrollIndex, &listViewExActive, &listViewExFocus)
+		gui.SetStyle(gui.LISTVIEW, gui.LIST_ITEMS_BORDER_NORMAL, 0)
 
-		gui.ToggleGroup(rl.NewRectangle(165, 400, 140, 25), "#1#ONE\n#3#TWO\n#8#THREE\n#23#", &toggleGroupActive)
+		gui.ToggleGroup(rl.Rectangle{X: 165, Y: 360 + 20, Width: 140, Height: 24}, "#1#ONE\n#3#TWO\n#8#THREE\n#23#", &toggleGroupActive)
+		gui.SetStyle(gui.SLIDER, gui.SLIDER_PADDING, 2)
+		gui.ToggleSlider(rl.Rectangle{X: 165, Y: 480 + 20, Width: 140, Height: 30}, "ON;OFF", &toggleSliderActive)
+		gui.SetStyle(gui.SLIDER, gui.SLIDER_PADDING, 0)
 
-		// Third GUI column
-		gui.Panel(rl.NewRectangle(320, 25, 225, 140), "Panel Info")
-		gui.ColorPicker(rl.NewRectangle(320, 185, 196, 192), "", &colorPickerValue)
+		gui.Panel(rl.Rectangle{X: 320, Y: 25 + 20, Width: 225, Height: 140}, "Panel Info")
+		gui.ColorPicker(rl.Rectangle{X: 320, Y: 185 + 20, Width: 196, Height: 192}, "", &colorPickerValue)
 
-		gui.Slider(rl.NewRectangle(355, 400, 165, 20), "TEST",
-			fmt.Sprintf("%2.2f", sliderValue), &sliderValue, -50, 100)
-		gui.SliderBar(rl.NewRectangle(320, 430, 200, 20), "",
-			fmt.Sprintf("%2.2f", sliderBarValue), &sliderBarValue, 0, 100)
-		gui.ProgressBar(rl.NewRectangle(320, 460, 200, 20), "", "", &progressValue, 0, 1)
+		gui.Slider(rl.Rectangle{X: 355, Y: 400 + 20, Width: 165, Height: 20}, "TEST", fmt.Sprintf("%2.2f", sliderValue), &sliderValue, -50, 100)
+		gui.SliderBar(rl.Rectangle{X: 320, Y: 430 + 20, Width: 200, Height: 20}, "", fmt.Sprintf("%d", int32(sliderBarValue)), &sliderBarValue, 0, 100)
 
-		// NOTE: View rectangle could be used to perform some scissor test
+		gui.ProgressBar(rl.Rectangle{X: 320, Y: 460 + 20, Width: 200, Height: 20}, "", fmt.Sprintf("%d%%", int32(progressValue*100)), &progressValue, 0.0, 1.0)
+		gui.Enable()
+
 		var view rl.Rectangle
-		gui.ScrollPanel(rl.NewRectangle(560, 25, 102, 354), "", rl.NewRectangle(560, 25, 300, 1200), &viewScroll, &view)
+		gui.ScrollPanel(rl.Rectangle{X: 560, Y: 25 + 20, Width: 102, Height: 354}, "", rl.Rectangle{X: 560, Y: 25, Width: 300, Height: 1200}, &viewScroll, &view)
 
 		var mouseCell rl.Vector2
-		gui.Grid(rl.NewRectangle(560, 25 + 180 + 195, 100, 120), "", 20, 3, &mouseCell)
+		gui.Grid(rl.Rectangle{X: 560, Y: 25 + 180 + 195 + 20, Width: 100, Height: 120}, "", 20, 3, &mouseCell)
 
-		gui.ColorBarAlpha(rl.NewRectangle(320, 490, 200, 30), "", &alphaValue)
+		gui.ColorBarAlpha(rl.Rectangle{X: 320, Y: 490 + 20, Width: 200, Height: 30}, "", &alphaValue)
 
-		gui.StatusBar(rl.NewRectangle(0, float32(rl.GetScreenHeight()) - 20, float32(rl.GetScreenWidth()), 20), "This is a status bar")
+		gui.SetStyle(gui.DEFAULT, gui.TEXT_ALIGNMENT_VERTICAL, gui.TEXT_ALIGN_TOP)
+		gui.SetStyle(gui.DEFAULT, gui.TEXT_WRAP_MODE, gui.TEXT_WRAP_WORD)
+		if gui.TextBox(rl.Rectangle{X: 678, Y: 25 + 20, Width: 258, Height: 492}, &textBoxMultiText, 1024, textBoxMultiEditMode) != 0 {
+			textBoxMultiEditMode = !textBoxMultiEditMode
+		}
+		gui.SetStyle(gui.DEFAULT, gui.TEXT_WRAP_MODE, gui.TEXT_WRAP_NONE)
+		gui.SetStyle(gui.DEFAULT, gui.TEXT_ALIGNMENT_VERTICAL, gui.TEXT_ALIGN_MIDDLE)
+
+		gui.SetStyle(gui.DEFAULT, gui.TEXT_ALIGNMENT, gui.TEXT_ALIGN_LEFT)
+		gui.StatusBar(rl.Rectangle{X: 0, Y: float32(rl.GetScreenHeight()) - 20, Width: float32(rl.GetScreenWidth()), Height: 20}, "This is a status bar")
+		gui.SetStyle(gui.DEFAULT, gui.TEXT_ALIGNMENT, gui.TEXT_ALIGN_CENTER)
 
 		if showMessageBox {
 			rl.DrawRectangle(0, 0, int32(rl.GetScreenWidth()), int32(rl.GetScreenHeight()), rl.Fade(rl.RayWhite, 0.8))
-			var result int32 = gui.MessageBox(rl.NewRectangle(float32(rl.GetScreenWidth())/2 - 125, float32(rl.GetScreenHeight())/2 - 50, 250, 100), gui.IconText(gui.ICON_EXIT, "Close Window"), "Do you really want to exit?", "Yes;No")
+			btnActive := int32(-1)
+			gui.MessageBox(rl.Rectangle{X: float32(rl.GetScreenWidth())/2 - 125, Y: float32(rl.GetScreenHeight())/2 - 50, Width: 250, Height: 100},
+				gui.IconText(gui.ICON_EXIT, "Close Window"), "Do you really want to exit?", "Yes;No", &btnActive)
 
-			if (result == 0) || (result == 2) {
+			if btnActive == 0 || btnActive == 2 {
 				showMessageBox = false
-			} else if result == 1 {
+			} else if btnActive == 1 {
 				exitWindow = true
 			}
 		}
 
 		if showTextInputBox {
-			rl.DrawRectangle(0, 0, int32(rl.GetScreenWidth()), int32(rl.GetScreenHeight()), rl.Fade(rl.RayWhite, 0.8))
-			var secretViewActive bool
-			var result int32 = gui.TextInputBox(
-				rl.NewRectangle(float32(rl.GetScreenWidth())/2 - 120, float32(rl.GetScreenHeight())/2 - 60, 240, 140),
-				"Save",
-				gui.IconText(gui.ICON_FILE_SAVE, "Save file as..."),
-				"Ok;Cancel",
-				&textInput, 255, &secretViewActive)
+			gui.Unlock()
 
-			if result == 1 {
-				// TODO: Validate textInput value and save
-				// strcpy(textInputFileName, textInput)
-				// TODO textInputFileName = textInput
-			}
-			if (result == 0) || (result == 1) || (result == 2) {
+			rl.DrawRectangle(0, 0, int32(rl.GetScreenWidth()), int32(rl.GetScreenHeight()), rl.Fade(rl.RayWhite, 0.8))
+			btnActive := int32(-1)
+			gui.TextInputBox(rl.Rectangle{X: float32(rl.GetScreenWidth())/2 - 120, Y: float32(rl.GetScreenHeight())/2 - 60, Width: 240, Height: 140},
+				gui.IconText(gui.ICON_FILE_SAVE, "Save file as..."), "Introduce output file name:", &textInput, 255, "Ok;Cancel", &btnActive, nil)
+
+			if btnActive == 0 || btnActive == 1 || btnActive == 2 {
 				showTextInputBox = false
-				//strcpy(textInput, "\0");
 				textInput = ""
 			}
 		}
-		//----------------------------------------------------------------------------------
 
 		rl.EndDrawing()
-		//----------------------------------------------------------------------------------
 	}
 
-	// De-Initialization
-	//--------------------------------------------------------------------------------------
-	rl.CloseWindow() // Close window and OpenGL context
-	//--------------------------------------------------------------------------------------
+	rl.CloseWindow()
 }
