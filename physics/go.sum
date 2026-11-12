@@ -1,6 +1,6 @@
 github.com/ebitengine/purego v0.10.2 h1:W809HbnvzAxgdm+aOvlSekrM16wGCdT/e76+9tS7gzE=
 github.com/ebitengine/purego v0.10.2/go.mod h1:iIjxzd6CiRiOG0UyXP+V1+jWqUXVjPKLAI0mRfJZTmQ=
-github.com/gen2brain/raylib-go/raylib v0.60.2-0.20261112111529-e7c809590980 h1:/vQcBECFtP1yI/wywkMOScjetdpHkhMfZ+RDui8ifqc=
-github.com/gen2brain/raylib-go/raylib v0.60.2-0.20261112111529-e7c809590980/go.mod h1:hNXVJGgOMB/ReUeFTdVPSqdOBXIQFT4cvKCaa2eTEDo=
+github.com/gen2brain/raylib-go/raylib v0.62.0 h1:I3TQUOd27AIIfmCOJRDA8pdbYFRfutOc6XV0ddpN+ZE=
+github.com/gen2brain/raylib-go/raylib v0.62.0/go.mod h1:hNXVJGgOMB/ReUeFTdVPSqdOBXIQFT4cvKCaa2eTEDo=
 github.com/jupiterrider/ffi v0.8.0 h1:IH6lto8OZaRIulQYObtZibII4tq71hXT6Z+KLBcxCcQ=
 github.com/jupiterrider/ffi v0.8.0/go.mod h1:9dauhpOfNqrqk28fxuu0kkdeFtT9Qr4vbfigiuIXN7c=
