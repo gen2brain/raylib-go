@@ -68,6 +68,7 @@ Platforms (cgo, default is [GLFW](https://www.glfw.org/)):
 | `rgfw`   | [RGFW](https://github.com/ColleagueRiley/RGFW) backend (PLATFORM_DESKTOP_RGFW)                                                             |
 | `win32`  | Native Win32 backend, Windows only (PLATFORM_DESKTOP_WIN32)                                                                                |
 | `memory` | Headless, renders to memory (PLATFORM_MEMORY)                                                                                              |
+| `termux` | [Termux](https://termux.dev/) on Android (X11)                                                                                             |
 
 Graphics API (cgo, default is OpenGL 3.3 on desktop):
 
@@ -89,7 +90,6 @@ Options:
 | `noaudio` | Disable audio functions                                                       |
 | `nocgo`   | Use the purego backend even when cgo is enabled                               |
 | `extlib`  | Load the system raylib library instead of the embedded one (used with purego) |
-| `termux`  | [Termux](https://termux.dev/) on Android (X11)                                |
 
 ### Documentation
 
