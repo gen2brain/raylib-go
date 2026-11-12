@@ -796,23 +796,14 @@ void mg_gamepads_init(mg_gamepads* gamepads) {
     MG_MEMSET(gamepads, 0, sizeof(mg_gamepads));
 
     /* create free list */
-    gamepads->free_list.head = &gamepads->gamepads[0];
-    gamepads->free_list.cur = gamepads->free_list.head;
+    gamepads->free_list.head = &gamepads->gamepads[MG_MAX_GAMEPADS - 1];
+    gamepads->free_list.cur = &gamepads->gamepads[0];
 
     {
         mg_size_t i;
         for (i = 0; i < MG_MAX_GAMEPADS; i++) {
-            gamepads->free_list.cur->prev = NULL;
-            gamepads->free_list.cur->next = NULL;
-
-            if (i) {
-                gamepads->free_list.cur->prev = &gamepads->gamepads[i - 1];
-            }
-
-            if (i != MG_MAX_GAMEPADS - 1) {
-                gamepads->free_list.cur->next = &gamepads->gamepads[i + 1];
-                gamepads->free_list.cur = gamepads->free_list.cur->next;
-            }
+            gamepads->gamepads[i].prev = (i != MG_MAX_GAMEPADS - 1) ? &gamepads->gamepads[i + 1] : NULL;
+            gamepads->gamepads[i].next = (i) ? &gamepads->gamepads[i - 1] : NULL;
         }
     }
 
@@ -909,7 +900,7 @@ void mg_list_swap_gamepad(mg_gamepad_list* from, mg_gamepad_list* to, mg_gamepad
         from->head = gamepad->next;
     }
 
-    MG_MEMSET(gamepad, 0, sizeof(mg_gamepad));
+    gamepad->next = NULL;
 
     if (to->head == NULL) {
         to->head = gamepad;
@@ -928,6 +919,13 @@ mg_gamepad* mg_gamepad_find(mg_gamepads* gamepads) {
         return NULL;
 
     mg_list_swap_gamepad(&gamepads->free_list, &gamepads->list, gamepad);
+
+    {
+        mg_gamepad* prev = gamepad->prev;
+        MG_MEMSET(gamepad, 0, sizeof(mg_gamepad));
+        gamepad->prev = prev;
+    }
+
     gamepad->index = (mg_size_t)(gamepad - gamepads->gamepads);
     return gamepad;
 }

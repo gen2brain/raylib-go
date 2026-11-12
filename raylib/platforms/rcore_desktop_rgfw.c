@@ -1631,7 +1631,8 @@ void PollInputEvents(void)
         {
             case MG_EVENT_BUTTON_PRESS:
             {
-                int button = mg_buttonConvertTable[gamepad_event.button];
+                int button = -1;
+                if ((gamepad_event.button >= 0) && (gamepad_event.button < (int)(sizeof(mg_buttonConvertTable)/sizeof(mg_buttonConvertTable[0])))) button = mg_buttonConvertTable[gamepad_event.button];
                 if (button >= 0)
                 {
                     CORE.Input.Gamepad.currentButtonState[gamepadIndex][button] = 1;
@@ -1640,7 +1641,8 @@ void PollInputEvents(void)
             } break;
             case MG_EVENT_BUTTON_RELEASE:
             {
-                int button = mg_buttonConvertTable[gamepad_event.button];
+                int button = -1;
+                if ((gamepad_event.button >= 0) && (gamepad_event.button < (int)(sizeof(mg_buttonConvertTable)/sizeof(mg_buttonConvertTable[0])))) button = mg_buttonConvertTable[gamepad_event.button];
                 if (button >= 0)
                 {
                     CORE.Input.Gamepad.currentButtonState[gamepadIndex][button] = 0;
@@ -1649,7 +1651,8 @@ void PollInputEvents(void)
             } break;
             case MG_EVENT_AXIS_MOVE:
             {
-                int axis = mg_axisConvertTable[gamepad_event.axis];
+                int axis = -1;
+                if ((gamepad_event.axis >= 0) && (gamepad_event.axis < (int)(sizeof(mg_axisConvertTable)/sizeof(mg_axisConvertTable[0])))) axis = mg_axisConvertTable[gamepad_event.axis];
 
                 switch (axis) {
                     case GAMEPAD_AXIS_LEFT_X:
