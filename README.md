@@ -60,13 +60,14 @@ On FreeBSD build with `-gcflags="github.com/ebitengine/purego/internal/fakecgo=-
 
 Platforms (cgo, default is [GLFW](https://www.glfw.org/)):
 
-| Tag     | Description                                                                                                                                |
-|---------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| `drm`   | Linux native [DRM](https://en.wikipedia.org/wiki/Direct_Rendering_Manager) mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM) |
-| `sdl`   | [SDL](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL)                                                                    |
-| `sdl3`  | [SDL3](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL3)                                                                  |
-| `rgfw`  | [RGFW](https://github.com/ColleagueRiley/RGFW) backend (PLATFORM_DESKTOP_RGFW)                                                             |
-| `win32` | Native Win32 backend, Windows only (PLATFORM_DESKTOP_WIN32)                                                                                |
+| Tag      | Description                                                                                                                                |
+|----------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| `drm`    | Linux native [DRM](https://en.wikipedia.org/wiki/Direct_Rendering_Manager) mode, including Raspberry Pi 4 and other devices (PLATFORM_DRM) |
+| `sdl`    | [SDL](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL)                                                                    |
+| `sdl3`   | [SDL3](https://github.com/libsdl-org/SDL) backend (PLATFORM_DESKTOP_SDL3)                                                                  |
+| `rgfw`   | [RGFW](https://github.com/ColleagueRiley/RGFW) backend (PLATFORM_DESKTOP_RGFW)                                                             |
+| `win32`  | Native Win32 backend, Windows only (PLATFORM_DESKTOP_WIN32)                                                                                |
+| `memory` | Headless, renders to memory with the software renderer, no window or GPU (PLATFORM_MEMORY)                                                 |
 
 Graphics API (cgo, default is OpenGL 3.3 on desktop):
 
@@ -77,6 +78,7 @@ Graphics API (cgo, default is OpenGL 3.3 on desktop):
 | `opengl11` | OpenGL 1.1 (pseudo OpenGL 1.1 style)                                                          |
 | `es2`      | OpenGL ES 2.0 (can be used to link against [Google's ANGLE](https://github.com/google/angle)) |
 | `es3`      | OpenGL ES 3.0 (experimental)                                                                  |
+| `software` | Software renderer, no GPU needed (with `sdl`, `sdl3`, `rgfw`, `drm` or `win32`)               |
 
 Options:
 

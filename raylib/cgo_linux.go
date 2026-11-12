@@ -1,5 +1,5 @@
-//go:build linux && !rgfw && !drm && !sdl && !sdl3 && !android && !nocgo
-// +build linux,!rgfw,!drm,!sdl,!sdl3,!android,!nocgo
+//go:build linux && !rgfw && !drm && !sdl && !sdl3 && !android && !memory && !nocgo
+// +build linux,!rgfw,!drm,!sdl,!sdl3,!android,!memory,!nocgo
 
 package rl
 

@@ -1,5 +1,5 @@
-//go:build windows && rgfw && !sdl && !sdl3 && !win32 && !nocgo
-// +build windows,rgfw,!sdl,!sdl3,!win32,!nocgo
+//go:build windows && rgfw && !sdl && !sdl3 && !win32 && !memory && !nocgo
+// +build windows,rgfw,!sdl,!sdl3,!win32,!memory,!nocgo
 
 package rl
 
@@ -9,11 +9,12 @@ package rl
 
 #cgo windows,!es2,!es3 LDFLAGS: -lopengl32
 
-#cgo windows,opengl11,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_11
-#cgo windows,opengl21,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_21
-#cgo windows,opengl43,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_43
-#cgo windows,!opengl11,!opengl21,!opengl43,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_33
-#cgo windows,es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_ES2
-#cgo windows,es3,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_ES3
+#cgo windows,opengl11,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_11
+#cgo windows,opengl21,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_21
+#cgo windows,opengl43,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_43
+#cgo windows,!opengl11,!opengl21,!opengl43,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo windows,es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_ES2
+#cgo windows,es3,!es2,!software CFLAGS: -DGRAPHICS_API_OPENGL_ES3
+#cgo windows,software CFLAGS: -DGRAPHICS_API_OPENGL_SOFTWARE
 */
 import "C"

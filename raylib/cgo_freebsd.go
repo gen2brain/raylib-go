@@ -1,5 +1,5 @@
-//go:build freebsd && !linux && !rgfw && !drm && !sdl && !sdl3 && !android && !nocgo
-// +build freebsd,!linux,!rgfw,!drm,!sdl,!sdl3,!android,!nocgo
+//go:build freebsd && !linux && !rgfw && !drm && !sdl && !sdl3 && !android && !memory && !nocgo
+// +build freebsd,!linux,!rgfw,!drm,!sdl,!sdl3,!android,!memory,!nocgo
 
 package rl
 

@@ -1,5 +1,5 @@
-//go:build darwin && rgfw && !sdl && !sdl3 && !nocgo
-// +build darwin,rgfw,!sdl,!sdl3,!nocgo
+//go:build darwin && rgfw && !sdl && !sdl3 && !memory && !nocgo
+// +build darwin,rgfw,!sdl,!sdl3,!memory,!nocgo
 
 package rl
 
@@ -10,11 +10,12 @@ package rl
 
 #cgo darwin,!es2,!es3 LDFLAGS: -framework OpenGL
 
-#cgo darwin,opengl11,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_11
-#cgo darwin,opengl21,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_21
-#cgo darwin,opengl43,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_43
-#cgo darwin,!opengl11,!opengl21,!opengl43,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_33
-#cgo darwin,es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_ES2
-#cgo darwin,es3,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_ES3
+#cgo darwin,opengl11,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_11
+#cgo darwin,opengl21,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_21
+#cgo darwin,opengl43,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_43
+#cgo darwin,!opengl11,!opengl21,!opengl43,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo darwin,es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_ES2
+#cgo darwin,es3,!es2,!software CFLAGS: -DGRAPHICS_API_OPENGL_ES3
+#cgo darwin,software CFLAGS: -DGRAPHICS_API_OPENGL_SOFTWARE
 */
 import "C"

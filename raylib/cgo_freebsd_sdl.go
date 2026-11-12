@@ -1,10 +1,11 @@
-//go:build freebsd && !linux && (sdl || sdl3) && !rgfw && !drm && !android && !nocgo
+//go:build freebsd && !linux && (sdl || sdl3) && !rgfw && !drm && !android && !memory && !nocgo
 // +build freebsd
 // +build !linux
 // +build sdl sdl3
 // +build !rgfw
 // +build !drm
 // +build !android
+// +build !memory
 // +build !nocgo
 
 package rl
@@ -18,13 +19,14 @@ package rl
 #cgo freebsd,sdl pkg-config: sdl2
 #cgo freebsd,sdl3 pkg-config: sdl3
 
-#cgo freebsd,!es2,!es3 LDFLAGS: -lGL
+#cgo freebsd,!es2,!es3,!software LDFLAGS: -lGL
 
-#cgo freebsd,opengl11,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_11
-#cgo freebsd,opengl21,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_21
-#cgo freebsd,opengl43,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_43
-#cgo freebsd,!opengl11,!opengl21,!opengl43,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_33
-#cgo freebsd,es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_ES2
-#cgo freebsd,es3,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_ES3
+#cgo freebsd,opengl11,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_11
+#cgo freebsd,opengl21,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_21
+#cgo freebsd,opengl43,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_43
+#cgo freebsd,!opengl11,!opengl21,!opengl43,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo freebsd,es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_ES2
+#cgo freebsd,es3,!es2,!software CFLAGS: -DGRAPHICS_API_OPENGL_ES3
+#cgo freebsd,software CFLAGS: -DGRAPHICS_API_OPENGL_SOFTWARE
 */
 import "C"
