@@ -11,10 +11,10 @@ replace github.com/gen2brain/raylib-go/easings => ../easings
 replace github.com/gen2brain/raylib-go/physics => ../physics
 
 require (
-	github.com/gen2brain/raylib-go/easings v0.62.1
-	github.com/gen2brain/raylib-go/physics v0.62.1
-	github.com/gen2brain/raylib-go/raygui v0.62.1
-	github.com/gen2brain/raylib-go/raylib v0.62.1
+	github.com/gen2brain/raylib-go/easings v0.62.2
+	github.com/gen2brain/raylib-go/physics v0.62.2
+	github.com/gen2brain/raylib-go/raygui v0.62.2
+	github.com/gen2brain/raylib-go/raylib v0.62.2
 	github.com/jakecoffman/cp v1.2.1
 	github.com/neguse/go-box2d-lite v0.0.0-20260315142500-8c06e40d0e7b
 )
