@@ -2236,13 +2236,15 @@ static bool InitGraphicsContext(void)
         TRACELOG(LOG_INFO, "DISPLAY: Trying to enable MSAA x4");
     }
 
+    EGLint alphaSize = FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_TRANSPARENT)? 8 : 0;
+
     const EGLint framebufferAttribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, renderableType,
         EGL_RED_SIZE, 8,
         EGL_GREEN_SIZE, 8,
         EGL_BLUE_SIZE, 8,
-        EGL_ALPHA_SIZE, FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_TRANSPARENT)? 8 : 0,
+        EGL_ALPHA_SIZE, alphaSize,
         EGL_DEPTH_SIZE, 24,
         EGL_SAMPLE_BUFFERS, sampleBuffer,
         EGL_SAMPLES, samples,
@@ -2250,11 +2252,43 @@ static bool InitGraphicsContext(void)
     };
 
     EGLint numConfigs = 0;
-    if ((eglChooseConfig(platform.eglDisplay, framebufferAttribs, &platform.eglConfig, 1, &numConfigs) == EGL_FALSE) || (numConfigs == 0))
+    if ((eglChooseConfig(platform.eglDisplay, framebufferAttribs, NULL, 0, &numConfigs) == EGL_FALSE) || (numConfigs == 0))
     {
         TRACELOG(LOG_WARNING, "DISPLAY: Failed to choose EGL config");
         return false;
     }
+
+    EGLConfig *configs = (EGLConfig *)RL_CALLOC(numConfigs, sizeof(EGLConfig));
+    if ((eglChooseConfig(platform.eglDisplay, framebufferAttribs, configs, numConfigs, &numConfigs) == EGL_FALSE) || (numConfigs == 0))
+    {
+        TRACELOG(LOG_WARNING, "DISPLAY: Failed to choose EGL config");
+        RL_FREE(configs);
+        return false;
+    }
+
+    // NOTE: Configs are sorted by color depth, the first one can be 10 bit per channel (more bandwidth, compositor conversion)
+    platform.eglConfig = configs[0];
+
+    for (EGLint i = 0; i < numConfigs; i++)
+    {
+        EGLint red = 0;
+        EGLint green = 0;
+        EGLint blue = 0;
+        EGLint alpha = 0;
+
+        eglGetConfigAttrib(platform.eglDisplay, configs[i], EGL_RED_SIZE, &red);
+        eglGetConfigAttrib(platform.eglDisplay, configs[i], EGL_GREEN_SIZE, &green);
+        eglGetConfigAttrib(platform.eglDisplay, configs[i], EGL_BLUE_SIZE, &blue);
+        eglGetConfigAttrib(platform.eglDisplay, configs[i], EGL_ALPHA_SIZE, &alpha);
+
+        if ((red == 8) && (green == 8) && (blue == 8) && (alpha == alphaSize))
+        {
+            platform.eglConfig = configs[i];
+            break;
+        }
+    }
+
+    RL_FREE(configs);
 
     EGLint contextAttribs[16] = { 0 };
     int attrib = 0;
