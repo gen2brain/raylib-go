@@ -532,17 +532,15 @@ func UnloadAudioStream(stream AudioStream) {
 // UpdateAudioStream - Update audio stream buffers with data
 func UpdateAudioStream[T float32 | int16](stream AudioStream, data []T) {
 	var cdata unsafe.Pointer
-	var csamplesCount C.int
 	switch d := any(data).(type) {
 	case []float32:
 		cdata = unsafe.Pointer(&d[0])
-		csamplesCount = (C.int)(len(d))
 	case []int16:
 		cdata = unsafe.Pointer(&d[0])
-		csamplesCount = (C.int)(len(d))
 	}
+	cframeCount := (C.int)(len(data) / int(max(stream.Channels, 1)))
 	cstream := stream.cptr()
-	C.UpdateAudioStream(*cstream, cdata, csamplesCount)
+	C.UpdateAudioStream(*cstream, cdata, cframeCount)
 }
 
 // IsAudioStreamProcessed - Check if any audio stream buffers requires refill

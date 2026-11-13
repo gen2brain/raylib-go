@@ -3902,15 +3902,13 @@ func UnloadAudioStream(stream AudioStream) {
 // UpdateAudioStream - Update audio stream buffers with data
 func UpdateAudioStream[T float32 | int16](stream AudioStream, data []T) {
 	var dataPtr unsafe.Pointer
-	var frameCount int32
 	switch d := any(data).(type) {
 	case []float32:
 		dataPtr = unsafe.Pointer(&d[0])
-		frameCount = int32(len(d))
 	case []int16:
 		dataPtr = unsafe.Pointer(&d[0])
-		frameCount = int32(len(d))
 	}
+	frameCount := int32(len(data) / int(max(stream.Channels, 1)))
 	updateAudioStream.Call(nil, &stream, &dataPtr, &frameCount)
 }
 

@@ -3236,7 +3236,7 @@ func UnloadAudioStream(stream AudioStream) {
 // UpdateAudioStream - Update audio stream buffers with data
 func UpdateAudioStream[T float32 | int16](stream AudioStream, data []T) {
 	defer scratch.release(scratch.mark())
-	cUpdateAudioStream(audioStreamIn(&stream), scratchSlice(data), int32(len(data)))
+	cUpdateAudioStream(audioStreamIn(&stream), scratchSlice(data), int32(len(data)/int(max(stream.Channels, 1))))
 }
 
 // IsAudioStreamProcessed - Check if any audio stream buffers requires refill
