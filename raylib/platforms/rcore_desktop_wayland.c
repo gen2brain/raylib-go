@@ -3193,6 +3193,9 @@ static void HandleTouch(int touchAction, int slot, int id, double x, double y)
     }
 
     for (int i = CORE.Input.Touch.pointCount; i < MAX_TOUCH_POINTS; i++) CORE.Input.Touch.currentTouchState[i] = 0;
+
+    // Map primary touch point to mouse position
+    if (CORE.Input.Touch.pointCount > 0) CORE.Input.Mouse.currentPosition = CORE.Input.Touch.position[0];
 }
 
 // Update cursor image for current pointer focus
