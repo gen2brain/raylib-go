@@ -877,8 +877,11 @@ void mg_gamepads_free(mg_gamepads* gamepads) {
 
     mg_gamepads_free_platform(gamepads);
 
-    for (cur = gamepads->list.cur; cur != NULL; cur = cur->prev) {
+    cur = gamepads->list.cur;
+    while (cur != NULL) {
+        mg_gamepad* prev = cur->prev;
         mg_gamepad_release(gamepads, cur);
+        cur = prev;
     }
     MG_MEMSET(gamepads, 0, sizeof(mg_gamepads));
 }
@@ -2187,10 +2190,10 @@ void mg_osx_input_value_changed_callback(void *context, IOReturn result, void *s
 
     switch (usagePage) {
         case kHIDPage_Button: {
-            mg_button btn = mg_get_gamepad_button(gamepad, (u8)usage);
-            if (btn == 0)
+            mg_button btn = mg_get_gamepad_button(gamepad, (u8)(usage - 1));
+            if (btn == MG_BUTTON_UNKNOWN)
                 btn = mg_get_gamepad_button_platform(usage);
-            if (btn == 0)
+            if (btn == MG_BUTTON_UNKNOWN)
                 break;
 
             mg_handle_button_event((mg_events*)gamepad->src.events, btn, MG_BOOL(intValue), gamepad);
@@ -2199,10 +2202,10 @@ void mg_osx_input_value_changed_callback(void *context, IOReturn result, void *s
         case kHIDPage_GenericDesktop: {
             CFIndex logicalMin = IOHIDElementGetLogicalMin(element);
             CFIndex logicalMax = IOHIDElementGetLogicalMax(element);
-            mg_axis btn = mg_get_gamepad_axis(gamepad, (u8)usage);
-            if (btn == 0)
+            mg_axis btn = mg_get_gamepad_axis(gamepad, (u8)(usage - kHIDUsage_GD_X));
+            if (btn == MG_AXIS_UNKNOWN)
                 btn = mg_get_gamepad_axis_platform(usage);
-            if (btn == 0)
+            if (btn == MG_AXIS_UNKNOWN)
                 break;
 
             if (logicalMax <= logicalMin) return;
@@ -2240,9 +2243,11 @@ void mg_osx_device_added_callback(void* context, IOReturn result, void *sender, 
 
     gamepad = mg_gamepad_find(gamepads);
     if (gamepad == NULL) {
+        CFRelease(elements);
         return;
     }
 
+    gamepad->src.device = (void*)device;
     IOHIDDeviceRegisterInputValueCallback(device, mg_osx_input_value_changed_callback, gamepad);
 
     deviceName = (CFStringRef)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductKey));
@@ -2302,10 +2307,10 @@ void mg_osx_device_added_callback(void* context, IOReturn result, void *sender, 
 
         switch (page) {
             case kHIDPage_Button: {
-                mg_button btn = mg_get_gamepad_button(gamepad, (u8)elm_usage);
-                if (btn == 0)
+                mg_button btn = mg_get_gamepad_button(gamepad, (u8)(elm_usage - 1));
+                if (btn == MG_BUTTON_UNKNOWN)
                     btn = mg_get_gamepad_button_platform(elm_usage);
-                if (btn == 0)
+                if (btn == MG_BUTTON_UNKNOWN)
                     break;
 
                 gamepad->buttons[btn].prev = 0;
@@ -2314,10 +2319,10 @@ void mg_osx_device_added_callback(void* context, IOReturn result, void *sender, 
                 break;
             }
             case kHIDPage_GenericDesktop: {
-                mg_axis btn = mg_get_gamepad_axis(gamepad, (u8)elm_usage);
-                if (btn == 0)
+                mg_axis btn = mg_get_gamepad_axis(gamepad, (u8)(elm_usage - kHIDUsage_GD_X));
+                if (btn == MG_AXIS_UNKNOWN)
                     btn = mg_get_gamepad_axis_platform(elm_usage);
-                if (btn == 0)
+                if (btn == MG_AXIS_UNKNOWN)
                     break;
 
                 gamepad->axes[btn].value = 0.0f;
