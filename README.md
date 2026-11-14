@@ -68,6 +68,7 @@ Platforms (cgo, default is [GLFW](https://www.glfw.org/)):
 | `rgfw`    | [RGFW](https://github.com/ColleagueRiley/RGFW) backend (PLATFORM_DESKTOP_RGFW)                                                             |
 | `win32`   | Native Win32 backend, Windows only (PLATFORM_DESKTOP_WIN32)                                                                                |
 | `wayland` | Native Wayland backend, Linux only (PLATFORM_DESKTOP_WAYLAND)                                                                              |
+| `cocoa`   | Native Cocoa backend, macOS only (PLATFORM_DESKTOP_COCOA)                                                                                  |
 | `memory`  | Headless, renders to memory (PLATFORM_MEMORY)                                                                                              |
 | `termux`  | [Termux](https://termux.dev/) on Android (X11)                                                                                             |
 
