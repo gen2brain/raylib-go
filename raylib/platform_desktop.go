@@ -1,6 +1,7 @@
-//go:build !drm && (!android || termux) && !nocgo
+//go:build !drm && (!android || termux) && !ios && !nocgo
 // +build !drm
 // +build !android termux
+// +build !ios
 // +build !nocgo
 
 package rl

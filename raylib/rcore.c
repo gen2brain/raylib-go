@@ -37,6 +37,8 @@
 *           - Embedded devices (with GPU)
 *       > PLATFORM_ANDROID (native NDK):
 *           - Android (ARM, ARM64)
+*       > PLATFORM_IOS (native UIKit):
+*           - iOS, iPadOS (ARM64)
 *       > PLATFORM_MEMORY
 *           - Memory framebuffer output, using software renderer, no OS required
 *
@@ -538,6 +540,8 @@ const char *TextFormat(const char *text, ...); // Formatting of text with variab
     #include "platforms/rcore_drm.c"
 #elif defined(PLATFORM_ANDROID)
     #include "platforms/rcore_android.c"
+#elif defined(PLATFORM_IOS)
+    #include "platforms/rcore_ios.c"
 #elif defined(PLATFORM_MEMORY)
     #include "platforms/rcore_memory.c"
 #else
@@ -616,6 +620,8 @@ void InitWindow(int width, int height, const char *title)
     TRACELOG(LOG_INFO, "Platform backend: NATIVE DRM");
 #elif defined(PLATFORM_ANDROID)
     TRACELOG(LOG_INFO, "Platform backend: ANDROID");
+#elif defined(PLATFORM_IOS)
+    TRACELOG(LOG_INFO, "Platform backend: IOS");
 #elif defined(PLATFORM_MEMORY)
     TRACELOG(LOG_INFO, "Platform backend: MEMORY (No OS)");
 #else
@@ -1093,7 +1099,7 @@ void BeginScissorMode(int x, int y, int width, int height)
 
     rlEnableScissorTest();
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(PLATFORM_IOS)
     if (!CORE.Window.usingFbo)
     {
         Vector2 scale = GetWindowScaleDPI();
@@ -1106,6 +1112,11 @@ void BeginScissorMode(int x, int y, int width, int height)
         rlScissor((int)(x*scale.x), (int)(CORE.Window.currentFbo.height - (y + height)*scale.y), (int)(width*scale.x), (int)(height*scale.y));
     }
 #endif
+    else if (!CORE.Window.usingFbo)
+    {
+        // NOTE: Screen viewport is centered in the framebuffer on platforms using border bars
+        rlScissor(x + CORE.Window.renderOffset.x/2, CORE.Window.renderOffset.y/2 + CORE.Window.currentFbo.height - (y + height), width, height);
+    }
     else
     {
         rlScissor(x, CORE.Window.currentFbo.height - (y + height), width, height);

@@ -37,6 +37,10 @@ To remove console window, build with `-ldflags "-H=windowsgui"`.
 
 [Android example](https://github.com/gen2brain/raylib-go/tree/master/examples/others/android/example).
 
+##### iOS
+
+[iOS example](https://github.com/gen2brain/raylib-go/tree/master/examples/others/ios/example).
+
 ##### Wasm
 
 [Wasm example](https://github.com/gen2brain/raylib-go/tree/master/examples/others/wasm/example).

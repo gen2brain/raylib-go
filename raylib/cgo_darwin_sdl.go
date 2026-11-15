@@ -1,5 +1,6 @@
-//go:build darwin && (sdl || sdl3) && !rgfw && !memory && !nocgo
+//go:build darwin && !ios && (sdl || sdl3) && !rgfw && !memory && !nocgo
 // +build darwin
+// +build !ios
 // +build sdl sdl3
 // +build !rgfw
 // +build !memory

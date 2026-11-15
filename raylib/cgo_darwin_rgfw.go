@@ -1,5 +1,5 @@
-//go:build darwin && rgfw && !sdl && !sdl3 && !memory && !nocgo
-// +build darwin,rgfw,!sdl,!sdl3,!memory,!nocgo
+//go:build darwin && !ios && rgfw && !sdl && !sdl3 && !memory && !nocgo
+// +build darwin,!ios,rgfw,!sdl,!sdl3,!memory,!nocgo
 
 package rl
 
