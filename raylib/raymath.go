@@ -1752,6 +1752,14 @@ func QuaternionLerp(q1 Quaternion, q2 Quaternion, amount float32) Quaternion {
 func QuaternionNlerp(q1 Quaternion, q2 Quaternion, amount float32) Quaternion {
 	var result = Quaternion{}
 
+	// q2 and -q2 are the same rotation, take the shorter path like QuaternionSlerp()
+	if (q1.X*q2.X + q1.Y*q2.Y + q1.Z*q2.Z + q1.W*q2.W) < 0.0 {
+		q2.X = -q2.X
+		q2.Y = -q2.Y
+		q2.Z = -q2.Z
+		q2.W = -q2.W
+	}
+
 	// QuaternionLerp(q1, q2, amount)
 	result.X = q1.X + amount*(q2.X-q1.X)
 	result.Y = q1.Y + amount*(q2.Y-q1.Y)
@@ -2032,20 +2040,29 @@ func QuaternionFromEuler(pitch, yaw, roll float32) Quaternion {
 func QuaternionToEuler(q Quaternion) Vector3 {
 	var result Vector3
 
-	// Roll (x-axis rotation)
-	x0 := 2.0 * (q.W*q.X + q.Y*q.Z)
-	x1 := 1.0 - 2.0*(q.X*q.X+q.Y*q.Y)
-	result.X = float32(math.Atan2(float64(x0), float64(x1)))
-
 	// Pitch (y-axis rotation)
 	y0 := 2.0 * (q.W*q.Y - q.Z*q.X)
 	y0 = Clamp(y0, -1.0, 1.0)
 	result.Y = float32(math.Asin(float64(y0)))
 
-	// Yaw (z-axis rotation)
-	z0 := 2.0 * (q.W*q.Z + q.X*q.Y)
-	z1 := 1.0 - 2.0*(q.Y*q.Y+q.Z*q.Z)
-	result.Z = float32(math.Atan2(float64(z0), float64(z1)))
+	if math.Abs(float64(y0)) >= 0.9999995 {
+		// Gimbal lock: roll and yaw turn about the same axis, keep the whole turn in roll
+		sign := float32(1.0)
+		if q.W < 0.0 {
+			sign = -1.0
+		}
+		result.X = 2.0 * float32(math.Atan2(float64(sign*q.X), float64(sign*q.W)))
+	} else {
+		// Roll (x-axis rotation)
+		x0 := 2.0 * (q.W*q.X + q.Y*q.Z)
+		x1 := 1.0 - 2.0*(q.X*q.X+q.Y*q.Y)
+		result.X = float32(math.Atan2(float64(x0), float64(x1)))
+
+		// Yaw (z-axis rotation)
+		z0 := 2.0 * (q.W*q.Z + q.X*q.Y)
+		z1 := 1.0 - 2.0*(q.Y*q.Y+q.Z*q.Z)
+		result.Z = float32(math.Atan2(float64(z0), float64(z1)))
+	}
 
 	return result
 }

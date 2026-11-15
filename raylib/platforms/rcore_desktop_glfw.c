@@ -359,7 +359,8 @@ void MinimizeWindow(void)
 // Restore window from being minimized/maximized
 void RestoreWindow(void)
 {
-    if (glfwGetWindowAttrib(platform.handle, GLFW_RESIZABLE) == GLFW_TRUE)
+    if ((glfwGetWindowAttrib(platform.handle, GLFW_ICONIFIED) == GLFW_TRUE) ||
+        (glfwGetWindowAttrib(platform.handle, GLFW_MAXIMIZED) == GLFW_TRUE))
     {
         // Restores the specified window if it was previously iconified (minimized) or maximized
         glfwRestoreWindow(platform.handle);
@@ -1677,8 +1678,10 @@ int InitPlatform(void)
         // If the area requested by the user exceeds the maximum workable area, clamp it to that
         // GLFW has a problem where if the window is greater than the workable area (this means
         // the taskbar / dockable areas) it won't show up if the window isn't fullscreen
-        if (CORE.Window.screen.width > (unsigned int)workWidth) CORE.Window.screen.width = workWidth;
-        if (CORE.Window.screen.height > (unsigned int)workHeight) CORE.Window.screen.height = workHeight;
+        // NOTE: Some window managers report a workarea that does not overlap the primary monitor
+        // (i.e. multi-monitor setups on X11), resulting in a zero/negative size, skip clamping then
+        if ((workWidth > 0) && (CORE.Window.screen.width > (unsigned int)workWidth)) CORE.Window.screen.width = workWidth;
+        if ((workHeight > 0) && (CORE.Window.screen.height > (unsigned int)workHeight)) CORE.Window.screen.height = workHeight;
 
         platform.handle = glfwCreateWindow(CORE.Window.screen.width, CORE.Window.screen.height, (CORE.Window.title != 0)? CORE.Window.title : " ", NULL, NULL);
         if (!platform.handle)
@@ -2206,7 +2209,8 @@ static void MouseCursorPosCallback(GLFWwindow *window, double x, double y)
 // GLFW3: Mouse wheel scroll callback, runs on mouse wheel changes
 static void MouseScrollCallback(GLFWwindow *window, double xoffset, double yoffset)
 {
-    CORE.Input.Mouse.currentWheelMove = (Vector2){ (float)xoffset, (float)yoffset };
+    CORE.Input.Mouse.currentWheelMove.x += (float)xoffset;
+    CORE.Input.Mouse.currentWheelMove.y += (float)yoffset;
 }
 
 // GLFW3: Cursor ennter callback, when cursor enters the window

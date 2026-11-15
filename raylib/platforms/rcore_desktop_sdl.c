@@ -1720,11 +1720,11 @@ void PollInputEvents(void)
             case SDL_MOUSEWHEEL:
             {
 #if defined(USING_VERSION_SDL3)
-                CORE.Input.Mouse.currentWheelMove.x = event.wheel.x;
-                CORE.Input.Mouse.currentWheelMove.y = event.wheel.y;
+                CORE.Input.Mouse.currentWheelMove.x -= event.wheel.x;
+                CORE.Input.Mouse.currentWheelMove.y += event.wheel.y;
 #else
-                CORE.Input.Mouse.currentWheelMove.x = event.wheel.preciseX;
-                CORE.Input.Mouse.currentWheelMove.y = event.wheel.preciseY;
+                CORE.Input.Mouse.currentWheelMove.x -= event.wheel.preciseX;
+                CORE.Input.Mouse.currentWheelMove.y += event.wheel.preciseY;
 #endif
             } break;
             case SDL_MOUSEMOTION:
@@ -2198,6 +2198,7 @@ int InitPlatform(void)
 
     // NOTE: No need to call InitTimer(), let SDL manage it internally
     //----------------------------------------------------------------------------
+    CORE.Time.previous = 0.0;
 
     // Initialize storage system
     //----------------------------------------------------------------------------

@@ -190,10 +190,13 @@
 #endif
 
 #define _CRT_INTERNAL_NONSTDC_NAMES  1
-#include <sys/stat.h>               // Required for: stat(), S_ISREG [Used in GetFileModTime(), IsFilePath()]
+#include <sys/stat.h>               // Required for: stat(), S_ISREG, S_ISDIR [Used in GetFileModTime(), IsPathFile(), IsPathDirectory()]
 
 #if !defined(S_ISREG) && defined(S_IFMT) && defined(S_IFREG)
     #define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+#endif
+#if !defined(S_ISDIR) && defined(S_IFMT) && defined(S_IFDIR)
+    #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
 #endif
 
 #if defined(_WIN32) && (defined(_MSC_VER) || defined(__TINYC__))
@@ -452,8 +455,10 @@ typedef enum AutomationEventType {
     ACTION_SETTARGETFPS             // param[0]: fps
 } AutomationEventType;
 
+#define MAX_AUTOMATION_EVENT_TYPES  24
+
 // Event type name strings, required for export
-static const char *autoEventTypeName[] = {
+static const char *autoEventTypeName[MAX_AUTOMATION_EVENT_TYPES] = {
     "EVENT_NONE",
     "INPUT_KEY_UP",
     "INPUT_KEY_DOWN",
@@ -2265,13 +2270,12 @@ int FileCopy(const char *srcPath, const char *dstPath)
     int srcDataSize = 0;
     unsigned char *srcFileData = LoadFileData(srcPath, &srcDataSize);
 
-    // Create required paths if they do not exist
-    if (DirectoryExists(GetDirectoryPath(dstPath))) result = 0; // Already exists
-    else result = MakeDirectory(GetDirectoryPath(dstPath));
-
-    if (result == 0) // Directory created successfully or already exists
+    if ((srcFileData != NULL) && (srcDataSize > 0))
     {
-        if ((srcFileData != NULL) && (srcDataSize > 0))
+        // Create required paths if they do not exist
+        const char *dstDirPath = GetDirectoryPath(dstPath);
+
+        if (DirectoryExists(dstDirPath) || (MakeDirectory(dstDirPath) == 0)) // Directory created successfully or already exists
         {
             bool saved = SaveFileData(dstPath, srcFileData, srcDataSize);
             if (saved) result = 0;
@@ -2521,9 +2525,11 @@ long GetFileModTime(const char *fileName)
 // WARNING: Getting the pointer to the input string extension position (not a string copy)
 const char *GetFileExtension(const char *fileName)
 {
-    const char *dot = strrchr(fileName, '.');
+    // Only the file name part can contain the extension, not a directory name
+    const char *name = GetFileName(fileName);
+    const char *dot = strrchr(name, '.');
 
-    if ((dot == NULL) || (dot == fileName)) return NULL;
+    if ((dot == NULL) || (dot == name)) return NULL;     // No extension for hidden files: ".gitignore"
 
     return dot;
 }
@@ -2595,7 +2601,8 @@ const char *GetDirectoryPath(const char *filePath)
 
     // In case provided path does not contain a root drive letter (C:\, D:\)
     // nor leading path separator (\, /), add the current directory path to dirPath
-    if ((filePath[1] != ':') && (filePath[0] != '\\') && (filePath[0] != '/'))
+    bool isRelative = (filePath[0] != '\\') && (filePath[0] != '/') && ((filePath[0] == '\0') || (filePath[1] != ':'));
+    if (isRelative)
     {
         // For security, set starting path to current directory,
         // obtained path will be concatenated to this
@@ -2614,10 +2621,19 @@ const char *GetDirectoryPath(const char *filePath)
         }
         else
         {
-            char *dirPathPtr = dirPath;
-            if ((filePath[1] != ':') && (filePath[0] != '\\') && (filePath[0] != '/')) dirPathPtr += 2;     // Skip drive letter, "C:"
-            memcpy(dirPathPtr, filePath, strlen(filePath) - (strlen(lastSlash) - 1));
-            dirPath[strlen(filePath) - strlen(lastSlash) + (((filePath[1] != ':') && (filePath[0] != '\\') && (filePath[0] != '/'))? 2 : 0)] = '\0';  // Add '\0' manually
+            int dirPathOffset = isRelative? 2 : 0;          // Skip "./" added for relative paths
+            int dirPathLength = (int)(lastSlash - filePath);
+
+            if ((dirPathOffset + dirPathLength) < MAX_FILEPATH_LENGTH)
+            {
+                memcpy(dirPath + dirPathOffset, filePath, dirPathLength);
+                dirPath[dirPathOffset + dirPathLength] = '\0';
+            }
+            else
+            {
+                TRACELOG(LOG_WARNING, "FILEIO: Directory path too long");
+                dirPath[0] = '\0';
+            }
         }
     }
 
@@ -2646,7 +2662,8 @@ const char *GetPrevDirectoryPath(const char *dirPath)
 
             if (!isFile)
             {
-                memcpy(prevDirPath, dirPath, i);
+                if (i < MAX_FILEPATH_LENGTH) memcpy(prevDirPath, dirPath, i);
+                else TRACELOG(LOG_WARNING, "FILEIO: Directory path too long");
                 break;
             }
             else isFile = false;
@@ -2900,7 +2917,8 @@ bool IsPathDirectory(const char *path)
 {
     bool result = false;
 
-    if (!IsPathFile(path)) result = true;
+    struct stat info = { 0 };
+    if ((stat(path, &info) == 0) && S_ISDIR(info.st_mode)) result = true;
 
     return result;
 }
@@ -3206,8 +3224,9 @@ unsigned char *DecodeDataBase64(const char *text, int *outputSize)
     int dataSize = (int)strlen(text); // WARNING: Expecting NULL terminated strings!
     int ending = dataSize - 1;
     int padding = 0;
-    while (text[ending] == '=') { padding++; ending--; }
+    while ((ending >= 0) && (text[ending] == '=')) { padding++; ending--; }
     int estimatedOutputSize = 3*(dataSize/4) - padding;
+    if (estimatedOutputSize < 0) estimatedOutputSize = 0;   // Invalid input, i.e. "QQ=" or "===="
     int maxOutputSize = 3*(dataSize/4);
 
     // Load some memory to store decoded data
@@ -3774,6 +3793,8 @@ bool ExportAutomationEventList(AutomationEventList list, const char *fileName)
     byteCount += sprintf(txtData + byteCount, "c %i\n", list.count);
     for (unsigned int i = 0; i < list.count; i++)
     {
+        if ((list.events[i].type < 0) || (list.events[i].type >= MAX_AUTOMATION_EVENT_TYPES)) list.events[i].type = 0;
+        
         byteCount += snprintf(txtData + byteCount, 256, "e %i %i %i %i %i %i // Event: %s\n", list.events[i].frame, list.events[i].type,
             list.events[i].params[0], list.events[i].params[1], list.events[i].params[2], list.events[i].params[3], autoEventTypeName[list.events[i].type]);
     }

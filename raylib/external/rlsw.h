@@ -288,6 +288,7 @@ typedef double              GLclampd;
 
 #define GL_REPEAT                           0x2901
 #define GL_CLAMP                            0x2900
+#define GL_CLAMP_TO_EDGE                    0x812F
 
 #define GL_TEXTURE_MAG_FILTER               0x2800
 #define GL_TEXTURE_MIN_FILTER               0x2801
@@ -2373,16 +2374,16 @@ static void sw_texture_sample_nearest(float *SW_RESTRICT color, const sw_texture
 
 #if RLSW_SUPPORT_NPOT_TEXTURE
     if (tex->sWrap == SW_REPEAT) x = (int)(sw_fract(u)*tex->width);
-    else x = (int)(sw_saturate(u)*tex->width);
+    else x = sw_clamp_int((int)(sw_saturate(u)*tex->width), 0, tex->wMinus1);
 
     if (tex->tWrap == SW_REPEAT) y = (int)(sw_fract(v)*tex->height);
-    else y = (int)(sw_saturate(v)*tex->height);
+    else y = sw_clamp_int((int)(sw_saturate(v)*tex->height), 0, tex->hMinus1);
 #else
     if (tex->sWrap == SW_REPEAT) x = (int)(u*tex->width) & tex->wMinus1;
-    else x = (int)(sw_saturate(u)*tex->width);
+    else x = sw_clamp_int((int)(sw_saturate(u)*tex->width), 0, tex->wMinus1);
 
     if (tex->tWrap == SW_REPEAT) y = (int)(v*tex->height) & tex->hMinus1;
-    else y = (int)(sw_saturate(v)*tex->height);
+    else y = sw_clamp_int((int)(sw_saturate(v)*tex->height), 0, tex->hMinus1);
 #endif
 
     tex->readColor(color, tex->pixels, y*tex->width + x);
@@ -4077,9 +4078,9 @@ void swGetIntegerv(SWget name, int *v)
 {
     switch (name)
     {
-        case SW_MODELVIEW_STACK_DEPTH: *v = SW_MODELVIEW_STACK_DEPTH; break;
-        case SW_PROJECTION_STACK_DEPTH: *v = SW_PROJECTION_STACK_DEPTH; break;
-        case SW_TEXTURE_STACK_DEPTH: *v = SW_TEXTURE_STACK_DEPTH; break;
+        case SW_MODELVIEW_STACK_DEPTH: *v = RLSW.stackModelviewCounter; break;
+        case SW_PROJECTION_STACK_DEPTH: *v = RLSW.stackProjectionCounter; break;
+        case SW_TEXTURE_STACK_DEPTH: *v = RLSW.stackTextureCounter; break;
         case SW_DRAW_FRAMEBUFFER_BINDING: *v = RLSW.boundFramebufferId; break;
         default: RLSW.errCode = SW_INVALID_ENUM; break;
     }
@@ -4357,7 +4358,7 @@ void swPopMatrix(void)
     {
         case SW_PROJECTION:
         {
-            if (RLSW.stackProjectionCounter <= 0)
+            if (RLSW.stackProjectionCounter <= 1)
             {
                 RLSW.errCode = SW_STACK_UNDERFLOW;
                 return;
@@ -4368,7 +4369,7 @@ void swPopMatrix(void)
         } break;
         case SW_MODELVIEW:
         {
-            if (RLSW.stackModelviewCounter <= 0)
+            if (RLSW.stackModelviewCounter <= 1)
             {
                 RLSW.errCode = SW_STACK_UNDERFLOW;
                 return;
@@ -4379,7 +4380,7 @@ void swPopMatrix(void)
         } break;
         case SW_TEXTURE:
         {
-            if (RLSW.stackTextureCounter <= 0)
+            if (RLSW.stackTextureCounter <= 1)
             {
                 RLSW.errCode = SW_STACK_UNDERFLOW;
                 return;
@@ -5051,6 +5052,9 @@ void swTexParameteri(int param, int value)
     }
 
     if (RLSW.boundTexture == NULL) return;
+
+    // Treat GL_CLAMP_TO_EDGE as GL_CLAMP
+    if (value == GL_CLAMP_TO_EDGE) value = GL_CLAMP;
 
     switch (param)
     {
