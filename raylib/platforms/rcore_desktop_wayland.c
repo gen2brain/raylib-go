@@ -421,6 +421,7 @@ typedef struct {
     bool activatedOnce;             // Window was activated by the compositor at least once
     bool fullscreenRequested;       // Last fullscreen state requested to the compositor
     bool fullscreenPending;         // Last fullscreen request not yet confirmed by a configure event
+    struct wl_output *fullscreenMoveOutput; // Output to request fullscreen on once the window left fullscreen
     bool eventReceived;             // Window or input event received (ends event waiting)
     bool initialized;               // Platform initialization finished (rlgl ready on next events)
     bool fullscreen;                // Window is fullscreen
@@ -821,8 +822,13 @@ void ToggleFullscreen(void)
 {
     if (!FLAG_IS_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE))
     {
-        // Leave borderless windowed mode before entering fullscreen
-        if (FLAG_IS_SET(CORE.Window.flags, FLAG_BORDERLESS_WINDOWED_MODE)) ToggleBorderlessWindowed();
+        // NOTE: Borderless windowed mode is already a fullscreen window for the compositor
+        if (FLAG_IS_SET(CORE.Window.flags, FLAG_BORDERLESS_WINDOWED_MODE))
+        {
+            FLAG_CLEAR(CORE.Window.flags, FLAG_BORDERLESS_WINDOWED_MODE);
+            FLAG_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE);
+            return;
+        }
 
         // Store previous screen data (in case exiting fullscreen)
         CORE.Window.previousPosition = CORE.Window.position;
@@ -861,8 +867,13 @@ void ToggleFullscreen(void)
 // NOTE: On Wayland it is a fullscreen window, there are no video modes to change
 void ToggleBorderlessWindowed(void)
 {
-    // Leave fullscreen before attempting to set borderless windowed mode
-    if (FLAG_IS_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE)) ToggleFullscreen();
+    // NOTE: Fullscreen mode is already a fullscreen window for the compositor
+    if (FLAG_IS_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE))
+    {
+        FLAG_CLEAR(CORE.Window.flags, FLAG_FULLSCREEN_MODE);
+        FLAG_SET(CORE.Window.flags, FLAG_BORDERLESS_WINDOWED_MODE);
+        return;
+    }
 
     if (!FLAG_IS_SET(CORE.Window.flags, FLAG_BORDERLESS_WINDOWED_MODE))
     {
@@ -1249,9 +1260,16 @@ void SetWindowMonitor(int monitor)
         {
             TRACELOG(LOG_INFO, "WAYLAND: Selected fullscreen monitor: [%i] %s", monitor, platform.monitors[monitor].name);
 
+            // NOTE: Fullscreen window leaves fullscreen to change the output, it is requested again on the configure event
+            bool leave = (platform.fullscreen && (platform.fullscreenMonitor != monitor));
             platform.fullscreenMonitor = monitor;
 
-            RequestFullscreen(true, platform.monitors[monitor].output);
+            if (leave)
+            {
+                RequestFullscreen(false, NULL);
+                platform.fullscreenMoveOutput = platform.monitors[monitor].output;
+            }
+            else RequestFullscreen(true, platform.monitors[monitor].output);
 
             wl_display_flush(platform.display);
         }
@@ -1312,6 +1330,12 @@ void SetWindowSize(int width, int height)
             platform.libdecor.StateFree(frameState);
         }
 
+        CommitWindowSurface();
+    }
+    else if (!platform.fullscreen)
+    {
+        // NOTE: Size limits of non-resizable windows follow the floating size, the compositor applies its own size
+        UpdateWindowGeometry();
         CommitWindowSurface();
     }
 }
@@ -2655,6 +2679,16 @@ static void CreateShellObjects(void)
         else if (wl_display_dispatch(platform.display) < 0) break;
     }
 
+    // NOTE: Some compositors apply the requested fullscreen state after the first frame, monitor size is used until then
+    int monitor = GetMonitorIndex(fullscreenOutput);
+    if (fullscreen && !platform.fullscreen && (monitor >= 0) && (platform.monitors[monitor].logicalWidth > 0) && (platform.monitors[monitor].logicalHeight > 0))
+    {
+        platform.width = platform.monitors[monitor].logicalWidth;
+        platform.height = platform.monitors[monitor].logicalHeight;
+        UpdateWindowBuffers();
+        UpdateWindowGeometry();
+    }
+
     if (platform.libdecor.frame != NULL) platform.xdgToplevel = platform.libdecor.FrameGetXdgToplevel(platform.libdecor.frame);
     UpdateWindowIcon();
 
@@ -2712,6 +2746,13 @@ static void ApplyConfigure(int width, int height, bool activated, bool maximized
 
     if (maximized) FLAG_SET(CORE.Window.flags, FLAG_WINDOW_MAXIMIZED);
     else FLAG_CLEAR(CORE.Window.flags, FLAG_WINDOW_MAXIMIZED);
+
+    // Window left fullscreen to change the output
+    if ((platform.fullscreenMoveOutput != NULL) && !fullscreen)
+    {
+        RequestFullscreen(true, platform.fullscreenMoveOutput);
+        wl_display_flush(platform.display);
+    }
 
     // Fullscreen state changed by the compositor
     // NOTE: Configure events sent before the last fullscreen request was applied do not change the flags
@@ -2945,6 +2986,8 @@ static void UpdateWindowGeometry(void)
 static void RequestFullscreen(bool fullscreen, struct wl_output *output)
 {
     if ((platform.libdecor.frame == NULL) && (platform.xdgToplevel == NULL)) return;
+
+    platform.fullscreenMoveOutput = NULL;
 
     if (platform.libdecor.frame != NULL)
     {
@@ -4469,6 +4512,8 @@ static void RegistryGlobalRemoveCallback(void *data, struct wl_registry *registr
         if (platform.monitors[i].globalName == name)
         {
             struct wl_output *output = platform.monitors[i].output;
+
+            if (platform.fullscreenMoveOutput == output) platform.fullscreenMoveOutput = NULL;
 
             // Remove output from the list of outputs the window is on
             for (int k = 0; k < platform.enteredOutputCount; k++)
