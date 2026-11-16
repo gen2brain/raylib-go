@@ -33,3 +33,4 @@ generate "$P/unstable/relative-pointer/relative-pointer-unstable-v1.xml" relativ
 generate "$P/unstable/pointer-constraints/pointer-constraints-unstable-v1.xml" pointer-constraints-unstable-v1
 generate "$P/unstable/idle-inhibit/idle-inhibit-unstable-v1.xml" idle-inhibit-unstable-v1
 generate "$P/unstable/xdg-output/xdg-output-unstable-v1.xml" xdg-output-unstable-v1
+generate "$P/unstable/text-input/text-input-unstable-v3.xml" text-input-unstable-v3

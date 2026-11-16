@@ -14,6 +14,7 @@
 *   POSSIBLE IMPROVEMENTS:
 *       - Client-side decorations drop shadow
 *       - Primary selection (middle-click paste)
+*       - Input method preedit drawing (text being composed is only shown by input methods that draw it themselves)
 *
 *   CONFIGURATION:
 *       #define WAYLAND_CLIENT_DECORATIONS
@@ -75,6 +76,7 @@
 #include "../external/wayland/xdg-toplevel-icon-v1-client-protocol.h"
 #include "../external/wayland/alpha-modifier-v1-client-protocol.h"
 #include "../external/wayland/xdg-output-unstable-v1-client-protocol.h"
+#include "../external/wayland/text-input-unstable-v3-client-protocol.h"
 
 // Wayland protocols interfaces code
 #include "../external/wayland/xdg-shell-client-protocol-code.h"
@@ -89,6 +91,7 @@
 #include "../external/wayland/xdg-toplevel-icon-v1-client-protocol-code.h"
 #include "../external/wayland/alpha-modifier-v1-client-protocol-code.h"
 #include "../external/wayland/xdg-output-unstable-v1-client-protocol-code.h"
+#include "../external/wayland/text-input-unstable-v3-client-protocol-code.h"
 
 #include <linux/input-event-codes.h> // Required for: BTN_LEFT, BTN_RIGHT...
 #include <sys/mman.h>               // Required for: mmap(), munmap()
@@ -374,6 +377,7 @@ typedef struct {
     struct xdg_toplevel_icon_manager_v1 *iconManager; // Window icons (optional)
     struct wp_alpha_modifier_v1 *alphaModifier; // Window opacity (optional)
     struct zxdg_output_manager_v1 *outputManager; // Outputs logical position and size (optional)
+    struct zwp_text_input_manager_v3 *textInputManager; // Input methods text (optional)
     unsigned int compositorVersion; // Bound wl_compositor version
     unsigned int seatVersion;       // Bound wl_seat version
 
@@ -468,6 +472,9 @@ typedef struct {
     int repeatDelay;                // Key repeat delay (milliseconds)
     unsigned int repeatScancode;    // Key being repeated (evdev scancode)
     bool lockKeysEntered;           // CAPS/NUM lock state received since the keyboard entered the window
+    struct zwp_text_input_v3 *textInput; // Seat text input (input methods)
+    bool textInputEntered;          // Text input is on the window
+    char *textInputCommit;          // Text committed by the input method, applied on the done event
     double repeatTime;              // Next key repeat time
     unsigned int inputSerial;       // Last input event serial (required by some requests)
 
@@ -631,6 +638,7 @@ static void ReleaseOutput(struct wl_output *output);            // Release outpu
 static void HandleKey(unsigned int scancode, bool pressed);     // Register key state change
 static void HandleKeyRelease(int key);                          // Register key release
 static void HandleKeyChar(unsigned int scancode);               // Register character input for a key, considering keyboard layout and compose sequences
+static void UpdateTextInputCursor(void);                        // Update text input cursor area, input method popups are placed next to it
 static void ProcessKeyRepeat(void);                             // Generate key repeat events
 static void HandleMouseButton(int button, bool pressed);        // Register mouse button state change
 static void HandleMouseMove(double x, double y);                // Register mouse position change
@@ -726,6 +734,12 @@ static void KeyboardKeyCallback(void *data, struct wl_keyboard *keyboard, uint32
 static void KeyboardModifiersCallback(void *data, struct wl_keyboard *keyboard, uint32_t serial, uint32_t depressed, uint32_t latched,
     uint32_t locked, uint32_t group);                                                   // Keyboard: modifiers state changed
 static void KeyboardRepeatInfoCallback(void *data, struct wl_keyboard *keyboard, int32_t rate, int32_t delay); // Keyboard: key repeat rate and delay
+static void TextInputEnterCallback(void *data, struct zwp_text_input_v3 *textInput, struct wl_surface *surface); // Text input: entered a surface
+static void TextInputLeaveCallback(void *data, struct zwp_text_input_v3 *textInput, struct wl_surface *surface); // Text input: left a surface
+static void TextInputPreeditStringCallback(void *data, struct zwp_text_input_v3 *textInput, const char *text, int32_t cursorBegin, int32_t cursorEnd); // Text input: text being composed
+static void TextInputCommitStringCallback(void *data, struct zwp_text_input_v3 *textInput, const char *text); // Text input: text committed
+static void TextInputDeleteSurroundingTextCallback(void *data, struct zwp_text_input_v3 *textInput, uint32_t beforeLength, uint32_t afterLength); // Text input: delete text around the cursor
+static void TextInputDoneCallback(void *data, struct zwp_text_input_v3 *textInput, uint32_t serial); // Text input: apply pending events
 static void TouchDownCallback(void *data, struct wl_touch *touch, uint32_t serial, uint32_t time, struct wl_surface *surface, int32_t id,
     wl_fixed_t x, wl_fixed_t y);                                                        // Touch: new touch point
 static void TouchUpCallback(void *data, struct wl_touch *touch, uint32_t serial, uint32_t time, int32_t id); // Touch: touch point released
@@ -780,6 +794,10 @@ static const struct wl_pointer_listener pointerListener = {
 static const struct zwp_relative_pointer_v1_listener relativePointerListener = { RelativePointerMotionCallback };
 static const struct wl_keyboard_listener keyboardListener = {
     KeyboardKeymapCallback, KeyboardEnterCallback, KeyboardLeaveCallback, KeyboardKeyCallback, KeyboardModifiersCallback, KeyboardRepeatInfoCallback
+};
+static const struct zwp_text_input_v3_listener textInputListener = {
+    TextInputEnterCallback, TextInputLeaveCallback, TextInputPreeditStringCallback, TextInputCommitStringCallback,
+    TextInputDeleteSurroundingTextCallback, TextInputDoneCallback
 };
 static const struct wl_touch_listener touchListener = {
     TouchDownCallback, TouchUpCallback, TouchMotionCallback, TouchFrameCallback, TouchCancelCallback,
@@ -2261,6 +2279,8 @@ void ClosePlatform(void)
     RL_FREE(platform.clipboardText);
     RL_FREE(platform.clipboardReceived);
 
+    if (platform.textInput != NULL) zwp_text_input_v3_destroy(platform.textInput);
+    if (platform.textInputCommit != NULL) RL_FREE(platform.textInputCommit);
     if (platform.cursorShapeDevice != NULL) wp_cursor_shape_device_v1_destroy(platform.cursorShapeDevice);
     if (platform.cursorSurface != NULL) wl_surface_destroy(platform.cursorSurface);
     if (platform.cursorTheme != NULL) wl_cursor_theme_destroy(platform.cursorTheme);
@@ -2289,6 +2309,7 @@ void ClosePlatform(void)
         else wl_seat_destroy(platform.seat);
     }
     if (platform.outputManager != NULL) zxdg_output_manager_v1_destroy(platform.outputManager);
+    if (platform.textInputManager != NULL) zwp_text_input_manager_v3_destroy(platform.textInputManager);
     if (platform.alphaModifier != NULL) wp_alpha_modifier_v1_destroy(platform.alphaModifier);
     if (platform.iconManager != NULL) xdg_toplevel_icon_manager_v1_destroy(platform.iconManager);
     if (platform.activation != NULL) xdg_activation_v1_destroy(platform.activation);
@@ -3211,6 +3232,16 @@ static void HandleKeyChar(unsigned int scancode)
         CORE.Input.Keyboard.charPressedQueue[CORE.Input.Keyboard.charPressedQueueCount] = codepoint;
         CORE.Input.Keyboard.charPressedQueueCount++;
     }
+}
+
+// Update text input cursor area, input method popups are placed next to it
+// NOTE: There is no text cursor, the last clicked position is used
+static void UpdateTextInputCursor(void)
+{
+    if ((platform.textInput == NULL) || !platform.textInputEntered) return;
+
+    zwp_text_input_v3_set_cursor_rectangle(platform.textInput, (int32_t)platform.pointerX, (int32_t)platform.pointerY, 1, 1);
+    zwp_text_input_v3_commit(platform.textInput);
 }
 
 // Generate key repeat events
@@ -4494,12 +4525,23 @@ static void RegistryGlobalCallback(void *data, struct wl_registry *registry, uin
     {
         platform.alphaModifier = wl_registry_bind(registry, name, &wp_alpha_modifier_v1_interface, 1);
     }
+    else if (strcmp(interface, zwp_text_input_manager_v3_interface.name) == 0)
+    {
+        platform.textInputManager = wl_registry_bind(registry, name, &zwp_text_input_manager_v3_interface, 1);
+    }
 
     // Data device requires both the seat and the data device manager
     if ((platform.dataDevice == NULL) && (platform.seat != NULL) && (platform.dataDeviceManager != NULL))
     {
         platform.dataDevice = wl_data_device_manager_get_data_device(platform.dataDeviceManager, platform.seat);
         wl_data_device_add_listener(platform.dataDevice, &dataDeviceListener, NULL);
+    }
+
+    // Text input requires both the seat and the text input manager
+    if ((platform.textInput == NULL) && (platform.seat != NULL) && (platform.textInputManager != NULL))
+    {
+        platform.textInput = zwp_text_input_manager_v3_get_text_input(platform.textInputManager, platform.seat);
+        zwp_text_input_v3_add_listener(platform.textInput, &textInputListener, NULL);
     }
 }
 
@@ -4988,6 +5030,7 @@ static void PointerButtonCallback(void *data, struct wl_pointer *pointer, uint32
         }
 
         if (mouseButton >= 0) HandleMouseButton(mouseButton, pressed);
+        if (pressed) UpdateTextInputCursor();
     }
     else HandleDecorationButton(GetDecorationPart(platform.pointerFocus), button, pressed);
 }
@@ -5182,6 +5225,93 @@ static void KeyboardRepeatInfoCallback(void *data, struct wl_keyboard *keyboard,
 {
     platform.repeatRate = rate;
     platform.repeatDelay = delay;
+}
+
+// Text input: entered a surface
+static void TextInputEnterCallback(void *data, struct zwp_text_input_v3 *textInput, struct wl_surface *surface)
+{
+    if (surface != platform.surface) return;
+
+    platform.textInputEntered = true;
+
+    zwp_text_input_v3_enable(textInput);
+    zwp_text_input_v3_set_content_type(textInput, ZWP_TEXT_INPUT_V3_CONTENT_HINT_NONE, ZWP_TEXT_INPUT_V3_CONTENT_PURPOSE_NORMAL);
+    zwp_text_input_v3_set_cursor_rectangle(textInput, (int32_t)platform.pointerX, (int32_t)platform.pointerY, 1, 1);
+    zwp_text_input_v3_commit(textInput);
+}
+
+// Text input: left a surface
+static void TextInputLeaveCallback(void *data, struct zwp_text_input_v3 *textInput, struct wl_surface *surface)
+{
+    if (!platform.textInputEntered) return;
+
+    platform.textInputEntered = false;
+
+    zwp_text_input_v3_disable(textInput);
+    zwp_text_input_v3_commit(textInput);
+}
+
+// Text input: text being composed
+// NOTE: Not displayed, input methods show it in their own popup
+static void TextInputPreeditStringCallback(void *data, struct zwp_text_input_v3 *textInput, const char *text, int32_t cursorBegin, int32_t cursorEnd)
+{
+}
+
+// Text input: text committed
+static void TextInputCommitStringCallback(void *data, struct zwp_text_input_v3 *textInput, const char *text)
+{
+    if (platform.textInputCommit != NULL) RL_FREE(platform.textInputCommit);
+    platform.textInputCommit = NULL;
+
+    if (text != NULL)
+    {
+        int length = (int)strlen(text);
+        platform.textInputCommit = (char *)RL_CALLOC(length + 1, sizeof(char));
+        memcpy(platform.textInputCommit, text, length);
+    }
+}
+
+// Text input: delete text around the cursor
+static void TextInputDeleteSurroundingTextCallback(void *data, struct zwp_text_input_v3 *textInput, uint32_t beforeLength, uint32_t afterLength)
+{
+}
+
+// Text input: apply pending events
+static void TextInputDoneCallback(void *data, struct zwp_text_input_v3 *textInput, uint32_t serial)
+{
+    if (platform.textInputCommit == NULL) return;
+
+    platform.eventReceived = true;
+
+    // Decode UTF-8 text
+    const unsigned char *bytes = (const unsigned char *)platform.textInputCommit;
+    int length = (int)strlen(platform.textInputCommit);
+    int i = 0;
+
+    while (i < length)
+    {
+        unsigned int codepoint = bytes[i];
+        int size = 1;
+
+        if ((bytes[i] & 0xe0) == 0xc0) { codepoint = bytes[i] & 0x1f; size = 2; }
+        else if ((bytes[i] & 0xf0) == 0xe0) { codepoint = bytes[i] & 0x0f; size = 3; }
+        else if ((bytes[i] & 0xf8) == 0xf0) { codepoint = bytes[i] & 0x07; size = 4; }
+
+        if ((i + size) > length) break;
+        for (int k = 1; k < size; k++) codepoint = (codepoint << 6) | (bytes[i + k] & 0x3f);
+        i += size;
+
+        // Check if there is space available in the queue, control characters are not registered
+        if ((codepoint >= 32) && (codepoint != 127) && (CORE.Input.Keyboard.charPressedQueueCount < MAX_CHAR_PRESSED_QUEUE))
+        {
+            // Add character to the queue
+            CORE.Input.Keyboard.charPressedQueue[CORE.Input.Keyboard.charPressedQueueCount] = codepoint;
+            CORE.Input.Keyboard.charPressedQueueCount++;
+        }
+    }
+
+    RL_FREE(platform.textInputCommit);
+    platform.textInputCommit = NULL;
 }
 
 // Touch: new touch point
