@@ -107,6 +107,70 @@
 #define MG_IMPLEMENTATION
 #include "../external/RGFW/deps/minigamepad.h"
 
+// NOTE: linux/input-event-codes.h defines KEY_<X> macros that collide with raylib KEY_<X> values,
+// macros are undefined to use the raylib values, also in rcore.c
+#undef KEY_APOSTROPHE
+#undef KEY_COMMA
+#undef KEY_MINUS
+#undef KEY_SLASH
+#undef KEY_SEMICOLON
+#undef KEY_EQUAL
+#undef KEY_A
+#undef KEY_B
+#undef KEY_C
+#undef KEY_D
+#undef KEY_E
+#undef KEY_F
+#undef KEY_G
+#undef KEY_H
+#undef KEY_I
+#undef KEY_J
+#undef KEY_K
+#undef KEY_L
+#undef KEY_M
+#undef KEY_N
+#undef KEY_O
+#undef KEY_P
+#undef KEY_Q
+#undef KEY_R
+#undef KEY_S
+#undef KEY_T
+#undef KEY_U
+#undef KEY_V
+#undef KEY_W
+#undef KEY_X
+#undef KEY_Y
+#undef KEY_Z
+#undef KEY_BACKSLASH
+#undef KEY_GRAVE
+#undef KEY_SPACE
+#undef KEY_ENTER
+#undef KEY_TAB
+#undef KEY_BACKSPACE
+#undef KEY_INSERT
+#undef KEY_DELETE
+#undef KEY_RIGHT
+#undef KEY_LEFT
+#undef KEY_DOWN
+#undef KEY_UP
+#undef KEY_HOME
+#undef KEY_END
+#undef KEY_PAUSE
+#undef KEY_F1
+#undef KEY_F2
+#undef KEY_F3
+#undef KEY_F4
+#undef KEY_F5
+#undef KEY_F6
+#undef KEY_F7
+#undef KEY_F8
+#undef KEY_F9
+#undef KEY_F10
+#undef KEY_F11
+#undef KEY_F12
+#undef KEY_BACK
+#undef KEY_MENU
+
 //----------------------------------------------------------------------------------
 // Defines and Macros
 //----------------------------------------------------------------------------------
@@ -380,6 +444,11 @@ typedef struct {
     float wheelMoveX;               // Mouse wheel horizontal move accumulated in the current frame
     float wheelMoveY;               // Mouse wheel vertical move accumulated in the current frame
     bool wheelDiscrete;             // Mouse wheel steps received in the current pointer frame
+    bool pointerEntered;            // Pointer entered the window at least once (mouse position is known)
+    bool keyPressedInFrame[MAX_KEYBOARD_KEYS]; // Keys pressed in the current frame
+    bool keyReleasePending[MAX_KEYBOARD_KEYS]; // Keys released in the frame they were pressed, release registered on next frame
+    bool buttonPressedInFrame[MAX_MOUSE_BUTTONS]; // Mouse buttons pressed in the current frame
+    bool buttonReleasePending[MAX_MOUSE_BUTTONS]; // Mouse buttons released in the frame they were pressed, release registered on next frame
     struct wp_cursor_shape_device_v1 *cursorShapeDevice; // Pointer cursor shape device
     struct wl_cursor_theme *cursorTheme; // Cursor theme (cursor-shape fallback)
     int cursorThemeScale;           // Cursor theme loaded scale
@@ -397,6 +466,7 @@ typedef struct {
     int repeatRate;                 // Key repeat rate (characters per second)
     int repeatDelay;                // Key repeat delay (milliseconds)
     unsigned int repeatScancode;    // Key being repeated (evdev scancode)
+    bool lockKeysEntered;           // CAPS/NUM lock state received since the keyboard entered the window
     double repeatTime;              // Next key repeat time
     unsigned int inputSerial;       // Last input event serial (required by some requests)
 
@@ -558,6 +628,7 @@ static void ReleaseKeyboard(struct wl_keyboard *keyboard);      // Release seat 
 static void ReleaseTouch(struct wl_touch *touch);               // Release seat touch device (destroy on old compositors)
 static void ReleaseOutput(struct wl_output *output);            // Release output (destroy on old compositors)
 static void HandleKey(unsigned int scancode, bool pressed);     // Register key state change
+static void HandleKeyRelease(int key);                          // Register key release
 static void HandleKeyChar(unsigned int scancode);               // Register character input for a key, considering keyboard layout and compose sequences
 static void ProcessKeyRepeat(void);                             // Generate key repeat events
 static void HandleMouseButton(int button, bool pressed);        // Register mouse button state change
@@ -1770,6 +1841,32 @@ void PollInputEvents(void)
     // Register previous mouse states
     for (int i = 0; i < MAX_MOUSE_BUTTONS; i++) CORE.Input.Mouse.previousButtonState[i] = CORE.Input.Mouse.currentButtonState[i];
 
+    // Register keys and mouse buttons released in the frame they were pressed
+    bool inputReleased = false;
+    for (int i = 0; i < MAX_KEYBOARD_KEYS; i++)
+    {
+        platform.keyPressedInFrame[i] = false;
+
+        if (platform.keyReleasePending[i])
+        {
+            platform.keyReleasePending[i] = false;
+            HandleKeyRelease(i);
+            inputReleased = true;
+        }
+    }
+
+    for (int i = 0; i < MAX_MOUSE_BUTTONS; i++)
+    {
+        platform.buttonPressedInFrame[i] = false;
+
+        if (platform.buttonReleasePending[i])
+        {
+            platform.buttonReleasePending[i] = false;
+            HandleMouseButton(i, false);
+            inputReleased = true;
+        }
+    }
+
     // Register previous mouse wheel state
     CORE.Input.Mouse.previousWheelMove = CORE.Input.Mouse.currentWheelMove;
     CORE.Input.Mouse.currentWheelMove = (Vector2){ 0.0f, 0.0f };
@@ -1803,8 +1900,9 @@ void PollInputEvents(void)
         (FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_MINIMIZED) && !FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_ALWAYS_RUN)))
     {
         // Wait for input events before continue (drawing is paused)
-        int timeout = -1;
-        if (platform.repeatScancode != 0)
+        // NOTE: A release registered in this frame is an input event, there is no waiting
+        int timeout = inputReleased? 0 : -1;
+        if (!inputReleased && (platform.repeatScancode != 0))
         {
             timeout = (int)((platform.repeatTime - GetTime())*1000.0) + 1;
             if (timeout < 0) timeout = 0;
@@ -2995,6 +3093,8 @@ static void HandleKey(unsigned int scancode, bool pressed)
 
     if (pressed)
     {
+        platform.keyPressedInFrame[key] = true;
+        platform.keyReleasePending[key] = false;
         CORE.Input.Keyboard.currentKeyState[key] = 1;
 
         // Check if there is space available in the key queue
@@ -3008,7 +3108,19 @@ static void HandleKey(unsigned int scancode, bool pressed)
         // Check the exit key to set close window
         if (key == CORE.Input.Keyboard.exitKey) platform.closeRequested = true;
     }
-    else CORE.Input.Keyboard.currentKeyState[key] = 0;
+    else
+    {
+        // NOTE: Press and release can be received in the same frame (e.g. keys sent by other programs),
+        // the release is registered on next frame to not miss the key press
+        if (platform.keyPressedInFrame[key]) platform.keyReleasePending[key] = true;
+        else HandleKeyRelease(key);
+    }
+}
+
+// Register key release
+static void HandleKeyRelease(int key)
+{
+    CORE.Input.Keyboard.currentKeyState[key] = 0;
 
     // NOTE: CAPS/NUM lock keys are considered down while the lock is active
     if (platform.xkbState != NULL)
@@ -3084,6 +3196,20 @@ static void ProcessKeyRepeat(void)
 static void HandleMouseButton(int button, bool pressed)
 {
     platform.eventReceived = true;
+
+    // NOTE: Press and release can be received in the same frame (e.g. button also used for scrolling, sent on release),
+    // the release is registered on next frame to not miss the button press
+    if (pressed)
+    {
+        platform.buttonPressedInFrame[button] = true;
+        platform.buttonReleasePending[button] = false;
+    }
+    else if (platform.buttonPressedInFrame[button])
+    {
+        platform.buttonReleasePending[button] = true;
+        return;
+    }
+
     CORE.Input.Mouse.currentButtonState[button] = pressed;
     CORE.Input.Touch.currentTouchState[button] = pressed;
 
@@ -4734,6 +4860,10 @@ static void PointerEnterCallback(void *data, struct wl_pointer *pointer, uint32_
     {
         CORE.Input.Mouse.cursorOnScreen = true;
         if (platform.lockedPointer == NULL) HandleMouseMove(platform.pointerX, platform.pointerY);
+
+        // NOTE: Mouse position is not known until the pointer enters the window, the first position is not a movement
+        if (!platform.pointerEntered) CORE.Input.Mouse.previousPosition = CORE.Input.Mouse.currentPosition;
+        platform.pointerEntered = true;
     }
     else
     {
@@ -4935,6 +5065,7 @@ static void KeyboardEnterCallback(void *data, struct wl_keyboard *keyboard, uint
 {
     platform.eventReceived = true;
     platform.inputSerial = serial;
+    platform.lockKeysEntered = false;
 }
 
 // Keyboard: window lost keyboard focus
@@ -4947,9 +5078,14 @@ static void KeyboardLeaveCallback(void *data, struct wl_keyboard *keyboard, uint
     for (int i = 0; i < MAX_KEYBOARD_KEYS; i++)
     {
         if ((i != KEY_CAPS_LOCK) && (i != KEY_NUM_LOCK)) CORE.Input.Keyboard.currentKeyState[i] = 0;
+        platform.keyReleasePending[i] = false;
     }
 
-    for (int i = 0; i < MAX_MOUSE_BUTTONS; i++) CORE.Input.Mouse.currentButtonState[i] = 0;
+    for (int i = 0; i < MAX_MOUSE_BUTTONS; i++)
+    {
+        CORE.Input.Mouse.currentButtonState[i] = 0;
+        platform.buttonReleasePending[i] = false;
+    }
 
     if (platform.xkbComposeState != NULL) xkb_compose_state_reset(platform.xkbComposeState);
 }
@@ -4986,6 +5122,14 @@ static void KeyboardModifiersCallback(void *data, struct wl_keyboard *keyboard, 
     // NOTE: CAPS/NUM lock keys are considered down while the lock is active
     CORE.Input.Keyboard.currentKeyState[KEY_CAPS_LOCK] = (xkb_state_mod_name_is_active(platform.xkbState, XKB_MOD_NAME_CAPS, XKB_STATE_MODS_LOCKED) > 0);
     CORE.Input.Keyboard.currentKeyState[KEY_NUM_LOCK] = (xkb_state_mod_name_is_active(platform.xkbState, XKB_MOD_NAME_NUM, XKB_STATE_MODS_LOCKED) > 0);
+
+    // NOTE: A lock that was already active when the keyboard entered the window is not a key press
+    if (!platform.lockKeysEntered)
+    {
+        CORE.Input.Keyboard.previousKeyState[KEY_CAPS_LOCK] = CORE.Input.Keyboard.currentKeyState[KEY_CAPS_LOCK];
+        CORE.Input.Keyboard.previousKeyState[KEY_NUM_LOCK] = CORE.Input.Keyboard.currentKeyState[KEY_NUM_LOCK];
+        platform.lockKeysEntered = true;
+    }
 }
 
 // Keyboard: key repeat rate and delay

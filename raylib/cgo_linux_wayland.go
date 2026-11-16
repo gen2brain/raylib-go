@@ -1,13 +1,5 @@
 //go:build linux && wayland && !rgfw && !drm && !sdl && !sdl3 && !android && !memory && !nocgo
-// +build linux
-// +build wayland
-// +build !rgfw
-// +build !drm
-// +build !sdl
-// +build !sdl3
-// +build !android
-// +build !memory
-// +build !nocgo
+// +build linux,wayland,!rgfw,!drm,!sdl,!sdl3,!android,!memory,!nocgo
 
 package rl
 
