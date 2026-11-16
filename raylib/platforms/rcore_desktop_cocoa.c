@@ -988,15 +988,9 @@ Vector2 GetWindowScaleDPI(void)
 {
     @autoreleasepool
     {
-        Vector2 scale = { 1.0f, 1.0f };
+        float scale = (float)[platform.window backingScaleFactor];
 
-        if (FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_HIGHDPI))
-        {
-            scale.x = (float)[platform.window backingScaleFactor];
-            scale.y = scale.x;
-        }
-
-        return scale;
+        return (Vector2){ scale, scale };
     }
 }
 

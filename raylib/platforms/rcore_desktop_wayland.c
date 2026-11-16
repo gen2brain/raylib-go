@@ -1512,11 +1512,7 @@ Vector2 GetWindowPosition(void)
 // Get window scale DPI factor for current monitor
 Vector2 GetWindowScaleDPI(void)
 {
-    Vector2 scale = { 1.0f, 1.0f };
-
-    if (FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_HIGHDPI)) scale = (Vector2){ platform.scale, platform.scale };
-
-    return scale;
+    return (Vector2){ platform.scale, platform.scale };
 }
 
 // Set clipboard text content
