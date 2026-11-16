@@ -1,7 +1,8 @@
-//go:build linux && !rgfw && !wayland && !drm && !sdl && !sdl3 && (!android || termux) && !memory && !nocgo
+//go:build linux && !rgfw && !wayland && !x11 && !drm && !sdl && !sdl3 && (!android || termux) && !memory && !nocgo
 // +build linux
 // +build !rgfw
 // +build !wayland
+// +build !x11
 // +build !drm
 // +build !sdl
 // +build !sdl3
