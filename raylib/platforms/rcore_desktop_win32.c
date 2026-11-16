@@ -66,8 +66,24 @@
 #undef DrawTextExW
 
 #include <windowsx.h>
-#include <shellscalingapi.h>
-#include <versionhelpers.h>
+
+// Avoid including shellscalingapi.h by defining these two enums directly
+#ifndef DPI_ENUMS_DECLARED
+typedef enum PROCESS_DPI_AWARENESS {
+    PROCESS_DPI_UNAWARE = 0,
+    PROCESS_SYSTEM_DPI_AWARE = 1,
+    PROCESS_PER_MONITOR_DPI_AWARE = 2
+} PROCESS_DPI_AWARENESS;
+
+typedef enum MONITOR_DPI_TYPE {
+    MDT_EFFECTIVE_DPI = 0,
+    MDT_ANGULAR_DPI = 1,
+    MDT_RAW_DPI = 2,
+    MDT_DEFAULT = MDT_EFFECTIVE_DPI
+} MONITOR_DPI_TYPE;
+
+#define DPI_ENUMS_DECLARED
+#endif
 
 #include <malloc.h>          // Required for alloca()
 
@@ -87,14 +103,21 @@ typedef struct {
     HDC hdc;                // Graphic context handler
     HGLRC glContext;        // OpenGL context handler
 
+    HICON largeIcon;        // Large icon typically used for the taskbar
+    HICON smallIcon;        // Small icon typically used for the window's title bar
+
     // Software renderer variables
     HDC hdcmem;             // Memory graphic context handler
     HBITMAP hbitmap;        // GDI bitmap handler
     unsigned int *pixels;   // Pointer to pixel data buffer (BGRA format)
 
+    int previousRenderWidth;
+    int previousRenderHeight;
     int appScreenWidth;
     int appScreenHeight;
     unsigned int desiredFlags;
+
+    bool perMonitorDPIAwareV2; // Flag to check DPI-awareness level. This is used mainly to distinguish between per-monitor DPI awareness v1 and v2
 
     LARGE_INTEGER timerFrequency;
 
@@ -106,6 +129,16 @@ typedef HGLRC (WINAPI *PFNWGLCREATECONTEXTATTRIBSARBPROC)(HDC, HGLRC, const int 
 typedef BOOL (WINAPI *PFNWGLCHOOSEPIXELFORMATARBPROC)(HDC, const int *, const FLOAT *, UINT, int *, UINT *);
 typedef BOOL (WINAPI *PFNWGLSWAPINTERVALEXTPROC)(int);
 typedef const char *(WINAPI *PFNWGLGETEXTENSIONSSTRINGARBPROC)(HDC hdc);
+
+// Define Win32 function pointer types
+typedef UINT (WINAPI *GetDpiForWindowProc)(HWND hwnd);
+typedef BOOL (WINAPI *AdjustWindowRectExForDpiProc)(LPRECT lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle, UINT dpi);
+typedef BOOL (WINAPI *SetProcessDpiAwarenessContextProc)(HANDLE value);
+typedef HRESULT (WINAPI *SetProcessDpiAwarenessProc)(PROCESS_DPI_AWARENESS value);
+typedef BOOL (WINAPI *SetProcessDPIAwareProc)(void);
+typedef HRESULT (WINAPI *GetDpiForMonitorProc)(HMONITOR monitor, MONITOR_DPI_TYPE dpiType, UINT *dpiX, UINT *dpiY);
+typedef HANDLE (WINAPI *GetThreadDpiAwarenessContextProc)(void);
+typedef BOOL (WINAPI *AreDpiAwarenessContextsEqualProc)(HANDLE a, HANDLE b);
 
 //----------------------------------------------------------------------------------
 // Global Variables Definition
@@ -119,6 +152,19 @@ static PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = NULL;
 static PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB = NULL;
 static PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = NULL;
 static PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB = NULL;
+
+// Win32 functions that need to be dynamically loaded to support older versions of Windows
+// Before calling any of these functions, they should be null-checked
+static GetDpiForWindowProc pGetDpiForWindow = NULL;
+static AdjustWindowRectExForDpiProc pAdjustWindowRectExForDpi = NULL;
+static SetProcessDpiAwarenessContextProc pSetProcessDpiAwarenessContext = NULL;
+static SetProcessDpiAwarenessProc pSetProcessDpiAwareness = NULL;
+static SetProcessDPIAwareProc pSetProcessDPIAware = NULL;
+static GetDpiForMonitorProc pGetDpiForMonitor = NULL;
+static GetThreadDpiAwarenessContextProc pGetThreadDpiAwarenessContext = NULL;
+static AreDpiAwarenessContextsEqualProc pAreDpiAwarenessContextsEqual = NULL;
+
+static HMODULE shcore = NULL; // shcore.dll (Windows 8.1 and early versions of Windows 10): loaded once, NULL on other versions
 
 // --------------------------------------------------------------------------------
 // This part of the file contains pure functions that never access global state
@@ -152,7 +198,7 @@ static PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB = NULL;
 
 #define CLASS_NAME              L"raylibWindow"
 
-#define FLAG_MASK_OPTIONAL      (FLAG_VSYNC_HINT)
+#define FLAG_MASK_OPTIONAL      (FLAG_VSYNC_HINT | FLAG_WINDOW_UNFOCUSED)
 #define FLAG_MASK_REQUIRED      ~(FLAG_MASK_OPTIONAL)
 
 // Flags that have no operations to perform during an update
@@ -199,6 +245,26 @@ static PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB = NULL;
 #define WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB 0x00000002
 #define WGL_CONTEXT_ES_PROFILE_BIT_EXT        0x00000004
 #define WGL_CONTEXT_ES2_PROFILE_BIT_EXT        0x00000004
+
+// Polyfill macro definitions and enums for older Windows SDKs
+#ifndef WM_DPICHANGED
+    #define WM_DPICHANGED                   0x02E0
+#endif
+
+#ifndef WM_GETDPISCALEDSIZE
+    #define WM_GETDPISCALEDSIZE             0x02E4
+#endif
+
+#ifndef WM_MOUSEHWHEEL
+    #define WM_MOUSEHWHEEL                  0x020E
+#endif
+
+#ifndef DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE
+    #define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE ((HANDLE)-3)
+#endif
+#ifndef DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+    #define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 ((HANDLE)-4)
+#endif
 
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
@@ -368,6 +434,117 @@ static void AToWCopy(const char *ascii, wchar_t *outPtr, size_t outLen)
     if (size != outLen) TRACELOG(LOG_WARNING, "WIN32: Failed to convert %i UTF-8 chars to WCHAR, converted %i chars", outLen, size);
 }
 
+// Dynamically load Windows functions that may not be available on older versions
+static void LoadWin32FunctionPointers(void)
+{
+    HMODULE user32 = GetModuleHandleW(L"user32.dll");
+
+    pGetDpiForWindow = (GetDpiForWindowProc)GetProcAddress(user32, "GetDpiForWindow");
+    pAdjustWindowRectExForDpi = (AdjustWindowRectExForDpiProc)GetProcAddress(user32, "AdjustWindowRectExForDpi");
+    pSetProcessDpiAwarenessContext = (SetProcessDpiAwarenessContextProc)GetProcAddress(user32, "SetProcessDpiAwarenessContext");
+
+    pSetProcessDPIAware = (SetProcessDPIAwareProc)GetProcAddress(user32, "SetProcessDPIAware");
+    pGetThreadDpiAwarenessContext = (GetThreadDpiAwarenessContextProc)GetProcAddress(user32, "GetThreadDpiAwarenessContext");
+    pAreDpiAwarenessContextsEqual = (AreDpiAwarenessContextsEqualProc)GetProcAddress(user32, "AreDpiAwarenessContextsEqual");
+
+    // SetProcessDpiAwarenessContext (Windows 10 v1703) supersedes SetProcessDpiAwareness (Windows 8.1)
+    // We can avoid loading the shcore.dll if the newer DPI functions are available
+    if (pSetProcessDpiAwarenessContext == NULL)
+    {
+        shcore = LoadLibraryW(L"shcore.dll");
+        if (shcore != NULL)
+        {
+            pSetProcessDpiAwareness = (SetProcessDpiAwarenessProc)GetProcAddress(shcore, "SetProcessDpiAwareness");
+            pGetDpiForMonitor = (GetDpiForMonitorProc)GetProcAddress(shcore, "GetDpiForMonitor");
+        }
+    }
+}
+
+// GetDpiForWindow with a fallback for older versions of Windows
+static UINT GetDpiForWindowCompat(HWND hwnd)
+{
+    UINT result = 0;
+
+    if (pGetDpiForWindow != NULL)
+    {
+        // This API requires Windows 10 v1607 or newer
+        // Returns 0 on failure
+        result = pGetDpiForWindow(hwnd);
+    }
+    else if (pGetDpiForMonitor != NULL)
+    {
+        // Windows 8.1 and early versions of Windows 10
+        // Get the DPI based on which monitor the window is on
+        HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+        UINT dpiX = 0;
+        UINT dpiY = 0;
+        HRESULT hr = pGetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
+        if (hr == S_OK) result = dpiX;
+    }
+
+    if (result == 0)
+    {
+        // If running on older versions of Windows or if the modern API calls fail: fallback to system-wide DPI
+        // We can call GetDC without a corresponding ReleaseDC because the window was created with CS_OWNDC
+        result = GetDeviceCaps(GetDC(hwnd), LOGPIXELSX);
+    }
+
+    return result;
+}
+
+// AdjustWindowRectExForDpi with a fallback for older versions of Windows
+static BOOL AdjustWindowRectExForDpiCompat(LPRECT lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle, UINT dpi)
+{
+    BOOL result = FALSE;
+    if ((pAdjustWindowRectExForDpi != NULL) && platform.perMonitorDPIAwareV2)
+    {
+        result = pAdjustWindowRectExForDpi(lpRect, dwStyle, bMenu, dwExStyle, dpi);
+    }
+    else
+    {
+        result = AdjustWindowRectEx(lpRect, dwStyle, bMenu, dwExStyle);
+    }
+    return result;
+}
+
+// Set process to highest level of dpi awareness on this version of Windows
+// DPI awareness can only be set once. This function will fail on subsequent calls (which is harmless)
+// Windows 10 v1703+  - per-monitor awareness v2
+// Windows 8.1/10     - per-monitor awareness v1
+// Windows Vista/7/8  - system-aware
+// Windows XP         - No DPI awareness
+static void SetProcessDpiAwareCompat(void)
+{
+    if (pSetProcessDpiAwarenessContext != NULL)
+    {
+        // Windows 10 v1703+
+        BOOL succeeded = pSetProcessDpiAwarenessContext((HANDLE)DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+
+        if (!succeeded)
+        {
+            // If monitor aware v2 is not available, try v1
+            pSetProcessDpiAwarenessContext((HANDLE)DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
+        }
+    }
+    else if (pSetProcessDpiAwareness != NULL)
+    {
+        // Windows 8.1+
+        pSetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+    }
+    else if (pSetProcessDPIAware != NULL)
+    {
+        // Windows Vista+
+        pSetProcessDPIAware();
+    }
+
+    platform.perMonitorDPIAwareV2 = false;
+    if ((pGetThreadDpiAwarenessContext != NULL) && (pAreDpiAwarenessContextsEqual != NULL))
+    {
+        // There are subtle differences between per-monitor v1 and v2
+        platform.perMonitorDPIAwareV2 = pAreDpiAwarenessContextsEqual(pGetThreadDpiAwarenessContext(), (HANDLE)DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+    }
+}
+
 static bool DecoratedFromStyle(DWORD style)
 {
     if (style & STYLE_FLAGS_UNDECORATED_ON)
@@ -377,7 +554,7 @@ static bool DecoratedFromStyle(DWORD style)
     }
 
     DWORD masked = (style & STYLE_FLAGS_UNDECORATED_OFF);
-    if (STYLE_FLAGS_UNDECORATED_OFF != masked) 
+    if (STYLE_FLAGS_UNDECORATED_OFF != masked)
     {
         TRACELOG(LOG_ERROR, "WIN32: FLAGS: Style 0x%x is missing flags 0x%x", masked, masked ^ STYLE_FLAGS_UNDECORATED_OFF);
     }
@@ -464,7 +641,7 @@ static SIZE CalcWindowSize(UINT dpi, SIZE clientSize, DWORD style)
 {
     RECT rect = { 0, 0, clientSize.cx, clientSize.cy };
 
-    int result = AdjustWindowRectExForDpi(&rect, style, 0, WINDOW_STYLE_EX, dpi);
+    int result = AdjustWindowRectExForDpiCompat(&rect, style, 0, WINDOW_STYLE_EX, dpi);
     if (result == 0) TRACELOG(LOG_ERROR, "WIN32: Failed to adjust window rect [ERROR: %lu]", GetLastError());
 
     return (SIZE){ rect.right - rect.left, rect.bottom - rect.top };
@@ -510,12 +687,12 @@ static bool UpdateWindowSize(int mode, HWND hwnd, int width, int height, unsigne
     }
 
     // Get size in pixels from points, considering high-dpi
-    UINT dpi = GetDpiForWindow(hwnd);
+    UINT dpi = GetDpiForWindowCompat(hwnd);
     float dpiScale = ((float)dpi)/96.0f;
     bool dpiScaling = flags & FLAG_WINDOW_HIGHDPI;
     SIZE desiredSize = {
-        .cx = dpiScaling? (int)((float)width*dpiScale) : width,
-        .cy = dpiScaling? (int)((float)height*dpiScale) : height
+        .cx = dpiScaling? (int)roundf((float)width*dpiScale) : width,
+        .cy = dpiScaling? (int)roundf((float)height*dpiScale) : height
     };
 
     // Get client size (framebuffer inside the window)
@@ -558,33 +735,6 @@ static bool UpdateWindowSize(int mode, HWND hwnd, int width, int height, unsigne
     SetWindowPos(hwnd, NULL, windowPos.x, windowPos.y, windowSize.cx, windowSize.cy, SWP_NOMOVE | SWP_NOZORDER);
 
     return true;
-}
-
-// Check if running in Windows 10 version 1703 (Creators Update)
-static BOOL IsWindows10Version1703OrGreaterWin32(void)
-{
-    HMODULE ntdll = LoadLibraryW(L"ntdll.dll");
-
-    DWORD (*Verify)(RTL_OSVERSIONINFOEXW*, ULONG, ULONGLONG) =
-        (DWORD (*)(RTL_OSVERSIONINFOEXW*, ULONG, ULONGLONG))GetProcAddress(ntdll, "RtlVerifyVersionInfo");
-    if (!Verify)
-    {
-        TRACELOG(LOG_ERROR, "WIN32: Failed to verify Windows version [ERROR: %lu]", GetLastError());
-        return 0;
-    }
-
-    RTL_OSVERSIONINFOEXW osvi = { 0 };
-    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-    osvi.dwMajorVersion = 10;
-    osvi.dwMinorVersion = 0;
-    osvi.dwBuildNumber = 15063;  // Build 15063 corresponds to Windows 10 version 1703 (Creators Update)
-
-    DWORDLONG cond = 0;
-    VER_SET_CONDITION(cond, VER_MAJORVERSION, VER_GREATER_EQUAL);
-    VER_SET_CONDITION(cond, VER_MINORVERSION, VER_GREATER_EQUAL);
-    VER_SET_CONDITION(cond, VER_BUILDNUMBER, VER_GREATER_EQUAL);
-
-    return 0 == (*Verify)(&osvi, VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER, cond);
 }
 
 // Get OpenGL function pointers
@@ -633,6 +783,101 @@ static LPCWSTR GetCursorName(int cursor)
     }
 
     return name;
+}
+
+// Delete platform.smallIcon and platform.largeIcon
+static void DeletePlatformIconHandles(void)
+{
+    HICON smallIcon = platform.smallIcon;
+    HICON largeIcon = platform.largeIcon;
+
+    if (smallIcon != NULL) DestroyIcon(smallIcon);
+
+    // Only delete largeIcon if it's not pointing to the same underlying resource as smallIcon
+    if ((largeIcon != NULL) && (largeIcon != smallIcon)) DestroyIcon(largeIcon);
+
+    platform.smallIcon = NULL;
+    platform.largeIcon = NULL;
+}
+
+// Delete existing icons and replace them with the standard window/taskbar icons
+static void ResetToDefaultWindowsIcons(void)
+{
+    HICON smallIcon = (HICON)GetClassLongPtrW(platform.hwnd, GCLP_HICONSM);
+    HICON largeIcon = (HICON)GetClassLongPtrW(platform.hwnd, GCLP_HICON);
+
+    SendMessage(platform.hwnd, WM_SETICON, ICON_SMALL, (LPARAM)smallIcon);
+    SendMessage(platform.hwnd, WM_SETICON, ICON_BIG, (LPARAM)largeIcon);
+
+    // The built-in Windows icons shouldn't be deleted, so there's no need to store a reference to them
+    // Just delete the previous icons and exit
+    DeletePlatformIconHandles();
+}
+
+// Convert Image to Win32 HICON (must be RGBA)
+static HICON ConvertImageToWindowsIcon(Image image)
+{
+    if (image.format != PIXELFORMAT_UNCOMPRESSED_R8G8B8A8)
+    {
+        TRACELOG(LOG_WARNING, "WIN32: Window icon image must be in R8G8B8A8 pixel format");
+        return NULL;
+    }
+
+    HDC hdc = GetDC(platform.hwnd);
+
+    // Create 32-bit BGRA DIB for color
+    BITMAPV5HEADER bi = { 0 };
+    ZeroMemory(&bi, sizeof(bi));
+    bi.bV5Size = sizeof(bi);
+    bi.bV5Width = image.width;
+    bi.bV5Height = -image.height; // Negative = top-down bitmap
+    bi.bV5Planes = 1;
+    bi.bV5BitCount = 32;
+    bi.bV5Compression = BI_BITFIELDS;
+    bi.bV5RedMask = 0x00FF0000;
+    bi.bV5GreenMask = 0x0000FF00;
+    bi.bV5BlueMask = 0x000000FF;
+    bi.bV5AlphaMask = 0xFF000000;
+
+    unsigned char *targetBits = NULL;
+    HBITMAP hColorBitmap = CreateDIBSection(hdc, (BITMAPINFO *)&bi, DIB_RGB_COLORS, (void **)&targetBits, NULL, 0);
+    if (!hColorBitmap)
+    {
+        ReleaseDC(platform.hwnd, hdc);
+        return NULL;
+    }
+
+    // Copy RGBA > BGRA (Win32 expects BGRA)
+    for (int y = 0; y < image.height; y++)
+    {
+        for (int x = 0; x < image.width; x++)
+        {
+            int i = (y*image.width + x)*4;
+            targetBits[i + 0] = ((unsigned char *)image.data)[i + 2]; // B
+            targetBits[i + 1] = ((unsigned char *)image.data)[i + 1]; // G
+            targetBits[i + 2] = ((unsigned char *)image.data)[i + 0]; // R
+            targetBits[i + 3] = ((unsigned char *)image.data)[i + 3]; // A
+        }
+    }
+
+    // Create mask bitmap (1-bit, all opaque)
+    HBITMAP hMaskBitmap = CreateBitmap(image.width, image.height, 1, 1, NULL);
+
+    // Build icon info
+    ICONINFO ii = { 0 };
+    ZeroMemory(&ii, sizeof(ii));
+    ii.fIcon = TRUE;
+    ii.hbmMask = hMaskBitmap;
+    ii.hbmColor = hColorBitmap;
+
+    HICON result = CreateIconIndirect(&ii);
+
+    // Clean up GDI bitmaps (icon keeps copies internally)
+    DeleteObject(hColorBitmap);
+    DeleteObject(hMaskBitmap);
+    ReleaseDC(platform.hwnd, hdc);
+
+    return result;
 }
 
 // Count monitors process
@@ -728,8 +973,8 @@ static bool AdoptWindowResize(unsigned flags)
 //----------------------------------------------------------------------------------
 // Module Internal Functions Declaration
 //----------------------------------------------------------------------------------
-int InitPlatform(void);             // Initialize platform (graphics, inputs and more)
-void ClosePlatform(void);           // Close platform
+int InitPlatform(void);         // Initialize platform (graphics, inputs and more)
+void ClosePlatform(void);       // Close platform
 
 // Win32 process messages management function
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
@@ -741,7 +986,7 @@ static void HandleRawInput(LPARAM lparam);
 static void HandleWindowResize(HWND hwnd, int *width, int *height);
 
 static void UpdateWindowStyle(HWND hwnd, unsigned desiredFlags);
-static unsigned SanitizeFlags(int mode, unsigned flags);
+static unsigned SanitizeFlags(unsigned flags);
 static void UpdateFlags(HWND hwnd, unsigned desiredFlags, int width, int height); // Update window flags
 
 // Check if OpenGL extension is available
@@ -798,89 +1043,102 @@ void RestoreWindow(void)
 // Set window configuration state using flags
 void SetWindowState(unsigned int flags)
 {
-    platform.desiredFlags = SanitizeFlags(1 /*SANITIZE_FLAGS_NORMAL*/, CORE.Window.flags | flags);
+    if (flags & FLAG_MSAA_4X_HINT) TRACELOG(LOG_WARNING, "WINDOW: MSAA can only be configured before window initialization");
+    if (flags & FLAG_WINDOW_HIGHDPI) TRACELOG(LOG_WARNING, "WINDOW: High DPI can only be configured before window initialization");
+
+    platform.desiredFlags = SanitizeFlags(CORE.Window.flags | flags);
     UpdateFlags(platform.hwnd, platform.desiredFlags, platform.appScreenWidth, platform.appScreenHeight);
 }
 
 // Clear window configuration state flags
 void ClearWindowState(unsigned int flags)
 {
-    platform.desiredFlags = SanitizeFlags(1 /*SANITIZE_FLAGS_NORMAL*/, CORE.Window.flags & ~flags);
+    if (flags & FLAG_MSAA_4X_HINT) TRACELOG(LOG_WARNING, "WINDOW: MSAA can only be configured before window initialization");
+    if (flags & FLAG_WINDOW_HIGHDPI) TRACELOG(LOG_WARNING, "WINDOW: High DPI can only be configured before window initialization");
+
+    platform.desiredFlags = SanitizeFlags(CORE.Window.flags & ~flags);
     UpdateFlags(platform.hwnd, platform.desiredFlags, platform.appScreenWidth, platform.appScreenHeight);
 }
 
 // Set icon for window
 void SetWindowIcon(Image image)
 {
-    if (!platform.hwnd || (image.data == NULL) || (image.width <= 0) || (image.height <= 0)) return;
+    if (!platform.hwnd) return;
 
-    HDC hdc = GetDC(platform.hwnd);
-
-    // Create 32-bit BGRA DIB for color
-    BITMAPV5HEADER bi = { 0 };
-    ZeroMemory(&bi, sizeof(bi));
-    bi.bV5Size = sizeof(bi);
-    bi.bV5Width = image.width;
-    bi.bV5Height = -image.height; // Negative = top-down bitmap
-    bi.bV5Planes = 1;
-    bi.bV5BitCount = 32;
-    bi.bV5Compression = BI_BITFIELDS;
-    bi.bV5RedMask = 0x00FF0000;
-    bi.bV5GreenMask = 0x0000FF00;
-    bi.bV5BlueMask = 0x000000FF;
-    bi.bV5AlphaMask = 0xFF000000;
-
-    unsigned char *targetBits = NULL;
-    HBITMAP hColorBitmap = CreateDIBSection(hdc, (BITMAPINFO *)&bi, DIB_RGB_COLORS, (void **)&targetBits, NULL, 0);
-    if (!hColorBitmap)
+    if ((image.data == NULL) || (image.width <= 0) || (image.height <= 0))
     {
-        ReleaseDC(platform.hwnd, hdc);
+        ResetToDefaultWindowsIcons();
         return;
     }
 
-    // Copy RGBA > BGRA (Win32 expects BGRA)
-    for (int y = 0; y < image.height; y++)
-    {
-        for (int x = 0; x < image.width; x++)
-        {
-            int i = (y*image.width + x)*4;
-            targetBits[i + 0] = ((unsigned char *)image.data)[i + 2]; // B
-            targetBits[i + 1] = ((unsigned char *)image.data)[i + 1]; // G
-            targetBits[i + 2] = ((unsigned char *)image.data)[i + 0]; // R
-            targetBits[i + 3] = ((unsigned char *)image.data)[i + 3]; // A
-        }
-    }
-
-    // Create mask bitmap (1-bit, all opaque)
-    HBITMAP hMaskBitmap = CreateBitmap(image.width, image.height, 1, 1, NULL);
-
-    // Build icon info
-    ICONINFO ii = { 0 };
-    ZeroMemory(&ii, sizeof(ii));
-    ii.fIcon = TRUE;
-    ii.hbmMask = hMaskBitmap;
-    ii.hbmColor = hColorBitmap;
-
-    HICON hIcon = CreateIconIndirect(&ii);
-
-    // Clean up GDI bitmaps (icon keeps copies internally)
-    DeleteObject(hColorBitmap);
-    DeleteObject(hMaskBitmap);
-    ReleaseDC(platform.hwnd, hdc);
-
+    HICON hIcon = ConvertImageToWindowsIcon(image);
     if (hIcon)
     {
-        // Set both large and small icons
+        SendMessage(platform.hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
         SendMessage(platform.hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-        HICON previousIcon = (HICON)SendMessage(platform.hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
-        if (previousIcon) DestroyIcon(previousIcon);
+        DeletePlatformIconHandles();
+        platform.smallIcon = hIcon;
+        platform.largeIcon = hIcon;
     }
 }
 
 // Set icon for window (multiple sizes)
 void SetWindowIcons(Image *images, int count)
 {
-    // TODO: Implement SetWindowIcons()
+    if ((images == NULL) || (count <= 0))
+    {
+        ResetToDefaultWindowsIcons();
+        return;
+    }
+
+    // Large icon has a resolution of (SM_CXICON*SM_CXICON) pixels
+    int largeIconRenderSize = GetSystemMetrics(SM_CXICON);
+
+    // Attempt to find a best match for the large icon based on each image's width
+    int bestLargeIconIndex = -1;
+    int bestLargeIconSizeDifference = INT_MAX;
+    for (int i = 0; i < count; i++)
+    {
+        Image img = images[i];
+        int difference = abs(img.width - largeIconRenderSize);
+        if ((img.data != NULL) && (img.format == PIXELFORMAT_UNCOMPRESSED_R8G8B8A8) && (difference < bestLargeIconSizeDifference))
+        {
+            bestLargeIconIndex = i;
+            bestLargeIconSizeDifference = difference;
+        }
+    }
+
+    // Small icon has a resolution of (SM_CYSMICON*SM_CYSMICON) pixels
+    int smallIconRenderSize = GetSystemMetrics(SM_CYSMICON);
+
+    // Attempt to find a best match for the small icon based on each image's width
+    int bestSmallIconIndex = -1;
+    int bestSmallIconSizeDifference = INT_MAX;
+    for (int i = 0; i < count; i++)
+    {
+        Image img = images[i];
+        int difference = abs(img.width - smallIconRenderSize);
+        if ((img.data != NULL) && (img.format == PIXELFORMAT_UNCOMPRESSED_R8G8B8A8) && (difference < bestSmallIconSizeDifference))
+        {
+            bestSmallIconIndex = i;
+            bestSmallIconSizeDifference = difference;
+        }
+    }
+
+    if ((bestSmallIconIndex != -1) && (bestLargeIconIndex != -1))
+    {
+        HICON smallIcon = ConvertImageToWindowsIcon(images[bestSmallIconIndex]);
+        HICON largeIcon = ConvertImageToWindowsIcon(images[bestLargeIconIndex]);
+
+        SendMessage(platform.hwnd, WM_SETICON, ICON_SMALL, (LPARAM)smallIcon);
+        SendMessage(platform.hwnd, WM_SETICON, ICON_BIG, (LPARAM)largeIcon);
+
+        DeletePlatformIconHandles();
+
+        platform.smallIcon = smallIcon;
+        platform.largeIcon = largeIcon;
+    }
+    else TRACELOG(LOG_WARNING, "WIN32: All icons passed to SetWindowIcons were invalid");
 }
 
 void SetWindowTitle(const char *title)
@@ -965,7 +1223,11 @@ void SetWindowOpacity(float opacity)
 // Set window focused
 void SetWindowFocused(void)
 {
-    TRACELOG(LOG_WARNING, "SetWindowFocused not implemented");
+    BringWindowToTop(platform.hwnd);
+    SetForegroundWindow(platform.hwnd);
+    SetFocus(platform.hwnd);
+
+    if (GetForegroundWindow() != platform.hwnd) TRACELOG(LOG_WARNING, "WIN32: WINDOW: Failed to set window focus");
 }
 
 // Get native window handle
@@ -1060,7 +1322,7 @@ Vector2 GetWindowPosition(void)
 // Get window scale DPI factor for current monitor
 Vector2 GetWindowScaleDPI(void)
 {
-    float scale = ((float)GetDpiForWindow(platform.hwnd))/96.0f;
+    float scale = ((float)GetDpiForWindowCompat(platform.hwnd))/96.0f;
     return (Vector2){ scale, scale };
 }
 
@@ -1069,10 +1331,7 @@ void SetClipboardText(const char *text)
 {
     if (OpenClipboard(platform.hwnd))
     {
-        if (text == NULL)
-        {
-            EmptyClipboard();
-        }
+        if (text == NULL) EmptyClipboard();
         else
         {
             size_t length = strlen(text);
@@ -1105,20 +1364,14 @@ void SetClipboardText(const char *text)
                             GlobalFree(globalHandle);
                         }
                     }
-                    else
-                    {
-                        GlobalFree(globalHandle);
-                    }
+                    else GlobalFree(globalHandle);
                 }
             }
         }
 
         CloseClipboard();
     }
-    else
-    {
-        TRACELOG(LOG_WARNING, "Clipboard: Failed to write to clipboard. It may be locked by another program.");
-    }
+    else TRACELOG(LOG_WARNING, "Clipboard: Failed to write to clipboard. It may be locked by another program.");
 }
 
 // Get clipboard text content
@@ -1143,7 +1396,7 @@ const char *GetClipboardText(void)
                 int length = (int)wcsnlen(clipboardText, maxLength);
 
                 int size = WideCharToMultiByte(CP_UTF8, 0, clipboardText, length, NULL, 0, NULL, NULL);
-                char *utf8Text = (char *)RL_MALLOC(size + 1);
+                char *utf8Text = (char *)RL_CALLOC(size + 1, 1);
 
                 if ((size > 0) && (WideCharToMultiByte(CP_UTF8, 0, clipboardText, length, utf8Text, size, NULL, NULL) == 0)) size = 0;
                 utf8Text[size] = '\0';
@@ -1189,7 +1442,6 @@ Image GetClipboardImage(void)
     else
     {
         image = LoadImageFromMemory(".bmp", (const unsigned char*)fileData, (int)dataSize);
-
         RL_FREE(fileData);
     }
 #else
@@ -1364,9 +1616,12 @@ void SetMousePosition(int x, int y)
         // Skip if window is minimized or if ClientToScreen calculation fails
         if (!IsIconic(platform.hwnd) && ClientToScreen(platform.hwnd, &topLeft))
         {
-            if (SetCursorPos(topLeft.x + x, topLeft.y + y))
+            Vector2 scale = CORE.Input.Mouse.scale;
+            int xScaled = (int)roundf(x/scale.x);
+            int yScaled = (int)roundf(y/scale.y);
+            if (SetCursorPos(topLeft.x + xScaled, topLeft.y + yScaled))
             {
-                CORE.Input.Mouse.currentPosition = (Vector2){ (float)x, (float)y };
+                CORE.Input.Mouse.currentPosition = (Vector2){ (float)xScaled, (float)yScaled };
             }
         }
     }
@@ -1426,6 +1681,7 @@ void PollInputEvents(void)
     CORE.Input.Mouse.previousPosition = CORE.Input.Mouse.currentPosition;
 
     CORE.Window.resizedLastFrame = false;
+    CORE.Window.shouldClose = false;
 
     // Process windows messages
     MSG msg = { 0 };
@@ -1433,6 +1689,35 @@ void PollInputEvents(void)
     {
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
+    }
+
+    if ((platform.previousRenderWidth != CORE.Window.render.width) || (platform.previousRenderHeight != CORE.Window.render.height))
+    {
+        SetupViewport(CORE.Window.render.width, CORE.Window.render.height);
+#if defined(GRAPHICS_API_OPENGL_SOFTWARE)
+        if (rlGetVersion() == RL_OPENGL_SOFTWARE)
+        {
+            BITMAPINFO bmi = { 0 };
+            ZeroMemory(&bmi, sizeof(bmi));
+            bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+            bmi.bmiHeader.biWidth = (LONG)CORE.Window.render.width;
+            bmi.bmiHeader.biHeight = -(LONG)(CORE.Window.render.height); // Top-down bitmap
+            bmi.bmiHeader.biPlanes = 1;
+            bmi.bmiHeader.biBitCount  = 32;         // 32-bit BGRA
+            bmi.bmiHeader.biCompression = BI_RGB;
+
+            platform.hbitmap = CreateDIBSection(
+                platform.hdcmem, &bmi, DIB_RGB_COLORS,
+                (void **)&platform.pixels, NULL, 0);
+
+            HGDIOBJ oldBitmap = SelectObject(platform.hdcmem, platform.hbitmap);
+            DeleteObject(oldBitmap);
+
+            swResize(CORE.Window.render.width, CORE.Window.render.height);
+        }
+#endif
+        platform.previousRenderWidth = CORE.Window.render.width;
+        platform.previousRenderHeight = CORE.Window.render.height;
     }
 
     // Windows will miss key up events for specific keys; check them manually
@@ -1444,7 +1729,7 @@ void PollInputEvents(void)
     // Windows won't send a WM_KEYDOWN event for print screen; check it manually
     bool isPrintScreenDown = ((GetAsyncKeyState(VK_SNAPSHOT) & 0x8000) != 0) && (GetForegroundWindow() == platform.hwnd);
     CORE.Input.Keyboard.currentKeyState[KEY_PRINT_SCREEN] = isPrintScreenDown;
-    if (isPrintScreenDown && (CORE.Input.Keyboard.exitKey == KEY_PRINT_SCREEN)) CORE.Window.shouldClose = true;
+    if (IsKeyPressed(KEY_PRINT_SCREEN) && (CORE.Input.Keyboard.exitKey == KEY_PRINT_SCREEN)) CORE.Window.shouldClose = true;
 }
 
 //----------------------------------------------------------------------------------
@@ -1636,28 +1921,17 @@ int InitPlatform(void)
 
     platform.appScreenWidth = CORE.Window.screen.width;
     platform.appScreenHeight = CORE.Window.screen.height;
-    platform.desiredFlags = SanitizeFlags(0 /*SANITIZE_FLAGS_FIRST*/, CORE.Window.flags);
+    platform.desiredFlags = SanitizeFlags(CORE.Window.flags);
 
     // NOTE: From this point CORE.Window.flags should always reflect the actual state of the window
     CORE.Window.flags = FLAG_WINDOW_HIDDEN | (platform.desiredFlags & FLAG_MASK_NO_UPDATE);
     CORE.Window.screenMax.width = 9999;
     CORE.Window.screenMax.height = 9999;
-/*
-    // TODO: Review SetProcessDpiAwarenessContext()
-    // NOTE: SetProcessDpiAwarenessContext() requires Windows 10, version 1703 and shcore.lib linkage
-    if (IsWindows10Version1703OrGreaterWin32())
-    {
-        TRACELOG(LOG_INFO, "DpiAware: >=Win10Creators");
-        if (!SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
-            TRACELOG(LOG_ERROR, "%s failed, error %u", "SetProcessDpiAwarenessContext", GetLastError());
-    }
-    else
-    {
-        TRACELOG(LOG_INFO, "DpiAware: <Win10Creators");
-        HRESULT hr = SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
-        if (hr < 0) TRACELOG(LOG_ERROR, "%s failed, hresult=0x%lx", "SetProcessDpiAwareness", (DWORD)hr);
-    }
-*/
+
+    LoadWin32FunctionPointers();
+
+    SetProcessDpiAwareCompat();
+
     HINSTANCE hInstance = GetModuleHandleW(0);
 
     // Define window class
@@ -1698,16 +1972,6 @@ int InitPlatform(void)
     }
     else TRACELOG(LOG_WARNING, "WIN32: DISPLAY: Failed to get primary monitor from point [ERROR: %u]", GetLastError());
 
-    // Adjust the window rectangle so the *client area* matches desired size
-    // NOTE: Window width/height includes borders and title-bar
-    DWORD style = WS_OVERLAPPEDWINDOW;
-    RECT rect = { 0, 0, platform.appScreenWidth, platform.appScreenHeight };
-    AdjustWindowRect(&rect, style, FALSE);
-    //AdjustWindowRectEx(&rect, WS_OVERLAPPEDWINDOW, FALSE, WINDOW_STYLE_EX);
-    //AdjustWindowRectExForDpi(&rect, style, FALSE, WINDOW_STYLE_EX, dpi);
-    int windowWidth  = rect.right - rect.left;
-    int windowHeight = rect.bottom - rect.top;
-
     // Create window
     // NOTE: Title string needs to be converted to WCHAR
     WCHAR *titleWide = NULL;
@@ -1718,9 +1982,9 @@ int InitPlatform(void)
         WINDOW_STYLE_EX,
         CLASS_NAME,
         titleWide,
-        MakeWindowStyle(CORE.Window.flags),     // WS_OVERLAPPEDWINDOW | WS_VISIBLE
+        MakeWindowStyle(CORE.Window.flags | FLAG_WINDOW_HIDDEN),
         CW_USEDEFAULT, CW_USEDEFAULT,
-        windowWidth, windowHeight,  // TODO: Window size [width, height], needs to be updated?
+        CW_USEDEFAULT, CW_USEDEFAULT, // Window size/position will be overridden after creation
         NULL, NULL,
         GetModuleHandleW(NULL), NULL);
 
@@ -1734,29 +1998,11 @@ int InitPlatform(void)
     // NOTE: Windows GDI object that represents a drawing surface
     platform.hdc = GetDC(platform.hwnd);
 
-    if (rlGetVersion() == RL_OPENGL_SOFTWARE) // Using software renderer
-    {
-        // Initialize software framebuffer
-        BITMAPINFO bmi = { 0 };
-        ZeroMemory(&bmi, sizeof(bmi));
-        bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-        bmi.bmiHeader.biWidth = platform.appScreenWidth;
-        bmi.bmiHeader.biHeight = -(int)(platform.appScreenHeight); // Top-down bitmap
-        bmi.bmiHeader.biPlanes = 1;
-        bmi.bmiHeader.biBitCount  = 32;         // 32-bit BGRA
-        bmi.bmiHeader.biCompression = BI_RGB;
+    bool highDPIWindowFlag = platform.desiredFlags & FLAG_WINDOW_HIGHDPI;
+    UINT dpi = GetDpiForWindowCompat(platform.hwnd);
+    float dpiScale = dpi/96.0f;
 
-        platform.hdcmem = CreateCompatibleDC(platform.hdc);
-
-        platform.hbitmap = CreateDIBSection(
-            platform.hdcmem, &bmi, DIB_RGB_COLORS,
-            (void **)&platform.pixels, NULL, 0);
-
-        SelectObject(platform.hdcmem, platform.hbitmap);
-
-        //ReleaseDC(platform.hwnd, platform.hdc); // Required?
-    }
-    else
+    if (rlGetVersion() != RL_OPENGL_SOFTWARE)
     {
         // Init hardware-accelerated OpenGL modern context
         platform.glContext = InitOpenGL(platform.hwnd, platform.hdc);
@@ -1764,17 +2010,54 @@ int InitPlatform(void)
 
     CORE.Window.ready = true;
 
-    // Activate window to set focus and show taskbar icon
-    ShowWindow(platform.hwnd, SW_SHOWDEFAULT);
+    RECT rect = { 0, 0, platform.appScreenWidth, platform.appScreenHeight };
+    if (highDPIWindowFlag)
+    {
+        rect.right = (LONG)roundf(platform.appScreenWidth*dpiScale);
+        rect.bottom = (LONG)roundf(platform.appScreenHeight*dpiScale);
+    }
+    AdjustWindowRectExForDpiCompat(
+        &rect, MakeWindowStyle(platform.desiredFlags),
+        FALSE, WINDOW_STYLE_EX, dpi
+    );
+
+    int windowWidth = rect.right - rect.left;
+    int windowHeight = rect.bottom - rect.top;
+
+    HMONITOR currentMonitor = MonitorFromWindow(platform.hwnd, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO monitorInfo = { 0 };
+    monitorInfo.cbSize = sizeof(monitorInfo);
+    if (GetMonitorInfoW(currentMonitor, &monitorInfo))
+    {
+        // rcWork is the monitor area, not including the taskbar
+        RECT rcWork = monitorInfo.rcWork;
+        int monitorWidth = rcWork.right - rcWork.left;
+        int monitorHeight = rcWork.bottom - rcWork.top;
+        int x = rcWork.left + (monitorWidth - windowWidth)/2;
+        int y = rcWork.top + (monitorHeight - windowHeight)/2;
+
+        // Ensure the window doesn't go off-screen; otherwise, the user might not be able to move it
+        if (x < rcWork.left) x = rcWork.left;
+        if (y < rcWork.top) y = rcWork.top;
+
+        // Center the window and set it to the correct DPI-adjusted size
+        SetWindowPos(platform.hwnd, NULL, x, y, windowWidth, windowHeight, SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+    else TRACELOG(LOG_WARNING, "DISPLAY: Unable to retrieve information about monitor");
+
+    if ((platform.desiredFlags & FLAG_WINDOW_HIDDEN) == 0)
+    {
+        // Show window and taskbar icon, activate unless FLAG_WINDOW_UNFOCUSED is set
+        bool isUnfocused = ((platform.desiredFlags & FLAG_WINDOW_UNFOCUSED) != 0);
+        if (isUnfocused) CORE.Window.flags |= FLAG_WINDOW_UNFOCUSED;
+        int nCmdShow = (isUnfocused)? SW_SHOWNA : SW_SHOWDEFAULT;
+        ShowWindow(platform.hwnd, nCmdShow);
+    }
 
     // Update flags (in case of deferred state change required)
     UpdateFlags(platform.hwnd, platform.desiredFlags, platform.appScreenWidth, platform.appScreenHeight);
 
     CORE.Window.resizedLastFrame = false;
-    CORE.Window.render.width = CORE.Window.screen.width;
-    CORE.Window.render.height = CORE.Window.screen.height;
-    CORE.Window.currentFbo.width = CORE.Window.render.width;
-    CORE.Window.currentFbo.height = CORE.Window.render.height;
     TRACELOG(LOG_INFO, "DISPLAY: Device initialized successfully %s",
         FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_HIGHDPI)? "(HighDPI)" : "");
     TRACELOG(LOG_INFO, "    > Display size: %i x %i", CORE.Window.display.width, CORE.Window.display.height);
@@ -1789,6 +2072,25 @@ int InitPlatform(void)
         TRACELOG(LOG_INFO, "    > Renderer: %s", glGetString(GL_RENDERER));
         TRACELOG(LOG_INFO, "    > Version:  %s", glGetString(GL_VERSION));
         TRACELOG(LOG_INFO, "    > GLSL:     %s", "NOT SUPPORTED");
+
+        // Initialize software framebuffer
+        BITMAPINFO bmi = { 0 };
+        ZeroMemory(&bmi, sizeof(bmi));
+        bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        bmi.bmiHeader.biWidth = (LONG)CORE.Window.render.width;
+        bmi.bmiHeader.biHeight = -(LONG)(CORE.Window.render.height); // Top-down bitmap
+        bmi.bmiHeader.biPlanes = 1;
+        bmi.bmiHeader.biBitCount  = 32;         // 32-bit BGRA
+        bmi.bmiHeader.biCompression = BI_RGB;
+
+        platform.hdcmem = CreateCompatibleDC(platform.hdc);
+
+        platform.hbitmap = CreateDIBSection(
+            platform.hdcmem, &bmi, DIB_RGB_COLORS,
+            (void **)&platform.pixels, NULL, 0);
+
+        SelectObject(platform.hdcmem, platform.hbitmap);
+        //ReleaseDC(platform.hwnd, platform.hdc); // Not required because the window class uses CS_OWNDC
     }
 
     // Initialize timing system
@@ -1814,19 +2116,11 @@ int InitPlatform(void)
 // Close platform
 void ClosePlatform(void)
 {
-    // Undo disable cursor if it's locked and unregister raw input devices
-    EnableCursor();
-
-    // Calling DestroyWindow invokes a WindowProc event that sets the FLAG_WINDOW_HIDDEN flag to true
-    // If InitWindow is called again, the hidden flag will be interpreted as something the user requested
-    // Save the current flags and restore them after
-    unsigned int savedFlags = CORE.Window.flags;
-
+    // Clear required platform data
     if (platform.hwnd)
     {
-        // SetWindowIcon uses the same resource for both ICON_BIG and ICON_SMALL
-        // If this ever changes, this code may have to be updated
-        HICON icon = (HICON)SendMessage(platform.hwnd, WM_GETICON, ICON_BIG, (LPARAM)0);
+        // Disable cursor lock (if enabled) and unregister raw input devices
+        EnableCursor();
 
         BOOL result = DestroyWindow(platform.hwnd);
         if (!result) TRACELOG(LOG_WARNING, "WIN32: WINDOW: Failed on window destroy [ERROR: %u]", GetLastError());
@@ -1835,21 +2129,27 @@ void ClosePlatform(void)
         result = UnregisterClassW(CLASS_NAME, hInstance);
         if (!result) TRACELOG(LOG_WARNING, "WIN32: WINDOW: Failed to unregister window class [ERROR: %u]", GetLastError());
 
-        if (icon != NULL) DestroyIcon(icon);
+        DeletePlatformIconHandles();
 
         platform.hwnd = NULL;
     }
 
+    // Clear clipboard
     if (platform.clipboardText != NULL)
     {
         RL_FREE(platform.clipboardText);
         platform.clipboardText = NULL;
     }
 
-    CORE.Window.flags = savedFlags;
+    // Unload shcore.dll
+    if (shcore != NULL)
+    {
+        FreeLibrary(shcore);
+        shcore = NULL;
+    }
 
 #if SUPPORT_WINMM_HIGHRES_TIMER && !SUPPORT_BUSY_WAIT_LOOP
-    timeEndPeriod(1);           // Restore time period
+    timeEndPeriod(1); // Restore time period
 #endif
 }
 
@@ -1921,10 +2221,12 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
         //case WM_QUIT: // Application closing, not related to window
         case WM_KILLFOCUS:
         {
+            CORE.Window.flags |= FLAG_WINDOW_UNFOCUSED;
             memset(CORE.Input.Keyboard.currentKeyState, 0, sizeof(CORE.Input.Keyboard.currentKeyState));
             memset(CORE.Input.Mouse.currentButtonState, 0, sizeof(CORE.Input.Mouse.currentButtonState));
             memset(CORE.Input.Touch.currentTouchState, 0, sizeof(CORE.Input.Touch.currentTouchState));
         } break;
+        case WM_SETFOCUS: CORE.Window.flags &= ~FLAG_WINDOW_UNFOCUSED; break;
         case WM_SIZING: // Sent to a window that the user is resizing
         {
             if (CORE.Window.flags & FLAG_WINDOW_RESIZABLE)
@@ -1939,24 +2241,18 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             // WARNING: Don't trust the docs, they say this message can not be obtained if not calling DefWindowProc()
             // in response to WM_WINDOWPOSCHANGED but looks like when a window is created,
             // this message can be obtained without getting WM_WINDOWPOSCHANGED
-
-#if defined(GRAPHICS_API_OPENGL_SOFTWARE)
-            // WARNING: Waiting two frames before resizing because software-renderer backend is initilized with swInit() later
-            // than InitPlatform(), that triggers WM_SIZE, so avoid crashing
-            if (CORE.Time.frameCounter > 2) HandleWindowResize(hwnd, &platform.appScreenWidth, &platform.appScreenHeight);
-#else
-            // NOTE: This message is only triggered on window creation
             HandleWindowResize(hwnd, &platform.appScreenWidth, &platform.appScreenHeight);
-#endif
             result = 0; // If an application processes WM_SIZE message, it should return zero
         } break;
         case WM_GETMINMAXINFO:
         {
+            UINT dpi = GetDpiForWindowCompat(hwnd);
             DWORD style = MakeWindowStyle(platform.desiredFlags);
-            SIZE maxClientSize = { CORE.Window.screenMax.width, CORE.Window.screenMax.height };
-            SIZE maxWindowSize = CalcWindowSize(96, maxClientSize, style);
-            SIZE minClientSize = { CORE.Window.screenMin.width, CORE.Window.screenMin.height };
-            SIZE minWindowSize = CalcWindowSize(96, minClientSize, style);
+            float clientScale = (CORE.Window.flags & FLAG_WINDOW_HIGHDPI)? ((float)dpi)/96.0f : 1.0f;
+            SIZE maxClientSize = { (LONG)roundf(CORE.Window.screenMax.width*clientScale), (LONG)roundf(CORE.Window.screenMax.height*clientScale) };
+            SIZE maxWindowSize = CalcWindowSize(dpi, maxClientSize, style);
+            SIZE minClientSize = { (LONG)roundf(CORE.Window.screenMin.width*clientScale), (LONG)roundf(CORE.Window.screenMin.height*clientScale) };
+            SIZE minWindowSize = CalcWindowSize(dpi, minClientSize, style);
 
             LPMINMAXINFO lpmmi = (LPMINMAXINFO) lparam;
             lpmmi->ptMaxSize.x = maxWindowSize.cx;
@@ -1973,7 +2269,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                 STYLESTRUCT *ss = (STYLESTRUCT *)lparam;
                 GetStyleChangeFlagOps(CORE.Window.flags, ss, deferredFlags);
 
-                UINT dpi = GetDpiForWindow(hwnd);
+                UINT dpi = GetDpiForWindowCompat(hwnd);
                 // Get client size (framebuffer inside the window)
                 RECT rect = { 0 };
                 GetClientRect(hwnd, &rect);
@@ -2062,42 +2358,65 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             UINT newDpi = (UINT)wparam; // TODO: WARNING: Converting from WPARAM = UINT_PTR
 
             // For the following flag changes, a window resize event should be posted,
-            // TODO: Should it be done after dpi changes?
+            // Keep the pending size when minimized, maximized, or borderless
             if (CORE.Window.flags & FLAG_WINDOW_MINIMIZED) return TRUE;
             if (CORE.Window.flags & FLAG_WINDOW_MAXIMIZED) return TRUE;
             if (CORE.Window.flags & FLAG_BORDERLESS_WINDOWED_MODE) return TRUE;
 
             float dpiScale = ((float)newDpi)/96.0f;
             bool dpiScaling = CORE.Window.flags & FLAG_WINDOW_HIGHDPI;
-            // Get size in pixels from points
+            // Calculate client area in pixels from points
             SIZE desired = {
-                .cx = dpiScaling? (int)((float)platform.appScreenWidth*dpiScale) : platform.appScreenWidth,
-                .cy = dpiScaling? (int)((float)platform.appScreenHeight*dpiScale) : platform.appScreenHeight
+                .cx = dpiScaling? (int)roundf((float)platform.appScreenWidth*dpiScale) : platform.appScreenWidth,
+                .cy = dpiScaling? (int)roundf((float)platform.appScreenHeight*dpiScale) : platform.appScreenHeight
             };
-            inoutSize->cx = desired.cx;
-            inoutSize->cy = desired.cy;
+            // Calculate and set window size, including title and window border
+            *inoutSize = CalcWindowSize(newDpi, desired, MakeWindowStyle(CORE.Window.flags));
 
             result = TRUE;
         } break;
         case WM_DPICHANGED:
         {
             // Get current dpi scale factor
-            //float scalex = HIWORD(wparam)/96.0f;
-            //float scaley = LOWORD(wparam)/96.0f;
+            //float scalex = LOWORD(wparam)/96.0f;
+            //float scaley = HIWORD(wparam)/96.0f;
 
             RECT *suggestedRect = (RECT *)lparam;
 
             // Never set the window size to anything other than the suggested rect here
             // Doing so can cause a window to stutter between monitors when transitioning between them
-            int result = (int)SetWindowPos(hwnd, NULL,
-                suggestedRect->left, suggestedRect->top,
-                suggestedRect->right - suggestedRect->left,
-                suggestedRect->bottom - suggestedRect->top,
-                SWP_NOZORDER | SWP_NOACTIVATE);
+            if (platform.perMonitorDPIAwareV2)
+            {
+                BOOL succeeded = SetWindowPos(hwnd, NULL,
+                    suggestedRect->left, suggestedRect->top,
+                    suggestedRect->right - suggestedRect->left,
+                    suggestedRect->bottom - suggestedRect->top,
+                    SWP_NOZORDER | SWP_NOACTIVATE);
 
-            if (result == 0) TRACELOG(LOG_ERROR, "Failed to set window position [ERROR: %lu]", GetLastError());
+                if (succeeded == FALSE) TRACELOG(LOG_ERROR, "Failed to set window position [ERROR: %lu]", GetLastError());
+            }
+            else if ((CORE.Window.flags & FLAG_WINDOW_HIGHDPI) && !(CORE.Window.flags & (FLAG_WINDOW_MINIMIZED | FLAG_WINDOW_MAXIMIZED | FLAG_BORDERLESS_WINDOWED_MODE)))
+            {
+                // This code only runs when per-monitor dpi awareness v1 is enabled. v1 doesn't send WM_GETDPISCALEDSIZE and the suggested RECT is subtly wrong (doesn't properly account for the title bar size)
+                // The solution is to manually build a properly sized RECT (and ignore the advice of not using the suggested RECT). This makes a per-monitor v1 process match the behavior of per-monitor v2
+                // To prevent the potential stutter when dragging the window between monitors, the manually sized rect keeps the same center as the suggested RECT
+                RECT windowRect = { 0 };
+                RECT clientRect = { 0 };
+                GetWindowRect(hwnd, &windowRect);
+                GetClientRect(hwnd, &clientRect);
 
-            // TODO: Update screen data, render size, screen scaling, viewport...
+                float dpiScale = ((float)LOWORD(wparam))/96.0f;
+                int width = (int)roundf(platform.appScreenWidth*dpiScale) + (windowRect.right - windowRect.left) - clientRect.right;
+                int height = (int)roundf(platform.appScreenHeight*dpiScale) + (windowRect.bottom - windowRect.top) - clientRect.bottom;
+                int x = suggestedRect->left + ((suggestedRect->right - suggestedRect->left) - width)/2;
+                int y = suggestedRect->top + ((suggestedRect->bottom - suggestedRect->top) - height)/2;
+
+                BOOL succeeded = SetWindowPos(hwnd, NULL, x, y, width, height, SWP_NOZORDER | SWP_NOACTIVATE);
+
+                if (succeeded == FALSE) TRACELOG(LOG_ERROR, "Failed to set window position [ERROR: %lu]", GetLastError());
+            }
+
+            HandleWindowResize(hwnd, &platform.appScreenWidth, &platform.appScreenHeight);
 
         } break;
         case WM_SETCURSOR:
@@ -2119,7 +2438,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                 HDC hdc = BeginPaint(hwnd, &ps);
 
                 // Blit from memory DC to window DC
-                BitBlt(hdc, 0, 0, platform.appScreenWidth, platform.appScreenHeight, platform.hdcmem, 0, 0, SRCCOPY);
+                BitBlt(hdc, 0, 0, CORE.Window.render.width, CORE.Window.render.height, platform.hdcmem, 0, 0, SRCCOPY);
 
                 EndPaint(hwnd, &ps);
             }
@@ -2249,7 +2568,7 @@ static void HandleKey(WPARAM wparam, LPARAM lparam, char state)
             bool isNextExtendedKey = ((HIWORD(next.lParam) & KF_EXTENDED) != 0);
             if ((next.wParam == VK_MENU) && ((LONG)next.time == time) && isNextExtendedKey)
             {
-                if ((next.message == WM_KEYDOWN) || (next.message == WM_SYSKEYDOWN) || 
+                if ((next.message == WM_KEYDOWN) || (next.message == WM_SYSKEYDOWN) ||
                     (next.message == WM_KEYUP) || (next.message == WM_SYSKEYUP)) ignoreKey = true;
             }
         }
@@ -2261,8 +2580,9 @@ static void HandleKey(WPARAM wparam, LPARAM lparam, char state)
         {
             CORE.Input.Keyboard.currentKeyState[key] = state;
 
-            if (((HIWORD(lparam) & KF_REPEAT) != 0) && (state == 1)) CORE.Input.Keyboard.keyRepeatInFrame[key] = 1;
-            if ((key == CORE.Input.Keyboard.exitKey) && (state == 1)) CORE.Window.shouldClose = true;
+            bool isKeyRepeatEvent = ((HIWORD(lparam) & KF_REPEAT) != 0);
+            if (isKeyRepeatEvent && (state == 1)) CORE.Input.Keyboard.keyRepeatInFrame[key] = 1;
+            if (!isKeyRepeatEvent && (key == CORE.Input.Keyboard.exitKey) && (state == 1)) CORE.Window.shouldClose = true;
         }
         else TRACELOG(LOG_WARNING, "INPUT: Unknown (or currently unhandled) virtual keycode %d (0x%x)", wparam, wparam);
     }
@@ -2347,15 +2667,16 @@ static void HandleWindowResize(HWND hwnd, int *width, int *height)
     GetClientRect(hwnd, &rect);
     SIZE clientSize = { rect.right, rect.bottom };
 
+    if ((CORE.Window.render.width != clientSize.cx) || (CORE.Window.render.height != clientSize.cy)) CORE.Window.resizedLastFrame = true;
+    CORE.Window.render.width = (int)clientSize.cx;
+    CORE.Window.render.height = (int)clientSize.cy;
     CORE.Window.currentFbo.width = (int)clientSize.cx;
     CORE.Window.currentFbo.height = (int)clientSize.cy;
-    SetupViewport(clientSize.cx, clientSize.cy);
 
-    CORE.Window.resizedLastFrame = true;
-    float dpiScale = ((float)GetDpiForWindow(hwnd))/96.0f;
+    float dpiScale = ((float)GetDpiForWindowCompat(hwnd))/96.0f;
     bool highdpi = !!(CORE.Window.flags & FLAG_WINDOW_HIGHDPI);
-    unsigned int screenWidth = highdpi? (unsigned int)(((float)clientSize.cx)/dpiScale) : clientSize.cx;
-    unsigned int screenHeight = highdpi? (unsigned int)(((float)clientSize.cy)/dpiScale) : clientSize.cy;
+    unsigned int screenWidth = highdpi? (unsigned int)roundf(((float)clientSize.cx)/dpiScale) : clientSize.cx;
+    unsigned int screenHeight = highdpi? (unsigned int)roundf(((float)clientSize.cy)/dpiScale) : clientSize.cy;
     CORE.Window.screen.width = screenWidth;
     CORE.Window.screen.height = screenHeight;
 
@@ -2369,9 +2690,11 @@ static void HandleWindowResize(HWND hwnd, int *width, int *height)
     CORE.Window.screenScale = MatrixScale( (float)CORE.Window.render.width/CORE.Window.screen.width,
         (float)CORE.Window.render.height/CORE.Window.screen.height, 1.0f);
 
-#if defined(GRAPHICS_API_OPENGL_SOFTWARE)
-    swResize(clientSize.cx, clientSize.cy);
-#endif
+    if (CORE.Window.flags & FLAG_WINDOW_HIGHDPI)
+    {
+        float mouseScale = 1.0f/dpiScale;
+        CORE.Input.Mouse.scale = (Vector2){ mouseScale, mouseScale };
+    }
 }
 
 // Update window style
@@ -2413,7 +2736,7 @@ static void UpdateWindowStyle(HWND hwnd, unsigned desiredFlags)
 }
 
 // Sanitize flags
-static unsigned SanitizeFlags(int mode, unsigned flags)
+static unsigned SanitizeFlags(unsigned flags)
 {
     if (flags & FLAG_WINDOW_MAXIMIZED)
     {
@@ -2452,14 +2775,8 @@ static unsigned SanitizeFlags(int mode, unsigned flags)
         }
     }
 
-    if (mode == 1)
-    {
-        if ((flags & FLAG_MSAA_4X_HINT) && (!(CORE.Window.flags & FLAG_MSAA_4X_HINT)))
-        {
-            TRACELOG(LOG_WARNING, "WIN32: WINDOW: MSAA can only be configured before window initialization");
-            flags &= ~FLAG_MSAA_4X_HINT;
-        }
-    }
+    // Don't change flags that can't be updated after window initialization
+    flags = (flags & ~FLAG_MASK_NO_UPDATE) | (CORE.Window.flags & FLAG_MASK_NO_UPDATE);
 
     return flags;
 }

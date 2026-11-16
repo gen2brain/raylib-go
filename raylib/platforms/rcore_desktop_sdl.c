@@ -443,8 +443,8 @@ void *SDL_GetClipboardData(const char *mime_type, size_t *size)
 //----------------------------------------------------------------------------------
 // Module Internal Functions Declaration
 //----------------------------------------------------------------------------------
-int InitPlatform(void);                                      // Initialize platform (graphics, inputs and more)
-void ClosePlatform(void);                                    // Close platform
+int InitPlatform(void);         // Initialize platform (graphics, inputs and more)
+void ClosePlatform(void);       // Close platform
 
 static KeyboardKey ConvertScancodeToKey(SDL_Scancode sdlScancode);  // Help convert SDL scancodes to raylib key
 static int GetCodepointNextSDL(const char *text, int *codepointSize); // Get next codepoint in a byte sequence and bytes processed
@@ -1479,6 +1479,7 @@ void PollInputEvents(void)
     //for (int i = 0; i < 256; i++) CORE.Input.Keyboard.currentKeyState[i] = keys[i];
 
     CORE.Window.resizedLastFrame = false;
+    CORE.Window.shouldClose = false;
 
     if ((CORE.Window.eventWaiting) || (FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_MINIMIZED) && !FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_ALWAYS_RUN)))
     {
@@ -1652,12 +1653,12 @@ void PollInputEvents(void)
                     }
 
                     CORE.Input.Keyboard.currentKeyState[key] = 1;
+
+                    // Check for registered exit key to request exit game loop on next iteration
+                    if ((key == CORE.Input.Keyboard.exitKey) && !event.key.repeat) CORE.Window.shouldClose = true;
                 }
 
                 if (event.key.repeat) CORE.Input.Keyboard.keyRepeatInFrame[key] = 1;
-
-                // Check for registered exit key to request exit game loop on next iteration
-                if (CORE.Input.Keyboard.currentKeyState[CORE.Input.Keyboard.exitKey]) CORE.Window.shouldClose = true;
 
             } break;
             case SDL_KEYUP:
@@ -2219,8 +2220,10 @@ int InitPlatform(void)
 void ClosePlatform(void)
 {
     SDL_FreeCursor(platform.cursor); // Free cursor
+
     if (platform.glContext != NULL) SDL_GL_DeleteContext(platform.glContext); // Deinitialize OpenGL context
     SDL_DestroyWindow(platform.window);
+
     SDL_Quit(); // Deinitialize SDL internal global state
 }
 
