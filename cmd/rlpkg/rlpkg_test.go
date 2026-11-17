@@ -181,6 +181,19 @@ func TestLoadData(t *testing.T) {
 		t.Errorf("names = %v, want %v", names, want)
 	}
 
+	c = &config{data: []string{filepath.Join(dir, "images") + "/"}}
+	if err := c.loadData(); err != nil {
+		t.Fatal(err)
+	}
+	names = names[:0]
+	for _, f := range c.files {
+		names = append(names, f.name)
+	}
+	slices.Sort(names)
+	if want := []string{"a.png", "sub/b.png"}; !slices.Equal(names, want) {
+		t.Errorf("contents names = %v, want %v", names, want)
+	}
+
 	c = &config{data: []string{filepath.Join(dir, "gopher.png"), filepath.Join(dir, "other", "gopher.png")}}
 	if err := c.loadData(); err == nil {
 		t.Error("two entries with the same name: no error")

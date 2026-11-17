@@ -207,7 +207,7 @@ func newFlagSet(c *config) *flag.FlagSet {
 		c.permissions = splitList(s)
 		return nil
 	})
-	fs.Func("data", "`file` or directory shipped with the application, loaded with relative paths; a directory keeps its name; repeatable", func(s string) error {
+	fs.Func("data", "`file` or directory shipped with the application, loaded with relative paths; a directory keeps its name, with a trailing slash only its contents are shipped; repeatable", func(s string) error {
 		c.data = append(c.data, s)
 		return nil
 	})
@@ -351,6 +351,9 @@ func (c *config) loadData() error {
 			return fmt.Errorf("--data: %w", err)
 		}
 		base := filepath.Base(filepath.Clean(root))
+		if info.IsDir() && (strings.HasSuffix(root, "/") || strings.HasSuffix(root, string(filepath.Separator))) {
+			base = ""
+		}
 		if !info.IsDir() {
 			if err := add(base, root); err != nil {
 				return err

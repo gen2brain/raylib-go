@@ -43,7 +43,7 @@ rlpkg staple <app>
  | `--version`                                          | `1.0.0`             | version string                                                                                                 |
  | `--build`                                            | `1`                 | build number: `versionCode`, `CFBundleVersion`, last Windows version field, deb/rpm revision                   |
  | `--icon`                                             | the raylib logo     | square PNG, 1024 px recommended                                                                                |
- | `--data`                                             |                     | file or directory shipped with the application, repeatable; a directory keeps its name                         |
+ | `--data`                                             |                     | file or directory shipped with the application, repeatable; `dir` keeps its name, `dir/` ships its contents    |
  | `--tags`                                             |                     | Go build tags (`es3,opengl43,...`)                                                                             |
  | `--ldflags`                                          |                     | extra linker flags                                                                                             |
  | `--cgo`                                              |                     | build with cgo (default: `go env CGO_ENABLED` for the host platform, off when cross-compiling)                 |
