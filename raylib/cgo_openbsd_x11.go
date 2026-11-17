@@ -1,5 +1,5 @@
-//go:build openbsd && x11 && !linux && !rgfw && !drm && !sdl && !sdl3 && !android && !memory && !nocgo
-// +build openbsd,x11,!linux,!rgfw,!drm,!sdl,!sdl3,!android,!memory,!nocgo
+//go:build openbsd && !glfw && !linux && !rgfw && !drm && !sdl && !sdl3 && !android && !memory && !nocgo
+// +build openbsd,!glfw,!linux,!rgfw,!drm,!sdl,!sdl3,!android,!memory,!nocgo
 
 package rl
 

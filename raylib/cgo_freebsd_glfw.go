@@ -1,5 +1,5 @@
-//go:build openbsd && !linux && !rgfw && !x11 && !drm && !sdl && !sdl3 && !android && !memory && !nocgo
-// +build openbsd,!linux,!rgfw,!x11,!drm,!sdl,!sdl3,!android,!memory,!nocgo
+//go:build freebsd && glfw && !linux && !rgfw && !drm && !sdl && !sdl3 && !android && !memory && !nocgo
+// +build freebsd,glfw,!linux,!rgfw,!drm,!sdl,!sdl3,!android,!memory,!nocgo
 
 package rl
 
@@ -29,17 +29,17 @@ GLFWbool _glfwConnectNull(int platformID, _GLFWplatform* platform) {
 #include "external/glfw/src/x11_window.c"
 #include "external/glfw/src/glx_context.c"
 
-#cgo openbsd CFLAGS: -I. -I/usr/X11R6/include -Iexternal/glfw/include -DPLATFORM_DESKTOP_GLFW -D_GLFW_X11
-#cgo openbsd LDFLAGS: -L/usr/X11R6/lib -lm -pthread -lX11
+#cgo freebsd CFLAGS: -I. -I/usr/local/include -Iexternal/glfw/include -DPLATFORM_DESKTOP_GLFW -D_GLFW_X11
+#cgo freebsd LDFLAGS: -L/usr/local/lib -lm -pthread -ldl -lrt -lX11
 
-#cgo openbsd,!es2,!es3 LDFLAGS: -lGL
-#cgo openbsd,es3 LDFLAGS: -lGLESv2
+#cgo freebsd,!es2,!es3 LDFLAGS: -lGL
+#cgo freebsd,es3 LDFLAGS: -lGLESv2
 
-#cgo openbsd,opengl11,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_11
-#cgo openbsd,opengl21,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_21
-#cgo openbsd,opengl43,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_43
-#cgo openbsd,!opengl11,!opengl21,!opengl43,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_33
-#cgo openbsd,es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_ES2
-#cgo openbsd,es3,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_ES3
+#cgo freebsd,opengl11,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_11
+#cgo freebsd,opengl21,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_21
+#cgo freebsd,opengl43,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_43
+#cgo freebsd,!opengl11,!opengl21,!opengl43,!es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_33
+#cgo freebsd,es2,!es3 CFLAGS: -DGRAPHICS_API_OPENGL_ES2
+#cgo freebsd,es3,!es2 CFLAGS: -DGRAPHICS_API_OPENGL_ES3
 */
 import "C"

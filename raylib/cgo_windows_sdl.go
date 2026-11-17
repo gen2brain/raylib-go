@@ -1,8 +1,7 @@
-//go:build windows && (sdl || sdl3) && !rgfw && !win32 && !memory && !nocgo
+//go:build windows && (sdl || sdl3) && !rgfw && !memory && !nocgo
 // +build windows
 // +build sdl sdl3
 // +build !rgfw
-// +build !win32
 // +build !memory
 // +build !nocgo
 
