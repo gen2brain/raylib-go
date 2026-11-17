@@ -1,6 +1,11 @@
 ### Android example
 
-To compile example to shared library you will need [Android NDK](https://developer.android.com/ndk/downloads/index.html).
+Build, sign and install the apk with [rlpkg](https://github.com/gen2brain/raylib-go/tree/master/cmd/rlpkg), only the
+[Android NDK](https://developer.android.com/ndk/downloads/index.html) is needed:
+
+    rlpkg package --os android --install --data android/assets/ .
+
+Or build it manually. To compile example to shared library you will need the Android NDK.
 To build Android apk you will need [Android SDK](http://developer.android.com/sdk/index.html#Other) and JDK 17 or newer.
 
 Export path to Android NDK, point to location where you have unpacked archive:
@@ -31,10 +36,6 @@ And build apk:
     ./gradlew assembleDebug
 
 If everything is successfully built apk can be found in the android/build/outputs.
-
-Or build, sign and install the apk with [rlpkg](https://github.com/gen2brain/raylib-go/tree/master/cmd/rlpkg), only the NDK is needed:
-
-    rlpkg package --os android --install --data android/assets/ .
 
 
 For 32-bit ARM use `CC="armv7a-linux-androideabi${ANDROID_API}-clang"`, set GOARCH to arm and put the library in `android/libs/armeabi-v7a`.

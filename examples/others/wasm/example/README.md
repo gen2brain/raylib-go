@@ -3,7 +3,13 @@
 Desktop code runs in the browser unchanged, built with `GOOS=js GOARCH=wasm`. raylib is a prebuilt module from
 `raylib/libs/wasm`, no C toolchain is needed.
 
-Build with `./build.sh` (`build.bat` on Windows), output goes to `web/` (set `OUT` to change it):
+Build it with [rlpkg](https://github.com/gen2brain/raylib-go/tree/master/cmd/rlpkg), the output is the directory
+`example/`, a website ready to upload to any web server:
+
+    rlpkg package --os js --data resources .
+    rlpkg serve example
+
+Or build with `./build.sh` (`build.bat` on Windows), output goes to `web/` (set `OUT` to change it):
 
 * `app.wasm` - the Go program
 * `raylib.js`, `raylib.wasm` - raylib
