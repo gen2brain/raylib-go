@@ -1034,11 +1034,11 @@ func DisableCursor() {
 	disableCursor.Call(nil)
 }
 
-// ShowSoftKeyboard - Shows on-screen keyboard (Android only)
+// ShowSoftKeyboard - Shows on-screen keyboard (Android and iOS)
 func ShowSoftKeyboard() {
 }
 
-// HideSoftKeyboard - Hides on-screen keyboard (Android only)
+// HideSoftKeyboard - Hides on-screen keyboard (Android and iOS)
 func HideSoftKeyboard() {
 }
 

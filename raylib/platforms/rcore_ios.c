@@ -7,14 +7,13 @@
 *
 *   LIMITATIONS:
 *       - Window is always fullscreen, window management functions are not available
-*       - SetGamepadMappings() and SetGamepadVibration() not available (gamepads are mapped by the system)
+*       - SetGamepadMappings() not available (gamepads are mapped by the system)
 *       - No drawing while the application is not active (OpenGL ES is not allowed in background)
 *       - FLAG_WINDOW_HIGHDPI not available: screen size is always the framebuffer size in pixels
 *       - Hardware keyboard keys are not repeated by the system
 *
 *   POSSIBLE IMPROVEMENTS:
 *       - Pointer devices (mouse, trackpad)
-*       - Gamepad vibration (CoreHaptics)
 *
 *   ADDITIONAL NOTES:
 *       - The UIKit application is started first, the program runs from the main run loop once the window exists
@@ -29,6 +28,7 @@
 *       - OpenGLES framework: EAGL context (deprecated by Apple, still available)
 *       - CoreGraphics: Software renderer framebuffer presentation
 *       - GameController: Gamepads
+*       - CoreHaptics: Gamepad vibration
 *       - gestures: Gestures system for touch-ready devices (or simulated from mouse inputs)
 *
 *   NOTE: This file contains Objective-C code, rcore.c must be compiled with -x objective-c
@@ -62,6 +62,7 @@
 #import <UIKit/UIKit.h>             // UIKit and Foundation
 #import <QuartzCore/QuartzCore.h>   // Required for: CAEAGLLayer, CADisplayLink
 #import <GameController/GameController.h> // Required for: GCController, GCExtendedGamepad
+#import <CoreHaptics/CoreHaptics.h> // Required for: CHHapticEngine, CHHapticPattern
 #if !defined(GRAPHICS_API_OPENGL_SOFTWARE)
 #import <OpenGLES/EAGL.h>           // Required for: EAGLContext
 #import <OpenGLES/EAGLDrawable.h>   // Required for: renderbufferStorage:fromDrawable:
@@ -98,7 +99,7 @@
 @interface RaylibViewController : UIViewController
 @end
 
-@interface RaylibView : UIView
+@interface RaylibView : UIView <UIKeyInput>
 @end
 
 @interface RaylibDisplayLinkTarget : NSObject
@@ -138,6 +139,15 @@ typedef struct {
 
     UITouch *touches[MAX_TOUCH_POINTS]; // Active touches, the index is the touch point id
     GCController *gamepads[MAX_GAMEPADS]; // Connected game controllers (extended gamepad profile), the index is the gamepad id
+    CHHapticEngine *hapticEngines[MAX_GAMEPADS][2]; // Gamepad haptic engines: left and right handles, or one for the whole gamepad
+    id<CHHapticPatternPlayer> hapticPlayers[MAX_GAMEPADS][2]; // Vibration playing on each haptic engine
+
+    bool softKeyboard;                  // On-screen keyboard requested, ShowSoftKeyboard()
+    UIView *emptyInputView;             // Input view replacing the on-screen keyboard while it is not requested
+    bool keyPressedInFrame[MAX_KEYBOARD_KEYS];  // Keys pressed in current frame
+    bool keyReleasePending[MAX_KEYBOARD_KEYS];  // Keys released in the frame they were pressed, release applied on next frame
+    bool touchPressedInFrame;           // Touch started in current frame
+    bool touchReleasePending;           // Touch ended in the frame it started, release applied on next frame
 
     char *clipboardText;                // Clipboard text, returned by GetClipboardText()
     char storagePath[MAX_FILEPATH_LENGTH]; // Application documents directory, base path for storage
@@ -196,7 +206,11 @@ static void UpdateFramebufferSize(void);                        // Update frameb
 static void ProcessRunLoop(bool wait);                          // Process pending run loop events, optionally waiting for one
 static void HandleTouches(NSSet *touches, int action);          // Register touch points change
 static void HandlePresses(NSSet *presses, bool pressed);        // Register hardware keyboard keys change
+static void HandleKey(int key, bool pressed);                   // Register key state change
+static void HandleText(NSString *text);                         // Register text typed with the on-screen keyboard
+static int GetKeyFromCharacter(unsigned int codepoint);         // Get key producing a character on a US keyboard layout
 static void PollGamepads(void);                                 // Register gamepads connection and state
+static void UnloadGamepadHaptics(int gamepad);                  // Stop gamepad vibration and unload its haptic engines
 static void TraceLogIOS(int logType, const char *text, va_list args); // Send trace log messages to the system log
 #if !defined(GRAPHICS_API_OPENGL_SOFTWARE)
 static void *GetProcAddressIOS(const char *name);               // Get OpenGL ES procedure address
@@ -224,6 +238,22 @@ __attribute__((weak)) int main(int argc, char *argv[])
 
         return UIApplicationMain(argc, argv, nil, NSStringFromClass([RaylibApplicationDelegate class]));
     }
+}
+
+// Show on-screen keyboard
+// NOTE: Characters typed are received as characters and key presses
+void ShowSoftKeyboard(void)
+{
+    platform.softKeyboard = true;
+    [platform.view reloadInputViews];
+    [platform.view becomeFirstResponder];
+}
+
+// Hide on-screen keyboard
+void HideSoftKeyboard(void)
+{
+    platform.softKeyboard = false;
+    [platform.view reloadInputViews];
 }
 
 //----------------------------------------------------------------------------------
@@ -630,9 +660,66 @@ int SetGamepadMappings(const char *mappings)
 }
 
 // Set gamepad vibration
+// NOTE: Each handle of the gamepad has its own haptic engine if supported, otherwise one engine uses the strongest value
 void SetGamepadVibration(int gamepad, float leftMotor, float rightMotor, float duration)
 {
-    TRACELOG(LOG_WARNING, "SetGamepadVibration() not available on target platform");
+    if ((gamepad < 0) || (gamepad >= MAX_GAMEPADS) || (platform.gamepads[gamepad] == nil) || (duration <= 0.0f)) return;
+
+    if (leftMotor < 0.0f) leftMotor = 0.0f;
+    if (leftMotor > 1.0f) leftMotor = 1.0f;
+    if (rightMotor < 0.0f) rightMotor = 0.0f;
+    if (rightMotor > 1.0f) rightMotor = 1.0f;
+    if (duration > MAX_GAMEPAD_VIBRATION_TIME) duration = MAX_GAMEPAD_VIBRATION_TIME;
+
+    @autoreleasepool
+    {
+        GCDeviceHaptics *haptics = [platform.gamepads[gamepad] haptics];
+        if (haptics == nil) return;
+
+        if (platform.hapticEngines[gamepad][0] == nil)
+        {
+            NSSet<GCHapticsLocality> *localities = [haptics supportedLocalities];
+
+            if ([localities containsObject:GCHapticsLocalityLeftHandle] && [localities containsObject:GCHapticsLocalityRightHandle])
+            {
+                platform.hapticEngines[gamepad][0] = [[haptics createEngineWithLocality:GCHapticsLocalityLeftHandle] retain];
+                platform.hapticEngines[gamepad][1] = [[haptics createEngineWithLocality:GCHapticsLocalityRightHandle] retain];
+            }
+            else platform.hapticEngines[gamepad][0] = [[haptics createEngineWithLocality:GCHapticsLocalityDefault] retain];
+        }
+
+        float intensities[2] = { leftMotor, rightMotor };
+        if (platform.hapticEngines[gamepad][1] == nil) intensities[0] = fmaxf(leftMotor, rightMotor);
+
+        for (int i = 0; i < 2; i++)
+        {
+            CHHapticEngine *engine = platform.hapticEngines[gamepad][i];
+            if (engine == nil) continue;
+
+            // Stop the previous vibration, a new one replaces it
+            [platform.hapticPlayers[gamepad][i] stopAtTime:CHHapticTimeImmediate error:nil];
+            [platform.hapticPlayers[gamepad][i] release];
+            platform.hapticPlayers[gamepad][i] = nil;
+
+            if (intensities[i] <= 0.0f) continue;
+
+            // NOTE: The system stops the engine while the application is not active
+            NSError *error = nil;
+            if (![engine startAndReturnError:&error])
+            {
+                TRACELOG(LOG_WARNING, "GAMEPAD: [%i] Failed to start haptic engine: %s", gamepad, [[error localizedDescription] UTF8String]);
+                continue;
+            }
+
+            CHHapticEventParameter *intensity = [[[CHHapticEventParameter alloc] initWithParameterID:CHHapticEventParameterIDHapticIntensity value:intensities[i]] autorelease];
+            CHHapticEvent *event = [[[CHHapticEvent alloc] initWithEventType:CHHapticEventTypeHapticContinuous parameters:@[ intensity ] relativeTime:0 duration:duration] autorelease];
+            CHHapticPattern *pattern = [[[CHHapticPattern alloc] initWithEvents:@[ event ] parameters:@[] error:&error] autorelease];
+            id<CHHapticPatternPlayer> player = (pattern != nil)? [engine createPlayerWithPattern:pattern error:&error] : nil;
+
+            if ((player != nil) && [player startAtTime:CHHapticTimeImmediate error:&error]) platform.hapticPlayers[gamepad][i] = [player retain];
+            else TRACELOG(LOG_WARNING, "GAMEPAD: [%i] Failed to play vibration: %s", gamepad, [[error localizedDescription] UTF8String]);
+        }
+    }
 }
 
 // Set mouse position XY
@@ -678,6 +765,19 @@ void PollInputEvents(void)
         CORE.Input.Keyboard.keyRepeatInFrame[i] = 0;
     }
 
+    // Apply releases of keys that were pressed and released in the previous frame, a release is an event already
+    for (int i = 0; i < MAX_KEYBOARD_KEYS; i++)
+    {
+        if (platform.keyReleasePending[i])
+        {
+            CORE.Input.Keyboard.currentKeyState[i] = 0;
+            platform.keyReleasePending[i] = false;
+            platform.eventReceived = true;
+        }
+
+        platform.keyPressedInFrame[i] = false;
+    }
+
     // Register previous mouse states
     for (int i = 0; i < MAX_MOUSE_BUTTONS; i++) CORE.Input.Mouse.previousButtonState[i] = CORE.Input.Mouse.currentButtonState[i];
 
@@ -690,6 +790,16 @@ void PollInputEvents(void)
 
     // Register previous touch states
     for (int i = 0; i < MAX_TOUCH_POINTS; i++) CORE.Input.Touch.previousTouchState[i] = CORE.Input.Touch.currentTouchState[i];
+
+    // Apply the release of a touch that started and ended in the previous frame, a release is an event already
+    if (platform.touchReleasePending)
+    {
+        CORE.Input.Touch.currentTouchState[MOUSE_BUTTON_LEFT] = 0;
+        platform.touchReleasePending = false;
+        platform.eventReceived = true;
+    }
+
+    platform.touchPressedInFrame = false;
 
     // Register previous gamepad states
     for (int i = 0; i < MAX_GAMEPADS; i++)
@@ -841,6 +951,7 @@ void ClosePlatform(void)
 
         for (int i = 0; i < MAX_GAMEPADS; i++)
         {
+            UnloadGamepadHaptics(i);
             [platform.gamepads[i] release];
             platform.gamepads[i] = nil;
             CORE.Input.Gamepad.ready[i] = false;
@@ -848,6 +959,10 @@ void ClosePlatform(void)
 
         RL_FREE(platform.clipboardText);
         platform.clipboardText = NULL;
+
+        [platform.emptyInputView release];
+        platform.emptyInputView = nil;
+        platform.softKeyboard = false;
     }
 }
 
@@ -1191,8 +1306,15 @@ static void HandleTouches(NSSet *touches, int action)
 
     CORE.Input.Touch.pointCount = count;
 
-    // NOTE: Touch is mapped to the mouse left button, first touch point to the mouse position
-    CORE.Input.Touch.currentTouchState[MOUSE_BUTTON_LEFT] = (count > 0);
+    // NOTE: Touch is mapped to the mouse left button, a touch ended in the frame it started keeps the press for that frame
+    if (count > 0)
+    {
+        if (CORE.Input.Touch.currentTouchState[MOUSE_BUTTON_LEFT] == 0) platform.touchPressedInFrame = true;
+        CORE.Input.Touch.currentTouchState[MOUSE_BUTTON_LEFT] = 1;
+        platform.touchReleasePending = false;
+    }
+    else if (platform.touchPressedInFrame) platform.touchReleasePending = true;
+    else CORE.Input.Touch.currentTouchState[MOUSE_BUTTON_LEFT] = 0;
 
     if (count > 0) CORE.Input.Mouse.currentPosition = CORE.Input.Touch.position[0];
     if (action == TOUCH_ACTION_DOWN) CORE.Input.Mouse.previousPosition = CORE.Input.Mouse.currentPosition;
@@ -1212,24 +1334,7 @@ static void HandlePresses(NSSet *presses, bool pressed)
         long usage = (long)[pressKey keyCode];
         int key = ((usage >= 0) && (usage < KEYMAP_SIZE))? hidToRaylibMap[usage] : (int)KEY_NULL;
 
-        if ((key > KEY_NULL) && (key < MAX_KEYBOARD_KEYS))
-        {
-            CORE.Input.Keyboard.currentKeyState[key] = pressed;
-
-            if (pressed)
-            {
-                // Check if there is space available in the key queue
-                if (CORE.Input.Keyboard.keyPressedQueueCount < MAX_KEY_PRESSED_QUEUE)
-                {
-                    // Add key to the queue
-                    CORE.Input.Keyboard.keyPressedQueue[CORE.Input.Keyboard.keyPressedQueueCount] = key;
-                    CORE.Input.Keyboard.keyPressedQueueCount++;
-                }
-
-                // Check the exit key to set close window
-                if (key == CORE.Input.Keyboard.exitKey) platform.closeRequested = true;
-            }
-        }
+        if ((key > KEY_NULL) && (key < MAX_KEYBOARD_KEYS)) HandleKey(key, pressed);
 
         if (!pressed || ([pressKey modifierFlags] & UIKeyModifierCommand)) continue;
 
@@ -1262,6 +1367,102 @@ static void HandlePresses(NSSet *presses, bool pressed)
     }
 }
 
+// Register key state change
+// NOTE: A key released in the frame it was pressed keeps the press for that frame
+static void HandleKey(int key, bool pressed)
+{
+    platform.eventReceived = true;
+
+    if (pressed)
+    {
+        CORE.Input.Keyboard.currentKeyState[key] = 1;
+        platform.keyPressedInFrame[key] = true;
+        platform.keyReleasePending[key] = false;
+
+        // Check if there is space available in the key queue
+        if (CORE.Input.Keyboard.keyPressedQueueCount < MAX_KEY_PRESSED_QUEUE)
+        {
+            // Add key to the queue
+            CORE.Input.Keyboard.keyPressedQueue[CORE.Input.Keyboard.keyPressedQueueCount] = key;
+            CORE.Input.Keyboard.keyPressedQueueCount++;
+        }
+
+        // Check the exit key to set close window
+        if (key == CORE.Input.Keyboard.exitKey) platform.closeRequested = true;
+    }
+    else if (platform.keyPressedInFrame[key]) platform.keyReleasePending[key] = true;
+    else CORE.Input.Keyboard.currentKeyState[key] = 0;
+}
+
+// Register text typed with the on-screen keyboard
+// NOTE: Line breaks and tabs are registered as keys only
+static void HandleText(NSString *text)
+{
+    NSData *data = [text dataUsingEncoding:NSUTF32LittleEndianStringEncoding];
+    const uint32_t *codepoints = (const uint32_t *)[data bytes];
+    int count = (int)([data length]/sizeof(uint32_t));
+
+    for (int i = 0; i < count; i++)
+    {
+        unsigned int codepoint = codepoints[i];
+        int key = (codepoint == '\n')? KEY_ENTER : (codepoint == '\t')? KEY_TAB : GetKeyFromCharacter(codepoint);
+
+        if (key != KEY_NULL)
+        {
+            HandleKey(key, true);
+            HandleKey(key, false);
+        }
+
+        // Check if there is space available in the queue, control characters are not registered
+        if ((codepoint >= 32) && (codepoint != 127) && (CORE.Input.Keyboard.charPressedQueueCount < MAX_CHAR_PRESSED_QUEUE))
+        {
+            // Add character to the queue
+            CORE.Input.Keyboard.charPressedQueue[CORE.Input.Keyboard.charPressedQueueCount] = codepoint;
+            CORE.Input.Keyboard.charPressedQueueCount++;
+        }
+    }
+}
+
+// Get key producing a character on a US keyboard layout
+static int GetKeyFromCharacter(unsigned int codepoint)
+{
+    if ((codepoint >= 'a') && (codepoint <= 'z')) return KEY_A + (int)(codepoint - 'a');
+    if ((codepoint >= 'A') && (codepoint <= 'Z')) return KEY_A + (int)(codepoint - 'A');
+    if ((codepoint >= '0') && (codepoint <= '9')) return KEY_ZERO + (int)(codepoint - '0');
+
+    switch (codepoint)
+    {
+        case ' ': return KEY_SPACE;
+        case '\'': return KEY_APOSTROPHE;
+        case ',': return KEY_COMMA;
+        case '-': return KEY_MINUS;
+        case '.': return KEY_PERIOD;
+        case '/': return KEY_SLASH;
+        case ';': return KEY_SEMICOLON;
+        case '=': return KEY_EQUAL;
+        case '[': return KEY_LEFT_BRACKET;
+        case '\\': return KEY_BACKSLASH;
+        case ']': return KEY_RIGHT_BRACKET;
+        case '`': return KEY_GRAVE;
+        default: return KEY_NULL;
+    }
+}
+
+// Stop gamepad vibration and unload its haptic engines
+static void UnloadGamepadHaptics(int gamepad)
+{
+    for (int i = 0; i < 2; i++)
+    {
+        [platform.hapticPlayers[gamepad][i] stopAtTime:CHHapticTimeImmediate error:nil];
+        [platform.hapticPlayers[gamepad][i] release];
+        platform.hapticPlayers[gamepad][i] = nil;
+
+        [platform.hapticEngines[gamepad][i] stopWithCompletionHandler:nil];
+        [platform.hapticEngines[gamepad][i] release];
+        platform.hapticEngines[gamepad][i] = nil;
+    }
+}
+
 // Register gamepads connection and state
 // NOTE: Controllers are mapped by the system to the extended gamepad profile (Xbox layout),
 // the state is updated by the main run loop and it is only received while the application is active
@@ -1274,6 +1475,7 @@ static void PollGamepads(void)
     {
         if ((platform.gamepads[i] != nil) && ![controllers containsObject:platform.gamepads[i]])
         {
+            UnloadGamepadHaptics(i);
             [platform.gamepads[i] release];
             platform.gamepads[i] = nil;
 
@@ -1474,6 +1676,8 @@ static void *GetProcAddressIOS(const char *name)
     memset(CORE.Input.Keyboard.currentKeyState, 0, sizeof(CORE.Input.Keyboard.currentKeyState));
     memset(CORE.Input.Touch.currentTouchState, 0, sizeof(CORE.Input.Touch.currentTouchState));
     memset(platform.touches, 0, sizeof(platform.touches));
+    memset(platform.keyReleasePending, 0, sizeof(platform.keyReleasePending));
+    platform.touchReleasePending = false;
     CORE.Input.Touch.pointCount = 0;
 
 #if !defined(GRAPHICS_API_OPENGL_SOFTWARE)
@@ -1530,6 +1734,57 @@ static void *GetProcAddressIOS(const char *name)
 - (BOOL)canBecomeFirstResponder
 {
     return YES;
+}
+
+// NOTE: The on-screen keyboard is shown for a first responder adopting UIKeyInput, an empty input view replaces it
+- (UIView *)inputView
+{
+    if (platform.softKeyboard) return nil;
+
+    if (platform.emptyInputView == nil) platform.emptyInputView = [[UIView alloc] initWithFrame:CGRectZero];
+
+    return platform.emptyInputView;
+}
+
+- (BOOL)hasText
+{
+    return YES;
+}
+
+- (void)insertText:(NSString *)text
+{
+    HandleText(text);
+}
+
+- (void)deleteBackward
+{
+    HandleKey(KEY_BACKSPACE, true);
+    HandleKey(KEY_BACKSPACE, false);
+}
+
+- (UITextAutocorrectionType)autocorrectionType
+{
+    return UITextAutocorrectionTypeNo;
+}
+
+- (UITextAutocapitalizationType)autocapitalizationType
+{
+    return UITextAutocapitalizationTypeNone;
+}
+
+- (UITextSpellCheckingType)spellCheckingType
+{
+    return UITextSpellCheckingTypeNo;
+}
+
+- (UITextSmartQuotesType)smartQuotesType
+{
+    return UITextSmartQuotesTypeNo;
+}
+
+- (UITextSmartDashesType)smartDashesType
+{
+    return UITextSmartDashesTypeNo;
 }
 
 - (void)pressesBegan:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event

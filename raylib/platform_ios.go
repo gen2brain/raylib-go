@@ -6,6 +6,9 @@ package rl
 /*
 #include "raylib.h"
 #include <stdlib.h>
+
+extern void ShowSoftKeyboard(void);
+extern void HideSoftKeyboard(void);
 */
 import "C"
 
@@ -66,12 +69,14 @@ func DisableCursor() {
 	C.DisableCursor()
 }
 
-// ShowSoftKeyboard - Shows on-screen keyboard (Android only)
+// ShowSoftKeyboard - Shows on-screen keyboard (Android and iOS)
 func ShowSoftKeyboard() {
+	C.ShowSoftKeyboard()
 }
 
-// HideSoftKeyboard - Hides on-screen keyboard (Android only)
+// HideSoftKeyboard - Hides on-screen keyboard (Android and iOS)
 func HideSoftKeyboard() {
+	C.HideSoftKeyboard()
 }
 
 // IsFileDropped - Check if a file has been dropped into window

@@ -15,7 +15,7 @@ CGO_ENABLED=1 GOOS=ios GOARCH=arm64 CC=clang \
 clang -arch arm64 -miphoneos-version-min=15.0 -o build/example.app/example build/libexample.a \
 	-framework UIKit -framework Foundation -framework CoreFoundation -framework CoreGraphics -framework QuartzCore \
 	-framework OpenGLES -framework AVFoundation -framework AudioToolbox -framework CoreAudio \
-	-framework GameController -framework Security -lresolv
+	-framework GameController -framework CoreHaptics -framework Security -lresolv
 
 cp Info.plist build/example.app/
 cp -R assets/. build/example.app/
