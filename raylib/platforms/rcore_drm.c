@@ -66,6 +66,10 @@
 #include <xf86drmMode.h>    // Direct Rendering Manager mode setting (KMS) interface
 
 #if !defined(GRAPHICS_API_OPENGL_SOFTWARE)
+    // NOTE: glad.h embeds khrplatform.h without KHRONOS_APIENTRY, required by EGL headers
+    #if !defined(KHRONOS_APIENTRY)
+        #define KHRONOS_APIENTRY
+    #endif
     #include <gbm.h>            // Generic Buffer Management (native platform for EGL on DRM)
     #include "EGL/egl.h"        // Native platform windowing system interface
     #include "EGL/eglext.h"     // EGL extensions
@@ -1407,8 +1411,15 @@ int InitPlatform(void)
         TRACELOG(LOG_INFO, "DISPLAY: Trying to enable MSAA x4");
     }
 
+    // NOTE: Desktop OpenGL contexts are also supported, Mesa drivers provide them on GBM
+    bool openglES = ((rlGetVersion() == RL_OPENGL_ES_20) || (rlGetVersion() == RL_OPENGL_ES_30));
+
+    EGLint renderableType = EGL_OPENGL_BIT;
+    if (rlGetVersion() == RL_OPENGL_ES_20) renderableType = EGL_OPENGL_ES2_BIT;
+    else if (rlGetVersion() == RL_OPENGL_ES_30) renderableType = EGL_OPENGL_ES3_BIT;
+
     const EGLint framebufferAttribs[] = {
-        EGL_RENDERABLE_TYPE, (rlGetVersion() == RL_OPENGL_ES_30)? EGL_OPENGL_ES3_BIT : EGL_OPENGL_ES2_BIT, // Type of context support
+        EGL_RENDERABLE_TYPE, renderableType, // Type of context support
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT, // Don't use it on Android!
         EGL_RED_SIZE, 8,            // RED color bit depth (alternative: 5)
         EGL_GREEN_SIZE, 8,          // GREEN color bit depth (alternative: 6)
@@ -1422,10 +1433,32 @@ int InitPlatform(void)
         EGL_NONE
     };
 
-    const EGLint contextAttribs[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
+    EGLint contextAttribs[8] = { 0 };
+    int attrib = 0;
+
+    if (openglES)
+    {
+        contextAttribs[attrib++] = EGL_CONTEXT_CLIENT_VERSION;
+        contextAttribs[attrib++] = 2;
+    }
+    else if (rlGetVersion() == RL_OPENGL_21)
+    {
+        contextAttribs[attrib++] = EGL_CONTEXT_MAJOR_VERSION;
+        contextAttribs[attrib++] = 2;
+        contextAttribs[attrib++] = EGL_CONTEXT_MINOR_VERSION;
+        contextAttribs[attrib++] = 1;
+    }
+    else if ((rlGetVersion() == RL_OPENGL_33) || (rlGetVersion() == RL_OPENGL_43))
+    {
+        contextAttribs[attrib++] = EGL_CONTEXT_MAJOR_VERSION;
+        contextAttribs[attrib++] = (rlGetVersion() == RL_OPENGL_33)? 3 : 4;
+        contextAttribs[attrib++] = EGL_CONTEXT_MINOR_VERSION;
+        contextAttribs[attrib++] = 3;
+        contextAttribs[attrib++] = EGL_CONTEXT_OPENGL_PROFILE_MASK;
+        contextAttribs[attrib++] = EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT;
+    }
+
+    contextAttribs[attrib++] = EGL_NONE;
 
     EGLint numConfigs = 0;
     const char *eglClientExtensions = NULL;
@@ -1523,7 +1556,7 @@ int InitPlatform(void)
     }
 
     // Set rendering API
-    eglBindAPI(EGL_OPENGL_ES_API);
+    eglBindAPI(openglES? EGL_OPENGL_ES_API : EGL_OPENGL_API);
 
     // Create an EGL rendering context
     platform.context = eglCreateContext(platform.device, platform.config, EGL_NO_CONTEXT, contextAttribs);
@@ -1571,8 +1604,6 @@ int InitPlatform(void)
     {
         CORE.Window.ready = true;
 
-        CORE.Window.render.width = CORE.Window.screen.width;
-        CORE.Window.render.height = CORE.Window.screen.height;
         CORE.Window.currentFbo.width = CORE.Window.render.width;
         CORE.Window.currentFbo.height = CORE.Window.render.height;
     }
@@ -1753,6 +1784,11 @@ void ClosePlatform(void)
         close(platform.keyboardFd);
         platform.keyboardFd = -1;
     }
+
+#if SUPPORT_SSH_KEYBOARD_RPI
+    // NOTE: The atexit() handler does not run for programs that do not exit through exit()
+    RestoreKeyboard();
+#endif
 }
 
 #if SUPPORT_SSH_KEYBOARD_RPI
@@ -1805,8 +1841,8 @@ static void InitKeyboard(void)
 // Restore default keyboard input
 static void RestoreKeyboard(void)
 {
-    // Reset to default keyboard settings
-    tcsetattr(STDIN_FILENO, TCSANOW, &platform.defaultSettings);
+    // Reset to default keyboard settings, discarding the input typed while running
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &platform.defaultSettings);
 
     // Reconfigure keyboard to default mode
     fcntl(STDIN_FILENO, F_SETFL, platform.defaultFileFlags);
@@ -2733,6 +2769,7 @@ static void SetupFramebuffer(int width, int height)
             CORE.Window.screen.height = CORE.Window.display.height;
         }
 
+#if defined(GRAPHICS_API_OPENGL_SOFTWARE)
         // Upscaling to fit display with border-bars
         float displayRatio = (float)CORE.Window.display.width/(float)CORE.Window.display.height;
         float screenRatio = (float)CORE.Window.screen.width/(float)CORE.Window.screen.height;
@@ -2751,6 +2788,16 @@ static void SetupFramebuffer(int width, int height)
             CORE.Window.renderOffset.x = (CORE.Window.render.width - CORE.Window.screen.width);
             CORE.Window.renderOffset.y = 0;
         }
+#else
+        // Upscaling to fit display with border-bars, the content is scaled by the screen scale matrix
+        float scaleRatio = fminf((float)CORE.Window.display.width/(float)CORE.Window.screen.width, (float)CORE.Window.display.height/(float)CORE.Window.screen.height);
+
+        CORE.Window.render.width = (int)round((float)CORE.Window.screen.width*scaleRatio);
+        CORE.Window.render.height = (int)round((float)CORE.Window.screen.height*scaleRatio);
+        CORE.Window.renderOffset.x = (CORE.Window.display.width - CORE.Window.render.width);
+        CORE.Window.renderOffset.y = (CORE.Window.display.height - CORE.Window.render.height);
+        CORE.Window.screenScale = MatrixScale(scaleRatio, scaleRatio, 1.0f);
+#endif
     }
     else
     {
