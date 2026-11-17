@@ -66,6 +66,8 @@
 #undef DrawTextExW
 
 #include <windowsx.h>
+#include <imm.h>            // Required for: COMPOSITIONFORM, CANDIDATEFORM (functions loaded at runtime)
+#include <shellapi.h>       // Required for: DragAcceptFiles(), DragQueryFileW(), DragFinish()
 
 // Avoid including shellscalingapi.h by defining these two enums directly
 #ifndef DPI_ENUMS_DECLARED
@@ -117,6 +119,32 @@ typedef struct {
     int appScreenHeight;
     unsigned int desiredFlags;
 
+    RECT coverRestoreRect;          // Window rectangle to restore when leaving fullscreen or borderless windowed mode
+    bool coverRestoreUndecorated;   // FLAG_WINDOW_UNDECORATED state to restore when leaving fullscreen or borderless windowed mode
+    bool coverRestoreMaximized;     // FLAG_WINDOW_MAXIMIZED state to restore when leaving fullscreen or borderless windowed mode
+    unsigned int coverEnterFlags;   // Fullscreen or borderless windowed mode flag being applied by a window style change
+    bool coverLeave;                // Fullscreen or borderless windowed mode being left by a window style change
+    float opacity;                  // Window opacity
+
+    HCURSOR cursor;                 // Mouse cursor shape
+    bool mouseTracked;              // Mouse leave notification requested
+    POINT cursorRestorePosition;    // Cursor screen position to restore when the cursor is enabled
+    POINT rawAbsolutePosition;      // Last position of an absolute pointing device (remote desktop, tablets)
+    bool rawAbsoluteValid;          // Absolute pointing device position is known
+    POINT textInputPosition;        // Last clicked position, input method windows are placed next to it
+    WCHAR highSurrogate;            // Pending first half of a character outside of the basic multilingual plane
+
+    int touchIds[MAX_TOUCH_POINTS];                 // Touch points ids, -1 if not used
+    Vector2 touchPositions[MAX_TOUCH_POINTS];       // Touch points positions
+
+    double gamepadCheckTime;                        // Next time to check for connected gamepads
+    double gamepadVibrationEnd[MAX_GAMEPADS];       // Time to stop gamepads vibration, 0 if not vibrating
+
+    bool keyPressedInFrame[MAX_KEYBOARD_KEYS];      // Keys pressed in current frame
+    bool keyReleasePending[MAX_KEYBOARD_KEYS];      // Keys released in the frame they were pressed, release applied on next frame
+    bool buttonPressedInFrame[MAX_MOUSE_BUTTONS];   // Mouse buttons pressed in current frame
+    bool buttonReleasePending[MAX_MOUSE_BUTTONS];   // Mouse buttons released in the frame they were pressed, release applied on next frame
+
     bool perMonitorDPIAwareV2; // Flag to check DPI-awareness level. This is used mainly to distinguish between per-monitor DPI awareness v1 and v2
 
     LARGE_INTEGER timerFrequency;
@@ -139,6 +167,35 @@ typedef BOOL (WINAPI *SetProcessDPIAwareProc)(void);
 typedef HRESULT (WINAPI *GetDpiForMonitorProc)(HMONITOR monitor, MONITOR_DPI_TYPE dpiType, UINT *dpiX, UINT *dpiY);
 typedef HANDLE (WINAPI *GetThreadDpiAwarenessContextProc)(void);
 typedef BOOL (WINAPI *AreDpiAwarenessContextsEqualProc)(HANDLE a, HANDLE b);
+typedef BOOL (WINAPI *GetPointerTypeProc)(UINT32 pointerId, DWORD *pointerType);
+typedef HIMC (WINAPI *ImmGetContextProc)(HWND hwnd);
+typedef BOOL (WINAPI *ImmReleaseContextProc)(HWND hwnd, HIMC context);
+typedef BOOL (WINAPI *ImmSetCompositionWindowProc)(HIMC context, LPCOMPOSITIONFORM form);
+typedef BOOL (WINAPI *ImmSetCandidateWindowProc)(HIMC context, LPCANDIDATEFORM form);
+
+// XInput gamepad state and functions, library loaded at runtime (no xinput.h needed)
+typedef struct {
+    WORD buttons;
+    BYTE leftTrigger;
+    BYTE rightTrigger;
+    SHORT thumbLX;
+    SHORT thumbLY;
+    SHORT thumbRX;
+    SHORT thumbRY;
+} XInputGamepad;
+
+typedef struct {
+    DWORD packetNumber;
+    XInputGamepad gamepad;
+} XInputState;
+
+typedef struct {
+    WORD leftMotorSpeed;
+    WORD rightMotorSpeed;
+} XInputVibration;
+
+typedef DWORD (WINAPI *XInputGetStateProc)(DWORD userIndex, XInputState *state);
+typedef DWORD (WINAPI *XInputSetStateProc)(DWORD userIndex, XInputVibration *vibration);
 
 //----------------------------------------------------------------------------------
 // Global Variables Definition
@@ -164,6 +221,22 @@ static GetDpiForMonitorProc pGetDpiForMonitor = NULL;
 static GetThreadDpiAwarenessContextProc pGetThreadDpiAwarenessContext = NULL;
 static AreDpiAwarenessContextsEqualProc pAreDpiAwarenessContextsEqual = NULL;
 
+// Touch input function (Windows 8)
+static GetPointerTypeProc pGetPointerType = NULL;
+
+// Gamepad functions, XInput library is loaded at runtime
+static XInputGetStateProc pXInputGetState = NULL;
+static XInputSetStateProc pXInputSetState = NULL;
+
+static HMODULE xinput = NULL; // xinput1_4.dll, xinput1_3.dll or xinput9_1_0.dll: gamepads
+
+// Input method functions, imm32.dll is loaded at runtime
+static ImmGetContextProc pImmGetContext = NULL;
+static ImmReleaseContextProc pImmReleaseContext = NULL;
+static ImmSetCompositionWindowProc pImmSetCompositionWindow = NULL;
+static ImmSetCandidateWindowProc pImmSetCandidateWindow = NULL;
+
+static HMODULE imm32 = NULL;  // imm32.dll: input methods
 static HMODULE shcore = NULL; // shcore.dll (Windows 8.1 and early versions of Windows 10): loaded once, NULL on other versions
 
 // --------------------------------------------------------------------------------
@@ -202,7 +275,12 @@ static HMODULE shcore = NULL; // shcore.dll (Windows 8.1 and early versions of W
 #define FLAG_MASK_REQUIRED      ~(FLAG_MASK_OPTIONAL)
 
 // Flags that have no operations to perform during an update
-#define FLAG_MASK_NO_UPDATE     (FLAG_WINDOW_HIGHDPI | FLAG_MSAA_4X_HINT)
+#define FLAG_MASK_NO_UPDATE     (FLAG_WINDOW_HIGHDPI | FLAG_MSAA_4X_HINT | FLAG_WINDOW_TRANSPARENT | FLAG_INTERLACED_HINT)
+
+// Flags of the modes covering the monitor with an undecorated window, there is no video mode change
+#define FLAG_MASK_COVER         (FLAG_FULLSCREEN_MODE | FLAG_BORDERLESS_WINDOWED_MODE)
+
+#define MAX_MONITORS            16
 
 // Lowest extended-key scancode, start of keyboardKeyFromExtendedScancode[]
 #define EXTENDED_KEY_OFFSET     0x1C
@@ -259,6 +337,20 @@ static HMODULE shcore = NULL; // shcore.dll (Windows 8.1 and early versions of W
     #define WM_MOUSEHWHEEL                  0x020E
 #endif
 
+#ifndef WM_POINTERUPDATE
+    #define WM_POINTERUPDATE                0x0245
+    #define WM_POINTERDOWN                  0x0246
+    #define WM_POINTERUP                    0x0247
+#endif
+#ifndef WM_POINTERCAPTURECHANGED
+    #define WM_POINTERCAPTURECHANGED        0x024C
+#endif
+
+#define POINTER_TYPE_TOUCH                  2           // Pointer input type: touch (PT_TOUCH)
+
+#define XINPUT_MAX_GAMEPADS                 4           // Maximum number of gamepads supported by XInput
+#define XINPUT_GAMEPAD_NAME                 "Xbox Controller"
+
 #ifndef DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE
     #define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE ((HANDLE)-3)
 #endif
@@ -283,13 +375,11 @@ typedef struct {
     DWORD clear;
 } FlagsOp;
 
-// Monitor info type
+// Monitors list, primary monitor first
 typedef struct {
-    HMONITOR needle;
-    int index;
-    int matchIndex;
-    RECT rect;
-} MonitorInfo;
+    HMONITOR handles[MAX_MONITORS];
+    int count;
+} MonitorList;
 
 //----------------------------------------------------------------------------------
 // Global Const Variables Definition
@@ -458,6 +548,25 @@ static void LoadWin32FunctionPointers(void)
             pGetDpiForMonitor = (GetDpiForMonitorProc)GetProcAddress(shcore, "GetDpiForMonitor");
         }
     }
+
+    pGetPointerType = (GetPointerTypeProc)GetProcAddress(user32, "GetPointerType");
+
+    const WCHAR *xinputNames[] = { L"xinput1_4.dll", L"xinput1_3.dll", L"xinput9_1_0.dll" };
+    for (int i = 0; (i < 3) && (xinput == NULL); i++) xinput = LoadLibraryW(xinputNames[i]);
+    if (xinput != NULL)
+    {
+        pXInputGetState = (XInputGetStateProc)GetProcAddress(xinput, "XInputGetState");
+        pXInputSetState = (XInputSetStateProc)GetProcAddress(xinput, "XInputSetState");
+    }
+
+    imm32 = LoadLibraryW(L"imm32.dll");
+    if (imm32 != NULL)
+    {
+        pImmGetContext = (ImmGetContextProc)GetProcAddress(imm32, "ImmGetContext");
+        pImmReleaseContext = (ImmReleaseContextProc)GetProcAddress(imm32, "ImmReleaseContext");
+        pImmSetCompositionWindow = (ImmSetCompositionWindowProc)GetProcAddress(imm32, "ImmSetCompositionWindow");
+        pImmSetCandidateWindow = (ImmSetCandidateWindowProc)GetProcAddress(imm32, "ImmSetCandidateWindow");
+    }
 }
 
 // GetDpiForWindow with a fallback for older versions of Windows
@@ -570,9 +679,12 @@ static DWORD MakeWindowStyle(unsigned flags)
     // flag automatically anyway so it keeps flags in sync with the OS
     DWORD style = WS_CLIPSIBLINGS;
 
+    // NOTE: Fullscreen and borderless windowed modes use an undecorated window with no resize frame
+    bool covered = ((flags & FLAG_MASK_COVER) != 0);
+
     style |= (flags & FLAG_WINDOW_HIDDEN)? 0 : WS_VISIBLE;
-    style |= (flags & FLAG_WINDOW_RESIZABLE)? STYLE_FLAGS_RESIZABLE : 0;
-    style |= (flags & FLAG_WINDOW_UNDECORATED)? STYLE_FLAGS_UNDECORATED_ON : STYLE_FLAGS_UNDECORATED_OFF;
+    style |= ((flags & FLAG_WINDOW_RESIZABLE) && !covered)? STYLE_FLAGS_RESIZABLE : 0;
+    style |= ((flags & FLAG_WINDOW_UNDECORATED) || covered)? STYLE_FLAGS_UNDECORATED_ON : STYLE_FLAGS_UNDECORATED_OFF;
 
     // Minimized takes precedence over maximized
     int mized = MIZED_NONE;
@@ -649,7 +761,7 @@ static SIZE CalcWindowSize(UINT dpi, SIZE clientSize, DWORD style)
 
 // Update window size if required
 // NOTE: Returns true if the window size was updated, false otherwise
-static bool UpdateWindowSize(int mode, HWND hwnd, int width, int height, unsigned flags)
+static bool UpdateWindowSize(HWND hwnd, int width, int height, unsigned flags)
 {
     if (flags & FLAG_WINDOW_MINIMIZED) return false;
 
@@ -659,10 +771,10 @@ static bool UpdateWindowSize(int mode, HWND hwnd, int width, int height, unsigne
         return false;
     }
 
-    if (flags & FLAG_BORDERLESS_WINDOWED_MODE)
+    if (flags & FLAG_MASK_COVER)
     {
         MONITORINFO info = { 0 };
-        HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
+        HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
         info.cbSize = sizeof(info);
         if (!GetMonitorInfoW(monitor, &info)) TRACELOG(LOG_ERROR, "WIN32: Failed to get monitor info [ERROR: %lu]", GetLastError());
 
@@ -708,31 +820,9 @@ static bool UpdateWindowSize(int mode, HWND hwnd, int width, int height, unsigne
 
     // Calculate window size from desired framebuffer size and window flags
     SIZE windowSize = CalcWindowSize(dpi, desiredSize, MakeWindowStyle(flags));
-    POINT windowPos = { 0 };
-    UINT swpFlags = SWP_NOZORDER | SWP_FRAMECHANGED;
-
-    if (mode == 0) // UPDATE_WINDOW_FIRST
-    {
-        HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
-        if (!monitor) TRACELOG(LOG_ERROR, "WIN32: Failed to get monitor from window [ERROR: %lu]", GetLastError());
-
-        MONITORINFO info = { 0 };
-        info.cbSize = sizeof(info);
-        if (!GetMonitorInfoW(monitor, &info)) TRACELOG(LOG_ERROR, "WIN32: Failed to get monitor info [ERROR: %lu]", GetLastError());
-
-        #define MAX(a,b) (((a)>(b))? (a):(b))
-
-        LONG monitorWidth = info.rcMonitor.right - info.rcMonitor.left;
-        LONG monitorHeight = info.rcMonitor.bottom - info.rcMonitor.top;
-        windowPos = (POINT){
-            MAX(0, (monitorWidth - windowSize.cx)/2),
-            MAX(0, (monitorHeight - windowSize.cy)/2),
-        };
-    }
-    else swpFlags |= SWP_NOMOVE;
 
     // WARNING: This code must be called after swInit() has been called, after InitPlatform() in [rcore]
-    SetWindowPos(hwnd, NULL, windowPos.x, windowPos.y, windowSize.cx, windowSize.cy, SWP_NOMOVE | SWP_NOZORDER);
+    SetWindowPos(hwnd, NULL, 0, 0, windowSize.cx, windowSize.cy, SWP_NOMOVE | SWP_NOZORDER);
 
     return true;
 }
@@ -880,35 +970,58 @@ static HICON ConvertImageToWindowsIcon(Image image)
     return result;
 }
 
-// Count monitors process
-// NOTE: Required by GetMonitorCount()
-static BOOL CALLBACK CountMonitorsProc(HMONITOR handle, HDC hdc, LPRECT rect, LPARAM lparam)
+// Collect monitors process, primary monitor first
+// NOTE: Required by GetMonitorHandles()
+static BOOL CALLBACK CollectMonitorsProc(HMONITOR handle, HDC hdc, LPRECT rect, LPARAM lparam)
 {
-    int *count = (int *)lparam;
-    *count += 1;
+    MonitorList *list = (MonitorList *)lparam;
+
+    if (list->count < MAX_MONITORS)
+    {
+        MONITORINFO info = { 0 };
+        info.cbSize = sizeof(info);
+
+        if (GetMonitorInfoW(handle, &info) && (info.dwFlags & MONITORINFOF_PRIMARY) && (list->count > 0))
+        {
+            for (int i = list->count; i > 0; i--) list->handles[i] = list->handles[i - 1];
+            list->handles[0] = handle;
+        }
+        else list->handles[list->count] = handle;
+
+        list->count++;
+    }
 
     // Always return TRUE to continue the loop, otherwise, the caller
     // can't distinguish between stopping the loop and an error
     return TRUE;
 }
 
-// Find monitor process
-// NOTE: Required by GetCurrentMonitor()
-static BOOL CALLBACK FindMonitorProc(HMONITOR handle, HDC hdc, LPRECT rect, LPARAM lparam)
+// Get connected monitors, primary monitor first
+static MonitorList GetMonitorHandles(void)
 {
-    MonitorInfo *monitor = (MonitorInfo *)lparam;
+    MonitorList list = { 0 };
 
-    if (handle == monitor->needle)
+    int result = EnumDisplayMonitors(NULL, NULL, CollectMonitorsProc, (LPARAM)&list);
+    if (result == 0) TRACELOG(LOG_ERROR, "%s failed, error=%lu", "EnumDisplayMonitors", GetLastError());
+
+    return list;
+}
+
+// Get monitor info for a monitor index, returns false if the monitor is not available
+static bool GetMonitorInfoFromIndex(int monitor, MONITORINFOEXW *info)
+{
+    MonitorList list = GetMonitorHandles();
+
+    if ((monitor < 0) || (monitor >= list.count))
     {
-        monitor->matchIndex = monitor->index;
-        monitor->rect = *rect;
+        TRACELOG(LOG_WARNING, "WIN32: Failed to find selected monitor");
+        return false;
     }
 
-    monitor->index += 1;
+    ZeroMemory(info, sizeof(MONITORINFOEXW));
+    info->cbSize = sizeof(MONITORINFOEXW);
 
-    // Always return TRUE to continue the loop, otherwise, the caller
-    // can't distinguish between stopping the loop and an error
-    return TRUE;
+    return (GetMonitorInfoW(list.handles[monitor], (MONITORINFO *)info) != 0);
 }
 
 // Get style changed required operations flags
@@ -916,7 +1029,8 @@ static BOOL CALLBACK FindMonitorProc(HMONITOR handle, HDC hdc, LPRECT rect, LPAR
 static void GetStyleChangeFlagOps(DWORD coreWindowFlags, STYLESTRUCT *style, FlagsOp *deferredFlags)
 {
     // Check window resizable flag change
-    bool resizable = (coreWindowFlags & FLAG_WINDOW_RESIZABLE);
+    // NOTE: Fullscreen and borderless windowed modes have no resize frame
+    bool resizable = ((coreWindowFlags & FLAG_WINDOW_RESIZABLE) && !(coreWindowFlags & FLAG_MASK_COVER));
     bool resizableOld = ((style->styleOld & STYLE_FLAGS_RESIZABLE) != 0);
     bool resizableNew = ((style->styleNew & STYLE_FLAGS_RESIZABLE) != 0);
     if (resizable != resizableOld) TRACELOG(LOG_ERROR, "WIN32: Expected resizable %u but got %u", resizable, resizableOld);
@@ -981,6 +1095,12 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
 
 // Win32: Handle inputs functions
 static void HandleKey(WPARAM wparam, LPARAM lparam, char state);
+static void HandleChar(unsigned int codepoint);                 // Register character input
+static void HandleTouch(int touchAction, int id, float x, float y); // Register touch event
+static void HandleDroppedFiles(HDROP drop);                     // Register dropped files
+static void PollGamepads(void);                                 // Update gamepads state (XInput)
+static void UpdateCursorClip(void);                             // Confine or release the cursor (disabled cursor)
+static void UpdateInputMethodPosition(HWND hwnd);               // Place input method windows next to the last clicked position
 static void HandleMouseButton(int button, char state);
 static void HandleRawInput(LPARAM lparam);
 static void HandleWindowResize(HWND hwnd, int *width, int *height);
@@ -988,6 +1108,9 @@ static void HandleWindowResize(HWND hwnd, int *width, int *height);
 static void UpdateWindowStyle(HWND hwnd, unsigned desiredFlags);
 static unsigned SanitizeFlags(unsigned flags);
 static void UpdateFlags(HWND hwnd, unsigned desiredFlags, int width, int height); // Update window flags
+static void UpdateLayeredStyle(HWND hwnd, bool passthrough, float opacity); // Update window layered style: mouse passthrough and opacity
+static void EnterCoverMode(HWND hwnd, unsigned desiredFlags);   // Cover the monitor with the window: fullscreen or borderless windowed mode
+static void LeaveCoverMode(HWND hwnd, unsigned desiredFlags);   // Restore the window from fullscreen or borderless windowed mode
 
 // Check if OpenGL extension is available
 static bool IsWglExtensionAvailable(HDC hdc, const char *extension);
@@ -1008,9 +1131,11 @@ bool WindowShouldClose(void)
 }
 
 // Toggle fullscreen mode
+// NOTE: The window covers the monitor, the video mode is not changed
 void ToggleFullscreen(void)
 {
-    TRACELOG(LOG_WARNING, "WIN32: Toggle full screen functionality not implemented");
+    if (CORE.Window.flags & FLAG_FULLSCREEN_MODE) ClearWindowState(FLAG_FULLSCREEN_MODE);
+    else SetWindowState(FLAG_FULLSCREEN_MODE);
 }
 
 // Toggle borderless windowed mode
@@ -1046,7 +1171,28 @@ void SetWindowState(unsigned int flags)
     if (flags & FLAG_MSAA_4X_HINT) TRACELOG(LOG_WARNING, "WINDOW: MSAA can only be configured before window initialization");
     if (flags & FLAG_WINDOW_HIGHDPI) TRACELOG(LOG_WARNING, "WINDOW: High DPI can only be configured before window initialization");
 
-    platform.desiredFlags = SanitizeFlags(CORE.Window.flags | flags);
+    unsigned requestedFlags = CORE.Window.flags | flags;
+
+    // Fullscreen and borderless windowed modes exclude each other, last one requested is kept
+    if (flags & FLAG_FULLSCREEN_MODE) requestedFlags &= ~FLAG_BORDERLESS_WINDOWED_MODE;
+    else if (flags & FLAG_BORDERLESS_WINDOWED_MODE) requestedFlags &= ~FLAG_FULLSCREEN_MODE;
+
+    // Decorations and maximized state are restored when leaving fullscreen and borderless windowed modes
+    if (requestedFlags & FLAG_MASK_COVER)
+    {
+        if (!(CORE.Window.flags & FLAG_MASK_COVER))
+        {
+            platform.coverRestoreUndecorated = ((requestedFlags & FLAG_WINDOW_UNDECORATED) != 0);
+            platform.coverRestoreMaximized = ((requestedFlags & FLAG_WINDOW_MAXIMIZED) != 0);
+        }
+        else
+        {
+            if (flags & FLAG_WINDOW_UNDECORATED) platform.coverRestoreUndecorated = true;
+            if (flags & FLAG_WINDOW_MAXIMIZED) platform.coverRestoreMaximized = true;
+        }
+    }
+
+    platform.desiredFlags = SanitizeFlags(requestedFlags);
     UpdateFlags(platform.hwnd, platform.desiredFlags, platform.appScreenWidth, platform.appScreenHeight);
 }
 
@@ -1056,7 +1202,24 @@ void ClearWindowState(unsigned int flags)
     if (flags & FLAG_MSAA_4X_HINT) TRACELOG(LOG_WARNING, "WINDOW: MSAA can only be configured before window initialization");
     if (flags & FLAG_WINDOW_HIGHDPI) TRACELOG(LOG_WARNING, "WINDOW: High DPI can only be configured before window initialization");
 
-    platform.desiredFlags = SanitizeFlags(CORE.Window.flags & ~flags);
+    unsigned requestedFlags = CORE.Window.flags & ~flags;
+
+    // Decorations and maximized state are restored when leaving fullscreen and borderless windowed modes
+    if (CORE.Window.flags & FLAG_MASK_COVER)
+    {
+        if (flags & FLAG_WINDOW_UNDECORATED) platform.coverRestoreUndecorated = false;
+        if (flags & FLAG_WINDOW_MAXIMIZED) platform.coverRestoreMaximized = false;
+
+        if (!(requestedFlags & FLAG_MASK_COVER))
+        {
+            if (platform.coverRestoreUndecorated) requestedFlags |= FLAG_WINDOW_UNDECORATED;
+            else requestedFlags &= ~FLAG_WINDOW_UNDECORATED;
+
+            if (platform.coverRestoreMaximized && (requestedFlags & FLAG_WINDOW_RESIZABLE)) requestedFlags |= FLAG_WINDOW_MAXIMIZED;
+        }
+    }
+
+    platform.desiredFlags = SanitizeFlags(requestedFlags);
     UpdateFlags(platform.hwnd, platform.desiredFlags, platform.appScreenWidth, platform.appScreenHeight);
 }
 
@@ -1157,22 +1320,50 @@ void SetWindowPosition(int x, int y)
 {
     if (platform.hwnd != NULL)
     {
-        RECT rect = { 0 };
-        if (GetWindowRect(platform.hwnd, &rect))
-        {
-            int width = rect.right - rect.left;
-            int height = rect.bottom - rect.top;
+        // NOTE: Position refers to the window client area, as returned by GetWindowPosition()
+        RECT rect = { x, y, x, y };
+        DWORD style = (DWORD)GetWindowLongPtrW(platform.hwnd, GWL_STYLE);
+        AdjustWindowRectExForDpiCompat(&rect, style, FALSE, WINDOW_STYLE_EX, GetDpiForWindowCompat(platform.hwnd));
 
-            // Move the window to the new position (keeping size and z-order)
-            SetWindowPos(platform.hwnd, NULL, x, y, width, height, SWP_NOZORDER | SWP_NOACTIVATE);
-        }
+        // Move the window to the new position (keeping size and z-order)
+        SetWindowPos(platform.hwnd, NULL, rect.left, rect.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
     }
 }
 
 // Set monitor for the current window
 void SetWindowMonitor(int monitor)
 {
-    TRACELOG(LOG_WARNING, "SetWindowMonitor not implemented");
+    MONITORINFOEXW info = { 0 };
+    if (!GetMonitorInfoFromIndex(monitor, &info)) return;
+
+    TRACELOG(LOG_INFO, "WIN32: Selected monitor: [%i]", monitor);
+
+    RECT windowRect = { 0 };
+    GetWindowRect(platform.hwnd, &windowRect);
+    int width = windowRect.right - windowRect.left;
+    int height = windowRect.bottom - windowRect.top;
+
+    if (CORE.Window.flags & FLAG_MASK_COVER)
+    {
+        // Cover the selected monitor, position to restore is moved to it
+        int restoreWidth = platform.coverRestoreRect.right - platform.coverRestoreRect.left;
+        int restoreHeight = platform.coverRestoreRect.bottom - platform.coverRestoreRect.top;
+        platform.coverRestoreRect.left = info.rcWork.left + ((info.rcWork.right - info.rcWork.left) - restoreWidth)/2;
+        platform.coverRestoreRect.top = info.rcWork.top + ((info.rcWork.bottom - info.rcWork.top) - restoreHeight)/2;
+        platform.coverRestoreRect.right = platform.coverRestoreRect.left + restoreWidth;
+        platform.coverRestoreRect.bottom = platform.coverRestoreRect.top + restoreHeight;
+
+        SetWindowPos(platform.hwnd, NULL, info.rcMonitor.left, info.rcMonitor.top,
+            info.rcMonitor.right - info.rcMonitor.left, info.rcMonitor.bottom - info.rcMonitor.top, SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+    else if (!(CORE.Window.flags & (FLAG_WINDOW_MINIMIZED | FLAG_WINDOW_MAXIMIZED)))
+    {
+        // Center the window on the selected monitor
+        int x = info.rcWork.left + ((info.rcWork.right - info.rcWork.left) - width)/2;
+        int y = info.rcWork.top + ((info.rcWork.bottom - info.rcWork.top) - height)/2;
+
+        SetWindowPos(platform.hwnd, NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
 }
 
 // Set window minimum dimensions (FLAG_WINDOW_RESIZABLE)
@@ -1211,13 +1402,21 @@ void SetWindowSize(int width, int height)
     int screenWidth = fmaxf(CORE.Window.screenMin.width, fminf(CORE.Window.screenMax.width, width));
     int screenHeight = fmaxf(CORE.Window.screenMin.height, fminf(CORE.Window.screenMax.height, height));
 
-    UpdateWindowSize(1, platform.hwnd, screenWidth, screenHeight, platform.desiredFlags);
+    // NOTE: Size is applied when the window is restored if it is currently minimized, maximized or covering the monitor
+    platform.appScreenWidth = screenWidth;
+    platform.appScreenHeight = screenHeight;
+
+    UpdateWindowSize(platform.hwnd, screenWidth, screenHeight, platform.desiredFlags);
 }
 
 // Set window opacity, value opacity is between 0.0 and 1.0
 void SetWindowOpacity(float opacity)
 {
-    TRACELOG(LOG_WARNING, "SetWindowOpacity not implemented");
+    if (opacity >= 1.0f) opacity = 1.0f;
+    else if (opacity <= 0.0f) opacity = 0.0f;
+
+    platform.opacity = opacity;
+    UpdateLayeredStyle(platform.hwnd, ((CORE.Window.flags & FLAG_WINDOW_MOUSE_PASSTHROUGH) != 0), platform.opacity);
 }
 
 // Set window focused
@@ -1238,85 +1437,134 @@ void *GetWindowHandle(void)
 
 int GetMonitorCount(void)
 {
-    int count = 0;
+    MonitorList list = GetMonitorHandles();
 
-    int result = EnumDisplayMonitors(NULL, NULL, CountMonitorsProc, (LPARAM)&count);
-    if (result == 0) TRACELOG(LOG_ERROR, "%s failed, error=%lu", "EnumDisplayMonitors", GetLastError());
-
-    return count;
+    return list.count;
 }
 
 // Get current monitor where window is placed
 int GetCurrentMonitor(void)
 {
+    int index = 0;
+
     HMONITOR monitor = MonitorFromWindow(platform.hwnd, MONITOR_DEFAULTTOPRIMARY);
     if (!monitor) TRACELOG(LOG_ERROR, "%s failed, error=%lu", "MonitorFromWindow", GetLastError());
 
-    MonitorInfo info = { 0 };
-    info.needle = monitor;
-    info.index = 0;
-    info.matchIndex = -1;
+    MonitorList list = GetMonitorHandles();
+    for (int i = 0; i < list.count; i++)
+    {
+        if (list.handles[i] == monitor)
+        {
+            index = i;
+            break;
+        }
+    }
 
-    int result = EnumDisplayMonitors(NULL, NULL, FindMonitorProc, (LPARAM)&info);
-    if (result == 0) TRACELOG(LOG_ERROR, "%s failed, error=%lu", "EnumDisplayMonitors", GetLastError());
-
-    return info.matchIndex;
+    return index;
 }
 
 // Get selected monitor position
 Vector2 GetMonitorPosition(int monitor)
 {
-    TRACELOG(LOG_WARNING, "GetMonitorPosition not implemented");
-    return (Vector2){ 0, 0 };
+    MONITORINFOEXW info = { 0 };
+    if (!GetMonitorInfoFromIndex(monitor, &info)) return (Vector2){ 0, 0 };
+
+    return (Vector2){ (float)info.rcMonitor.left, (float)info.rcMonitor.top };
 }
 
 // Get selected monitor width (currently used by monitor)
 int GetMonitorWidth(int monitor)
 {
-    //TRACELOG(LOG_WARNING, "GetMonitorWidth not implemented");
-    return 0;
+    MONITORINFOEXW info = { 0 };
+    if (!GetMonitorInfoFromIndex(monitor, &info)) return 0;
+
+    return (int)(info.rcMonitor.right - info.rcMonitor.left);
 }
 
 // Get selected monitor height (currently used by monitor)
 int GetMonitorHeight(int monitor)
 {
-    //TRACELOG(LOG_WARNING, "GetMonitorHeight not implemented");
-    return 0;
+    MONITORINFOEXW info = { 0 };
+    if (!GetMonitorInfoFromIndex(monitor, &info)) return 0;
+
+    return (int)(info.rcMonitor.bottom - info.rcMonitor.top);
 }
 
 // Get selected monitor physical width in millimetres
 int GetMonitorPhysicalWidth(int monitor)
 {
-    TRACELOG(LOG_WARNING, "GetMonitorPhysicalWidth not implemented");
-    return 0;
+    int width = 0;
+
+    MONITORINFOEXW info = { 0 };
+    if (!GetMonitorInfoFromIndex(monitor, &info)) return width;
+
+    HDC hdc = CreateDCW(L"DISPLAY", info.szDevice, NULL, NULL);
+    if (hdc != NULL)
+    {
+        width = GetDeviceCaps(hdc, HORZSIZE);
+        DeleteDC(hdc);
+    }
+
+    return width;
 }
 
 // Get selected monitor physical height in millimetres
 int GetMonitorPhysicalHeight(int monitor)
 {
-    TRACELOG(LOG_WARNING, "GetMonitorPhysicalHeight not implemented");
-    return 0;
+    int height = 0;
+
+    MONITORINFOEXW info = { 0 };
+    if (!GetMonitorInfoFromIndex(monitor, &info)) return height;
+
+    HDC hdc = CreateDCW(L"DISPLAY", info.szDevice, NULL, NULL);
+    if (hdc != NULL)
+    {
+        height = GetDeviceCaps(hdc, VERTSIZE);
+        DeleteDC(hdc);
+    }
+
+    return height;
 }
 
 // Get selected monitor refresh rate
 int GetMonitorRefreshRate(int monitor)
 {
-    TRACELOG(LOG_WARNING, "GetMonitorRefreshRate not implemented");
-    return 0;
+    MONITORINFOEXW info = { 0 };
+    if (!GetMonitorInfoFromIndex(monitor, &info)) return 0;
+
+    DEVMODEW mode = { 0 };
+    mode.dmSize = sizeof(mode);
+    if (!EnumDisplaySettingsW(info.szDevice, ENUM_CURRENT_SETTINGS, &mode)) return 0;
+
+    return (int)mode.dmDisplayFrequency;
 }
 
 // Get the human-readable, UTF-8 encoded name of the selected monitor
 const char *GetMonitorName(int monitor)
 {
-    TRACELOG(LOG_WARNING, "GetMonitorName not implemented");
-    return 0;
+    static char name[128] = { 0 };
+    name[0] = '\0';
+
+    MONITORINFOEXW info = { 0 };
+    if (!GetMonitorInfoFromIndex(monitor, &info)) return name;
+
+    // NOTE: Monitor attached to the display adapter, adapter name is used if not available
+    DISPLAY_DEVICEW device = { 0 };
+    device.cb = sizeof(device);
+    if (EnumDisplayDevicesW(info.szDevice, 0, &device, 0)) WideCharToMultiByte(CP_UTF8, 0, device.DeviceString, -1, name, sizeof(name) - 1, NULL, NULL);
+    else WideCharToMultiByte(CP_UTF8, 0, info.szDevice, -1, name, sizeof(name) - 1, NULL, NULL);
+
+    return name;
 }
 
 // Get window position XY on monitor
+// NOTE: Position of the window client area
 Vector2 GetWindowPosition(void)
 {
-    //TRACELOG(LOG_WARNING, "GetWindowPosition not implemented");
-    return (Vector2){ 0, 0 };
+    POINT position = { 0 };
+    if (platform.hwnd != NULL) ClientToScreen(platform.hwnd, &position);
+
+    return (Vector2){ (float)position.x, (float)position.y };
 }
 
 // Get window scale DPI factor for current monitor
@@ -1454,7 +1702,7 @@ Image GetClipboardImage(void)
 // Show mouse cursor
 void ShowCursor(void)
 {
-    SetCursor(LoadCursorW(NULL, (LPCWSTR)IDC_ARROW));
+    SetCursor(platform.cursor);
     CORE.Input.Mouse.cursorHidden = false;
 }
 
@@ -1472,56 +1720,53 @@ void EnableCursor(void)
 {
     if (CORE.Input.Mouse.cursorLocked)
     {
-        if (!ClipCursor(NULL)) TRACELOG(LOG_WARNING, "WIN32: Failed to clip cursor [ERROR: %lu]", GetLastError());
+        CORE.Input.Mouse.cursorLocked = false;
+        UpdateCursorClip();
 
         RAWINPUTDEVICE rid = { 0 };
         rid.usUsagePage = 0x01; // HID_USAGE_PAGE_GENERIC
         rid.usUsage = 0x02; // HID_USAGE_GENERIC_MOUSE
-        rid.dwFlags = RIDEV_REMOVE; // Add to this window even in background
+        rid.dwFlags = RIDEV_REMOVE;
         rid.hwndTarget = NULL;
         int result = RegisterRawInputDevices(&rid, 1, sizeof(rid));
         if (result == 0) TRACELOG(LOG_WARNING, "WIN32: Failed to register raw input devices [ERROR: %lu]", GetLastError());
 
+        // Restore cursor position, mouse position follows it with no movement registered
+        SetCursorPos(platform.cursorRestorePosition.x, platform.cursorRestorePosition.y);
+
+        POINT position = platform.cursorRestorePosition;
+        if (ScreenToClient(platform.hwnd, &position))
+        {
+            CORE.Input.Mouse.currentPosition = (Vector2){ (float)position.x, (float)position.y };
+            CORE.Input.Mouse.previousPosition = CORE.Input.Mouse.currentPosition;
+        }
+
         ShowCursor();
-        CORE.Input.Mouse.cursorLocked = false;
     }
 }
 
 // Disables cursor (lock cursor)
+// NOTE: Cursor is hidden and confined to the window, mouse position is updated from raw mouse motion
 void DisableCursor(void)
 {
     if (!CORE.Input.Mouse.cursorLocked)
     {
+        // NOTE: First movement of an absolute pointing device is relative to the cursor position
+        platform.rawAbsoluteValid = (GetCursorPos(&platform.cursorRestorePosition) != 0);
+        platform.rawAbsolutePosition = platform.cursorRestorePosition;
+
         RAWINPUTDEVICE rid = { 0 };
         rid.usUsagePage = 0x01; // HID_USAGE_PAGE_GENERIC
         rid.usUsage = 0x02; // HID_USAGE_GENERIC_MOUSE
-        rid.dwFlags = RIDEV_INPUTSINK; // Add to this window even in background
+        rid.dwFlags = 0;
         rid.hwndTarget = platform.hwnd;
         int result = RegisterRawInputDevices(&rid, 1, sizeof(rid));
         if (result == 0) TRACELOG(LOG_WARNING, "WIN32: Failed to register raw input devices [ERROR: %lu]", GetLastError());
 
-        RECT clientRect = { 0 };
-        if (!GetClientRect(platform.hwnd, &clientRect)) TRACELOG(LOG_WARNING, "WIN32: Failed to get client rectangle [ERROR: %lu]", GetLastError());
-
-        POINT topleft = { clientRect.left, clientRect.top };
-        if (!ClientToScreen(platform.hwnd, &topleft)) TRACELOG(LOG_WARNING, "WIN32: Failed to get client to screen size [ERROR: %lu]", GetLastError());
-
-        LONG width = clientRect.right - clientRect.left;
-        LONG height = clientRect.bottom - clientRect.top;
-
-        TRACELOG(LOG_INFO, "WIN32: Clip cursor client rect: [%d,%d %d,%d], top-left: (%d,%d)",
-            clientRect.left, clientRect.top, clientRect.right, clientRect.bottom, topleft.x, topleft.y);
-
-        LONG centerX = topleft.x + width/2;
-        LONG centerY = topleft.y + height/2;
-        RECT clipRect = { centerX, centerY, centerX + 1, centerY + 1 };
-        if (!ClipCursor(&clipRect)) TRACELOG(LOG_WARNING, "WIN32: Failed to clip cursor [ERROR: %lu]", GetLastError());
-
-        CORE.Input.Mouse.previousPosition = (Vector2){ 0, 0 };
-        CORE.Input.Mouse.currentPosition = (Vector2){ 0, 0 };
         HideCursor();
 
         CORE.Input.Mouse.cursorLocked = true;
+        UpdateCursorClip();
     }
 }
 
@@ -1592,9 +1837,10 @@ void OpenURL(const char *url)
 //----------------------------------------------------------------------------------
 
 // Set internal gamepad mappings
+// NOTE: Gamepads are read with XInput, it has a fixed buttons and axes layout
 int SetGamepadMappings(const char *mappings)
 {
-    TRACELOG(LOG_WARNING, "SetGamepadMappings not implemented");
+    TRACELOG(LOG_WARNING, "WIN32: Gamepad mappings are not used by XInput");
 
     return -1;
 }
@@ -1602,7 +1848,17 @@ int SetGamepadMappings(const char *mappings)
 // Set gamepad vibration
 void SetGamepadVibration(int gamepad, float leftMotor, float rightMotor, float duration)
 {
-    TRACELOG(LOG_WARNING, "SetGamepadVibration not implemented");
+    if ((gamepad < 0) || (gamepad >= XINPUT_MAX_GAMEPADS) || (gamepad >= MAX_GAMEPADS) || !CORE.Input.Gamepad.ready[gamepad]) return;
+    if ((pXInputSetState == NULL) || (duration <= 0.0f)) return;
+
+    if (leftMotor < 0.0f) leftMotor = 0.0f;
+    if (leftMotor > 1.0f) leftMotor = 1.0f;
+    if (rightMotor < 0.0f) rightMotor = 0.0f;
+    if (rightMotor > 1.0f) rightMotor = 1.0f;
+    if (duration > MAX_GAMEPAD_VIBRATION_TIME) duration = MAX_GAMEPAD_VIBRATION_TIME;
+
+    XInputVibration vibration = { (WORD)(leftMotor*65535.0f), (WORD)(rightMotor*65535.0f) };
+    if (pXInputSetState((DWORD)gamepad, &vibration) == ERROR_SUCCESS) platform.gamepadVibrationEnd[gamepad] = GetTime() + (double)duration;
 }
 
 // Set mouse position XY
@@ -1634,16 +1890,63 @@ void SetMouseCursor(int cursor)
     LPCWSTR cursorName = GetCursorName(cursor);
     HCURSOR hcursor = LoadCursorW(NULL, cursorName);
     if (!hcursor) TRACELOG(LOG_ERROR, "WIN32: Failed to load requested cursor [ERROR: %lu]", GetLastError());
+    else platform.cursor = hcursor;
 
-    SetCursor(hcursor);
-    CORE.Input.Mouse.cursorHidden = false;
+    // NOTE: Cursor is set by the window when the mouse moves over it
+    if (!CORE.Input.Mouse.cursorHidden && CORE.Input.Mouse.cursorOnScreen) SetCursor(platform.cursor);
 }
 
 // Get physical key name
+// NOTE: Character produced by the key with the current keyboard layout, only for keys producing characters
 const char *GetKeyName(int key)
 {
-    TRACELOG(LOG_WARNING, "GetKeyName not implemented");
-    return NULL;
+    static char name[8] = { 0 };
+
+    bool printable = (((key >= KEY_APOSTROPHE) && (key <= KEY_GRAVE)) || ((key >= KEY_KP_0) && (key <= KEY_KP_ADD)) || (key == KEY_KP_EQUAL));
+    if (!printable || (key == KEY_SPACE)) return NULL;
+
+    UINT scancode = 0;
+    UINT vk = 0;
+
+    if ((key >= KEY_KP_0) && (key <= KEY_KP_ADD))
+    {
+        // NOTE: Keypad keys depend on NUMLOCK state, their virtual keys are used directly
+        static const UINT keypadKeys[] = { VK_NUMPAD0, VK_NUMPAD1, VK_NUMPAD2, VK_NUMPAD3, VK_NUMPAD4, VK_NUMPAD5, VK_NUMPAD6, VK_NUMPAD7,
+            VK_NUMPAD8, VK_NUMPAD9, VK_DECIMAL, VK_DIVIDE, VK_MULTIPLY, VK_SUBTRACT, VK_ADD };
+
+        vk = keypadKeys[key - KEY_KP_0];
+        scancode = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+    }
+    else
+    {
+        for (unsigned int i = 0; i < sizeof(keyboardKeyFromScancode)/sizeof(keyboardKeyFromScancode[0]); i++)
+        {
+            if (keyboardKeyFromScancode[i] == key)
+            {
+                scancode = i;
+                break;
+            }
+        }
+
+        if (scancode != 0) vk = MapVirtualKeyW(scancode, MAPVK_VSC_TO_VK);
+    }
+
+    if (vk == 0) return NULL;
+
+    BYTE state[256] = { 0 };
+
+    WCHAR chars[16] = { 0 };
+    int length = ToUnicode(vk, scancode, state, chars, sizeof(chars)/sizeof(chars[0]), 0);
+
+    // NOTE: Dead keys are stored by the keyboard layout, translated again to get the character and clear that state
+    if (length == -1) length = ToUnicode(vk, scancode, state, chars, sizeof(chars)/sizeof(chars[0]), 0);
+    if (length < 1) return NULL;
+
+    int size = WideCharToMultiByte(CP_UTF8, 0, chars, 1, name, sizeof(name) - 1, NULL, NULL);
+    if (size < 1) return NULL;
+    name[size] = '\0';
+
+    return name;
 }
 
 // Register all input events
@@ -1673,6 +1976,33 @@ void PollInputEvents(void)
 
     memcpy(CORE.Input.Keyboard.previousKeyState, CORE.Input.Keyboard.currentKeyState, sizeof(CORE.Input.Keyboard.previousKeyState));
 
+    // Apply releases of keys and mouse buttons that were pressed and released in the previous frame
+    bool releasePending = false;
+    for (int i = 0; i < MAX_KEYBOARD_KEYS; i++)
+    {
+        if (platform.keyReleasePending[i])
+        {
+            CORE.Input.Keyboard.currentKeyState[i] = 0;
+            platform.keyReleasePending[i] = false;
+            releasePending = true;
+        }
+
+        platform.keyPressedInFrame[i] = false;
+    }
+
+    for (int i = 0; i < MAX_MOUSE_BUTTONS; i++)
+    {
+        if (platform.buttonReleasePending[i])
+        {
+            CORE.Input.Mouse.currentButtonState[i] = 0;
+            CORE.Input.Touch.currentTouchState[i] = 0;
+            platform.buttonReleasePending[i] = false;
+            releasePending = true;
+        }
+
+        platform.buttonPressedInFrame[i] = false;
+    }
+
     // Register previous mouse wheel state
     CORE.Input.Mouse.previousWheelMove = CORE.Input.Mouse.currentWheelMove;
     CORE.Input.Mouse.currentWheelMove = (Vector2){ 0.0f, 0.0f };
@@ -1682,6 +2012,14 @@ void PollInputEvents(void)
 
     CORE.Window.resizedLastFrame = false;
     CORE.Window.shouldClose = false;
+
+    // Wait for events if required, also while minimized, a release applied in this frame is an event already
+    bool waitEvents = (CORE.Window.eventWaiting || ((CORE.Window.flags & FLAG_WINDOW_MINIMIZED) && !(CORE.Window.flags & FLAG_WINDOW_ALWAYS_RUN)));
+    if (waitEvents && !releasePending)
+    {
+        MSG next = { 0 };
+        if (!PeekMessageW(&next, NULL, 0, 0, PM_NOREMOVE)) WaitMessage();
+    }
 
     // Process windows messages
     MSG msg = { 0 };
@@ -1720,11 +2058,14 @@ void PollInputEvents(void)
         platform.previousRenderHeight = CORE.Window.render.height;
     }
 
+    PollGamepads();
+
     // Windows will miss key up events for specific keys; check them manually
-    if ((GetKeyState(VK_LSHIFT) & 0x8000) == 0) CORE.Input.Keyboard.currentKeyState[KEY_LEFT_SHIFT] = 0;
-    if ((GetKeyState(VK_RSHIFT) & 0x8000) == 0) CORE.Input.Keyboard.currentKeyState[KEY_RIGHT_SHIFT] = 0;
-    if ((GetKeyState(VK_LWIN) & 0x8000) == 0) CORE.Input.Keyboard.currentKeyState[KEY_LEFT_SUPER] = 0;
-    if ((GetKeyState(VK_RWIN) & 0x8000) == 0) CORE.Input.Keyboard.currentKeyState[KEY_RIGHT_SUPER] = 0;
+    // NOTE: A key pressed in this frame is kept down for the frame
+    if (((GetKeyState(VK_LSHIFT) & 0x8000) == 0) && !platform.keyPressedInFrame[KEY_LEFT_SHIFT]) CORE.Input.Keyboard.currentKeyState[KEY_LEFT_SHIFT] = 0;
+    if (((GetKeyState(VK_RSHIFT) & 0x8000) == 0) && !platform.keyPressedInFrame[KEY_RIGHT_SHIFT]) CORE.Input.Keyboard.currentKeyState[KEY_RIGHT_SHIFT] = 0;
+    if (((GetKeyState(VK_LWIN) & 0x8000) == 0) && !platform.keyPressedInFrame[KEY_LEFT_SUPER]) CORE.Input.Keyboard.currentKeyState[KEY_LEFT_SUPER] = 0;
+    if (((GetKeyState(VK_RWIN) & 0x8000) == 0) && !platform.keyPressedInFrame[KEY_RIGHT_SUPER]) CORE.Input.Keyboard.currentKeyState[KEY_RIGHT_SUPER] = 0;
 
     // Windows won't send a WM_KEYDOWN event for print screen; check it manually
     bool isPrintScreenDown = ((GetAsyncKeyState(VK_SNAPSHOT) & 0x8000) != 0) && (GetForegroundWindow() == platform.hwnd);
@@ -1776,8 +2117,7 @@ HGLRC InitOpenGL(HWND hwnd, HDC hdc)
 
     HGLRC tempContext = wglCreateContext(dummyHDC);
     //if (!tempContext) { TRACELOG(LOG_ERROR, "%s failed, error=%lu", "wglCreateContext", GetLastError()); return -1; }
-    BOOL result = wglMakeCurrent(dummyHDC, tempContext);
-    //if (!result) { TRACELOG(LOG_ERROR, "%s failed, error=%lu", "wglMakeCurrent", GetLastError()); return -1; }
+    if (!wglMakeCurrent(dummyHDC, tempContext)) TRACELOG(LOG_WARNING, "WIN32: Failed to make the dummy OpenGL context current [ERROR: %lu]", GetLastError());
 
     // Load WGL extension entry points
     wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
@@ -1921,6 +2261,22 @@ int InitPlatform(void)
 
     platform.appScreenWidth = CORE.Window.screen.width;
     platform.appScreenHeight = CORE.Window.screen.height;
+    platform.coverRestoreUndecorated = ((CORE.Window.flags & FLAG_WINDOW_UNDECORATED) != 0);
+    platform.coverRestoreMaximized = ((CORE.Window.flags & FLAG_WINDOW_MAXIMIZED) != 0);
+    platform.coverEnterFlags = 0;
+    platform.coverLeave = false;
+    platform.opacity = 1.0f;
+    platform.cursor = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
+    platform.mouseTracked = false;
+    platform.rawAbsoluteValid = false;
+    platform.highSurrogate = 0;
+    platform.gamepadCheckTime = 0.0;
+    for (int i = 0; i < MAX_TOUCH_POINTS; i++) platform.touchIds[i] = -1;
+    for (int i = 0; i < MAX_GAMEPADS; i++) platform.gamepadVibrationEnd[i] = 0.0;
+    memset(platform.keyPressedInFrame, 0, sizeof(platform.keyPressedInFrame));
+    memset(platform.keyReleasePending, 0, sizeof(platform.keyReleasePending));
+    memset(platform.buttonPressedInFrame, 0, sizeof(platform.buttonPressedInFrame));
+    memset(platform.buttonReleasePending, 0, sizeof(platform.buttonReleasePending));
     platform.desiredFlags = SanitizeFlags(CORE.Window.flags);
 
     // NOTE: From this point CORE.Window.flags should always reflect the actual state of the window
@@ -1998,6 +2354,9 @@ int InitPlatform(void)
     // NOTE: Windows GDI object that represents a drawing surface
     platform.hdc = GetDC(platform.hwnd);
 
+    // Accept files dropped on the window
+    DragAcceptFiles(platform.hwnd, TRUE);
+
     bool highDPIWindowFlag = platform.desiredFlags & FLAG_WINDOW_HIGHDPI;
     UINT dpi = GetDpiForWindowCompat(platform.hwnd);
     float dpiScale = dpi/96.0f;
@@ -2010,16 +2369,21 @@ int InitPlatform(void)
 
     CORE.Window.ready = true;
 
-    RECT rect = { 0, 0, platform.appScreenWidth, platform.appScreenHeight };
+    // Window client size, considering high-dpi
+    int clientWidth = platform.appScreenWidth;
+    int clientHeight = platform.appScreenHeight;
     if (highDPIWindowFlag)
     {
-        rect.right = (LONG)roundf(platform.appScreenWidth*dpiScale);
-        rect.bottom = (LONG)roundf(platform.appScreenHeight*dpiScale);
+        clientWidth = (int)roundf(platform.appScreenWidth*dpiScale);
+        clientHeight = (int)roundf(platform.appScreenHeight*dpiScale);
     }
-    AdjustWindowRectExForDpiCompat(
-        &rect, MakeWindowStyle(platform.desiredFlags),
-        FALSE, WINDOW_STYLE_EX, dpi
-    );
+
+    // Window size with the requested decorations, fullscreen and borderless windowed modes are applied after the window is shown
+    unsigned floatingFlags = platform.desiredFlags & ~(FLAG_MASK_COVER | FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_MINIMIZED | FLAG_WINDOW_MAXIMIZED);
+    if (platform.coverRestoreUndecorated) floatingFlags |= FLAG_WINDOW_UNDECORATED;
+
+    RECT rect = { 0, 0, clientWidth, clientHeight };
+    AdjustWindowRectExForDpiCompat(&rect, MakeWindowStyle(floatingFlags), FALSE, WINDOW_STYLE_EX, dpi);
 
     int windowWidth = rect.right - rect.left;
     int windowHeight = rect.bottom - rect.top;
@@ -2040,8 +2404,12 @@ int InitPlatform(void)
         if (x < rcWork.left) x = rcWork.left;
         if (y < rcWork.top) y = rcWork.top;
 
-        // Center the window and set it to the correct DPI-adjusted size
-        SetWindowPos(platform.hwnd, NULL, x, y, windowWidth, windowHeight, SWP_NOZORDER | SWP_NOACTIVATE);
+        // Set the client area position and DPI-adjusted size with the current style, it is kept when the decorations are applied
+        RECT windowRect = { x - rect.left, y - rect.top, x - rect.left + clientWidth, y - rect.top + clientHeight };
+        AdjustWindowRectExForDpiCompat(&windowRect, MakeWindowStyle(CORE.Window.flags | FLAG_WINDOW_HIDDEN), FALSE, WINDOW_STYLE_EX, dpi);
+
+        SetWindowPos(platform.hwnd, NULL, windowRect.left, windowRect.top, windowRect.right - windowRect.left,
+            windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOACTIVATE);
     }
     else TRACELOG(LOG_WARNING, "DISPLAY: Unable to retrieve information about monitor");
 
@@ -2056,6 +2424,15 @@ int InitPlatform(void)
 
     // Update flags (in case of deferred state change required)
     UpdateFlags(platform.hwnd, platform.desiredFlags, platform.appScreenWidth, platform.appScreenHeight);
+
+    // Initial mouse position, first mouse movement is relative to it
+    POINT cursorPosition = { 0 };
+    if (GetCursorPos(&cursorPosition) && ScreenToClient(platform.hwnd, &cursorPosition))
+    {
+        CORE.Input.Mouse.currentPosition = (Vector2){ (float)cursorPosition.x, (float)cursorPosition.y };
+        CORE.Input.Mouse.previousPosition = CORE.Input.Mouse.currentPosition;
+        platform.textInputPosition = cursorPosition;
+    }
 
     CORE.Window.resizedLastFrame = false;
     TRACELOG(LOG_INFO, "DISPLAY: Device initialized successfully %s",
@@ -2103,6 +2480,9 @@ int InitPlatform(void)
     InitTimer();
     //----------------------------------------------------------------------------
 
+    // Gamepads connected at start are available in the first frame
+    PollGamepads();
+
     // Initialize storage system
     //----------------------------------------------------------------------------
     CORE.Storage.basePath = GetWorkingDirectory();
@@ -2139,6 +2519,35 @@ void ClosePlatform(void)
     {
         RL_FREE(platform.clipboardText);
         platform.clipboardText = NULL;
+    }
+
+    // Stop gamepads vibration and unload XInput library
+    if (xinput != NULL)
+    {
+        for (int i = 0; (i < XINPUT_MAX_GAMEPADS) && (i < MAX_GAMEPADS); i++)
+        {
+            if ((platform.gamepadVibrationEnd[i] > 0.0) && (pXInputSetState != NULL))
+            {
+                XInputVibration vibration = { 0 };
+                pXInputSetState((DWORD)i, &vibration);
+            }
+        }
+
+        FreeLibrary(xinput);
+        xinput = NULL;
+        pXInputGetState = NULL;
+        pXInputSetState = NULL;
+    }
+
+    // Unload imm32.dll
+    if (imm32 != NULL)
+    {
+        FreeLibrary(imm32);
+        imm32 = NULL;
+        pImmGetContext = NULL;
+        pImmReleaseContext = NULL;
+        pImmSetCompositionWindow = NULL;
+        pImmSetCandidateWindow = NULL;
     }
 
     // Unload shcore.dll
@@ -2225,8 +2634,18 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             memset(CORE.Input.Keyboard.currentKeyState, 0, sizeof(CORE.Input.Keyboard.currentKeyState));
             memset(CORE.Input.Mouse.currentButtonState, 0, sizeof(CORE.Input.Mouse.currentButtonState));
             memset(CORE.Input.Touch.currentTouchState, 0, sizeof(CORE.Input.Touch.currentTouchState));
+            memset(platform.keyReleasePending, 0, sizeof(platform.keyReleasePending));
+            memset(platform.buttonReleasePending, 0, sizeof(platform.buttonReleasePending));
+            for (int i = 0; i < MAX_TOUCH_POINTS; i++) platform.touchIds[i] = -1;
+            CORE.Input.Touch.pointCount = 0;
+            platform.highSurrogate = 0;
+            UpdateCursorClip();
         } break;
-        case WM_SETFOCUS: CORE.Window.flags &= ~FLAG_WINDOW_UNFOCUSED; break;
+        case WM_SETFOCUS:
+        {
+            CORE.Window.flags &= ~FLAG_WINDOW_UNFOCUSED;
+            UpdateCursorClip();
+        } break;
         case WM_SIZING: // Sent to a window that the user is resizing
         {
             if (CORE.Window.flags & FLAG_WINDOW_RESIZABLE)
@@ -2246,6 +2665,13 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
         } break;
         case WM_GETMINMAXINFO:
         {
+            // NOTE: Window covering the monitor is not limited by the app size limits
+            if ((CORE.Window.flags | platform.desiredFlags) & FLAG_MASK_COVER)
+            {
+                result = DefWindowProcW(hwnd, msg, wparam, lparam);
+                break;
+            }
+
             UINT dpi = GetDpiForWindowCompat(hwnd);
             DWORD style = MakeWindowStyle(platform.desiredFlags);
             float clientScale = (CORE.Window.flags & FLAG_WINDOW_HIGHDPI)? ((float)dpi)/96.0f : 1.0f;
@@ -2254,11 +2680,12 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             SIZE minClientSize = { (LONG)roundf(CORE.Window.screenMin.width*clientScale), (LONG)roundf(CORE.Window.screenMin.height*clientScale) };
             SIZE minWindowSize = CalcWindowSize(dpi, minClientSize, style);
 
+            // NOTE: System maximized size is kept if smaller, it is adjusted by the system for the monitor the window is maximized on
             LPMINMAXINFO lpmmi = (LPMINMAXINFO) lparam;
-            lpmmi->ptMaxSize.x = maxWindowSize.cx;
-            lpmmi->ptMaxSize.y = maxWindowSize.cy;
-            lpmmi->ptMaxTrackSize.x = maxWindowSize.cx;
-            lpmmi->ptMaxTrackSize.y = maxWindowSize.cy;
+            if (maxWindowSize.cx < lpmmi->ptMaxSize.x) lpmmi->ptMaxSize.x = maxWindowSize.cx;
+            if (maxWindowSize.cy < lpmmi->ptMaxSize.y) lpmmi->ptMaxSize.y = maxWindowSize.cy;
+            if (maxWindowSize.cx < lpmmi->ptMaxTrackSize.x) lpmmi->ptMaxTrackSize.x = maxWindowSize.cx;
+            if (maxWindowSize.cy < lpmmi->ptMaxTrackSize.y) lpmmi->ptMaxTrackSize.y = maxWindowSize.cy;
             lpmmi->ptMinTrackSize.x = minWindowSize.cx;
             lpmmi->ptMinTrackSize.y = minWindowSize.cy;
         } break;
@@ -2267,7 +2694,17 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             if (wparam == GWL_STYLE)
             {
                 STYLESTRUCT *ss = (STYLESTRUCT *)lparam;
-                GetStyleChangeFlagOps(CORE.Window.flags, ss, deferredFlags);
+
+                if ((platform.coverEnterFlags != 0) || platform.coverLeave)
+                {
+                    // Fullscreen or borderless windowed mode change, resizable flag is kept
+                    if (platform.coverEnterFlags != 0) deferredFlags->set |= platform.coverEnterFlags;
+                    else deferredFlags->clear |= FLAG_MASK_COVER;
+
+                    if (DecoratedFromStyle(ss->styleNew)) deferredFlags->clear |= FLAG_WINDOW_UNDECORATED;
+                    else deferredFlags->set |= FLAG_WINDOW_UNDECORATED;
+                }
+                else GetStyleChangeFlagOps(CORE.Window.flags, ss, deferredFlags);
 
                 UINT dpi = GetDpiForWindowCompat(hwnd);
                 // Get client size (framebuffer inside the window)
@@ -2317,17 +2754,6 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
                 case MIZED_NONE:
                 {
                     deferredFlags->clear |= (FLAG_WINDOW_MINIMIZED | FLAG_WINDOW_MAXIMIZED);
-                    HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
-                    MONITORINFO info;
-                    info.cbSize = sizeof(info);
-                    if (!GetMonitorInfoW(monitor, &info)) TRACELOG(LOG_ERROR, "WIN32: MONITOR: Failed to get monitor info [ERROR: %lu]", GetLastError());
-
-                    if ((pos->x == info.rcMonitor.left) &&
-                        (pos->y == info.rcMonitor.top) &&
-                        (pos->cx == (info.rcMonitor.right - info.rcMonitor.left)) &&
-                        (pos->cy == (info.rcMonitor.bottom - info.rcMonitor.top))) deferredFlags->set |= FLAG_BORDERLESS_WINDOWED_MODE;
-                    else deferredFlags->clear |= FLAG_BORDERLESS_WINDOWED_MODE;
-
                 } break;
                 case MIZED_MIN:
                 {
@@ -2361,7 +2787,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             // Keep the pending size when minimized, maximized, or borderless
             if (CORE.Window.flags & FLAG_WINDOW_MINIMIZED) return TRUE;
             if (CORE.Window.flags & FLAG_WINDOW_MAXIMIZED) return TRUE;
-            if (CORE.Window.flags & FLAG_BORDERLESS_WINDOWED_MODE) return TRUE;
+            if (CORE.Window.flags & FLAG_MASK_COVER) return TRUE;
 
             float dpiScale = ((float)newDpi)/96.0f;
             bool dpiScaling = CORE.Window.flags & FLAG_WINDOW_HIGHDPI;
@@ -2395,7 +2821,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
 
                 if (succeeded == FALSE) TRACELOG(LOG_ERROR, "Failed to set window position [ERROR: %lu]", GetLastError());
             }
-            else if ((CORE.Window.flags & FLAG_WINDOW_HIGHDPI) && !(CORE.Window.flags & (FLAG_WINDOW_MINIMIZED | FLAG_WINDOW_MAXIMIZED | FLAG_BORDERLESS_WINDOWED_MODE)))
+            else if ((CORE.Window.flags & FLAG_WINDOW_HIGHDPI) && !(CORE.Window.flags & (FLAG_WINDOW_MINIMIZED | FLAG_WINDOW_MAXIMIZED | FLAG_MASK_COVER)))
             {
                 // This code only runs when per-monitor dpi awareness v1 is enabled. v1 doesn't send WM_GETDPISCALEDSIZE and the suggested RECT is subtly wrong (doesn't properly account for the title bar size)
                 // The solution is to manually build a properly sized RECT (and ignore the advice of not using the suggested RECT). This makes a per-monitor v1 process match the behavior of per-monitor v2
@@ -2424,7 +2850,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
             // Called when mouse moves, enters/leaves window...
             if (LOWORD(lparam) == HTCLIENT)
             {
-                SetCursor(CORE.Input.Mouse.cursorHidden? NULL : LoadCursorW(NULL, (LPCWSTR)IDC_ARROW));
+                SetCursor(CORE.Input.Mouse.cursorHidden? NULL : platform.cursor);
                 return 0;
             }
 
@@ -2446,16 +2872,90 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
         } break;
         case WM_INPUT:
         {
-            //HandleRawInput(lparam);
+            HandleRawInput(lparam);
+            result = DefWindowProcW(hwnd, msg, wparam, lparam);
         } break;
         case WM_MOUSEMOVE:
         {
+            if (!platform.mouseTracked)
+            {
+                // Request a notification when the mouse leaves the window
+                TRACKMOUSEEVENT track = { 0 };
+                track.cbSize = sizeof(track);
+                track.dwFlags = TME_LEAVE;
+                track.hwndTrack = hwnd;
+                if (TrackMouseEvent(&track)) platform.mouseTracked = true;
+
+                CORE.Input.Mouse.cursorOnScreen = true;
+            }
+
             if (!CORE.Input.Mouse.cursorLocked)
             {
                 CORE.Input.Mouse.currentPosition.x = (float)GET_X_LPARAM(lparam);
                 CORE.Input.Mouse.currentPosition.y = (float)GET_Y_LPARAM(lparam);
                 CORE.Input.Touch.position[0] = CORE.Input.Mouse.currentPosition;
             }
+        } break;
+        case WM_MOUSELEAVE:
+        {
+            platform.mouseTracked = false;
+            CORE.Input.Mouse.cursorOnScreen = false;
+        } break;
+        case WM_CHAR:
+        {
+            WCHAR unit = (WCHAR)wparam;
+
+            if ((unit >= 0xd800) && (unit <= 0xdbff)) platform.highSurrogate = unit;
+            else
+            {
+                unsigned int codepoint = unit;
+
+                // NOTE: Characters outside of the basic multilingual plane are sent in two messages
+                if ((unit >= 0xdc00) && (unit <= 0xdfff))
+                {
+                    if (platform.highSurrogate != 0) codepoint = 0x10000 + (((unsigned int)platform.highSurrogate - 0xd800) << 10) + (unit - 0xdc00);
+                    else codepoint = 0;
+                }
+
+                platform.highSurrogate = 0;
+                HandleChar(codepoint);
+            }
+        } break;
+        case WM_SYSCHAR: break; // Characters of ALT+key combinations are not text input, not processed to avoid the default sound
+        case WM_UNICHAR:
+        {
+            // NOTE: Sent by other applications, TRUE reports that the message is supported
+            if (wparam == UNICODE_NOCHAR) result = TRUE;
+            else HandleChar((unsigned int)wparam);
+        } break;
+        case WM_POINTERDOWN:
+        case WM_POINTERUPDATE:
+        case WM_POINTERUP:
+        case WM_POINTERCAPTURECHANGED:
+        {
+            // NOTE: Touch points are processed here, mouse and pen are processed by the default mouse messages
+            UINT32 pointerId = (UINT32)LOWORD(wparam);
+            DWORD pointerType = 0;
+
+            if ((pGetPointerType != NULL) && pGetPointerType(pointerId, &pointerType) && (pointerType == POINTER_TYPE_TOUCH))
+            {
+                POINT position = { GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam) };
+                ScreenToClient(hwnd, &position);
+
+                int touchAction = TOUCH_ACTION_UP;
+                if (msg == WM_POINTERDOWN) touchAction = TOUCH_ACTION_DOWN;
+                else if (msg == WM_POINTERUPDATE) touchAction = TOUCH_ACTION_MOVE;
+
+                HandleTouch(touchAction, (int)pointerId, (float)position.x*CORE.Input.Mouse.scale.x, (float)position.y*CORE.Input.Mouse.scale.y);
+            }
+            else result = DefWindowProcW(hwnd, msg, wparam, lparam);
+        } break;
+        case WM_DROPFILES: HandleDroppedFiles((HDROP)wparam); break;
+        case WM_IME_STARTCOMPOSITION:
+        case WM_IME_COMPOSITION:
+        {
+            UpdateInputMethodPosition(hwnd);
+            result = DefWindowProcW(hwnd, msg, wparam, lparam);
         } break;
         case WM_SYSKEYDOWN:
         {
@@ -2578,16 +3078,301 @@ static void HandleKey(WPARAM wparam, LPARAM lparam, char state)
     {
         if (key != KEY_NULL)
         {
-            CORE.Input.Keyboard.currentKeyState[key] = state;
-
             bool isKeyRepeatEvent = ((HIWORD(lparam) & KF_REPEAT) != 0);
-            if (isKeyRepeatEvent && (state == 1)) CORE.Input.Keyboard.keyRepeatInFrame[key] = 1;
-            if (!isKeyRepeatEvent && (key == CORE.Input.Keyboard.exitKey) && (state == 1)) CORE.Window.shouldClose = true;
+
+            if (state == 1)
+            {
+                CORE.Input.Keyboard.currentKeyState[key] = 1;
+                platform.keyReleasePending[key] = false;
+
+                if (isKeyRepeatEvent) CORE.Input.Keyboard.keyRepeatInFrame[key] = 1;
+                else
+                {
+                    platform.keyPressedInFrame[key] = true;
+
+                    // Add key to the queue
+                    if (CORE.Input.Keyboard.keyPressedQueueCount < MAX_KEY_PRESSED_QUEUE)
+                    {
+                        CORE.Input.Keyboard.keyPressedQueue[CORE.Input.Keyboard.keyPressedQueueCount] = key;
+                        CORE.Input.Keyboard.keyPressedQueueCount++;
+                    }
+
+                    if (key == CORE.Input.Keyboard.exitKey) CORE.Window.shouldClose = true;
+                }
+            }
+            else if (platform.keyPressedInFrame[key]) platform.keyReleasePending[key] = true; // Key press is kept for the current frame
+            else CORE.Input.Keyboard.currentKeyState[key] = 0;
         }
-        else TRACELOG(LOG_WARNING, "INPUT: Unknown (or currently unhandled) virtual keycode %d (0x%x)", wparam, wparam);
+        else if (wparam != VK_PACKET) TRACELOG(LOG_WARNING, "INPUT: Unknown (or currently unhandled) virtual keycode %d (0x%x)", wparam, wparam);
+    }
+}
+
+// Register character input
+static void HandleChar(unsigned int codepoint)
+{
+    // Check if there is space available in the queue, control characters are not registered
+    if ((codepoint >= 32) && (codepoint != 127) && (CORE.Input.Keyboard.charPressedQueueCount < MAX_CHAR_PRESSED_QUEUE))
+    {
+        // Add character to the queue
+        CORE.Input.Keyboard.charPressedQueue[CORE.Input.Keyboard.charPressedQueueCount] = (int)codepoint;
+        CORE.Input.Keyboard.charPressedQueueCount++;
+    }
+}
+
+// Register touch event
+static void HandleTouch(int touchAction, int id, float x, float y)
+{
+    int slot = -1;
+    for (int i = 0; i < MAX_TOUCH_POINTS; i++)
+    {
+        if (platform.touchIds[i] == id) slot = i;
     }
 
-    // TODO: Add key to the queue as well?
+    if ((slot < 0) && (touchAction == TOUCH_ACTION_DOWN))
+    {
+        for (int i = 0; (i < MAX_TOUCH_POINTS) && (slot < 0); i++)
+        {
+            if (platform.touchIds[i] == -1) slot = i;
+        }
+    }
+
+    if (slot < 0) return;
+
+    platform.touchIds[slot] = id;
+    platform.touchPositions[slot] = (Vector2){ x, y };
+
+#if SUPPORT_GESTURES_SYSTEM
+    GestureEvent gestureEvent = { 0 };
+    gestureEvent.touchAction = touchAction;
+#endif
+
+    // Register touch points, released points are included in the gesture event
+    int pointCount = 0;
+    for (int i = 0; i < MAX_TOUCH_POINTS; i++)
+    {
+        if (platform.touchIds[i] == -1) continue;
+
+    #if SUPPORT_GESTURES_SYSTEM
+        gestureEvent.pointId[pointCount] = platform.touchIds[i];
+        gestureEvent.position[pointCount].x = platform.touchPositions[i].x/(float)GetScreenWidth();
+        gestureEvent.position[pointCount].y = platform.touchPositions[i].y/(float)GetScreenHeight();
+    #endif
+        pointCount++;
+    }
+
+#if SUPPORT_GESTURES_SYSTEM
+    gestureEvent.pointCount = pointCount;
+    ProcessGestureEvent(gestureEvent);
+#endif
+
+    if (touchAction == TOUCH_ACTION_UP) platform.touchIds[slot] = -1;
+
+    // Update touch points state
+    CORE.Input.Touch.pointCount = 0;
+    for (int i = 0; i < MAX_TOUCH_POINTS; i++)
+    {
+        if (platform.touchIds[i] == -1) continue;
+
+        CORE.Input.Touch.pointId[CORE.Input.Touch.pointCount] = platform.touchIds[i];
+        CORE.Input.Touch.position[CORE.Input.Touch.pointCount] = platform.touchPositions[i];
+        CORE.Input.Touch.currentTouchState[CORE.Input.Touch.pointCount] = 1;
+        CORE.Input.Touch.pointCount++;
+    }
+
+    for (int i = CORE.Input.Touch.pointCount; i < MAX_TOUCH_POINTS; i++) CORE.Input.Touch.currentTouchState[i] = 0;
+
+    // Map primary touch point to mouse position (pixels, as registered by mouse messages)
+    if (CORE.Input.Touch.pointCount > 0)
+    {
+        CORE.Input.Mouse.currentPosition.x = CORE.Input.Touch.position[0].x/CORE.Input.Mouse.scale.x;
+        CORE.Input.Mouse.currentPosition.y = CORE.Input.Touch.position[0].y/CORE.Input.Mouse.scale.y;
+    }
+}
+
+// Register dropped files
+static void HandleDroppedFiles(HDROP drop)
+{
+    unsigned int count = DragQueryFileW(drop, 0xFFFFFFFF, NULL, 0);
+
+    if (count > 0)
+    {
+        // In case previous dropped filepaths have not been freed, free them
+        if (CORE.Window.dropFileCount > 0)
+        {
+            for (unsigned int i = 0; i < CORE.Window.dropFileCount; i++) RL_FREE(CORE.Window.dropFilepaths[i]);
+
+            RL_FREE(CORE.Window.dropFilepaths);
+
+            CORE.Window.dropFileCount = 0;
+            CORE.Window.dropFilepaths = NULL;
+        }
+
+        // WARNING: Paths are freed by the system on DragFinish(), they need to be copied
+        CORE.Window.dropFileCount = count;
+        CORE.Window.dropFilepaths = (char **)RL_CALLOC(CORE.Window.dropFileCount, sizeof(char *));
+
+        for (unsigned int i = 0; i < CORE.Window.dropFileCount; i++)
+        {
+            CORE.Window.dropFilepaths[i] = (char *)RL_CALLOC(MAX_FILEPATH_LENGTH, sizeof(char));
+
+            unsigned int length = DragQueryFileW(drop, i, NULL, 0);
+            WCHAR *path = (WCHAR *)RL_CALLOC(length + 1, sizeof(WCHAR));
+            DragQueryFileW(drop, i, path, length + 1);
+            WideCharToMultiByte(CP_UTF8, 0, path, -1, CORE.Window.dropFilepaths[i], MAX_FILEPATH_LENGTH - 1, NULL, NULL);
+            RL_FREE(path);
+        }
+    }
+
+    DragFinish(drop);
+}
+
+// Update gamepads state (XInput)
+// NOTE: Not connected gamepads are checked once per second, checking them is slow
+static void PollGamepads(void)
+{
+    if (pXInputGetState == NULL) return;
+
+    // XInput buttons bits and their raylib gamepad buttons
+    static const struct { WORD mask; int button; } buttons[] = {
+        { 0x0001, GAMEPAD_BUTTON_LEFT_FACE_UP },
+        { 0x0002, GAMEPAD_BUTTON_LEFT_FACE_DOWN },
+        { 0x0004, GAMEPAD_BUTTON_LEFT_FACE_LEFT },
+        { 0x0008, GAMEPAD_BUTTON_LEFT_FACE_RIGHT },
+        { 0x0010, GAMEPAD_BUTTON_MIDDLE_RIGHT },
+        { 0x0020, GAMEPAD_BUTTON_MIDDLE_LEFT },
+        { 0x0040, GAMEPAD_BUTTON_LEFT_THUMB },
+        { 0x0080, GAMEPAD_BUTTON_RIGHT_THUMB },
+        { 0x0100, GAMEPAD_BUTTON_LEFT_TRIGGER_1 },
+        { 0x0200, GAMEPAD_BUTTON_RIGHT_TRIGGER_1 },
+        { 0x1000, GAMEPAD_BUTTON_RIGHT_FACE_DOWN },
+        { 0x2000, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT },
+        { 0x4000, GAMEPAD_BUTTON_RIGHT_FACE_LEFT },
+        { 0x8000, GAMEPAD_BUTTON_RIGHT_FACE_UP }
+    };
+
+    double time = GetTime();
+    bool checkConnected = (time >= platform.gamepadCheckTime);
+    if (checkConnected) platform.gamepadCheckTime = time + 1.0;
+
+    for (int i = 0; (i < XINPUT_MAX_GAMEPADS) && (i < MAX_GAMEPADS); i++)
+    {
+        if (!CORE.Input.Gamepad.ready[i] && !checkConnected) continue;
+
+        XInputState state = { 0 };
+        if (pXInputGetState((DWORD)i, &state) != ERROR_SUCCESS)
+        {
+            if (CORE.Input.Gamepad.ready[i])
+            {
+                CORE.Input.Gamepad.ready[i] = false;
+                CORE.Input.Gamepad.axisCount[i] = 0;
+                platform.gamepadVibrationEnd[i] = 0.0;
+                memset(CORE.Input.Gamepad.name[i], 0, MAX_GAMEPAD_NAME_LENGTH);
+                memset(CORE.Input.Gamepad.currentButtonState[i], 0, sizeof(CORE.Input.Gamepad.currentButtonState[i]));
+                memset(CORE.Input.Gamepad.previousButtonState[i], 0, sizeof(CORE.Input.Gamepad.previousButtonState[i]));
+                memset(CORE.Input.Gamepad.axisState[i], 0, sizeof(CORE.Input.Gamepad.axisState[i]));
+            }
+
+            continue;
+        }
+
+        if (!CORE.Input.Gamepad.ready[i])
+        {
+            CORE.Input.Gamepad.ready[i] = true;
+            CORE.Input.Gamepad.axisCount[i] = 6;
+            snprintf(CORE.Input.Gamepad.name[i], MAX_GAMEPAD_NAME_LENGTH, "%s", XINPUT_GAMEPAD_NAME);
+        }
+
+        // Register previous gamepad states
+        for (int k = 0; k < MAX_GAMEPAD_BUTTONS; k++) CORE.Input.Gamepad.previousButtonState[i][k] = CORE.Input.Gamepad.currentButtonState[i][k];
+
+        for (unsigned int k = 0; k < sizeof(buttons)/sizeof(buttons[0]); k++)
+        {
+            if (state.gamepad.buttons & buttons[k].mask)
+            {
+                CORE.Input.Gamepad.currentButtonState[i][buttons[k].button] = 1;
+                CORE.Input.Gamepad.lastButtonPressed = buttons[k].button;
+            }
+            else CORE.Input.Gamepad.currentButtonState[i][buttons[k].button] = 0;
+        }
+
+        // Axes in the range [-1, 1], sticks Y axis points down, triggers are -1 when released
+        CORE.Input.Gamepad.axisState[i][GAMEPAD_AXIS_LEFT_X] = fmaxf((float)state.gamepad.thumbLX/32767.0f, -1.0f);
+        CORE.Input.Gamepad.axisState[i][GAMEPAD_AXIS_LEFT_Y] = -fmaxf((float)state.gamepad.thumbLY/32767.0f, -1.0f);
+        CORE.Input.Gamepad.axisState[i][GAMEPAD_AXIS_RIGHT_X] = fmaxf((float)state.gamepad.thumbRX/32767.0f, -1.0f);
+        CORE.Input.Gamepad.axisState[i][GAMEPAD_AXIS_RIGHT_Y] = -fmaxf((float)state.gamepad.thumbRY/32767.0f, -1.0f);
+        CORE.Input.Gamepad.axisState[i][GAMEPAD_AXIS_LEFT_TRIGGER] = ((float)state.gamepad.leftTrigger/255.0f)*2.0f - 1.0f;
+        CORE.Input.Gamepad.axisState[i][GAMEPAD_AXIS_RIGHT_TRIGGER] = ((float)state.gamepad.rightTrigger/255.0f)*2.0f - 1.0f;
+
+        // Register buttons for 2nd triggers (because they are axes)
+        if (CORE.Input.Gamepad.axisState[i][GAMEPAD_AXIS_LEFT_TRIGGER] > 0.1f)
+        {
+            CORE.Input.Gamepad.currentButtonState[i][GAMEPAD_BUTTON_LEFT_TRIGGER_2] = 1;
+            CORE.Input.Gamepad.lastButtonPressed = GAMEPAD_BUTTON_LEFT_TRIGGER_2;
+        }
+        else CORE.Input.Gamepad.currentButtonState[i][GAMEPAD_BUTTON_LEFT_TRIGGER_2] = 0;
+
+        if (CORE.Input.Gamepad.axisState[i][GAMEPAD_AXIS_RIGHT_TRIGGER] > 0.1f)
+        {
+            CORE.Input.Gamepad.currentButtonState[i][GAMEPAD_BUTTON_RIGHT_TRIGGER_2] = 1;
+            CORE.Input.Gamepad.lastButtonPressed = GAMEPAD_BUTTON_RIGHT_TRIGGER_2;
+        }
+        else CORE.Input.Gamepad.currentButtonState[i][GAMEPAD_BUTTON_RIGHT_TRIGGER_2] = 0;
+
+        // Stop vibration when its time is over
+        if ((platform.gamepadVibrationEnd[i] > 0.0) && (time >= platform.gamepadVibrationEnd[i]) && (pXInputSetState != NULL))
+        {
+            XInputVibration vibration = { 0 };
+            pXInputSetState((DWORD)i, &vibration);
+            platform.gamepadVibrationEnd[i] = 0.0;
+        }
+    }
+}
+
+// Confine the cursor to the window center while it is disabled and the window is focused, release it otherwise
+static void UpdateCursorClip(void)
+{
+    if (CORE.Input.Mouse.cursorLocked && !(CORE.Window.flags & FLAG_WINDOW_UNFOCUSED) && (GetForegroundWindow() == platform.hwnd))
+    {
+        RECT clientRect = { 0 };
+        POINT topLeft = { 0 };
+        GetClientRect(platform.hwnd, &clientRect);
+        ClientToScreen(platform.hwnd, &topLeft);
+
+        LONG centerX = topLeft.x + clientRect.right/2;
+        LONG centerY = topLeft.y + clientRect.bottom/2;
+        RECT clipRect = { centerX, centerY, centerX + 1, centerY + 1 };
+        if (!ClipCursor(&clipRect)) TRACELOG(LOG_WARNING, "WIN32: Failed to clip cursor [ERROR: %lu]", GetLastError());
+    }
+    else ClipCursor(NULL);
+}
+
+// Place input method windows next to the last clicked position
+// NOTE: Text being composed is drawn by the input method, there is no text cursor
+static void UpdateInputMethodPosition(HWND hwnd)
+{
+    if ((pImmGetContext == NULL) || (pImmReleaseContext == NULL)) return;
+
+    HIMC context = pImmGetContext(hwnd);
+    if (context == NULL) return;
+
+    if (pImmSetCompositionWindow != NULL)
+    {
+        COMPOSITIONFORM composition = { 0 };
+        composition.dwStyle = CFS_POINT;
+        composition.ptCurrentPos = platform.textInputPosition;
+        pImmSetCompositionWindow(context, &composition);
+    }
+
+    if (pImmSetCandidateWindow != NULL)
+    {
+        CANDIDATEFORM candidate = { 0 };
+        candidate.dwIndex = 0;
+        candidate.dwStyle = CFS_CANDIDATEPOS;
+        candidate.ptCurrentPos = platform.textInputPosition;
+        pImmSetCandidateWindow(context, &candidate);
+    }
+
+    pImmReleaseContext(hwnd, context);
 }
 
 // Handle mouse button input event
@@ -2599,7 +3384,7 @@ static void HandleMouseButton(int button, char state)
         bool allMouseButtonsReleased = true;
         for (unsigned int i = 0; i < MAX_MOUSE_BUTTONS; i++)
         {
-            if (CORE.Input.Mouse.currentButtonState[i] != 0)
+            if ((CORE.Input.Mouse.currentButtonState[i] != 0) && !platform.buttonReleasePending[i])
             {
                 allMouseButtonsReleased = false;
                 break;
@@ -2607,19 +3392,32 @@ static void HandleMouseButton(int button, char state)
         }
 
         if (allMouseButtonsReleased) SetCapture(platform.hwnd);
+
+        // Register current mouse button state
+        CORE.Input.Mouse.currentButtonState[button] = 1;
+        CORE.Input.Touch.currentTouchState[button] = 1;
+        platform.buttonPressedInFrame[button] = true;
+        platform.buttonReleasePending[button] = false;
+
+        // Input method windows are placed next to the last clicked position
+        POINT position = { 0 };
+        if (GetCursorPos(&position) && ScreenToClient(platform.hwnd, &position)) platform.textInputPosition = position;
     }
-
-    // Register current mouse button state
-    CORE.Input.Mouse.currentButtonState[button] = state;
-    CORE.Input.Touch.currentTouchState[button] = state;
-
-    if (state == 0)
+    else
     {
+        // NOTE: Button press is kept for the current frame if it is released in the same frame
+        if (platform.buttonPressedInFrame[button]) platform.buttonReleasePending[button] = true;
+        else
+        {
+            CORE.Input.Mouse.currentButtonState[button] = 0;
+            CORE.Input.Touch.currentTouchState[button] = 0;
+        }
+
         // Release mouse capture when all mouse buttons are released
         bool allMouseButtonsReleased = true;
         for (unsigned int i = 0; i < MAX_MOUSE_BUTTONS; i++)
         {
-            if (CORE.Input.Mouse.currentButtonState[i] != 0)
+            if ((CORE.Input.Mouse.currentButtonState[i] != 0) && !platform.buttonReleasePending[i])
             {
                 allMouseButtonsReleased = false;
                 break;
@@ -2641,20 +3439,42 @@ static void HandleRawInput(LPARAM lparam)
 
     UINT size = GetRawInputData((HRAWINPUT)lparam, RID_INPUT, &input, &inputSize, sizeof(RAWINPUTHEADER));
 
-    if (size == (UINT)-1) TRACELOG(LOG_ERROR, "WIN32: Failed to get raw input data [ERROR: %lu]", GetLastError());
+    if (size == (UINT)-1) return;
+    if (input.header.dwType != RIM_TYPEMOUSE) return;
 
-    if (input.header.dwType != RIM_TYPEMOUSE) TRACELOG(LOG_ERROR, "WIN32: Unexpected WM_INPUT type %lu", input.header.dwType);
+    // NOTE: Raw mouse motion is only used while the cursor is disabled and the window is focused
+    if (!CORE.Input.Mouse.cursorLocked || (CORE.Window.flags & FLAG_WINDOW_UNFOCUSED)) return;
 
-    if (input.data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE) TRACELOG(LOG_ERROR, "TODO: Handle absolute mouse inputs");
+    LONG deltaX = input.data.mouse.lLastX;
+    LONG deltaY = input.data.mouse.lLastY;
 
-    if (input.data.mouse.usFlags & MOUSE_VIRTUAL_DESKTOP) TRACELOG(LOG_ERROR, "TODO: Handle virtual desktop mouse inputs");
+    if (input.data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE)
+    {
+        // Absolute pointing devices (remote desktop, tablets, virtual machines) report [0, 65535] over the primary monitor or the virtual desktop
+        POINT position = { 0 };
+        int width = GetSystemMetrics(SM_CXSCREEN);
+        int height = GetSystemMetrics(SM_CYSCREEN);
 
-    // Trick to keep the mouse position at (0,0) and instead move
-    // the previous position so a proper mouse delta can still be retrieved
-    //CORE.Input.Mouse.previousPosition.x -= input.data.mouse.lLastX;
-    //CORE.Input.Mouse.previousPosition.y -= input.data.mouse.lLastY;
-    //if (CORE.Input.Mouse.currentPosition.x != 0) abort();
-    //if (CORE.Input.Mouse.currentPosition.y != 0) abort();
+        if (input.data.mouse.usFlags & MOUSE_VIRTUAL_DESKTOP)
+        {
+            position.x = GetSystemMetrics(SM_XVIRTUALSCREEN);
+            position.y = GetSystemMetrics(SM_YVIRTUALSCREEN);
+            width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+            height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+        }
+
+        position.x += (LONG)(((float)input.data.mouse.lLastX/65535.0f)*(float)width);
+        position.y += (LONG)(((float)input.data.mouse.lLastY/65535.0f)*(float)height);
+
+        deltaX = platform.rawAbsoluteValid? (position.x - platform.rawAbsolutePosition.x) : 0;
+        deltaY = platform.rawAbsoluteValid? (position.y - platform.rawAbsolutePosition.y) : 0;
+        platform.rawAbsolutePosition = position;
+        platform.rawAbsoluteValid = true;
+    }
+
+    CORE.Input.Mouse.currentPosition.x += (float)deltaX;
+    CORE.Input.Mouse.currentPosition.y += (float)deltaY;
+    CORE.Input.Touch.position[0] = CORE.Input.Mouse.currentPosition;
 }
 
 // Handle window resizing event
@@ -2705,6 +3525,13 @@ static void UpdateWindowStyle(HWND hwnd, unsigned desiredFlags)
 
     if (current != desired)
     {
+        // Client area position and size, kept when the window frame changes
+        RECT clientRect = { 0 };
+        POINT clientOrigin = { 0 };
+        GetClientRect(hwnd, &clientRect);
+        ClientToScreen(hwnd, &clientOrigin);
+        bool floating = (!IsIconic(hwnd) && !IsZoomed(hwnd));
+
         SetLastError(0);
         DWORD previous = STYLE_MASK_WRITABLE & SetWindowLongPtrW(hwnd, GWL_STYLE, desired);
         if (previous != current)
@@ -2714,6 +3541,15 @@ static void UpdateWindowStyle(HWND hwnd, unsigned desiredFlags)
         }
 
         CheckFlags("UpdateWindowStyle", hwnd, desiredFlags, desired, STYLE_MASK_WRITABLE);
+
+        // NOTE: New window frame is only applied by SetWindowPos() with SWP_FRAMECHANGED
+        if (floating)
+        {
+            RECT rect = { clientOrigin.x, clientOrigin.y, clientOrigin.x + clientRect.right, clientOrigin.y + clientRect.bottom };
+            AdjustWindowRectExForDpiCompat(&rect, desired, FALSE, WINDOW_STYLE_EX, GetDpiForWindowCompat(hwnd));
+            SetWindowPos(hwnd, NULL, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+        }
+        else SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
     }
 
     // Minimized takes precedence over maximized
@@ -2738,11 +3574,15 @@ static void UpdateWindowStyle(HWND hwnd, unsigned desiredFlags)
 // Sanitize flags
 static unsigned SanitizeFlags(unsigned flags)
 {
+    // Fullscreen and borderless windowed modes exclude each other, window is undecorated in both
+    if ((flags & FLAG_MASK_COVER) == FLAG_MASK_COVER) flags &= ~FLAG_BORDERLESS_WINDOWED_MODE;
+    if (flags & FLAG_MASK_COVER) flags |= FLAG_WINDOW_UNDECORATED;
+
     if (flags & FLAG_WINDOW_MAXIMIZED)
     {
-        if (flags & FLAG_BORDERLESS_WINDOWED_MODE)
+        if (flags & FLAG_MASK_COVER)
         {
-            TRACELOG(LOG_WARNING, "WIN32: WINDOW: Borderless windows mode overriding maximized window flag");
+            // NOTE: Maximized state is restored when leaving fullscreen and borderless windowed modes
             flags &= ~FLAG_WINDOW_MAXIMIZED;
         }
 
@@ -2811,6 +3651,45 @@ static void UpdateFlags(HWND hwnd, unsigned desiredFlags, int width, int height)
         else CORE.Window.flags &= ~FLAG_VSYNC_HINT;
     }
 
+    // Window always on top
+    if ((desiredFlags ^ CORE.Window.flags) & FLAG_WINDOW_TOPMOST)
+    {
+        bool topmost = ((desiredFlags & FLAG_WINDOW_TOPMOST) != 0);
+        SetWindowPos(hwnd, topmost? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+
+        if (topmost) CORE.Window.flags |= FLAG_WINDOW_TOPMOST;
+        else CORE.Window.flags &= ~FLAG_WINDOW_TOPMOST;
+    }
+
+    // Mouse events pass through the window
+    if ((desiredFlags ^ CORE.Window.flags) & FLAG_WINDOW_MOUSE_PASSTHROUGH)
+    {
+        bool passthrough = ((desiredFlags & FLAG_WINDOW_MOUSE_PASSTHROUGH) != 0);
+        UpdateLayeredStyle(hwnd, passthrough, platform.opacity);
+
+        if (passthrough) CORE.Window.flags |= FLAG_WINDOW_MOUSE_PASSTHROUGH;
+        else CORE.Window.flags &= ~FLAG_WINDOW_MOUSE_PASSTHROUGH;
+    }
+
+    // Keep running while minimized
+    CORE.Window.flags = (CORE.Window.flags & ~FLAG_WINDOW_ALWAYS_RUN) | (desiredFlags & FLAG_WINDOW_ALWAYS_RUN);
+
+    // Fullscreen and borderless windowed modes
+    bool covered = ((CORE.Window.flags & FLAG_MASK_COVER) != 0);
+    bool cover = ((desiredFlags & FLAG_MASK_COVER) != 0);
+
+    if (covered && !cover) LeaveCoverMode(hwnd, desiredFlags);
+    else if (covered && cover)
+    {
+        // Mode and resizable flag changes do not change the window
+        unsigned keptFlags = FLAG_MASK_COVER | FLAG_WINDOW_RESIZABLE;
+        CORE.Window.flags = (CORE.Window.flags & ~keptFlags) | (desiredFlags & keptFlags);
+    }
+
+    // NOTE: Window state is updated before covering the monitor
+    unsigned stateFlags = desiredFlags;
+    if (!covered && cover) stateFlags = (desiredFlags & ~(FLAG_MASK_COVER | FLAG_WINDOW_UNDECORATED)) | (CORE.Window.flags & FLAG_WINDOW_UNDECORATED);
+
     // TODO: Review flags update code
     DWORD previousStyle = 0;
     for (unsigned attempt = 1; ; attempt++)
@@ -2818,22 +3697,98 @@ static void UpdateFlags(HWND hwnd, unsigned desiredFlags, int width, int height)
         CheckFlags("UpdateFlags", hwnd, CORE.Window.flags, MakeWindowStyle(CORE.Window.flags), STYLE_MASK_ALL);
 
         bool windowSizeUpdated = false;
-        if (MakeWindowStyle(CORE.Window.flags) == MakeWindowStyle(desiredFlags))
+        if (MakeWindowStyle(CORE.Window.flags) == MakeWindowStyle(stateFlags))
         {
-            windowSizeUpdated = UpdateWindowSize(1, hwnd, width, height, desiredFlags);
-            if ((FLAG_MASK_REQUIRED & desiredFlags) == (FLAG_MASK_REQUIRED & CORE.Window.flags)) break;
+            windowSizeUpdated = UpdateWindowSize(hwnd, width, height, stateFlags);
+            if ((FLAG_MASK_REQUIRED & stateFlags) == (FLAG_MASK_REQUIRED & CORE.Window.flags)) break;
         }
 
         if ((attempt > 1) && (previousStyle == MakeWindowStyle(CORE.Window.flags)) && !windowSizeUpdated)
         {
             TRACELOG(LOG_ERROR, "WIN32: WINDOW: UpdateFlags() failed after %u attempt(s) wanted 0x%x but is 0x%x (diff=0x%x)",
-                attempt, desiredFlags, CORE.Window.flags, desiredFlags ^ CORE.Window.flags);
+                attempt, stateFlags, CORE.Window.flags, stateFlags ^ CORE.Window.flags);
             break;
         }
 
         previousStyle = MakeWindowStyle(CORE.Window.flags);
-        UpdateWindowStyle(hwnd, desiredFlags);
+        UpdateWindowStyle(hwnd, stateFlags);
     }
+
+    if (!covered && cover) EnterCoverMode(hwnd, desiredFlags);
+}
+
+// Update window layered style: mouse passthrough and opacity
+static void UpdateLayeredStyle(HWND hwnd, bool passthrough, float opacity)
+{
+    if (hwnd == NULL) return;
+
+    LONG_PTR exStyle = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+    bool layered = (passthrough || (opacity < 1.0f));
+
+    if (layered) exStyle |= WS_EX_LAYERED;
+    else exStyle &= ~WS_EX_LAYERED;
+
+    if (passthrough) exStyle |= WS_EX_TRANSPARENT;
+    else exStyle &= ~WS_EX_TRANSPARENT;
+
+    SetWindowLongPtrW(hwnd, GWL_EXSTYLE, exStyle);
+
+    if (layered) SetLayeredWindowAttributes(hwnd, 0, (BYTE)(255.0f*opacity), LWA_ALPHA);
+}
+
+// Cover the monitor with the window: fullscreen or borderless windowed mode
+// NOTE: The window is undecorated and has the monitor size, the video mode is not changed
+static void EnterCoverMode(HWND hwnd, unsigned desiredFlags)
+{
+    if (CORE.Window.flags & FLAG_WINDOW_MINIMIZED) return;
+
+    GetWindowRect(hwnd, &platform.coverRestoreRect);
+
+    MONITORINFO info = { 0 };
+    info.cbSize = sizeof(info);
+    if (!GetMonitorInfoW(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &info))
+    {
+        TRACELOG(LOG_ERROR, "WIN32: Failed to get monitor info [ERROR: %lu]", GetLastError());
+        return;
+    }
+
+    DWORD current = STYLE_MASK_WRITABLE & MakeWindowStyle(CORE.Window.flags);
+    DWORD desired = STYLE_MASK_WRITABLE & MakeWindowStyle(desiredFlags);
+
+    if (current != desired)
+    {
+        // Flags are updated by the window on style change
+        platform.coverEnterFlags = (desiredFlags & FLAG_MASK_COVER);
+        SetWindowLongPtrW(hwnd, GWL_STYLE, desired);
+        platform.coverEnterFlags = 0;
+    }
+    else CORE.Window.flags |= (desiredFlags & FLAG_MASK_COVER);
+
+    SetWindowPos(hwnd, HWND_TOP, info.rcMonitor.left, info.rcMonitor.top, info.rcMonitor.right - info.rcMonitor.left,
+        info.rcMonitor.bottom - info.rcMonitor.top, SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+}
+
+// Restore the window from fullscreen or borderless windowed mode
+static void LeaveCoverMode(HWND hwnd, unsigned desiredFlags)
+{
+    // NOTE: Resizable flag does not change the window while it covers the monitor
+    CORE.Window.flags = (CORE.Window.flags & ~FLAG_WINDOW_RESIZABLE) | (desiredFlags & FLAG_WINDOW_RESIZABLE);
+
+    DWORD current = STYLE_MASK_WRITABLE & MakeWindowStyle(CORE.Window.flags);
+    DWORD desired = STYLE_MASK_WRITABLE & MakeWindowStyle(desiredFlags);
+
+    if (current != desired)
+    {
+        // Flags are updated by the window on style change
+        platform.coverLeave = true;
+        SetWindowLongPtrW(hwnd, GWL_STYLE, desired);
+        platform.coverLeave = false;
+    }
+    else CORE.Window.flags &= ~FLAG_MASK_COVER;
+
+    SetWindowPos(hwnd, NULL, platform.coverRestoreRect.left, platform.coverRestoreRect.top,
+        platform.coverRestoreRect.right - platform.coverRestoreRect.left, platform.coverRestoreRect.bottom - platform.coverRestoreRect.top,
+        SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
 }
 
 // Check if OpenGL extension is available

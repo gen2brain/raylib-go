@@ -1115,7 +1115,7 @@ void BeginScissorMode(int x, int y, int width, int height)
     rlEnableScissorTest();
 
     // NOTE: Fullscreen windows of the native platforms keep the content scale, there is no video mode change
-#if defined(PLATFORM_DESKTOP_X11) || defined(PLATFORM_DESKTOP_WAYLAND) || defined(PLATFORM_DESKTOP_COCOA)
+#if defined(PLATFORM_DESKTOP_X11) || defined(PLATFORM_DESKTOP_WAYLAND) || defined(PLATFORM_DESKTOP_COCOA) || defined(PLATFORM_DESKTOP_WIN32)
     bool scaled = FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_HIGHDPI);
 #else
     bool scaled = (FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_HIGHDPI) && !FLAG_IS_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE));
