@@ -16,11 +16,11 @@ It is also possible to use raylib-go without cgo (see below).
 
 ##### Ubuntu
 
-    apt-get install libgl1-mesa-dev libegl1-mesa-dev libgbm-dev libdrm-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev libxext-dev libwayland-dev libxkbcommon-dev
+    apt-get install libegl1-mesa-dev libgbm-dev libdrm-dev libxi-dev libxrandr-dev libxext-dev libwayland-dev libxkbcommon-dev
 
 ##### Fedora
 
-    dnf install mesa-libGL-devel mesa-libEGL-devel mesa-libgbm-devel libdrm-devel libXi-devel libXcursor-devel libXrandr-devel libXinerama-devel libXext-devel wayland-devel libxkbcommon-devel
+    dnf install mesa-libEGL-devel mesa-libgbm-devel libdrm-devel libXi-devel libXrandr-devel libXext-devel wayland-devel libxkbcommon-devel
 
 ##### macOS
 

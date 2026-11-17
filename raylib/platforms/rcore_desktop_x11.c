@@ -62,7 +62,6 @@
 #include <X11/XKBlib.h>             // Keyboard extension
 #include <X11/keysym.h>             // Key symbols
 #include <X11/cursorfont.h>         // Core cursor shapes
-#include <X11/Xcursor/Xcursor.h>    // Cursor themes
 #include <X11/extensions/Xrandr.h>  // Monitors
 #include <X11/extensions/XInput2.h> // Smooth scrolling, touch and raw mouse motion
 #include <X11/extensions/shape.h>   // Input shape (mouse passthrough)
@@ -73,6 +72,8 @@
     #include <sys/shm.h>            // Required for: shmget(), shmat(), shmdt(), shmctl()
 #endif
 #undef Font
+
+Cursor XcursorLibraryLoadCursor(Display *display, const char *file); // Cursor themes (libXcursor)
 
 #include <xkbcommon/xkbcommon.h>    // Required for: xkb_keysym_to_utf8(), xkb_keysym_to_utf32()
 
