@@ -301,6 +301,14 @@ func DisableCursor() {
 	cDisableCursor()
 }
 
+// ShowSoftKeyboard - Shows on-screen keyboard (Android only)
+func ShowSoftKeyboard() {
+}
+
+// HideSoftKeyboard - Hides on-screen keyboard (Android only)
+func HideSoftKeyboard() {
+}
+
 // IsCursorOnScreen - Check if cursor is on the screen
 func IsCursorOnScreen() bool {
 	return cIsCursorOnScreen() != 0

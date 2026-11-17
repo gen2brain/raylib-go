@@ -1034,6 +1034,14 @@ func DisableCursor() {
 	disableCursor.Call(nil)
 }
 
+// ShowSoftKeyboard - Shows on-screen keyboard (Android only)
+func ShowSoftKeyboard() {
+}
+
+// HideSoftKeyboard - Hides on-screen keyboard (Android only)
+func HideSoftKeyboard() {
+}
+
 // IsCursorOnScreen - Check if cursor is on the screen
 func IsCursorOnScreen() bool {
 	var ret ffi.Arg

@@ -4,6 +4,7 @@
 package rl
 
 /*
+#define ANativeActivity_onCreate AndroidGlueOnCreate
 #include "external/android/native_app_glue/android_native_app_glue.c"
 
 #cgo android LDFLAGS: -llog -landroid -lEGL -lGLESv2 -lOpenSLES -lm -Wl,--wrap=fopen

@@ -48,6 +48,14 @@ func DisableCursor() {
 	C.DisableCursor()
 }
 
+// ShowSoftKeyboard - Shows on-screen keyboard (Android only)
+func ShowSoftKeyboard() {
+}
+
+// HideSoftKeyboard - Hides on-screen keyboard (Android only)
+func HideSoftKeyboard() {
+}
+
 // IsFileDropped - Check if a file has been dropped into window
 func IsFileDropped() bool {
 	return false

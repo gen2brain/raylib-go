@@ -50,6 +50,9 @@
 //#include <android/sensor.h>           // Required for: Android sensors functions (accelerometer, gyroscope, light...)
 
 #include <errno.h>                      // Required for: error types
+#include <stdatomic.h>                  // Required for: atomic_int, atomic_bool, atomic_uint
+#include <sys/eventfd.h>                // Required for: eventfd()
+#include <unistd.h>                     // Required for: read(), write()
 #include <jni.h>                        // Required for: JNIEnv and JavaVM [Used in OpenURL() and GetCurrentMonitor()]
 
 #include <EGL/egl.h>                    // Native platform windowing system interface
@@ -94,6 +97,26 @@ typedef struct {
 
     int32_t hoverPoints[MAX_TOUCH_POINTS];          // Hover Points
 } TouchRaw;
+
+// Requests applied on the main (UI) thread, views can only be changed there
+#define UI_REQUEST_CURSOR           1       // Update pointer icon
+#define UI_REQUEST_CAPTURE          2       // Update pointer capture
+#define UI_REQUEST_SYSTEM_BARS      4       // Update system bars visibility
+#define UI_REQUEST_SOFT_KEYBOARD    8       // Update on-screen keyboard visibility
+
+#define POINTER_ICON_NULL           0       // PointerIcon.TYPE_NULL
+#define SYSTEM_BARS_TRANSIENT       2       // WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+#define SYSTEM_UI_IMMERSIVE         0x1706  // View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY, LAYOUT_STABLE, LAYOUT_HIDE_NAVIGATION, LAYOUT_FULLSCREEN, FULLSCREEN, HIDE_NAVIGATION
+
+typedef struct {
+    ALooper *looper;                    // Main (UI) thread looper
+    int eventFd;                        // Event file descriptor waking the main thread looper
+    atomic_uint requests;               // Pending requests (UI_REQUEST_*)
+    atomic_int cursor;                  // Requested mouse cursor (MOUSE_CURSOR_*), -1 for hidden
+    atomic_bool pointerCapture;         // Requested pointer capture state
+    atomic_bool immersive;              // Requested system bars state, hidden if immersive
+    atomic_bool softKeyboard;           // Requested on-screen keyboard visibility
+} UiThreadData;
 
 //----------------------------------------------------------------------------------
 // Global Variables Definition
@@ -270,7 +293,23 @@ static const KeyboardKey mapKeycode[KEYCODE_MAP_SIZE] = {
     KEY_KP_EQUAL        // AKEYCODE_NUMPAD_EQUALS
 };
 
+// Android pointer icon types (PointerIcon.TYPE_*) for raylib mouse cursors
+static const int mapCursor[MOUSE_CURSOR_NOT_ALLOWED + 1] = {
+    1000,               // MOUSE_CURSOR_DEFAULT: TYPE_ARROW
+    1000,               // MOUSE_CURSOR_ARROW: TYPE_ARROW
+    1008,               // MOUSE_CURSOR_IBEAM: TYPE_TEXT
+    1007,               // MOUSE_CURSOR_CROSSHAIR: TYPE_CROSSHAIR
+    1002,               // MOUSE_CURSOR_POINTING_HAND: TYPE_HAND
+    1014,               // MOUSE_CURSOR_RESIZE_EW: TYPE_HORIZONTAL_DOUBLE_ARROW
+    1015,               // MOUSE_CURSOR_RESIZE_NS: TYPE_VERTICAL_DOUBLE_ARROW
+    1017,               // MOUSE_CURSOR_RESIZE_NWSE: TYPE_TOP_LEFT_DIAGONAL_DOUBLE_ARROW
+    1016,               // MOUSE_CURSOR_RESIZE_NESW: TYPE_TOP_RIGHT_DIAGONAL_DOUBLE_ARROW
+    1013,               // MOUSE_CURSOR_RESIZE_ALL: TYPE_ALL_SCROLL
+    1012                // MOUSE_CURSOR_NOT_ALLOWED: TYPE_NO_DROP
+};
+
 static TouchRaw touchRaw = { 0 };
+static UiThreadData ui = { .eventFd = -1 };     // NOTE: Kept for the process, the main thread looper does not change
 
 //----------------------------------------------------------------------------------
 // Module Internal Functions Declaration
@@ -297,6 +336,9 @@ static void CheckGamepads(void);                    // Check connected and disco
 static void HandleKey(KeyboardKey key, bool pressed); // Register key state change
 static void HandleMouseButton(int button, bool pressed); // Register mouse button or touch state change
 static Vector2 GetScreenPosition(float x, float y); // Convert display position to screen position
+static void RequestUiUpdate(unsigned int request);  // Request an update applied on the main (UI) thread
+static void UpdateSystemBars(void);                 // Request system bars visibility from window flags
+static int UiThreadCallback(int fd, int events, void *data); // Apply pending requests on the main (UI) thread
 
 static int android_read(void *cookie, char *buf, int size);
 static int android_write(void *cookie, const char *buf, int size);
@@ -366,12 +408,50 @@ void android_main(struct android_app *app)
             if (platform.source != NULL) platform.source->process(app, platform.source);
         }
     }
+
+    platform.app = NULL;
 }
 
 // NOTE: Add this to header (if apps really need it)
 struct android_app *GetAndroidApp(void)
 {
     return platform.app;
+}
+
+// Activity entry point of android_native_app_glue, renamed when compiling it (-DANativeActivity_onCreate=AndroidGlueOnCreate)
+void AndroidGlueOnCreate(ANativeActivity *activity, void *savedState, size_t savedStateSize);
+
+// Activity entry point, called on the main (UI) thread
+JNIEXPORT void ANativeActivity_onCreate(ANativeActivity *activity, void *savedState, size_t savedStateSize)
+{
+    if (ui.looper == NULL)
+    {
+        ui.looper = ALooper_forThread();
+        ui.eventFd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+
+        if ((ui.looper != NULL) && (ui.eventFd >= 0))
+        {
+            ALooper_acquire(ui.looper);
+            ALooper_addFd(ui.looper, ui.eventFd, ALOOPER_POLL_CALLBACK, ALOOPER_EVENT_INPUT, UiThreadCallback, NULL);
+        }
+    }
+
+    AndroidGlueOnCreate(activity, savedState, savedStateSize);
+}
+
+// Show on-screen keyboard
+// NOTE: Characters typed are received as key events
+void ShowSoftKeyboard(void)
+{
+    atomic_store(&ui.softKeyboard, true);
+    RequestUiUpdate(UI_REQUEST_SOFT_KEYBOARD);
+}
+
+// Hide on-screen keyboard
+void HideSoftKeyboard(void)
+{
+    atomic_store(&ui.softKeyboard, false);
+    RequestUiUpdate(UI_REQUEST_SOFT_KEYBOARD);
 }
 
 //----------------------------------------------------------------------------------
@@ -386,15 +466,31 @@ bool WindowShouldClose(void)
 }
 
 // Toggle fullscreen mode
+// NOTE: Fullscreen hides the system bars (immersive mode)
 void ToggleFullscreen(void)
 {
-    TRACELOG(LOG_WARNING, "ToggleFullscreen() not available on target platform");
+    if (FLAG_IS_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE)) FLAG_CLEAR(CORE.Window.flags, FLAG_FULLSCREEN_MODE);
+    else
+    {
+        FLAG_CLEAR(CORE.Window.flags, FLAG_BORDERLESS_WINDOWED_MODE);
+        FLAG_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE);
+    }
+
+    UpdateSystemBars();
 }
 
 // Toggle borderless windowed mode
+// NOTE: Same as fullscreen, the display mode is never changed
 void ToggleBorderlessWindowed(void)
 {
-    TRACELOG(LOG_WARNING, "ToggleBorderlessWindowed() not available on target platform");
+    if (FLAG_IS_SET(CORE.Window.flags, FLAG_BORDERLESS_WINDOWED_MODE)) FLAG_CLEAR(CORE.Window.flags, FLAG_BORDERLESS_WINDOWED_MODE);
+    else
+    {
+        FLAG_CLEAR(CORE.Window.flags, FLAG_FULLSCREEN_MODE);
+        FLAG_SET(CORE.Window.flags, FLAG_BORDERLESS_WINDOWED_MODE);
+    }
+
+    UpdateSystemBars();
 }
 
 // Set window state: maximized, if resizable
@@ -422,6 +518,12 @@ void SetWindowState(unsigned int flags)
 
     // State change: FLAG_WINDOW_ALWAYS_RUN
     if (FLAG_IS_SET(flags, FLAG_WINDOW_ALWAYS_RUN)) FLAG_SET(CORE.Window.flags, FLAG_WINDOW_ALWAYS_RUN);
+
+    // State change: FLAG_FULLSCREEN_MODE
+    if (FLAG_IS_SET(flags, FLAG_FULLSCREEN_MODE) && !FLAG_IS_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE)) ToggleFullscreen();
+
+    // State change: FLAG_BORDERLESS_WINDOWED_MODE
+    if (FLAG_IS_SET(flags, FLAG_BORDERLESS_WINDOWED_MODE) && !FLAG_IS_SET(CORE.Window.flags, FLAG_BORDERLESS_WINDOWED_MODE)) ToggleBorderlessWindowed();
 }
 
 // Clear window configuration state flags
@@ -429,6 +531,12 @@ void ClearWindowState(unsigned int flags)
 {
     // State change: FLAG_WINDOW_ALWAYS_RUN
     if (FLAG_IS_SET(flags, FLAG_WINDOW_ALWAYS_RUN)) FLAG_CLEAR(CORE.Window.flags, FLAG_WINDOW_ALWAYS_RUN);
+
+    // State change: FLAG_FULLSCREEN_MODE
+    if (FLAG_IS_SET(flags, FLAG_FULLSCREEN_MODE) && FLAG_IS_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE)) ToggleFullscreen();
+
+    // State change: FLAG_BORDERLESS_WINDOWED_MODE
+    if (FLAG_IS_SET(flags, FLAG_BORDERLESS_WINDOWED_MODE) && FLAG_IS_SET(CORE.Window.flags, FLAG_BORDERLESS_WINDOWED_MODE)) ToggleBorderlessWindowed();
 }
 
 // Set icon for window
@@ -797,12 +905,16 @@ Image GetClipboardImage(void)
 void ShowCursor(void)
 {
     CORE.Input.Mouse.cursorHidden = false;
+    atomic_store(&ui.cursor, CORE.Input.Mouse.cursor);
+    RequestUiUpdate(UI_REQUEST_CURSOR);
 }
 
 // Hide mouse cursor
 void HideCursor(void)
 {
     CORE.Input.Mouse.cursorHidden = true;
+    atomic_store(&ui.cursor, -1);
+    RequestUiUpdate(UI_REQUEST_CURSOR);
 }
 
 // Enable cursor (unlock cursor)
@@ -812,15 +924,20 @@ void EnableCursor(void)
     SetMousePosition(CORE.Window.screen.width/2, CORE.Window.screen.height/2);
 
     CORE.Input.Mouse.cursorLocked = false;
+    atomic_store(&ui.pointerCapture, false);
+    RequestUiUpdate(UI_REQUEST_CAPTURE);
 }
 
 // Disables cursor (lock cursor)
+// NOTE: Pointer capture, mouse movement is received as relative motion
 void DisableCursor(void)
 {
     // Set cursor position in the middle
     SetMousePosition(CORE.Window.screen.width/2, CORE.Window.screen.height/2);
 
     CORE.Input.Mouse.cursorLocked = true;
+    atomic_store(&ui.pointerCapture, true);
+    RequestUiUpdate(UI_REQUEST_CAPTURE);
 }
 
 // Swap back buffer with front buffer (screen drawing)
@@ -991,12 +1108,20 @@ void SetGamepadVibration(int gamepad, float leftMotor, float rightMotor, float d
 void SetMousePosition(int x, int y)
 {
     CORE.Input.Mouse.currentPosition = (Vector2){ (float)x, (float)y };
+    CORE.Input.Mouse.previousPosition = CORE.Input.Mouse.currentPosition;
 }
 
 // Set mouse cursor
 void SetMouseCursor(int cursor)
 {
-    TRACELOG(LOG_WARNING, "SetMouseCursor() not implemented on target platform");
+    if ((cursor < MOUSE_CURSOR_DEFAULT) || (cursor > MOUSE_CURSOR_NOT_ALLOWED)) return;
+
+    CORE.Input.Mouse.cursor = cursor;
+    if (!CORE.Input.Mouse.cursorHidden)
+    {
+        atomic_store(&ui.cursor, cursor);
+        RequestUiUpdate(UI_REQUEST_CURSOR);
+    }
 }
 
 // Get physical key name
@@ -1076,6 +1201,7 @@ void PollInputEvents(void)
     }
 
     // Register previous mouse states
+    CORE.Input.Mouse.previousPosition = CORE.Input.Mouse.currentPosition;
     for (int i = 0; i < MAX_MOUSE_BUTTONS; i++) CORE.Input.Mouse.previousButtonState[i] = CORE.Input.Mouse.currentButtonState[i];
     CORE.Input.Mouse.previousWheelMove = CORE.Input.Mouse.currentWheelMove;
     CORE.Input.Mouse.currentWheelMove = (Vector2){ 0.0f, 0.0f };
@@ -1239,6 +1365,8 @@ int InitPlatform(void)
     // Gamepads connected at start are available in the first frame
     CheckGamepads();
 
+    if (FLAG_IS_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE) || FLAG_IS_SET(CORE.Window.flags, FLAG_BORDERLESS_WINDOWED_MODE)) UpdateSystemBars();
+
     return 0;
 }
 
@@ -1283,8 +1411,6 @@ void ClosePlatform(void)
 // NOTE: returns false in case graphic device could not be created
 static int InitGraphicsDevice(void)
 {
-    FLAG_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE);
-
     EGLint samples = 0;
     EGLint sampleBuffer = 0;
     if (FLAG_IS_SET(CORE.Window.flags, FLAG_MSAA_4X_HINT))
@@ -1490,6 +1616,10 @@ static void AndroidCommandCallback(struct android_app *app, int32_t cmd)
         {
             platform.appEnabled = true;
             FLAG_CLEAR(CORE.Window.flags, FLAG_WINDOW_UNFOCUSED);
+
+            // NOTE: Pointer capture is lost with the focus, system bars can be shown again
+            if (CORE.Input.Mouse.cursorLocked) RequestUiUpdate(UI_REQUEST_CAPTURE);
+            if (FLAG_IS_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE) || FLAG_IS_SET(CORE.Window.flags, FLAG_BORDERLESS_WINDOWED_MODE)) UpdateSystemBars();
             //ResumeMusicStream();
         } break;
         case APP_CMD_PAUSE: break;
@@ -1631,12 +1761,27 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
             return 1; // Handled gamepad axis motion
         }
 
-        if (FLAG_IS_SET(source, AINPUT_SOURCE_MOUSE) && (AMotionEvent_getToolType(event, 0) == AMOTION_EVENT_TOOL_TYPE_MOUSE))
+        bool relative = FLAG_IS_SET(source, AINPUT_SOURCE_MOUSE_RELATIVE);
+
+        if (relative || (FLAG_IS_SET(source, AINPUT_SOURCE_MOUSE) && (AMotionEvent_getToolType(event, 0) == AMOTION_EVENT_TOOL_TYPE_MOUSE)))
         {
             int32_t action = AMotionEvent_getAction(event) & AMOTION_EVENT_ACTION_MASK;
 
             // Mouse position, buttons and wheel
-            CORE.Input.Mouse.currentPosition = GetScreenPosition(AMotionEvent_getX(event, 0), AMotionEvent_getY(event, 0));
+            // NOTE: Captured pointer (disabled cursor) reports relative motion
+            if (relative)
+            {
+                Vector2 scale = { (float)(CORE.Window.screen.width + CORE.Window.renderOffset.x)/(float)CORE.Window.display.width, (float)(CORE.Window.screen.height + CORE.Window.renderOffset.y)/(float)CORE.Window.display.height };
+                CORE.Input.Mouse.currentPosition.x += AMotionEvent_getX(event, 0)*scale.x;
+                CORE.Input.Mouse.currentPosition.y += AMotionEvent_getY(event, 0)*scale.y;
+                CORE.Input.Mouse.cursorOnScreen = true;
+            }
+            else if (!CORE.Input.Mouse.cursorLocked)
+            {
+                CORE.Input.Mouse.currentPosition = GetScreenPosition(AMotionEvent_getX(event, 0), AMotionEvent_getY(event, 0));
+                CORE.Input.Mouse.cursorOnScreen = (action != AMOTION_EVENT_ACTION_HOVER_EXIT);
+            }
+
             CORE.Input.Touch.position[0] = CORE.Input.Mouse.currentPosition;
 
             if (action == AMOTION_EVENT_ACTION_SCROLL)
@@ -1667,6 +1812,9 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
             }
 
             platform.mouseButtonState = buttonState;
+
+            // NOTE: Hover events are also passed to the views, the pointer icon is resolved there
+            if ((action == AMOTION_EVENT_ACTION_HOVER_MOVE) || (action == AMOTION_EVENT_ACTION_HOVER_ENTER) || (action == AMOTION_EVENT_ACTION_HOVER_EXIT)) return 0;
 
             return 1; // Handled mouse event
         }
@@ -1709,7 +1857,11 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
             if (action == AKEY_EVENT_ACTION_DOWN)
             {
                 if (AKeyEvent_getRepeatCount(event) > 0) CORE.Input.Keyboard.keyRepeatInFrame[key] = 1;
-                else HandleKey(key, true);
+                else
+                {
+                    HandleKey(key, true);
+                    if (key == CORE.Input.Keyboard.exitKey) CORE.Window.shouldClose = true;
+                }
             }
             else if (action == AKEY_EVENT_ACTION_MULTIPLE) CORE.Input.Keyboard.keyRepeatInFrame[key] = 1;
             else HandleKey(key, false);
@@ -1870,9 +2022,8 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
     bool touchDown = (CORE.Input.Touch.pointCount > 0);
     if (touchDown != (CORE.Input.Touch.currentTouchState[MOUSE_BUTTON_LEFT] == 1) || (!touchDown && platform.buttonReleasePending[MOUSE_BUTTON_LEFT])) HandleMouseButton(MOUSE_BUTTON_LEFT, touchDown);
 
-    // Stores the previous position of touch[0] only while it's active to calculate the delta
-    if (flags == AMOTION_EVENT_ACTION_MOVE) CORE.Input.Mouse.previousPosition = CORE.Input.Mouse.currentPosition;
-    else CORE.Input.Mouse.previousPosition = CORE.Input.Touch.position[0];
+    // Touch down and up do not move the mouse, the delta is only calculated while touch[0] is moving
+    if (flags != AMOTION_EVENT_ACTION_MOVE) CORE.Input.Mouse.previousPosition = CORE.Input.Touch.position[0];
 
     // Map touch[0] as mouse input for convenience
     CORE.Input.Mouse.currentPosition = CORE.Input.Touch.position[0];
@@ -2256,6 +2407,123 @@ static Vector2 GetScreenPosition(float x, float y)
     float heightRatio = (float)(CORE.Window.screen.height + CORE.Window.renderOffset.y)/(float)CORE.Window.display.height;
 
     return (Vector2){ x*widthRatio - (float)CORE.Window.renderOffset.x/2, y*heightRatio - (float)CORE.Window.renderOffset.y/2 };
+}
+
+// Request an update applied on the main (UI) thread
+// NOTE: Never waits for the main thread
+static void RequestUiUpdate(unsigned int request)
+{
+    if (ui.eventFd < 0) return;
+
+    atomic_fetch_or(&ui.requests, request);
+
+    uint64_t value = 1;
+    write(ui.eventFd, &value, sizeof(value));
+}
+
+// Request system bars visibility from window flags
+static void UpdateSystemBars(void)
+{
+    atomic_store(&ui.immersive, FLAG_IS_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE) || FLAG_IS_SET(CORE.Window.flags, FLAG_BORDERLESS_WINDOWED_MODE));
+    RequestUiUpdate(UI_REQUEST_SYSTEM_BARS);
+
+    // Window size can change with the system bars
+    platform.displayCheckEnd = GetTime() + 2.0;
+}
+
+// Apply pending requests on the main (UI) thread
+static int UiThreadCallback(int fd, int events, void *data)
+{
+    uint64_t value = 0;
+    read(fd, &value, sizeof(value));
+
+    unsigned int requests = atomic_exchange(&ui.requests, 0);
+    struct android_app *app = platform.app;
+    if ((requests == 0) || (app == NULL) || (app->activity == NULL)) return 1;
+
+    JNIEnv *env = app->activity->env;
+    jobject activity = app->activity->clazz;
+    int sdkVersion = app->activity->sdkVersion;
+
+    if ((*env)->PushLocalFrame(env, 32) != JNI_OK) return 1;
+
+    jclass activityClass = (*env)->GetObjectClass(env, activity);
+    jobject window = (*env)->CallObjectMethod(env, activity, (*env)->GetMethodID(env, activityClass, "getWindow", "()Landroid/view/Window;"));
+    jclass windowClass = (*env)->FindClass(env, "android/view/Window");
+    jobject view = (!JniFailed(env) && (window != NULL))? (*env)->CallObjectMethod(env, window, (*env)->GetMethodID(env, windowClass, "getDecorView", "()Landroid/view/View;")) : NULL;
+    jclass viewClass = (*env)->FindClass(env, "android/view/View");
+
+    if (!JniFailed(env) && (view != NULL))
+    {
+        if (FLAG_IS_SET(requests, UI_REQUEST_CURSOR) && (sdkVersion >= 24))
+        {
+            int cursor = atomic_load(&ui.cursor);
+            int iconType = ((cursor >= 0) && (cursor <= MOUSE_CURSOR_NOT_ALLOWED))? mapCursor[cursor] : POINTER_ICON_NULL;
+
+            jclass iconClass = (*env)->FindClass(env, "android/view/PointerIcon");
+            jobject icon = (*env)->CallStaticObjectMethod(env, iconClass, (*env)->GetStaticMethodID(env, iconClass, "getSystemIcon", "(Landroid/content/Context;I)Landroid/view/PointerIcon;"), activity, (jint)iconType);
+            if (!JniFailed(env)) (*env)->CallVoidMethod(env, view, (*env)->GetMethodID(env, viewClass, "setPointerIcon", "(Landroid/view/PointerIcon;)V"), icon);
+            JniFailed(env);
+        }
+
+        if (FLAG_IS_SET(requests, UI_REQUEST_CAPTURE) && (sdkVersion >= 26))
+        {
+            bool capture = atomic_load(&ui.pointerCapture);
+            (*env)->CallVoidMethod(env, view, (*env)->GetMethodID(env, viewClass, capture? "requestPointerCapture" : "releasePointerCapture", "()V"));
+            JniFailed(env);
+        }
+
+        if (FLAG_IS_SET(requests, UI_REQUEST_SOFT_KEYBOARD))
+        {
+            // NOTE: Input method serves the decor view, the native content view never gets the focus
+            jstring serviceName = (*env)->NewStringUTF(env, "input_method");
+            jobject manager = (*env)->CallObjectMethod(env, activity, (*env)->GetMethodID(env, activityClass, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;"), serviceName);
+            jclass managerClass = (*env)->FindClass(env, "android/view/inputmethod/InputMethodManager");
+
+            if (!JniFailed(env) && (manager != NULL))
+            {
+                if (atomic_load(&ui.softKeyboard)) (*env)->CallBooleanMethod(env, manager, (*env)->GetMethodID(env, managerClass, "showSoftInput", "(Landroid/view/View;I)Z"), view, 0);
+                else
+                {
+                    jobject token = (*env)->CallObjectMethod(env, view, (*env)->GetMethodID(env, viewClass, "getWindowToken", "()Landroid/os/IBinder;"));
+                    if (!JniFailed(env)) (*env)->CallBooleanMethod(env, manager, (*env)->GetMethodID(env, managerClass, "hideSoftInputFromWindow", "(Landroid/os/IBinder;I)Z"), token, 0);
+                }
+
+                JniFailed(env);
+            }
+        }
+
+        if (FLAG_IS_SET(requests, UI_REQUEST_SYSTEM_BARS))
+        {
+            bool immersive = atomic_load(&ui.immersive);
+
+            if (sdkVersion >= 30)
+            {
+                // Bars shown by a swipe are hidden again after a while (BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE)
+                jobject controller = (*env)->CallObjectMethod(env, window, (*env)->GetMethodID(env, windowClass, "getInsetsController", "()Landroid/view/WindowInsetsController;"));
+                jclass typeClass = (*env)->FindClass(env, "android/view/WindowInsets$Type");
+                jint types = JniFailed(env)? 0 : (*env)->CallStaticIntMethod(env, typeClass, (*env)->GetStaticMethodID(env, typeClass, "systemBars", "()I"));
+
+                if (!JniFailed(env) && (controller != NULL))
+                {
+                    jclass controllerClass = (*env)->FindClass(env, "android/view/WindowInsetsController");
+                    (*env)->CallVoidMethod(env, controller, (*env)->GetMethodID(env, controllerClass, "setSystemBarsBehavior", "(I)V"), (jint)SYSTEM_BARS_TRANSIENT);
+                    (*env)->CallVoidMethod(env, controller, (*env)->GetMethodID(env, controllerClass, immersive? "hide" : "show", "(I)V"), types);
+                    JniFailed(env);
+                }
+            }
+            else
+            {
+                jint visibility = immersive? SYSTEM_UI_IMMERSIVE : 0;
+                (*env)->CallVoidMethod(env, view, (*env)->GetMethodID(env, viewClass, "setSystemUiVisibility", "(I)V"), visibility);
+                JniFailed(env);
+            }
+        }
+    }
+
+    (*env)->PopLocalFrame(env, NULL);
+
+    return 1;
 }
 
 // Replacement for fopen(), used as linker wrap entry point (-Wl,--wrap=fopen)

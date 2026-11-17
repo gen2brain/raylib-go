@@ -10,6 +10,8 @@ package rl
 #include <android_native_app_glue.h>
 
 extern struct android_app* GetAndroidApp();
+extern void ShowSoftKeyboard(void);
+extern void HideSoftKeyboard(void);
 
 static AAssetManager* GetAssetManager() {
     struct android_app* app = GetAndroidApp();
@@ -66,32 +68,48 @@ func android_run() {
 
 // ShowCursor - Shows cursor
 func ShowCursor() {
-	return
+	C.ShowCursor()
 }
 
 // HideCursor - Hides cursor
 func HideCursor() {
-	return
+	C.HideCursor()
 }
 
 // IsCursorHidden - Check if cursor is not visible
 func IsCursorHidden() bool {
-	return false
+	ret := C.IsCursorHidden()
+	v := bool(ret)
+
+	return v
 }
 
 // IsCursorOnScreen - Check if cursor is on the screen
 func IsCursorOnScreen() bool {
-	return false
+	ret := C.IsCursorOnScreen()
+	v := bool(ret)
+
+	return v
 }
 
 // EnableCursor - Enables cursor (unlock cursor)
 func EnableCursor() {
-	return
+	C.EnableCursor()
 }
 
 // DisableCursor - Disables cursor (lock cursor)
 func DisableCursor() {
-	return
+	C.DisableCursor()
+}
+
+// ShowSoftKeyboard - Shows on-screen keyboard (Android only)
+func ShowSoftKeyboard() {
+	C.ShowSoftKeyboard()
+}
+
+// HideSoftKeyboard - Hides on-screen keyboard (Android only)
+func HideSoftKeyboard() {
+	C.HideSoftKeyboard()
 }
 
 // IsFileDropped - Check if a file has been dropped into window
