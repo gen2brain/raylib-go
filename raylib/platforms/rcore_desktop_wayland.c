@@ -107,8 +107,10 @@
 
 // Gamepad support (evdev)
 #define MG_MAX_GAMEPADS MAX_GAMEPADS
-#define MG_IMPLEMENTATION
-#include "../external/RGFW/deps/minigamepad.h"
+#if !defined(MG_IMPLEMENTATION)
+    #define MG_IMPLEMENTATION
+    #include "../external/RGFW/deps/minigamepad.h"
+#endif
 
 // NOTE: linux/input-event-codes.h defines KEY_<X> macros that collide with raylib KEY_<X> values,
 // macros are undefined to use the raylib values, also in rcore.c

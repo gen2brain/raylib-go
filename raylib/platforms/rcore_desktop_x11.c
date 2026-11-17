@@ -101,8 +101,10 @@
 // Gamepad support (evdev), Linux only
 #if defined(__linux__)
     #define MG_MAX_GAMEPADS MAX_GAMEPADS
-    #define MG_IMPLEMENTATION
-    #include "../external/RGFW/deps/minigamepad.h"
+    #if !defined(MG_IMPLEMENTATION)
+        #define MG_IMPLEMENTATION
+        #include "../external/RGFW/deps/minigamepad.h"
+    #endif
 #endif
 
 // NOTE: linux/input.h (included by minigamepad) defines KEY_<X> macros that collide with raylib KEY_<X> values,

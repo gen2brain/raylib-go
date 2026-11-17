@@ -21,6 +21,8 @@
 *           - Others (not tested)
 *       > PLATFORM_DESKTOP_WIN32 (native Win32):
 *           - Windows (Win32, Win64)
+*       > PLATFORM_DESKTOP_LINUX (native Wayland and X11, selected at runtime):
+*           - Linux (Wayland compositors, X11 servers)
 *       > PLATFORM_DESKTOP_WAYLAND (native Wayland):
 *           - Linux (Wayland compositors)
 *       > PLATFORM_DESKTOP_X11 (native X11):
@@ -539,6 +541,8 @@ const char *TextFormat(const char *text, ...); // Formatting of text with variab
     #include "platforms/rcore_desktop_rgfw.c"
 #elif defined(PLATFORM_DESKTOP_WIN32)
     #include "platforms/rcore_desktop_win32.c"
+#elif defined(PLATFORM_DESKTOP_LINUX)
+    #include "platforms/rcore_desktop_linux.c"
 #elif defined(PLATFORM_DESKTOP_WAYLAND)
     #include "platforms/rcore_desktop_wayland.c"
 #elif defined(PLATFORM_DESKTOP_X11)
@@ -619,6 +623,8 @@ void InitWindow(int width, int height, const char *title)
     TRACELOG(LOG_INFO, "Platform backend: DESKTOP (RGFW)");
 #elif defined(PLATFORM_DESKTOP_WIN32)
     TRACELOG(LOG_INFO, "Platform backend: DESKTOP (WIN32)");
+#elif defined(PLATFORM_DESKTOP_LINUX)
+    TRACELOG(LOG_INFO, "Platform backend: DESKTOP (LINUX)");
 #elif defined(PLATFORM_DESKTOP_WAYLAND)
     TRACELOG(LOG_INFO, "Platform backend: DESKTOP (WAYLAND)");
 #elif defined(PLATFORM_DESKTOP_X11)
@@ -1115,7 +1121,7 @@ void BeginScissorMode(int x, int y, int width, int height)
     rlEnableScissorTest();
 
     // NOTE: Fullscreen windows of the native platforms keep the content scale, there is no video mode change
-#if defined(PLATFORM_DESKTOP_X11) || defined(PLATFORM_DESKTOP_WAYLAND) || defined(PLATFORM_DESKTOP_COCOA) || defined(PLATFORM_DESKTOP_WIN32)
+#if defined(PLATFORM_DESKTOP_LINUX) || defined(PLATFORM_DESKTOP_X11) || defined(PLATFORM_DESKTOP_WAYLAND) || defined(PLATFORM_DESKTOP_COCOA) || defined(PLATFORM_DESKTOP_WIN32)
     bool scaled = FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_HIGHDPI);
 #else
     bool scaled = (FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_HIGHDPI) && !FLAG_IS_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE));
