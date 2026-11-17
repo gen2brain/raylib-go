@@ -611,6 +611,11 @@ struct mg_gamepad {
 #include <linux/input.h>
 #include <linux/input-event-codes.h>
 
+/* ABS_PROFILE was added in Linux 5.11 headers */
+#ifndef ABS_PROFILE
+#define ABS_PROFILE 0x21
+#endif
+
 struct mg_gamepads_src {
     int inotify, watch;
 };

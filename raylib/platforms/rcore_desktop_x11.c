@@ -93,6 +93,9 @@
 #include <unistd.h>                 // Required for: readlink(), getpid()
 #include <errno.h>                  // Required for: errno, EINTR
 #include <dlfcn.h>                  // Required for: dlsym()
+#if !defined(RTLD_DEFAULT)
+    #define RTLD_DEFAULT ((void *)0)    // glibc older than 2.41 defines it only with _GNU_SOURCE
+#endif
 #include <math.h>                   // Required for: roundf()
 
 // Gamepad support (evdev), Linux only
