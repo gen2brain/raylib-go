@@ -5,10 +5,8 @@ package rl
 
 /*
 #cgo linux CFLAGS: -DPLATFORM_DESKTOP_WAYLAND
-#cgo linux LDFLAGS: -lwayland-client -lwayland-cursor -lxkbcommon -lm -ldl -lrt
-#cgo linux,!software LDFLAGS: -lwayland-egl -lEGL
-#cgo linux,es2,!software linux,es3,!software LDFLAGS: -lGLESv2
-#cgo linux,arm64,!termux,!opengl11,!opengl21,!opengl33,!opengl43,!es2,!es3,!software LDFLAGS: -lGLESv2
+#cgo linux LDFLAGS: -lm -ldl -lrt
+#cgo linux,es3,!es2,!software LDFLAGS: -lGLESv2
 #cgo linux,opengl11,!es2,!es3,!software LDFLAGS: -lGL
 
 #cgo linux,opengl11,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_11

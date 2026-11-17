@@ -24,9 +24,9 @@
 *           Draw client-side decorations with raylib, libdecor is not loaded
 *
 *   DEPENDENCIES:
-*       - libwayland-client, libwayland-egl, libwayland-cursor: Wayland protocol, EGL window and cursor themes
-*       - libxkbcommon: Keyboard keymaps and compose sequences
-*       - EGL: OpenGL context creation
+*       - libwayland-client, libwayland-egl, libwayland-cursor (loaded at runtime): Wayland protocol, EGL window and cursor themes
+*       - libxkbcommon (loaded at runtime): Keyboard keymaps and compose sequences
+*       - EGL (loaded at runtime): OpenGL context creation
 *       - libdecor (optional, loaded at runtime): Client-side decorations
 *       - minigamepad: Gamepad support (evdev)
 *       - gestures: Gestures system for touch-ready devices (or simulated from mouse inputs)
@@ -53,7 +53,45 @@
 *
 **********************************************************************************************/
 
-#include <wayland-client.h>         // Wayland client library
+#include <wayland-client-core.h>    // Wayland client library
+
+// libwayland-client functions, loaded at runtime
+#define LIBWAYLAND_CLIENT_FUNCTIONS(F) \
+    F(wl_display_cancel_read) F(wl_display_connect) F(wl_display_create_queue) F(wl_display_disconnect) \
+    F(wl_display_dispatch) F(wl_display_dispatch_pending) F(wl_display_dispatch_queue_pending) \
+    F(wl_display_flush) F(wl_display_get_error) F(wl_display_get_fd) F(wl_display_get_protocol_error) \
+    F(wl_display_prepare_read) F(wl_display_prepare_read_queue) F(wl_display_read_events) \
+    F(wl_display_roundtrip) F(wl_event_queue_destroy) F(wl_proxy_add_listener) F(wl_proxy_create_wrapper) \
+    F(wl_proxy_destroy) F(wl_proxy_get_user_data) F(wl_proxy_get_version) F(wl_proxy_marshal_flags) \
+    F(wl_proxy_set_queue) F(wl_proxy_wrapper_destroy)
+#define LIBRARY_FUNCTION(name) __typeof__(&name) p##name;
+static struct { LIBWAYLAND_CLIENT_FUNCTIONS(LIBRARY_FUNCTION) } waylandClient = { 0 };
+#define wl_display_cancel_read            waylandClient.pwl_display_cancel_read
+#define wl_display_connect                waylandClient.pwl_display_connect
+#define wl_display_create_queue           waylandClient.pwl_display_create_queue
+#define wl_display_disconnect             waylandClient.pwl_display_disconnect
+#define wl_display_dispatch               waylandClient.pwl_display_dispatch
+#define wl_display_dispatch_pending       waylandClient.pwl_display_dispatch_pending
+#define wl_display_dispatch_queue_pending waylandClient.pwl_display_dispatch_queue_pending
+#define wl_display_flush                  waylandClient.pwl_display_flush
+#define wl_display_get_error              waylandClient.pwl_display_get_error
+#define wl_display_get_fd                 waylandClient.pwl_display_get_fd
+#define wl_display_get_protocol_error     waylandClient.pwl_display_get_protocol_error
+#define wl_display_prepare_read           waylandClient.pwl_display_prepare_read
+#define wl_display_prepare_read_queue     waylandClient.pwl_display_prepare_read_queue
+#define wl_display_read_events            waylandClient.pwl_display_read_events
+#define wl_display_roundtrip              waylandClient.pwl_display_roundtrip
+#define wl_event_queue_destroy            waylandClient.pwl_event_queue_destroy
+#define wl_proxy_add_listener             waylandClient.pwl_proxy_add_listener
+#define wl_proxy_create_wrapper           waylandClient.pwl_proxy_create_wrapper
+#define wl_proxy_destroy                  waylandClient.pwl_proxy_destroy
+#define wl_proxy_get_user_data            waylandClient.pwl_proxy_get_user_data
+#define wl_proxy_get_version              waylandClient.pwl_proxy_get_version
+#define wl_proxy_marshal_flags            waylandClient.pwl_proxy_marshal_flags
+#define wl_proxy_set_queue                waylandClient.pwl_proxy_set_queue
+#define wl_proxy_wrapper_destroy          waylandClient.pwl_proxy_wrapper_destroy
+
+#include "../external/wayland/wayland-client-protocol.h"
 #include <wayland-egl.h>            // Wayland EGL window
 #include <wayland-cursor.h>         // Wayland cursor themes
 #include <xkbcommon/xkbcommon.h>    // Keyboard keymap and state
@@ -79,6 +117,7 @@
 #include "../external/wayland/text-input-unstable-v3-client-protocol.h"
 
 // Wayland protocols interfaces code
+#include "../external/wayland/wayland-client-protocol-code.h"
 #include "../external/wayland/xdg-shell-client-protocol-code.h"
 #include "../external/wayland/xdg-decoration-unstable-v1-client-protocol-code.h"
 #include "../external/wayland/fractional-scale-v1-client-protocol-code.h"
@@ -104,6 +143,30 @@
 #include <errno.h>                  // Required for: errno, EINTR, EAGAIN
 #include <dlfcn.h>                  // Required for: dlopen(), dlsym(), dlclose()
 #include <math.h>                   // Required for: roundf(), ceilf()
+
+// System library functions, loaded at runtime
+#define LIBWAYLAND_CURSOR_FUNCTIONS(F) \
+    F(wl_cursor_image_get_buffer) F(wl_cursor_theme_destroy) F(wl_cursor_theme_get_cursor) \
+    F(wl_cursor_theme_load)
+#define LIBXKBCOMMON_FUNCTIONS(F) \
+    F(xkb_compose_state_feed) F(xkb_compose_state_get_one_sym) F(xkb_compose_state_get_status) \
+    F(xkb_compose_state_new) F(xkb_compose_state_reset) F(xkb_compose_state_unref) \
+    F(xkb_compose_table_new_from_locale) F(xkb_compose_table_unref) F(xkb_context_new) F(xkb_context_unref) \
+    F(xkb_keymap_key_get_syms_by_level) F(xkb_keymap_key_repeats) F(xkb_keymap_new_from_string) \
+    F(xkb_keymap_unref) F(xkb_keysym_to_utf32) F(xkb_keysym_to_utf8) F(xkb_state_key_get_layout) \
+    F(xkb_state_key_get_one_sym) F(xkb_state_mod_name_is_active) F(xkb_state_new) F(xkb_state_unref) \
+    F(xkb_state_update_mask)
+#if defined(GRAPHICS_API_OPENGL_SOFTWARE)
+    #define LIBWAYLAND_EGL_FUNCTIONS(F)
+    #define LIBEGL_FUNCTIONS(F)
+#else
+    #define LIBWAYLAND_EGL_FUNCTIONS(F) \
+        F(wl_egl_window_create) F(wl_egl_window_destroy) F(wl_egl_window_resize)
+    #define LIBEGL_FUNCTIONS(F) \
+        F(eglBindAPI) F(eglChooseConfig) F(eglCreateContext) F(eglCreateWindowSurface) F(eglDestroyContext) \
+        F(eglDestroySurface) F(eglGetConfigAttrib) F(eglGetDisplay) F(eglGetProcAddress) F(eglInitialize) \
+        F(eglMakeCurrent) F(eglSwapBuffers) F(eglSwapInterval) F(eglTerminate)
+#endif
 
 // Gamepad support (evdev)
 #define MG_MAX_GAMEPADS MAX_GAMEPADS
@@ -525,7 +588,67 @@ typedef struct {
 
     // Gamepads
     mg_gamepads minigamepad;        // Gamepads (evdev)
+
+    // System libraries, loaded at runtime
+    void *libwaylandClient;         // Wayland client library
+    void *libwaylandCursor;         // Wayland cursor themes library
+    void *libwaylandEgl;            // Wayland EGL window library
+    void *libxkbcommon;             // Keyboard keymap library
+    void *libEGL;                   // EGL library
+    struct {
+        LIBWAYLAND_CURSOR_FUNCTIONS(LIBRARY_FUNCTION)
+        LIBWAYLAND_EGL_FUNCTIONS(LIBRARY_FUNCTION)
+        LIBXKBCOMMON_FUNCTIONS(LIBRARY_FUNCTION)
+        LIBEGL_FUNCTIONS(LIBRARY_FUNCTION)
+    } lib;
 } PlatformData;
+
+// System library functions, loaded at runtime
+#define wl_cursor_image_get_buffer        platform.lib.pwl_cursor_image_get_buffer
+#define wl_cursor_theme_destroy           platform.lib.pwl_cursor_theme_destroy
+#define wl_cursor_theme_get_cursor        platform.lib.pwl_cursor_theme_get_cursor
+#define wl_cursor_theme_load              platform.lib.pwl_cursor_theme_load
+#define xkb_compose_state_feed            platform.lib.pxkb_compose_state_feed
+#define xkb_compose_state_get_one_sym     platform.lib.pxkb_compose_state_get_one_sym
+#define xkb_compose_state_get_status      platform.lib.pxkb_compose_state_get_status
+#define xkb_compose_state_new             platform.lib.pxkb_compose_state_new
+#define xkb_compose_state_reset           platform.lib.pxkb_compose_state_reset
+#define xkb_compose_state_unref           platform.lib.pxkb_compose_state_unref
+#define xkb_compose_table_new_from_locale platform.lib.pxkb_compose_table_new_from_locale
+#define xkb_compose_table_unref           platform.lib.pxkb_compose_table_unref
+#define xkb_context_new                   platform.lib.pxkb_context_new
+#define xkb_context_unref                 platform.lib.pxkb_context_unref
+#define xkb_keymap_key_get_syms_by_level  platform.lib.pxkb_keymap_key_get_syms_by_level
+#define xkb_keymap_key_repeats            platform.lib.pxkb_keymap_key_repeats
+#define xkb_keymap_new_from_string        platform.lib.pxkb_keymap_new_from_string
+#define xkb_keymap_unref                  platform.lib.pxkb_keymap_unref
+#define xkb_keysym_to_utf32               platform.lib.pxkb_keysym_to_utf32
+#define xkb_keysym_to_utf8                platform.lib.pxkb_keysym_to_utf8
+#define xkb_state_key_get_layout          platform.lib.pxkb_state_key_get_layout
+#define xkb_state_key_get_one_sym         platform.lib.pxkb_state_key_get_one_sym
+#define xkb_state_mod_name_is_active      platform.lib.pxkb_state_mod_name_is_active
+#define xkb_state_new                     platform.lib.pxkb_state_new
+#define xkb_state_unref                   platform.lib.pxkb_state_unref
+#define xkb_state_update_mask             platform.lib.pxkb_state_update_mask
+#if !defined(GRAPHICS_API_OPENGL_SOFTWARE)
+    #define wl_egl_window_create              platform.lib.pwl_egl_window_create
+    #define wl_egl_window_destroy             platform.lib.pwl_egl_window_destroy
+    #define wl_egl_window_resize              platform.lib.pwl_egl_window_resize
+    #define eglBindAPI                        platform.lib.peglBindAPI
+    #define eglChooseConfig                   platform.lib.peglChooseConfig
+    #define eglCreateContext                  platform.lib.peglCreateContext
+    #define eglCreateWindowSurface            platform.lib.peglCreateWindowSurface
+    #define eglDestroyContext                 platform.lib.peglDestroyContext
+    #define eglDestroySurface                 platform.lib.peglDestroySurface
+    #define eglGetConfigAttrib                platform.lib.peglGetConfigAttrib
+    #define eglGetDisplay                     platform.lib.peglGetDisplay
+    #define eglGetProcAddress                 platform.lib.peglGetProcAddress
+    #define eglInitialize                     platform.lib.peglInitialize
+    #define eglMakeCurrent                    platform.lib.peglMakeCurrent
+    #define eglSwapBuffers                    platform.lib.peglSwapBuffers
+    #define eglSwapInterval                   platform.lib.peglSwapInterval
+    #define eglTerminate                      platform.lib.peglTerminate
+#endif
 
 //----------------------------------------------------------------------------------
 // Global Variables Definition
@@ -616,6 +739,8 @@ static const int mgAxisConvertTable[] = {
 int InitPlatform(void);          // Initialize platform (graphics, inputs and more)
 void ClosePlatform(void);        // Close platform
 
+static bool LoadLibraries(void);                                // Load system libraries and their functions
+static void CloseLibraries(void);                               // Close system libraries
 static bool InitGraphicsContext(void);                          // Initialize EGL display, context and window surface
 static void DispatchEvents(int timeout);                        // Read and dispatch Wayland events, timeout in milliseconds (-1 blocks)
 static void WaitFrameCallback(int timeout);                     // Wait for the compositor frame callback, timeout in milliseconds
@@ -2065,6 +2190,12 @@ void PollInputEvents(void)
 // Initialize platform: graphics, inputs and more
 int InitPlatform(void)
 {
+    if (!LoadLibraries())
+    {
+        CloseLibraries();
+        return -1;
+    }
+
     // Decorations mode preference
 #if defined(WAYLAND_CLIENT_DECORATIONS) || defined(WAYLAND_BUILTIN_DECORATIONS)
     platform.preferClientDecorations = true;
@@ -2330,7 +2461,74 @@ void ClosePlatform(void)
         wl_display_disconnect(platform.display);
     }
 
+    CloseLibraries();
+
     memset(&platform, 0, sizeof(platform));
+}
+
+// Load system libraries and their functions
+static bool LoadLibraries(void)
+{
+    struct { void **handle; const char *names[2]; } libraries[] = {
+        { &platform.libwaylandClient, { "libwayland-client.so.0", "libwayland-client.so" } },
+        { &platform.libwaylandCursor, { "libwayland-cursor.so.0", "libwayland-cursor.so" } },
+        { &platform.libxkbcommon, { "libxkbcommon.so.0", "libxkbcommon.so" } },
+#if !defined(GRAPHICS_API_OPENGL_SOFTWARE)
+        { &platform.libwaylandEgl, { "libwayland-egl.so.1", "libwayland-egl.so" } },
+        { &platform.libEGL, { "libEGL.so.1", "libEGL.so" } },
+#endif
+    };
+
+    for (int i = 0; i < (int)(sizeof(libraries)/sizeof(libraries[0])); i++)
+    {
+        *libraries[i].handle = dlopen(libraries[i].names[0], RTLD_LAZY | RTLD_LOCAL);
+        if (*libraries[i].handle == NULL) *libraries[i].handle = dlopen(libraries[i].names[1], RTLD_LAZY | RTLD_LOCAL);
+        if (*libraries[i].handle == NULL)
+        {
+            TRACELOG(LOG_WARNING, "WAYLAND: Failed to load %s", libraries[i].names[0]);
+            return false;
+        }
+    }
+
+    bool loaded = true;
+    void *library = NULL;
+
+    #define LOAD_CLIENT_FUNCTION(name) \
+        waylandClient.p##name = (__typeof__(waylandClient.p##name))dlsym(library, #name); \
+        if (waylandClient.p##name == NULL) { TRACELOG(LOG_WARNING, "WAYLAND: Failed to load function %s", #name); loaded = false; }
+    #define LOAD_PLATFORM_FUNCTION(name) \
+        platform.lib.p##name = (__typeof__(platform.lib.p##name))dlsym(library, #name); \
+        if (platform.lib.p##name == NULL) { TRACELOG(LOG_WARNING, "WAYLAND: Failed to load function %s", #name); loaded = false; }
+
+    library = platform.libwaylandClient;
+    LIBWAYLAND_CLIENT_FUNCTIONS(LOAD_CLIENT_FUNCTION)
+    library = platform.libwaylandCursor;
+    LIBWAYLAND_CURSOR_FUNCTIONS(LOAD_PLATFORM_FUNCTION)
+    library = platform.libxkbcommon;
+    LIBXKBCOMMON_FUNCTIONS(LOAD_PLATFORM_FUNCTION)
+    library = platform.libwaylandEgl;
+    LIBWAYLAND_EGL_FUNCTIONS(LOAD_PLATFORM_FUNCTION)
+    library = platform.libEGL;
+    LIBEGL_FUNCTIONS(LOAD_PLATFORM_FUNCTION)
+
+    #undef LOAD_PLATFORM_FUNCTION
+    #undef LOAD_CLIENT_FUNCTION
+
+    return loaded;
+}
+
+// Close system libraries
+static void CloseLibraries(void)
+{
+    void **libraries[] = { &platform.libEGL, &platform.libwaylandEgl, &platform.libxkbcommon, &platform.libwaylandCursor, &platform.libwaylandClient };
+
+    for (int i = 0; i < (int)(sizeof(libraries)/sizeof(libraries[0])); i++)
+    {
+        if (*libraries[i] != NULL) dlclose(*libraries[i]);
+        *libraries[i] = NULL;
+    }
+
+    memset(&waylandClient, 0, sizeof(waylandClient));
 }
 
 // Initialize EGL display, context and window surface

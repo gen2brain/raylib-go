@@ -153,7 +153,9 @@ DECLARE_PLATFORM_FUNCTIONS(X11)
 #define PollInputEvents PollInputEventsDrm
 #define InitPlatform InitPlatformDrm
 #define ClosePlatform ClosePlatformDrm
+#define CloseLibraries CloseLibrariesDrm
 #define InitKeyboard InitKeyboardDrm
+#define LoadLibraries LoadLibrariesDrm
 #define PlatformData PlatformDataDrm
 #define linuxToRaylibMap linuxToRaylibMapDrm
 #define platform platformDrm
@@ -208,11 +210,29 @@ DECLARE_PLATFORM_FUNCTIONS(X11)
 #undef PollInputEvents
 #undef InitPlatform
 #undef ClosePlatform
+#undef CloseLibraries
 #undef InitKeyboard
+#undef LoadLibraries
 #undef PlatformData
 #undef linuxToRaylibMap
 #undef platform
 #undef KEYMAP_SIZE
+#undef LIBEGL_FUNCTIONS
+#undef LIBRARY_FUNCTION
+#undef LOAD_FUNCTION
+#undef eglBindAPI
+#undef eglChooseConfig
+#undef eglCreateContext
+#undef eglCreateWindowSurface
+#undef eglDestroyContext
+#undef eglDestroySurface
+#undef eglGetConfigAttrib
+#undef eglGetDisplay
+#undef eglGetProcAddress
+#undef eglInitialize
+#undef eglMakeCurrent
+#undef eglSwapBuffers
+#undef eglTerminate
 
 // Wayland platform
 #define WindowShouldClose WindowShouldCloseWayland
@@ -263,12 +283,14 @@ DECLARE_PLATFORM_FUNCTIONS(X11)
 #define PollInputEvents PollInputEventsWayland
 #define InitPlatform InitPlatformWayland
 #define ClosePlatform ClosePlatformWayland
+#define CloseLibraries CloseLibrariesWayland
 #define HandleKey HandleKeyWayland
 #define HandleKeyChar HandleKeyCharWayland
 #define HandleMouseButton HandleMouseButtonWayland
 #define HandleMouseMove HandleMouseMoveWayland
 #define HandleTouch HandleTouchWayland
 #define InitGraphicsContext InitGraphicsContextWayland
+#define LoadLibraries LoadLibrariesWayland
 #define LockPointer LockPointerWayland
 #define MonitorInfo MonitorInfoWayland
 #define PlatformData PlatformDataWayland
@@ -333,12 +355,14 @@ DECLARE_PLATFORM_FUNCTIONS(X11)
 #undef PollInputEvents
 #undef InitPlatform
 #undef ClosePlatform
+#undef CloseLibraries
 #undef HandleKey
 #undef HandleKeyChar
 #undef HandleMouseButton
 #undef HandleMouseMove
 #undef HandleTouch
 #undef InitGraphicsContext
+#undef LoadLibraries
 #undef LockPointer
 #undef MonitorInfo
 #undef PlatformData
@@ -353,8 +377,27 @@ DECLARE_PLATFORM_FUNCTIONS(X11)
 #undef mgButtonConvertTable
 #undef platform
 #undef KEYMAP_SIZE
+#undef LIBEGL_FUNCTIONS
+#undef LIBRARY_FUNCTION
+#undef LIBXKBCOMMON_FUNCTIONS
 #undef MAX_MONITORS
 #undef MAX_WINDOW_ICONS
+#undef eglBindAPI
+#undef eglChooseConfig
+#undef eglCreateContext
+#undef eglCreateWindowSurface
+#undef eglDestroyContext
+#undef eglDestroySurface
+#undef eglGetConfigAttrib
+#undef eglGetDisplay
+#undef eglGetProcAddress
+#undef eglInitialize
+#undef eglMakeCurrent
+#undef eglSwapBuffers
+#undef eglSwapInterval
+#undef eglTerminate
+#undef xkb_keysym_to_utf32
+#undef xkb_keysym_to_utf8
 
 // X11 platform
 #define WindowShouldClose WindowShouldCloseX11
@@ -405,6 +448,7 @@ DECLARE_PLATFORM_FUNCTIONS(X11)
 #define PollInputEvents PollInputEventsX11
 #define InitPlatform InitPlatformX11
 #define ClosePlatform ClosePlatformX11
+#define CloseLibraries CloseLibrariesX11
 #define HandleKey HandleKeyX11
 #define HandleKeyChar HandleKeyCharX11
 #define HandleMouseButton HandleMouseButtonX11
@@ -412,6 +456,7 @@ DECLARE_PLATFORM_FUNCTIONS(X11)
 #define HandleTouch HandleTouchX11
 #define InitGraphicsContext InitGraphicsContextX11
 #define InitKeyboard InitKeyboardX11
+#define LoadLibraries LoadLibrariesX11
 #define LockPointer LockPointerX11
 #define MonitorInfo MonitorInfoX11
 #define PlatformData PlatformDataX11
@@ -475,6 +520,7 @@ DECLARE_PLATFORM_FUNCTIONS(X11)
 #undef PollInputEvents
 #undef InitPlatform
 #undef ClosePlatform
+#undef CloseLibraries
 #undef HandleKey
 #undef HandleKeyChar
 #undef HandleMouseButton
@@ -482,6 +528,7 @@ DECLARE_PLATFORM_FUNCTIONS(X11)
 #undef HandleTouch
 #undef InitGraphicsContext
 #undef InitKeyboard
+#undef LoadLibraries
 #undef LockPointer
 #undef MonitorInfo
 #undef PlatformData
@@ -495,8 +542,28 @@ DECLARE_PLATFORM_FUNCTIONS(X11)
 #undef mgButtonConvertTable
 #undef platform
 #undef KEYMAP_SIZE
+#undef LIBEGL_FUNCTIONS
+#undef LIBRARY_FUNCTION
+#undef LIBXKBCOMMON_FUNCTIONS
+#undef LOAD_FUNCTION
 #undef MAX_MONITORS
 #undef MAX_WINDOW_ICONS
+#undef eglBindAPI
+#undef eglChooseConfig
+#undef eglCreateContext
+#undef eglCreateWindowSurface
+#undef eglDestroyContext
+#undef eglDestroySurface
+#undef eglGetConfigAttrib
+#undef eglGetDisplay
+#undef eglGetProcAddress
+#undef eglInitialize
+#undef eglMakeCurrent
+#undef eglSwapBuffers
+#undef eglSwapInterval
+#undef eglTerminate
+#undef xkb_keysym_to_utf32
+#undef xkb_keysym_to_utf8
 
 //----------------------------------------------------------------------------------
 // Types and Structures Definition

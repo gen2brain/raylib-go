@@ -887,7 +887,8 @@ RLAPI void rlLoadDrawQuad(void);     // Load and draw a quad
     // NOTE: OpenGL ES 2.0 can be enabled on Desktop platforms,
     // in that case, functions are loaded from a custom glad for OpenGL ES 2.0
     // TODO: rlgl OpenGL ES 2.0 selection shouldn't depend on raylib platform macros, a specific GLAD shouldn't be neither required
-    #if defined(PLATFORM_DESKTOP_GLFW) || defined(PLATFORM_DESKTOP_SDL) || defined(PLATFORM_DESKTOP_COCOA)
+    #if defined(PLATFORM_DESKTOP_GLFW) || defined(PLATFORM_DESKTOP_SDL) || defined(PLATFORM_DESKTOP_COCOA) || \
+        defined(PLATFORM_DESKTOP_X11) || defined(PLATFORM_DESKTOP_WAYLAND) || defined(PLATFORM_DESKTOP_LINUX) || defined(PLATFORM_DRM)
         #define GLAD_GLES2_IMPLEMENTATION
         #include "external/glad_gles2.h"
     #else
@@ -895,15 +896,6 @@ RLAPI void rlLoadDrawQuad(void);     // Load and draw a quad
         //#include <EGL/egl.h>          // EGL library -> not required, platform layer
         #include <GLES2/gl2.h>          // OpenGL ES 2.0 library
         #include <GLES2/gl2ext.h>       // OpenGL ES 2.0 extensions library
-    #endif
-
-    // It seems OpenGL ES 2.0 instancing entry points are not defined on Raspberry Pi
-    // provided headers (despite being defined in official Khronos GLES2 headers)
-    // TODO: Avoid raylib platform-dependent code on rlgl, it should be a completely portable library
-    #if defined(PLATFORM_DRM)           // Use CONFIG_DRM?
-    typedef void (GL_APIENTRYP PFNGLDRAWARRAYSINSTANCEDEXTPROC) (GLenum mode, GLint start, GLsizei count, GLsizei primcount);
-    typedef void (GL_APIENTRYP PFNGLDRAWELEMENTSINSTANCEDEXTPROC) (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount);
-    typedef void (GL_APIENTRYP PFNGLVERTEXATTRIBDIVISOREXTPROC) (GLuint index, GLuint divisor);
     #endif
 #endif
 
@@ -2457,7 +2449,8 @@ void rlLoadExtensions(void *loader)
 
 #elif defined(GRAPHICS_API_OPENGL_ES2)
 
-    #if defined(PLATFORM_DESKTOP_GLFW) || defined(PLATFORM_DESKTOP_SDL) || defined(PLATFORM_DESKTOP_COCOA)
+    #if defined(PLATFORM_DESKTOP_GLFW) || defined(PLATFORM_DESKTOP_SDL) || defined(PLATFORM_DESKTOP_COCOA) || \
+        defined(PLATFORM_DESKTOP_X11) || defined(PLATFORM_DESKTOP_WAYLAND) || defined(PLATFORM_DESKTOP_LINUX) || defined(PLATFORM_DRM)
     // TODO: Support GLAD loader for OpenGL ES 3.0
     if (gladLoadGLES2((GLADloadfunc)loader) == 0) TRACELOG(RL_LOG_WARNING, "GLAD: Cannot load OpenGL ES2.0 functions");
     else TRACELOG(RL_LOG_INFO, "GLAD: OpenGL ES 2.0 loaded successfully");

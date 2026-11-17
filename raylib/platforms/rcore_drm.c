@@ -20,7 +20,7 @@
 *           running processes orblocking the device if not restored properly. Use with care
 *
 *   DEPENDENCIES:
-*       - DRM and GLM: System libraries for display initialization and configuration
+*       - libdrm, libgbm, EGL (loaded at runtime): System libraries for display initialization and configuration
 *       - gestures: Gestures system for touch-ready devices (or simulated from mouse inputs)
 *
 *
@@ -94,6 +94,28 @@
     #define EGL_OPENGL_ES3_BIT  0x40
 #endif
 
+#include <dlfcn.h>          // Required for: dlopen(), dlsym(), dlclose()
+
+// System library functions, loaded at runtime
+#define LIBDRM_FUNCTIONS(F) \
+    F(drmHandleEvent) F(drmIoctl) F(drmModeAddFB) F(drmModeFreeConnector) F(drmModeFreeCrtc) \
+    F(drmModeFreeEncoder) F(drmModeFreeResources) F(drmModeGetConnector) F(drmModeGetCrtc) \
+    F(drmModeGetEncoder) F(drmModeGetResources) F(drmModePageFlip) F(drmModeRmFB) F(drmModeSetCrtc)
+#if defined(GRAPHICS_API_OPENGL_SOFTWARE)
+    #define LIBGBM_FUNCTIONS(F)
+    #define LIBEGL_FUNCTIONS(F)
+#else
+    #define LIBGBM_FUNCTIONS(F) \
+        F(gbm_bo_get_handle) F(gbm_bo_get_height) F(gbm_bo_get_stride) F(gbm_bo_get_width) \
+        F(gbm_bo_set_user_data) F(gbm_create_device) F(gbm_device_destroy) F(gbm_surface_create) \
+        F(gbm_surface_destroy) F(gbm_surface_lock_front_buffer) F(gbm_surface_release_buffer)
+    #define LIBEGL_FUNCTIONS(F) \
+        F(eglBindAPI) F(eglChooseConfig) F(eglCreateContext) F(eglCreateWindowSurface) F(eglDestroyContext) \
+        F(eglDestroySurface) F(eglGetConfigAttrib) F(eglGetDisplay) F(eglGetError) F(eglGetPlatformDisplay) \
+        F(eglGetProcAddress) F(eglInitialize) F(eglMakeCurrent) F(eglSwapBuffers) F(eglTerminate)
+#endif
+#define LIBRARY_FUNCTION(name) __typeof__(&name) p##name;
+
 #ifndef EGL_PLATFORM_GBM_KHR
     #define EGL_PLATFORM_GBM_KHR  0x31D7
 #endif
@@ -159,7 +181,61 @@ typedef struct {
     int gamepadAbsAxisRange[MAX_GAMEPADS][MAX_GAMEPAD_AXES][2]; // [0] = min, [1] = range value of the axes
     int gamepadAbsAxisMap[MAX_GAMEPADS][ABS_CNT]; // Maps the axes gamepads from the evdev api to a sequential one
     int gamepadCount;                   // The number of gamepads registered
+
+    // System libraries, loaded at runtime
+    void *libdrm;                       // Direct Rendering Manager library
+    void *libgbm;                       // Generic Buffer Management library
+    void *libEGL;                       // EGL library
+    struct {
+        LIBDRM_FUNCTIONS(LIBRARY_FUNCTION)
+        LIBGBM_FUNCTIONS(LIBRARY_FUNCTION)
+        LIBEGL_FUNCTIONS(LIBRARY_FUNCTION)
+    } lib;
 } PlatformData;
+
+// System library functions, loaded at runtime
+#define drmHandleEvent                platform.lib.pdrmHandleEvent
+#define drmIoctl                      platform.lib.pdrmIoctl
+#define drmModeAddFB                  platform.lib.pdrmModeAddFB
+#define drmModeFreeConnector          platform.lib.pdrmModeFreeConnector
+#define drmModeFreeCrtc               platform.lib.pdrmModeFreeCrtc
+#define drmModeFreeEncoder            platform.lib.pdrmModeFreeEncoder
+#define drmModeFreeResources          platform.lib.pdrmModeFreeResources
+#define drmModeGetConnector           platform.lib.pdrmModeGetConnector
+#define drmModeGetCrtc                platform.lib.pdrmModeGetCrtc
+#define drmModeGetEncoder             platform.lib.pdrmModeGetEncoder
+#define drmModeGetResources           platform.lib.pdrmModeGetResources
+#define drmModePageFlip               platform.lib.pdrmModePageFlip
+#define drmModeRmFB                   platform.lib.pdrmModeRmFB
+#define drmModeSetCrtc                platform.lib.pdrmModeSetCrtc
+#if !defined(GRAPHICS_API_OPENGL_SOFTWARE)
+    #define gbm_bo_get_handle             platform.lib.pgbm_bo_get_handle
+    #define gbm_bo_get_height             platform.lib.pgbm_bo_get_height
+    #define gbm_bo_get_stride             platform.lib.pgbm_bo_get_stride
+    #define gbm_bo_get_width              platform.lib.pgbm_bo_get_width
+    #define gbm_bo_set_user_data          platform.lib.pgbm_bo_set_user_data
+    #define gbm_create_device             platform.lib.pgbm_create_device
+    #define gbm_device_destroy            platform.lib.pgbm_device_destroy
+    #define gbm_surface_create            platform.lib.pgbm_surface_create
+    #define gbm_surface_destroy           platform.lib.pgbm_surface_destroy
+    #define gbm_surface_lock_front_buffer platform.lib.pgbm_surface_lock_front_buffer
+    #define gbm_surface_release_buffer    platform.lib.pgbm_surface_release_buffer
+    #define eglBindAPI                    platform.lib.peglBindAPI
+    #define eglChooseConfig               platform.lib.peglChooseConfig
+    #define eglCreateContext              platform.lib.peglCreateContext
+    #define eglCreateWindowSurface        platform.lib.peglCreateWindowSurface
+    #define eglDestroyContext             platform.lib.peglDestroyContext
+    #define eglDestroySurface             platform.lib.peglDestroySurface
+    #define eglGetConfigAttrib            platform.lib.peglGetConfigAttrib
+    #define eglGetDisplay                 platform.lib.peglGetDisplay
+    #define eglGetError                   platform.lib.peglGetError
+    #define eglGetPlatformDisplay         platform.lib.peglGetPlatformDisplay
+    #define eglGetProcAddress             platform.lib.peglGetProcAddress
+    #define eglInitialize                 platform.lib.peglInitialize
+    #define eglMakeCurrent                platform.lib.peglMakeCurrent
+    #define eglSwapBuffers                platform.lib.peglSwapBuffers
+    #define eglTerminate                  platform.lib.peglTerminate
+#endif
 
 #if defined(SUPPORT_DRM_CACHE)
 typedef struct {
@@ -263,6 +339,9 @@ static const short linuxToRaylibMap[KEYMAP_SIZE] = {
 //----------------------------------------------------------------------------------
 int InitPlatform(void);          // Initialize platform (graphics, inputs and more)
 void ClosePlatform(void);        // Close platform
+
+static bool LoadLibraries(void);                // Load system libraries and their functions
+static void CloseLibraries(void);               // Close system libraries
 
 #if SUPPORT_SSH_KEYBOARD_RPI
 static void InitKeyboard(void);                 // Initialize raw keyboard system
@@ -1152,6 +1231,12 @@ void PollInputEvents(void)
 // Initialize platform: graphics, inputs and more
 int InitPlatform(void)
 {
+    if (!LoadLibraries())
+    {
+        CloseLibraries();
+        return -1;
+    }
+
     platform.fd = -1;
     platform.connector = NULL;
     platform.modeIndex = -1;
@@ -1789,6 +1874,61 @@ void ClosePlatform(void)
     // NOTE: The atexit() handler does not run for programs that do not exit through exit()
     RestoreKeyboard();
 #endif
+
+    CloseLibraries();
+}
+
+// Load system libraries and their functions
+static bool LoadLibraries(void)
+{
+    struct { void **handle; const char *names[2]; } libraries[] = {
+        { &platform.libdrm, { "libdrm.so.2", "libdrm.so" } },
+#if !defined(GRAPHICS_API_OPENGL_SOFTWARE)
+        { &platform.libgbm, { "libgbm.so.1", "libgbm.so" } },
+        { &platform.libEGL, { "libEGL.so.1", "libEGL.so" } },
+#endif
+    };
+
+    for (int i = 0; i < (int)(sizeof(libraries)/sizeof(libraries[0])); i++)
+    {
+        *libraries[i].handle = dlopen(libraries[i].names[0], RTLD_LAZY | RTLD_LOCAL);
+        if (*libraries[i].handle == NULL) *libraries[i].handle = dlopen(libraries[i].names[1], RTLD_LAZY | RTLD_LOCAL);
+        if (*libraries[i].handle == NULL)
+        {
+            TRACELOG(LOG_WARNING, "DISPLAY: Failed to load %s", libraries[i].names[0]);
+            return false;
+        }
+    }
+
+    bool loaded = true;
+    void *library = NULL;
+
+    #define LOAD_FUNCTION(name) \
+        platform.lib.p##name = (__typeof__(platform.lib.p##name))dlsym(library, #name); \
+        if (platform.lib.p##name == NULL) { TRACELOG(LOG_WARNING, "DISPLAY: Failed to load function %s", #name); loaded = false; }
+
+    library = platform.libdrm;
+    LIBDRM_FUNCTIONS(LOAD_FUNCTION)
+    library = platform.libgbm;
+    LIBGBM_FUNCTIONS(LOAD_FUNCTION)
+    library = platform.libEGL;
+    LIBEGL_FUNCTIONS(LOAD_FUNCTION)
+
+    #undef LOAD_FUNCTION
+
+    return loaded;
+}
+
+// Close system libraries
+static void CloseLibraries(void)
+{
+    void **libraries[] = { &platform.libEGL, &platform.libgbm, &platform.libdrm };
+
+    for (int i = 0; i < (int)(sizeof(libraries)/sizeof(libraries[0])); i++)
+    {
+        if (*libraries[i] != NULL) dlclose(*libraries[i]);
+        *libraries[i] = NULL;
+    }
 }
 
 #if SUPPORT_SSH_KEYBOARD_RPI

@@ -22,12 +22,12 @@
 *           Custom flag for rcore on target platform -not used-
 *
 *   DEPENDENCIES:
-*       - libX11, libXext: X11 protocol, shared memory images, input shape and sync counters
-*       - libXrandr: Monitors
-*       - libXi: Smooth scrolling, touch and raw mouse motion (XInput2)
-*       - libXcursor: Cursor themes
-*       - libxkbcommon: Key symbols to characters
-*       - EGL: OpenGL context creation
+*       - libX11, libXext (loaded at runtime): X11 protocol, shared memory images, input shape and sync counters
+*       - libXrandr (loaded at runtime): Monitors
+*       - libXi (loaded at runtime): Smooth scrolling, touch and raw mouse motion (XInput2)
+*       - libXcursor (loaded at runtime): Cursor themes
+*       - libxkbcommon (loaded at runtime): Key symbols to characters
+*       - EGL (loaded at runtime): OpenGL context creation
 *       - minigamepad: Gamepad support (evdev, Linux)
 *       - gestures: Gestures system for touch-ready devices (or simulated from mouse inputs)
 *
@@ -92,11 +92,57 @@
 #include <poll.h>                   // Required for: poll()
 #include <unistd.h>                 // Required for: readlink(), getpid()
 #include <errno.h>                  // Required for: errno, EINTR
-#include <dlfcn.h>                  // Required for: dlsym()
-#if !defined(RTLD_DEFAULT)
-    #define RTLD_DEFAULT ((void *)0)    // glibc older than 2.41 defines it only with _GNU_SOURCE
-#endif
+#include <dlfcn.h>                  // Required for: dlopen(), dlsym(), dlclose()
 #include <math.h>                   // Required for: roundf()
+
+// System library functions, loaded at runtime
+#define LIBX11_FUNCTIONS(F) \
+    F(XAllocSizeHints) F(XChangeProperty) F(XCheckIfEvent) F(XCloseDisplay) F(XCloseIM) F(XConvertSelection) \
+    F(XCreateBitmapFromData) F(XCreateColormap) F(XCreateFontCursor) F(XCreateGC) F(XCreateIC) \
+    F(XCreateImage) F(XCreatePixmapCursor) F(XCreateWindow) F(XDefineCursor) F(XDeleteProperty) F(XDestroyIC) \
+    F(XDestroyWindow) F(XDisplayKeycodes) F(XDisplayName) F(XEventsQueued) F(XExtendedMaxRequestSize) \
+    F(XFilterEvent) F(XFlush) F(XFree) F(XFreeColormap) F(XFreeCursor) F(XFreeEventData) F(XFreeGC) \
+    F(XFreePixmap) F(XGetAtomName) F(XGetEventData) F(XGetICValues) F(XGetIMValues) F(XGetInputFocus) \
+    F(XGetKeyboardMapping) F(XGetSelectionOwner) F(XGetVisualInfo) F(XGetWindowProperty) F(XGrabPointer) \
+    F(XIconifyWindow) F(XInitThreads) F(XInternAtoms) F(XkbFreeKeyboard) F(XkbFreeNames) F(XkbGetMap) \
+    F(XkbGetNames) F(XkbGetState) F(XkbKeycodeToKeysym) F(XkbKeysymToModifiers) F(XkbQueryExtension) \
+    F(XkbRefreshKeyboardMapping) F(XkbSelectEventDetails) F(XkbSelectEvents) F(XkbSetDetectableAutoRepeat) \
+    F(XLookupString) F(XMapWindow) F(XMatchVisualInfo) F(XMaxRequestSize) F(XMoveResizeWindow) F(XMoveWindow) \
+    F(XNextEvent) F(XOpenDisplay) F(XOpenIM) F(XPeekEvent) F(XPending) F(XPutImage) F(XQueryExtension) \
+    F(XQueryKeymap) F(XQueryPointer) F(XRaiseWindow) F(XRefreshKeyboardMapping) \
+    F(XRegisterIMInstantiateCallback) F(XResizeWindow) F(XrmDestroyDatabase) F(XrmGetResource) \
+    F(XrmGetStringDatabase) F(XrmInitialize) F(XSelectInput) F(XSendEvent) F(XSetClassHint) \
+    F(XSetErrorHandler) F(XSetICFocus) F(XSetIMValues) F(XSetInputFocus) F(XSetIOErrorHandler) \
+    F(XSetLocaleModifiers) F(XSetSelectionOwner) F(XSetWMClientMachine) F(XSetWMHints) F(XSetWMNormalHints) \
+    F(XSetWMProtocols) F(XStringListToTextProperty) F(XSupportsLocale) F(XSync) F(XTranslateCoordinates) \
+    F(XUngrabPointer) F(XUnregisterIMInstantiateCallback) F(XUnsetICFocus) F(Xutf8LookupString) \
+    F(XWarpPointer) F(XWithdrawWindow)
+#define LIBXEXT_FUNCTIONS(F) \
+    F(XShapeCombineMask) F(XShapeCombineRectangles) F(XShapeQueryExtension) F(XShapeQueryVersion) \
+    F(XSyncCreateCounter) F(XSyncDestroyCounter) F(XSyncInitialize) F(XSyncIntsToValue) F(XSyncIntToValue) \
+    F(XSyncQueryExtension) F(XSyncSetCounter)
+#define LIBXRANDR_FUNCTIONS(F) \
+    F(XRRFreeCrtcInfo) F(XRRFreeMonitors) F(XRRFreeOutputInfo) F(XRRFreeScreenResources) F(XRRGetCrtcInfo) \
+    F(XRRGetMonitors) F(XRRGetOutputInfo) F(XRRGetScreenResourcesCurrent) F(XRRQueryExtension) \
+    F(XRRQueryVersion) F(XRRSelectInput) F(XRRUpdateConfiguration)
+#define LIBXI_FUNCTIONS(F) \
+    F(XIFreeDeviceInfo) F(XIQueryDevice) F(XIQueryVersion) F(XISelectEvents)
+#define LIBXCURSOR_FUNCTIONS(F) \
+    F(XcursorLibraryLoadCursor)
+#define LIBXKBCOMMON_FUNCTIONS(F) \
+    F(xkb_keysym_to_utf32) F(xkb_keysym_to_utf8)
+#if defined(GRAPHICS_API_OPENGL_SOFTWARE)
+    #define LIBXSHM_FUNCTIONS(F) \
+        F(XShmAttach) F(XShmCreateImage) F(XShmDetach) F(XShmPutImage) F(XShmQueryExtension)
+    #define LIBEGL_FUNCTIONS(F)
+#else
+    #define LIBXSHM_FUNCTIONS(F)
+    #define LIBEGL_FUNCTIONS(F) \
+        F(eglBindAPI) F(eglChooseConfig) F(eglCreateContext) F(eglCreateWindowSurface) F(eglDestroyContext) \
+        F(eglDestroySurface) F(eglGetConfigAttrib) F(eglGetDisplay) F(eglGetProcAddress) F(eglInitialize) \
+        F(eglMakeCurrent) F(eglQueryString) F(eglSwapBuffers) F(eglSwapInterval) F(eglTerminate)
+#endif
+#define LIBRARY_FUNCTION(name) __typeof__(&name) p##name;
 
 // Gamepad support (evdev), Linux only
 #if defined(__linux__)
@@ -461,7 +507,183 @@ typedef struct {
     // Gamepads
     mg_gamepads minigamepad;        // Gamepads (evdev)
 #endif
+
+    // System libraries, loaded at runtime
+    void *libX11;                   // X11 client library
+    void *libXext;                  // X11 extensions library
+    void *libXrandr;                // RandR extension library
+    void *libXi;                    // XInput2 extension library
+    void *libXcursor;               // Cursor themes library
+    void *libxkbcommon;             // Keyboard keymap library
+    void *libEGL;                   // EGL library
+    struct {
+        LIBX11_FUNCTIONS(LIBRARY_FUNCTION)
+        LIBXEXT_FUNCTIONS(LIBRARY_FUNCTION)
+        LIBXSHM_FUNCTIONS(LIBRARY_FUNCTION)
+        LIBXRANDR_FUNCTIONS(LIBRARY_FUNCTION)
+        LIBXI_FUNCTIONS(LIBRARY_FUNCTION)
+        LIBXCURSOR_FUNCTIONS(LIBRARY_FUNCTION)
+        LIBXKBCOMMON_FUNCTIONS(LIBRARY_FUNCTION)
+        LIBEGL_FUNCTIONS(LIBRARY_FUNCTION)
+    } lib;
 } PlatformData;
+
+// System library functions, loaded at runtime
+#define XAllocSizeHints                  platform.lib.pXAllocSizeHints
+#define XChangeProperty                  platform.lib.pXChangeProperty
+#define XCheckIfEvent                    platform.lib.pXCheckIfEvent
+#define XCloseDisplay                    platform.lib.pXCloseDisplay
+#define XCloseIM                         platform.lib.pXCloseIM
+#define XConvertSelection                platform.lib.pXConvertSelection
+#define XCreateBitmapFromData            platform.lib.pXCreateBitmapFromData
+#define XCreateColormap                  platform.lib.pXCreateColormap
+#define XCreateFontCursor                platform.lib.pXCreateFontCursor
+#define XCreateGC                        platform.lib.pXCreateGC
+#define XCreateIC                        platform.lib.pXCreateIC
+#define XCreateImage                     platform.lib.pXCreateImage
+#define XCreatePixmapCursor              platform.lib.pXCreatePixmapCursor
+#define XCreateWindow                    platform.lib.pXCreateWindow
+#define XDefineCursor                    platform.lib.pXDefineCursor
+#define XDeleteProperty                  platform.lib.pXDeleteProperty
+#define XDestroyIC                       platform.lib.pXDestroyIC
+#define XDestroyWindow                   platform.lib.pXDestroyWindow
+#define XDisplayKeycodes                 platform.lib.pXDisplayKeycodes
+#define XDisplayName                     platform.lib.pXDisplayName
+#define XEventsQueued                    platform.lib.pXEventsQueued
+#define XExtendedMaxRequestSize          platform.lib.pXExtendedMaxRequestSize
+#define XFilterEvent                     platform.lib.pXFilterEvent
+#define XFlush                           platform.lib.pXFlush
+#define XFree                            platform.lib.pXFree
+#define XFreeColormap                    platform.lib.pXFreeColormap
+#define XFreeCursor                      platform.lib.pXFreeCursor
+#define XFreeEventData                   platform.lib.pXFreeEventData
+#define XFreeGC                          platform.lib.pXFreeGC
+#define XFreePixmap                      platform.lib.pXFreePixmap
+#define XGetAtomName                     platform.lib.pXGetAtomName
+#define XGetEventData                    platform.lib.pXGetEventData
+#define XGetICValues                     platform.lib.pXGetICValues
+#define XGetIMValues                     platform.lib.pXGetIMValues
+#define XGetInputFocus                   platform.lib.pXGetInputFocus
+#define XGetKeyboardMapping              platform.lib.pXGetKeyboardMapping
+#define XGetSelectionOwner               platform.lib.pXGetSelectionOwner
+#define XGetVisualInfo                   platform.lib.pXGetVisualInfo
+#define XGetWindowProperty               platform.lib.pXGetWindowProperty
+#define XGrabPointer                     platform.lib.pXGrabPointer
+#define XIconifyWindow                   platform.lib.pXIconifyWindow
+#define XInitThreads                     platform.lib.pXInitThreads
+#define XInternAtoms                     platform.lib.pXInternAtoms
+#define XkbFreeKeyboard                  platform.lib.pXkbFreeKeyboard
+#define XkbFreeNames                     platform.lib.pXkbFreeNames
+#define XkbGetMap                        platform.lib.pXkbGetMap
+#define XkbGetNames                      platform.lib.pXkbGetNames
+#define XkbGetState                      platform.lib.pXkbGetState
+#define XkbKeycodeToKeysym               platform.lib.pXkbKeycodeToKeysym
+#define XkbKeysymToModifiers             platform.lib.pXkbKeysymToModifiers
+#define XkbQueryExtension                platform.lib.pXkbQueryExtension
+#define XkbRefreshKeyboardMapping        platform.lib.pXkbRefreshKeyboardMapping
+#define XkbSelectEventDetails            platform.lib.pXkbSelectEventDetails
+#define XkbSelectEvents                  platform.lib.pXkbSelectEvents
+#define XkbSetDetectableAutoRepeat       platform.lib.pXkbSetDetectableAutoRepeat
+#define XLookupString                    platform.lib.pXLookupString
+#define XMapWindow                       platform.lib.pXMapWindow
+#define XMatchVisualInfo                 platform.lib.pXMatchVisualInfo
+#define XMaxRequestSize                  platform.lib.pXMaxRequestSize
+#define XMoveResizeWindow                platform.lib.pXMoveResizeWindow
+#define XMoveWindow                      platform.lib.pXMoveWindow
+#define XNextEvent                       platform.lib.pXNextEvent
+#define XOpenDisplay                     platform.lib.pXOpenDisplay
+#define XOpenIM                          platform.lib.pXOpenIM
+#define XPeekEvent                       platform.lib.pXPeekEvent
+#define XPending                         platform.lib.pXPending
+#define XPutImage                        platform.lib.pXPutImage
+#define XQueryExtension                  platform.lib.pXQueryExtension
+#define XQueryKeymap                     platform.lib.pXQueryKeymap
+#define XQueryPointer                    platform.lib.pXQueryPointer
+#define XRaiseWindow                     platform.lib.pXRaiseWindow
+#define XRefreshKeyboardMapping          platform.lib.pXRefreshKeyboardMapping
+#define XRegisterIMInstantiateCallback   platform.lib.pXRegisterIMInstantiateCallback
+#define XResizeWindow                    platform.lib.pXResizeWindow
+#define XrmDestroyDatabase               platform.lib.pXrmDestroyDatabase
+#define XrmGetResource                   platform.lib.pXrmGetResource
+#define XrmGetStringDatabase             platform.lib.pXrmGetStringDatabase
+#define XrmInitialize                    platform.lib.pXrmInitialize
+#define XSelectInput                     platform.lib.pXSelectInput
+#define XSendEvent                       platform.lib.pXSendEvent
+#define XSetClassHint                    platform.lib.pXSetClassHint
+#define XSetErrorHandler                 platform.lib.pXSetErrorHandler
+#define XSetICFocus                      platform.lib.pXSetICFocus
+#define XSetIMValues                     platform.lib.pXSetIMValues
+#define XSetInputFocus                   platform.lib.pXSetInputFocus
+#define XSetIOErrorHandler               platform.lib.pXSetIOErrorHandler
+#define XSetLocaleModifiers              platform.lib.pXSetLocaleModifiers
+#define XSetSelectionOwner               platform.lib.pXSetSelectionOwner
+#define XSetWMClientMachine              platform.lib.pXSetWMClientMachine
+#define XSetWMHints                      platform.lib.pXSetWMHints
+#define XSetWMNormalHints                platform.lib.pXSetWMNormalHints
+#define XSetWMProtocols                  platform.lib.pXSetWMProtocols
+#define XStringListToTextProperty        platform.lib.pXStringListToTextProperty
+#define XSupportsLocale                  platform.lib.pXSupportsLocale
+#define XSync                            platform.lib.pXSync
+#define XTranslateCoordinates            platform.lib.pXTranslateCoordinates
+#define XUngrabPointer                   platform.lib.pXUngrabPointer
+#define XUnregisterIMInstantiateCallback platform.lib.pXUnregisterIMInstantiateCallback
+#define XUnsetICFocus                    platform.lib.pXUnsetICFocus
+#define Xutf8LookupString                platform.lib.pXutf8LookupString
+#define XWarpPointer                     platform.lib.pXWarpPointer
+#define XWithdrawWindow                  platform.lib.pXWithdrawWindow
+#define XShapeCombineMask                platform.lib.pXShapeCombineMask
+#define XShapeCombineRectangles          platform.lib.pXShapeCombineRectangles
+#define XShapeQueryExtension             platform.lib.pXShapeQueryExtension
+#define XShapeQueryVersion               platform.lib.pXShapeQueryVersion
+#define XSyncCreateCounter               platform.lib.pXSyncCreateCounter
+#define XSyncDestroyCounter              platform.lib.pXSyncDestroyCounter
+#define XSyncInitialize                  platform.lib.pXSyncInitialize
+#define XSyncIntsToValue                 platform.lib.pXSyncIntsToValue
+#define XSyncIntToValue                  platform.lib.pXSyncIntToValue
+#define XSyncQueryExtension              platform.lib.pXSyncQueryExtension
+#define XSyncSetCounter                  platform.lib.pXSyncSetCounter
+#define XRRFreeCrtcInfo                  platform.lib.pXRRFreeCrtcInfo
+#define XRRFreeMonitors                  platform.lib.pXRRFreeMonitors
+#define XRRFreeOutputInfo                platform.lib.pXRRFreeOutputInfo
+#define XRRFreeScreenResources           platform.lib.pXRRFreeScreenResources
+#define XRRGetCrtcInfo                   platform.lib.pXRRGetCrtcInfo
+#define XRRGetMonitors                   platform.lib.pXRRGetMonitors
+#define XRRGetOutputInfo                 platform.lib.pXRRGetOutputInfo
+#define XRRGetScreenResourcesCurrent     platform.lib.pXRRGetScreenResourcesCurrent
+#define XRRQueryExtension                platform.lib.pXRRQueryExtension
+#define XRRQueryVersion                  platform.lib.pXRRQueryVersion
+#define XRRSelectInput                   platform.lib.pXRRSelectInput
+#define XRRUpdateConfiguration           platform.lib.pXRRUpdateConfiguration
+#define XIFreeDeviceInfo                 platform.lib.pXIFreeDeviceInfo
+#define XIQueryDevice                    platform.lib.pXIQueryDevice
+#define XIQueryVersion                   platform.lib.pXIQueryVersion
+#define XISelectEvents                   platform.lib.pXISelectEvents
+#define XcursorLibraryLoadCursor         platform.lib.pXcursorLibraryLoadCursor
+#define xkb_keysym_to_utf32              platform.lib.pxkb_keysym_to_utf32
+#define xkb_keysym_to_utf8               platform.lib.pxkb_keysym_to_utf8
+#if defined(GRAPHICS_API_OPENGL_SOFTWARE)
+    #define XShmAttach                       platform.lib.pXShmAttach
+    #define XShmCreateImage                  platform.lib.pXShmCreateImage
+    #define XShmDetach                       platform.lib.pXShmDetach
+    #define XShmPutImage                     platform.lib.pXShmPutImage
+    #define XShmQueryExtension               platform.lib.pXShmQueryExtension
+#else
+    #define eglBindAPI                       platform.lib.peglBindAPI
+    #define eglChooseConfig                  platform.lib.peglChooseConfig
+    #define eglCreateContext                 platform.lib.peglCreateContext
+    #define eglCreateWindowSurface           platform.lib.peglCreateWindowSurface
+    #define eglDestroyContext                platform.lib.peglDestroyContext
+    #define eglDestroySurface                platform.lib.peglDestroySurface
+    #define eglGetConfigAttrib               platform.lib.peglGetConfigAttrib
+    #define eglGetDisplay                    platform.lib.peglGetDisplay
+    #define eglGetProcAddress                platform.lib.peglGetProcAddress
+    #define eglInitialize                    platform.lib.peglInitialize
+    #define eglMakeCurrent                   platform.lib.peglMakeCurrent
+    #define eglQueryString                   platform.lib.peglQueryString
+    #define eglSwapBuffers                   platform.lib.peglSwapBuffers
+    #define eglSwapInterval                  platform.lib.peglSwapInterval
+    #define eglTerminate                     platform.lib.peglTerminate
+#endif
 
 // X11 key name (XKB) to raylib KeyboardKey value
 typedef struct {
@@ -583,6 +805,8 @@ static const int mgAxisConvertTable[] = {
 int InitPlatform(void);          // Initialize platform (graphics, inputs and more)
 void ClosePlatform(void);        // Close platform
 
+static bool LoadLibraries(void);                                // Load system libraries and their functions
+static void CloseLibraries(void);                               // Close system libraries
 static int ErrorHandler(Display *display, XErrorEvent *event);  // X11 errors handler, errors are not fatal
 static int IOErrorHandler(Display *display);                    // X11 connection errors handler
 static void IOErrorExitHandler(Display *display, void *data);   // X11 connection errors exit handler, the process is not terminated
@@ -1860,6 +2084,12 @@ void PollInputEvents(void)
 // Initialize platform: graphics, inputs and more
 int InitPlatform(void)
 {
+    if (!LoadLibraries())
+    {
+        CloseLibraries();
+        return -1;
+    }
+
     XInitThreads();
 
     platform.display = XOpenDisplay(NULL);
@@ -1881,7 +2111,7 @@ int InitPlatform(void)
     // NOTE: Connection errors terminate the process, the default handler exits; with libX11 1.7 or later
     // an exit handler can be set to continue running, the window should close
     void (*setIOErrorExitHandler)(Display *, void (*)(Display *, void *), void *) =
-        (void (*)(Display *, void (*)(Display *, void *), void *))dlsym(RTLD_DEFAULT, "XSetIOErrorExitHandler");
+        (void (*)(Display *, void (*)(Display *, void *), void *))dlsym(platform.libX11, "XSetIOErrorExitHandler");
     if (setIOErrorExitHandler != NULL)
     {
         platform.previousIOErrorHandler = XSetIOErrorHandler(IOErrorHandler);
@@ -2092,7 +2322,75 @@ void ClosePlatform(void)
     XSetErrorHandler(platform.previousErrorHandler);
     if (platform.ioErrorHandlerSet) XSetIOErrorHandler(platform.previousIOErrorHandler);
 
+    CloseLibraries();
+
     memset(&platform, 0, sizeof(platform));
+}
+
+// Load system libraries and their functions
+static bool LoadLibraries(void)
+{
+    struct { void **handle; const char *names[2]; } libraries[] = {
+        { &platform.libX11, { "libX11.so.6", "libX11.so" } },
+        { &platform.libXext, { "libXext.so.6", "libXext.so" } },
+        { &platform.libXrandr, { "libXrandr.so.2", "libXrandr.so" } },
+        { &platform.libXi, { "libXi.so.6", "libXi.so" } },
+        { &platform.libXcursor, { "libXcursor.so.1", "libXcursor.so" } },
+        { &platform.libxkbcommon, { "libxkbcommon.so.0", "libxkbcommon.so" } },
+#if !defined(GRAPHICS_API_OPENGL_SOFTWARE)
+        { &platform.libEGL, { "libEGL.so.1", "libEGL.so" } },
+#endif
+    };
+
+    for (int i = 0; i < (int)(sizeof(libraries)/sizeof(libraries[0])); i++)
+    {
+        *libraries[i].handle = dlopen(libraries[i].names[0], RTLD_LAZY | RTLD_LOCAL);
+        if (*libraries[i].handle == NULL) *libraries[i].handle = dlopen(libraries[i].names[1], RTLD_LAZY | RTLD_LOCAL);
+        if (*libraries[i].handle == NULL)
+        {
+            TRACELOG(LOG_WARNING, "X11: Failed to load %s", libraries[i].names[0]);
+            return false;
+        }
+    }
+
+    bool loaded = true;
+    void *library = NULL;
+
+    #define LOAD_FUNCTION(name) \
+        platform.lib.p##name = (__typeof__(platform.lib.p##name))dlsym(library, #name); \
+        if (platform.lib.p##name == NULL) { TRACELOG(LOG_WARNING, "X11: Failed to load function %s", #name); loaded = false; }
+
+    library = platform.libX11;
+    LIBX11_FUNCTIONS(LOAD_FUNCTION)
+    library = platform.libXext;
+    LIBXEXT_FUNCTIONS(LOAD_FUNCTION)
+    LIBXSHM_FUNCTIONS(LOAD_FUNCTION)
+    library = platform.libXrandr;
+    LIBXRANDR_FUNCTIONS(LOAD_FUNCTION)
+    library = platform.libXi;
+    LIBXI_FUNCTIONS(LOAD_FUNCTION)
+    library = platform.libXcursor;
+    LIBXCURSOR_FUNCTIONS(LOAD_FUNCTION)
+    library = platform.libxkbcommon;
+    LIBXKBCOMMON_FUNCTIONS(LOAD_FUNCTION)
+    library = platform.libEGL;
+    LIBEGL_FUNCTIONS(LOAD_FUNCTION)
+
+    #undef LOAD_FUNCTION
+
+    return loaded;
+}
+
+// Close system libraries
+static void CloseLibraries(void)
+{
+    void **libraries[] = { &platform.libEGL, &platform.libxkbcommon, &platform.libXcursor, &platform.libXi, &platform.libXrandr, &platform.libXext, &platform.libX11 };
+
+    for (int i = 0; i < (int)(sizeof(libraries)/sizeof(libraries[0])); i++)
+    {
+        if (*libraries[i] != NULL) dlclose(*libraries[i]);
+        *libraries[i] = NULL;
+    }
 }
 
 // X11 errors handler, errors are not fatal

@@ -17,10 +17,8 @@ package rl
 
 /*
 #cgo linux CFLAGS: -DPLATFORM_DESKTOP_LINUX -D_DEFAULT_SOURCE -I/usr/include/libdrm
-#cgo linux LDFLAGS: -lX11 -lXext -lXrandr -lXi -lXcursor -lwayland-client -lwayland-cursor -lxkbcommon -ldrm -lm -ldl -lrt
-#cgo linux,!software LDFLAGS: -lwayland-egl -lgbm -lEGL
-#cgo linux,es2,!software linux,es3,!software LDFLAGS: -lGLESv2
-#cgo linux,arm64,!termux,!opengl11,!opengl21,!opengl33,!opengl43,!es2,!es3,!software LDFLAGS: -lGLESv2
+#cgo linux LDFLAGS: -lm -ldl -lrt -lpthread
+#cgo linux,es3,!es2,!software LDFLAGS: -lGLESv2
 #cgo linux,opengl11,!es2,!es3,!software LDFLAGS: -lGL
 
 #cgo linux,opengl11,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_11

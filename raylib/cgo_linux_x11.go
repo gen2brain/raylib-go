@@ -16,11 +16,9 @@ package rl
 
 /*
 #cgo linux CFLAGS: -DPLATFORM_DESKTOP_X11
-#cgo linux LDFLAGS: -lX11 -lXext -lXrandr -lXi -lXcursor -lxkbcommon -lm -ldl -lrt
-#cgo linux,!software LDFLAGS: -lEGL
+#cgo linux LDFLAGS: -lm -ldl -lrt
 #cgo linux,termux,software LDFLAGS: -landroid-shmem
-#cgo linux,es2,!software linux,es3,!software LDFLAGS: -lGLESv2
-#cgo linux,arm64,!termux,!opengl11,!opengl21,!opengl33,!opengl43,!es2,!es3,!software LDFLAGS: -lGLESv2
+#cgo linux,es3,!es2,!software LDFLAGS: -lGLESv2
 #cgo linux,opengl11,!es2,!es3,!software LDFLAGS: -lGL
 
 #cgo linux,opengl11,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_11

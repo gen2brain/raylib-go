@@ -5,9 +5,8 @@ package rl
 
 /*
 #cgo openbsd CFLAGS: -I. -I/usr/X11R6/include -I/usr/local/include -DPLATFORM_DESKTOP_X11
-#cgo openbsd LDFLAGS: -L/usr/X11R6/lib -L/usr/local/lib -lX11 -lXext -lXrandr -lXi -lXcursor -lxkbcommon -lm -pthread
-#cgo openbsd,!software LDFLAGS: -lEGL
-#cgo openbsd,es2,!software openbsd,es3,!software LDFLAGS: -lGLESv2
+#cgo openbsd LDFLAGS: -L/usr/X11R6/lib -L/usr/local/lib -lm -pthread
+#cgo openbsd,es3,!es2,!software LDFLAGS: -lGLESv2
 #cgo openbsd,opengl11,!es2,!es3,!software LDFLAGS: -lGL
 
 #cgo openbsd,opengl11,!es2,!es3,!software CFLAGS: -DGRAPHICS_API_OPENGL_11
