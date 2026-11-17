@@ -42,7 +42,7 @@
 *           - Embedded devices (with GPU)
 *       > PLATFORM_ANDROID (native NDK):
 *           - Android (ARM, ARM64)
-*       > PLATFORM_IOS (native UIKit):
+*       > PLATFORM_UIKIT (native UIKit):
 *           - iOS, iPadOS (ARM64)
 *       > PLATFORM_MEMORY
 *           - Memory framebuffer output, using software renderer, no OS required
@@ -555,7 +555,7 @@ const char *TextFormat(const char *text, ...); // Formatting of text with variab
     #include "platforms/rcore_drm.c"
 #elif defined(PLATFORM_ANDROID)
     #include "platforms/rcore_android.c"
-#elif defined(PLATFORM_IOS)
+#elif defined(PLATFORM_UIKIT)
     #include "platforms/rcore_ios.c"
 #elif defined(PLATFORM_MEMORY)
     #include "platforms/rcore_memory.c"
@@ -639,7 +639,7 @@ void InitWindow(int width, int height, const char *title)
     TRACELOG(LOG_INFO, "Platform backend: NATIVE DRM");
 #elif defined(PLATFORM_ANDROID)
     TRACELOG(LOG_INFO, "Platform backend: ANDROID");
-#elif defined(PLATFORM_IOS)
+#elif defined(PLATFORM_UIKIT)
     TRACELOG(LOG_INFO, "Platform backend: IOS");
 #elif defined(PLATFORM_MEMORY)
     TRACELOG(LOG_INFO, "Platform backend: MEMORY (No OS)");
@@ -1127,7 +1127,7 @@ void BeginScissorMode(int x, int y, int width, int height)
     bool scaled = (FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_HIGHDPI) && !FLAG_IS_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE));
 #endif
 
-#if defined(__APPLE__) && !defined(PLATFORM_IOS)
+#if defined(__APPLE__) && !defined(PLATFORM_UIKIT)
     if (!CORE.Window.usingFbo)
     {
         Vector2 scale = { 1.0f, 1.0f };
