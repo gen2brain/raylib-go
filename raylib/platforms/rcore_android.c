@@ -69,6 +69,20 @@ typedef struct {
     EGLSurface surface;                 // Surface to draw on, framebuffers (connected to context)
     EGLContext context;                 // Graphic context, mode in which drawing can be done
     EGLConfig config;                   // Graphic config
+    int requestedWidth;                 // Screen width requested on window initialization
+    int requestedHeight;                // Screen height requested on window initialization
+    double displayCheckEnd;             // Time to stop checking the display size after a configuration change
+
+    // Input data
+    char *clipboardText;                // Clipboard text, returned by GetClipboardText()
+    int deadChar;                       // Pending dead key accent, combined with the next character
+    int gamepadDeviceId[MAX_GAMEPADS];  // Input device id of each gamepad, -1 if not connected
+    double gamepadCheckTime;            // Next time to check for connected gamepads
+    int mouseButtonState;               // Mouse buttons down (AMOTION_EVENT_BUTTON_*)
+    bool keyPressedInFrame[MAX_KEYBOARD_KEYS];      // Keys pressed in current frame
+    bool keyReleasePending[MAX_KEYBOARD_KEYS];      // Keys released in the frame they were pressed, release applied on next frame
+    bool buttonPressedInFrame[MAX_MOUSE_BUTTONS];   // Mouse buttons and touch pressed in current frame
+    bool buttonReleasePending[MAX_MOUSE_BUTTONS];   // Mouse buttons and touch released in the frame they were pressed
 } PlatformData;
 
 typedef struct {
@@ -269,6 +283,20 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
 static GamepadButton AndroidTranslateGamepadButton(int button);                     // Map Android gamepad button to raylib gamepad button
 
 static void SetupFramebuffer(int width, int height); // Setup main framebuffer (required by InitPlatform())
+static void UpdateDisplaySize(void);                // Update framebuffer and viewport if the display size changed (rotation)
+
+static JNIEnv *AttachJni(void);                     // Attach current thread to the Java VM, NULL on failure
+static void DetachJni(void);                        // Detach current thread from the Java VM
+static bool JniFailed(JNIEnv *env);                 // Check and clear a pending Java exception
+static jobject GetDefaultDisplay(JNIEnv *env);      // Get default display object (android.view.Display)
+static int GetKeyCharacter(int deviceId, int keycode, int metaState); // Get character produced by a key, considering dead keys
+static int GetGamepadIndex(int deviceId, bool connect); // Get gamepad index for an input device, connecting it if required
+static void ConnectGamepad(int gamepad, int deviceId); // Register a connected gamepad
+static void DisconnectGamepad(int gamepad);         // Unregister a disconnected gamepad
+static void CheckGamepads(void);                    // Check connected and disconnected gamepads
+static void HandleKey(KeyboardKey key, bool pressed); // Register key state change
+static void HandleMouseButton(int button, bool pressed); // Register mouse button or touch state change
+static Vector2 GetScreenPosition(float x, float y); // Convert display position to screen position
 
 static int android_read(void *cookie, char *buf, int size);
 static int android_write(void *cookie, const char *buf, int size);
@@ -313,18 +341,14 @@ FILE *funopen(const void *cookie, int (*readfn)(void *, char *, int), int (*writ
 
 // To allow easier porting to android, allow the user to define a
 // custom main function which is called from android_main
-//extern int main(int argc, char *argv[]);
-extern void android_run();
+extern void android_run(void);
 
 // Android main function
 void android_main(struct android_app *app)
 {
-    char arg0[] = "raylib";     // NOTE: argv[] are mutable
     platform.app = app;
 
-    (void)android_run();
-    // NOTE: Return from main is ignored
-    //(void)main(1, (char *[]) { arg0, NULL });
+    android_run();
 
     // Request to end the native activity
     ANativeActivity_finish(app->activity);
@@ -476,103 +500,182 @@ void *GetWindowHandle(void)
 }
 
 // Get number of monitors
+// NOTE: Only the display the activity is on is available
 int GetMonitorCount(void)
 {
-    TRACELOG(LOG_WARNING, "GetMonitorCount() not implemented on target platform");
     return 1;
 }
 
 // Get current monitor where window is placed
 int GetCurrentMonitor(void)
 {
-    int displayId = -1;
-    JNIEnv *env = NULL;
-    JavaVM *vm = platform.app->activity->vm;
-    (*vm)->AttachCurrentThread(vm, &env, NULL);
-
-    jobject activity = platform.app->activity->clazz;
-    jclass activityClass = (*env)->GetObjectClass(env, activity);
-
-    jmethodID getDisplayMethod = (*env)->GetMethodID(env, activityClass, "getDisplay", "()Landroid/view/Display;");
-
-    jobject display = (*env)->CallObjectMethod(env, activity, getDisplayMethod);
-
-    if (display == NULL)
-    {
-        TRACELOG(LOG_ERROR, "GetCurrentMonitor() couldn't get the display object");
-    }
-    else
-    {
-        jclass displayClass = (*env)->FindClass(env, "android/view/Display");
-        jmethodID getDisplayIdMethod = (*env)->GetMethodID(env, displayClass, "getDisplayId", "()I");
-        displayId = (int)(*env)->CallIntMethod(env, display, getDisplayIdMethod);
-        (*env)->DeleteLocalRef(env, displayClass);
-    }
-
-    (*env)->DeleteLocalRef(env, activityClass);
-    (*env)->DeleteLocalRef(env, display);
-
-    (*vm)->DetachCurrentThread(vm);
-    return displayId;
+    return 0;
 }
 
 // Get selected monitor position
 Vector2 GetMonitorPosition(int monitor)
 {
-    TRACELOG(LOG_WARNING, "GetMonitorPosition() not implemented on target platform");
     return (Vector2){ 0, 0 };
 }
 
 // Get selected monitor width (currently used by monitor)
 int GetMonitorWidth(int monitor)
 {
-    TRACELOG(LOG_WARNING, "GetMonitorWidth() not implemented on target platform");
-    return 0;
+    int width = 0;
+
+    JNIEnv *env = AttachJni();
+    if (env == NULL) return width;
+
+    jobject display = GetDefaultDisplay(env);
+    if (display != NULL)
+    {
+        // Display size in pixels, in the current orientation
+        jclass pointClass = (*env)->FindClass(env, "android/graphics/Point");
+        jobject size = (*env)->NewObject(env, pointClass, (*env)->GetMethodID(env, pointClass, "<init>", "()V"));
+        jclass displayClass = (*env)->GetObjectClass(env, display);
+        (*env)->CallVoidMethod(env, display, (*env)->GetMethodID(env, displayClass, "getRealSize", "(Landroid/graphics/Point;)V"), size);
+        if (!JniFailed(env)) width = (*env)->GetIntField(env, size, (*env)->GetFieldID(env, pointClass, "x", "I"));
+    }
+
+    DetachJni();
+
+    return width;
 }
 
 // Get selected monitor height (currently used by monitor)
 int GetMonitorHeight(int monitor)
 {
-    TRACELOG(LOG_WARNING, "GetMonitorHeight() not implemented on target platform");
-    return 0;
+    int height = 0;
+
+    JNIEnv *env = AttachJni();
+    if (env == NULL) return height;
+
+    jobject display = GetDefaultDisplay(env);
+    if (display != NULL)
+    {
+        // Display size in pixels, in the current orientation
+        jclass pointClass = (*env)->FindClass(env, "android/graphics/Point");
+        jobject size = (*env)->NewObject(env, pointClass, (*env)->GetMethodID(env, pointClass, "<init>", "()V"));
+        jclass displayClass = (*env)->GetObjectClass(env, display);
+        (*env)->CallVoidMethod(env, display, (*env)->GetMethodID(env, displayClass, "getRealSize", "(Landroid/graphics/Point;)V"), size);
+        if (!JniFailed(env)) height = (*env)->GetIntField(env, size, (*env)->GetFieldID(env, pointClass, "y", "I"));
+    }
+
+    DetachJni();
+
+    return height;
 }
 
 // Get selected monitor physical width in millimetres
-// NOTE: It seems to return a slightly underestimated value on some devices
 int GetMonitorPhysicalWidth(int monitor)
 {
-    int widthPixels = ANativeWindow_getWidth(platform.app->window);
-    float dpi = AConfiguration_getDensity(platform.app->config);
-    return (widthPixels/dpi)*25.4f;
+    int width = 0;
+
+    JNIEnv *env = AttachJni();
+    if (env == NULL) return width;
+
+    jobject display = GetDefaultDisplay(env);
+    if (display != NULL)
+    {
+        // NOTE: Real pixel density of the display, AConfiguration density is a density bucket
+        jclass metricsClass = (*env)->FindClass(env, "android/util/DisplayMetrics");
+        jobject metrics = (*env)->NewObject(env, metricsClass, (*env)->GetMethodID(env, metricsClass, "<init>", "()V"));
+        jclass displayClass = (*env)->GetObjectClass(env, display);
+        (*env)->CallVoidMethod(env, display, (*env)->GetMethodID(env, displayClass, "getRealMetrics", "(Landroid/util/DisplayMetrics;)V"), metrics);
+        if (!JniFailed(env))
+        {
+            int pixels = (*env)->GetIntField(env, metrics, (*env)->GetFieldID(env, metricsClass, "widthPixels", "I"));
+            float dpi = (*env)->GetFloatField(env, metrics, (*env)->GetFieldID(env, metricsClass, "xdpi", "F"));
+            if (dpi > 0.0f) width = (int)roundf((float)pixels/dpi*25.4f);
+        }
+    }
+
+    DetachJni();
+
+    return width;
 }
 
 // Get selected monitor physical height in millimetres
-// NOTE: It seems to return a slightly underestimated value on some devices
 int GetMonitorPhysicalHeight(int monitor)
 {
-    int heightPixels = ANativeWindow_getHeight(platform.app->window);
-    float dpi = AConfiguration_getDensity(platform.app->config);
-    return (heightPixels/dpi)*25.4f;
+    int height = 0;
+
+    JNIEnv *env = AttachJni();
+    if (env == NULL) return height;
+
+    jobject display = GetDefaultDisplay(env);
+    if (display != NULL)
+    {
+        // NOTE: Real pixel density of the display, AConfiguration density is a density bucket
+        jclass metricsClass = (*env)->FindClass(env, "android/util/DisplayMetrics");
+        jobject metrics = (*env)->NewObject(env, metricsClass, (*env)->GetMethodID(env, metricsClass, "<init>", "()V"));
+        jclass displayClass = (*env)->GetObjectClass(env, display);
+        (*env)->CallVoidMethod(env, display, (*env)->GetMethodID(env, displayClass, "getRealMetrics", "(Landroid/util/DisplayMetrics;)V"), metrics);
+        if (!JniFailed(env))
+        {
+            int pixels = (*env)->GetIntField(env, metrics, (*env)->GetFieldID(env, metricsClass, "heightPixels", "I"));
+            float dpi = (*env)->GetFloatField(env, metrics, (*env)->GetFieldID(env, metricsClass, "ydpi", "F"));
+            if (dpi > 0.0f) height = (int)roundf((float)pixels/dpi*25.4f);
+        }
+    }
+
+    DetachJni();
+
+    return height;
 }
 
 // Get selected monitor refresh rate
 int GetMonitorRefreshRate(int monitor)
 {
-    TRACELOG(LOG_WARNING, "GetMonitorRefreshRate() not implemented on target platform");
-    return 0;
+    int refreshRate = 0;
+
+    JNIEnv *env = AttachJni();
+    if (env == NULL) return refreshRate;
+
+    jobject display = GetDefaultDisplay(env);
+    if (display != NULL)
+    {
+        jclass displayClass = (*env)->GetObjectClass(env, display);
+        float rate = (*env)->CallFloatMethod(env, display, (*env)->GetMethodID(env, displayClass, "getRefreshRate", "()F"));
+        if (!JniFailed(env)) refreshRate = (int)roundf(rate);
+    }
+
+    DetachJni();
+
+    return refreshRate;
 }
 
 // Get the human-readable, UTF-8 encoded name of the selected monitor
 const char *GetMonitorName(int monitor)
 {
-    TRACELOG(LOG_WARNING, "GetMonitorName() not implemented on target platform");
-    return "";
+    static char name[128] = { 0 };
+    name[0] = '\0';
+
+    JNIEnv *env = AttachJni();
+    if (env == NULL) return name;
+
+    jobject display = GetDefaultDisplay(env);
+    if (display != NULL)
+    {
+        jclass displayClass = (*env)->GetObjectClass(env, display);
+        jstring displayName = (jstring)(*env)->CallObjectMethod(env, display, (*env)->GetMethodID(env, displayClass, "getName", "()Ljava/lang/String;"));
+        if (!JniFailed(env) && (displayName != NULL))
+        {
+            const char *text = (*env)->GetStringUTFChars(env, displayName, NULL);
+            snprintf(name, sizeof(name), "%s", text);
+            (*env)->ReleaseStringUTFChars(env, displayName, text);
+        }
+    }
+
+    DetachJni();
+
+    return name;
 }
 
 // Get window position XY on monitor
+// NOTE: The window covers the display
 Vector2 GetWindowPosition(void)
 {
-    TRACELOG(LOG_WARNING, "GetWindowPosition() not implemented on target platform");
     return (Vector2){ 0, 0 };
 }
 
@@ -625,11 +728,59 @@ void SetClipboardText(const char *text)
 }
 
 // Get clipboard text content
-// NOTE: returned string is allocated and freed by GLFW
+// NOTE: Returned string is kept until the next call
 const char *GetClipboardText(void)
 {
-    TRACELOG(LOG_WARNING, "GetClipboardText() not implemented on target platform");
-    return NULL;
+    RL_FREE(platform.clipboardText);
+    platform.clipboardText = NULL;
+
+    JNIEnv *env = AttachJni();
+    if (env == NULL) return NULL;
+
+    jobject activity = platform.app->activity->clazz;
+    jclass activityClass = (*env)->GetObjectClass(env, activity);
+    jmethodID getSystemService = (*env)->GetMethodID(env, activityClass, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;");
+    jstring serviceName = (*env)->NewStringUTF(env, "clipboard");
+    jobject clipboard = (*env)->CallObjectMethod(env, activity, getSystemService, serviceName);
+
+    if (!JniFailed(env) && (clipboard != NULL))
+    {
+        jclass clipboardClass = (*env)->FindClass(env, "android/content/ClipboardManager");
+        jobject clip = (*env)->CallObjectMethod(env, clipboard, (*env)->GetMethodID(env, clipboardClass, "getPrimaryClip", "()Landroid/content/ClipData;"));
+
+        if (!JniFailed(env) && (clip != NULL))
+        {
+            jclass clipDataClass = (*env)->FindClass(env, "android/content/ClipData");
+            int count = (*env)->CallIntMethod(env, clip, (*env)->GetMethodID(env, clipDataClass, "getItemCount", "()I"));
+
+            if (!JniFailed(env) && (count > 0))
+            {
+                // NOTE: Item converted to text, also for URIs and intents
+                jobject item = (*env)->CallObjectMethod(env, clip, (*env)->GetMethodID(env, clipDataClass, "getItemAt", "(I)Landroid/content/ClipData$Item;"), 0);
+                jclass itemClass = (*env)->FindClass(env, "android/content/ClipData$Item");
+                jobject sequence = (*env)->CallObjectMethod(env, item, (*env)->GetMethodID(env, itemClass, "coerceToText", "(Landroid/content/Context;)Ljava/lang/CharSequence;"), activity);
+
+                if (!JniFailed(env) && (sequence != NULL))
+                {
+                    jclass sequenceClass = (*env)->FindClass(env, "java/lang/CharSequence");
+                    jstring text = (jstring)(*env)->CallObjectMethod(env, sequence, (*env)->GetMethodID(env, sequenceClass, "toString", "()Ljava/lang/String;"));
+
+                    if (!JniFailed(env) && (text != NULL))
+                    {
+                        const char *utf8 = (*env)->GetStringUTFChars(env, text, NULL);
+                        int length = (int)strlen(utf8);
+                        platform.clipboardText = (char *)RL_CALLOC(length + 1, sizeof(char));
+                        memcpy(platform.clipboardText, utf8, length);
+                        (*env)->ReleaseStringUTFChars(env, text, utf8);
+                    }
+                }
+            }
+        }
+    }
+
+    DetachJni();
+
+    return platform.clipboardText;
 }
 
 // Get clipboard image
@@ -750,9 +901,90 @@ int SetGamepadMappings(const char *mappings)
 }
 
 // Set gamepad vibration
+// NOTE: Gamepads with two motors are driven separately on Android 12 and later, one motor uses the strongest value
 void SetGamepadVibration(int gamepad, float leftMotor, float rightMotor, float duration)
 {
-    TRACELOG(LOG_WARNING, "SetGamepadVibration() not implemented on target platform");
+    if ((gamepad < 0) || (gamepad >= MAX_GAMEPADS) || !CORE.Input.Gamepad.ready[gamepad] || (duration <= 0.0f)) return;
+
+    if (leftMotor < 0.0f) leftMotor = 0.0f;
+    if (leftMotor > 1.0f) leftMotor = 1.0f;
+    if (rightMotor < 0.0f) rightMotor = 0.0f;
+    if (rightMotor > 1.0f) rightMotor = 1.0f;
+    if (duration > MAX_GAMEPAD_VIBRATION_TIME) duration = MAX_GAMEPAD_VIBRATION_TIME;
+
+    JNIEnv *env = AttachJni();
+    if (env == NULL) return;
+
+    int sdkVersion = AConfiguration_getSdkVersion(platform.app->config);
+    jlong milliseconds = (jlong)(duration*1000.0f);
+    int leftAmplitude = (int)roundf(leftMotor*255.0f);
+    int rightAmplitude = (int)roundf(rightMotor*255.0f);
+    bool vibrating = false;
+
+    jclass deviceClass = (*env)->FindClass(env, "android/view/InputDevice");
+    jobject device = (*env)->CallStaticObjectMethod(env, deviceClass, (*env)->GetStaticMethodID(env, deviceClass, "getDevice", "(I)Landroid/view/InputDevice;"), platform.gamepadDeviceId[gamepad]);
+
+    if (!JniFailed(env) && (device != NULL) && (sdkVersion >= 31))
+    {
+        // Both motors are driven by one combined vibration
+        jclass managerClass = (*env)->FindClass(env, "android/os/VibratorManager");
+        jobject manager = (*env)->CallObjectMethod(env, device, (*env)->GetMethodID(env, deviceClass, "getVibratorManager", "()Landroid/os/VibratorManager;"));
+        jintArray ids = (!JniFailed(env) && (manager != NULL))? (jintArray)(*env)->CallObjectMethod(env, manager, (*env)->GetMethodID(env, managerClass, "getVibratorIds", "()[I")) : NULL;
+        int idCount = (!JniFailed(env) && (ids != NULL))? (*env)->GetArrayLength(env, ids) : 0;
+
+        if (idCount >= 2)
+        {
+            jint idValues[2] = { 0 };
+            (*env)->GetIntArrayRegion(env, ids, 0, 2, idValues);
+
+            if ((leftAmplitude == 0) && (rightAmplitude == 0)) (*env)->CallVoidMethod(env, manager, (*env)->GetMethodID(env, managerClass, "cancel", "()V"));
+            else
+            {
+                jclass effectClass = (*env)->FindClass(env, "android/os/VibrationEffect");
+                jmethodID createOneShot = (*env)->GetStaticMethodID(env, effectClass, "createOneShot", "(JI)Landroid/os/VibrationEffect;");
+                jclass combinedClass = (*env)->FindClass(env, "android/os/CombinedVibration");
+                jclass parallelClass = (*env)->FindClass(env, "android/os/CombinedVibration$ParallelCombination");
+                jmethodID addVibrator = (*env)->GetMethodID(env, parallelClass, "addVibrator", "(ILandroid/os/VibrationEffect;)Landroid/os/CombinedVibration$ParallelCombination;");
+                jobject parallel = (*env)->CallStaticObjectMethod(env, combinedClass, (*env)->GetStaticMethodID(env, combinedClass, "startParallel", "()Landroid/os/CombinedVibration$ParallelCombination;"));
+                int amplitudes[2] = { leftAmplitude, rightAmplitude };
+
+                for (int i = 0; (i < 2) && !JniFailed(env); i++)
+                {
+                    if (amplitudes[i] == 0) continue;
+                    jobject effect = (*env)->CallStaticObjectMethod(env, effectClass, createOneShot, milliseconds, (jint)amplitudes[i]);
+                    if (!JniFailed(env)) (*env)->CallObjectMethod(env, parallel, addVibrator, idValues[i], effect);
+                }
+
+                jobject combined = JniFailed(env)? NULL : (*env)->CallObjectMethod(env, parallel, (*env)->GetMethodID(env, parallelClass, "combine", "()Landroid/os/CombinedVibration;"));
+                if (!JniFailed(env) && (combined != NULL)) (*env)->CallVoidMethod(env, manager, (*env)->GetMethodID(env, managerClass, "vibrate", "(Landroid/os/CombinedVibration;)V"), combined);
+            }
+
+            vibrating = !JniFailed(env);
+        }
+    }
+
+    if (!vibrating && (device != NULL))
+    {
+        jclass vibratorClass = (*env)->FindClass(env, "android/os/Vibrator");
+        jobject vibrator = (*env)->CallObjectMethod(env, device, (*env)->GetMethodID(env, deviceClass, "getVibrator", "()Landroid/os/Vibrator;"));
+        int amplitude = (leftAmplitude > rightAmplitude)? leftAmplitude : rightAmplitude;
+
+        if (!JniFailed(env) && (vibrator != NULL))
+        {
+            if (amplitude == 0) (*env)->CallVoidMethod(env, vibrator, (*env)->GetMethodID(env, vibratorClass, "cancel", "()V"));
+            else if (sdkVersion >= 26)
+            {
+                jclass effectClass = (*env)->FindClass(env, "android/os/VibrationEffect");
+                jobject effect = (*env)->CallStaticObjectMethod(env, effectClass, (*env)->GetStaticMethodID(env, effectClass, "createOneShot", "(JI)Landroid/os/VibrationEffect;"), milliseconds, (jint)amplitude);
+                if (!JniFailed(env)) (*env)->CallVoidMethod(env, vibrator, (*env)->GetMethodID(env, vibratorClass, "vibrate", "(Landroid/os/VibrationEffect;)V"), effect);
+            }
+            else (*env)->CallVoidMethod(env, vibrator, (*env)->GetMethodID(env, vibratorClass, "vibrate", "(J)V"), milliseconds);
+
+            JniFailed(env);
+        }
+    }
+
+    DetachJni();
 }
 
 // Set mouse position XY
@@ -768,10 +1000,37 @@ void SetMouseCursor(int cursor)
 }
 
 // Get physical key name
+// NOTE: Character produced by the key with the virtual keyboard layout, only for keys producing characters
 const char *GetKeyName(int key)
 {
-    TRACELOG(LOG_WARNING, "GetKeyName() not implemented on target platform");
-    return "";
+    static char name[8] = { 0 };
+
+    if ((key <= KEY_NULL) || (key == KEY_SPACE)) return NULL;
+
+    int keycode = 0;
+    for (int i = 1; i < KEYCODE_MAP_SIZE; i++)
+    {
+        if (mapKeycode[i] == key)
+        {
+            keycode = i;
+            break;
+        }
+    }
+
+    if (keycode == 0) return NULL;
+
+    int deadChar = platform.deadChar;
+    platform.deadChar = 0;
+    int codepoint = GetKeyCharacter(-1, keycode, 0);
+    platform.deadChar = deadChar;
+    if (codepoint < 32) return NULL;
+
+    int size = 0;
+    const char *utf8 = CodepointToUTF8(codepoint, &size);
+    memcpy(name, utf8, size);
+    name[size] = '\0';
+
+    return name;
 }
 
 // Register all input events
@@ -810,21 +1069,70 @@ void PollInputEvents(void)
     //for (int i = 0; i < MAX_TOUCH_POINTS; i++) CORE.Input.Touch.position[i] = (Vector2){ 0, 0 };
 
     // Register previous keys states
-    // NOTE: Android supports up to 260 keys
-    for (int i = 0; i < 260; i++)
+    for (int i = 0; i < MAX_KEYBOARD_KEYS; i++)
     {
         CORE.Input.Keyboard.previousKeyState[i] = CORE.Input.Keyboard.currentKeyState[i];
         CORE.Input.Keyboard.keyRepeatInFrame[i] = 0;
     }
+
+    // Register previous mouse states
+    for (int i = 0; i < MAX_MOUSE_BUTTONS; i++) CORE.Input.Mouse.previousButtonState[i] = CORE.Input.Mouse.currentButtonState[i];
+    CORE.Input.Mouse.previousWheelMove = CORE.Input.Mouse.currentWheelMove;
+    CORE.Input.Mouse.currentWheelMove = (Vector2){ 0.0f, 0.0f };
+
+    // Apply releases of keys, mouse buttons and touches that were pressed and released in the previous frame
+    bool releasePending = false;
+    for (int i = 0; i < MAX_KEYBOARD_KEYS; i++)
+    {
+        if (platform.keyReleasePending[i])
+        {
+            CORE.Input.Keyboard.currentKeyState[i] = 0;
+            platform.keyReleasePending[i] = false;
+            releasePending = true;
+        }
+
+        platform.keyPressedInFrame[i] = false;
+    }
+
+    for (int i = 0; i < MAX_MOUSE_BUTTONS; i++)
+    {
+        if (platform.buttonReleasePending[i])
+        {
+            CORE.Input.Mouse.currentButtonState[i] = 0;
+            CORE.Input.Touch.currentTouchState[i] = 0;
+            platform.buttonReleasePending[i] = false;
+            releasePending = true;
+        }
+
+        platform.buttonPressedInFrame[i] = false;
+    }
+
+    CORE.Window.resizedLastFrame = false;
+
+    // Display size changes after a configuration change (rotation) are applied when the window is resized
+    if (platform.displayCheckEnd > 0.0)
+    {
+        UpdateDisplaySize();
+        if (GetTime() > platform.displayCheckEnd) platform.displayCheckEnd = 0.0;
+    }
+
+    CheckGamepads();
 
     // Android ALooper_pollOnce() variables
     int pollResult = 0;
     int pollEvents = 0;
 
     // Poll Events (registered events) until TIMEOUT is reached which indicates there are no events left to poll
-    // NOTE: Activity is paused if not enabled (platform.appEnabled) and always run flag is not set (FLAG_WINDOW_ALWAYS_RUN)
-    while ((pollResult = ALooper_pollOnce((platform.appEnabled || FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_ALWAYS_RUN))? 0 : -1, NULL, &pollEvents, ((void **)&platform.source)) > ALOOPER_POLL_TIMEOUT))
+    // NOTE: Activity is paused if not enabled (platform.appEnabled) and always run flag is not set (FLAG_WINDOW_ALWAYS_RUN),
+    // events are waited for if required, a release applied in this frame or a pending display check is an event already
+    int timeout = 0;
+    if (!platform.appEnabled && !FLAG_IS_SET(CORE.Window.flags, FLAG_WINDOW_ALWAYS_RUN)) timeout = -1;
+    else if (CORE.Window.eventWaiting && !releasePending && (platform.displayCheckEnd == 0.0)) timeout = 1000;
+
+    while ((pollResult = ALooper_pollOnce(timeout, NULL, &pollEvents, ((void **)&platform.source)) > ALOOPER_POLL_TIMEOUT))
     {
+        timeout = 0;
+
         // Process this event
         if (platform.source != NULL) platform.source->process(platform.app, platform.source);
 
@@ -850,6 +1158,13 @@ int InitPlatform(void)
     //----------------------------------------------------------------------------
     CORE.Window.currentFbo.width = CORE.Window.screen.width;
     CORE.Window.currentFbo.height = CORE.Window.screen.height;
+    platform.requestedWidth = CORE.Window.screen.width;
+    platform.requestedHeight = CORE.Window.screen.height;
+    platform.displayCheckEnd = 0.0;
+    platform.deadChar = 0;
+    platform.mouseButtonState = 0;
+    platform.gamepadCheckTime = 0.0;
+    for (int i = 0; i < MAX_GAMEPADS; i++) platform.gamepadDeviceId[i] = -1;
 
     // Set desired windows flags before initializing anything
     ANativeActivity_setWindowFlags(platform.app->activity, AWINDOW_FLAG_FULLSCREEN, 0);  //AWINDOW_FLAG_SCALED, AWINDOW_FLAG_DITHER
@@ -921,6 +1236,9 @@ int InitPlatform(void)
 
     for (int i = 0; i < MAX_TOUCH_POINTS; i++) touchRaw.hoverPoints[i] = -1;
 
+    // Gamepads connected at start are available in the first frame
+    CheckGamepads();
+
     return 0;
 }
 
@@ -947,6 +1265,9 @@ void ClosePlatform(void)
         eglTerminate(platform.device);
         platform.device = EGL_NO_DISPLAY;
     }
+
+    RL_FREE(platform.clipboardText);
+    platform.clipboardText = NULL;
 
     // NOTE: Reset global state in case the activity is being relaunched
     if (platform.app->destroyRequested != 0)
@@ -1082,10 +1403,7 @@ static void AndroidCommandCallback(struct android_app *app, int32_t cmd)
 {
     switch (cmd)
     {
-        case APP_CMD_START:
-        {
-            //rendering = true;
-        } break;
+        case APP_CMD_START: FLAG_CLEAR(CORE.Window.flags, FLAG_WINDOW_MINIMIZED); break;
         case APP_CMD_RESUME: break;
         case APP_CMD_INIT_WINDOW:
         {
@@ -1110,6 +1428,9 @@ static void AndroidCommandCallback(struct android_app *app, int32_t cmd)
                     eglMakeCurrent(platform.device, platform.surface, platform.surface, platform.context);
 
                     platform.contextRebindRequired = false;
+
+                    // NOTE: Display can be rotated while the window was destroyed
+                    UpdateDisplaySize();
                 }
                 else
                 {
@@ -1161,6 +1482,8 @@ static void AndroidCommandCallback(struct android_app *app, int32_t cmd)
                     // Initialize random seed
                     SetRandomSeed((unsigned int)time(NULL));
                 }
+
+                FLAG_CLEAR(CORE.Window.flags, FLAG_WINDOW_HIDDEN);
             }
         } break;
         case APP_CMD_GAINED_FOCUS:
@@ -1197,16 +1520,15 @@ static void AndroidCommandCallback(struct android_app *app, int32_t cmd)
             // If 'platform.device' is already set to 'EGL_NO_DISPLAY'
             // this means that the user has already called 'CloseWindow()'
 
+            FLAG_SET(CORE.Window.flags, FLAG_WINDOW_HIDDEN);
         } break;
         case APP_CMD_SAVE_STATE: break;
-        case APP_CMD_STOP: break;
+        case APP_CMD_STOP: FLAG_SET(CORE.Window.flags, FLAG_WINDOW_MINIMIZED); break;
         case APP_CMD_DESTROY: break;
         case APP_CMD_CONFIG_CHANGED:
         {
-            //AConfiguration_fromAssetManager(platform.app->config, platform.app->activity->assetManager);
-            //print_cur_config(platform.app);
-
-            // Check screen orientation here!
+            // NOTE: Window is resized after the configuration change (rotation), its size is checked for a while
+            platform.displayCheckEnd = GetTime() + 2.0;
         } break;
         default: break;
     }
@@ -1254,20 +1576,20 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
         if (FLAG_IS_SET(source, AINPUT_SOURCE_JOYSTICK) ||
             FLAG_IS_SET(source, AINPUT_SOURCE_GAMEPAD))
         {
-            // Assuming a single gamepad, "detected" on its input event
-            CORE.Input.Gamepad.ready[0] = true;
+            int gamepad = GetGamepadIndex(AInputEvent_getDeviceId(event), true);
+            if (gamepad < 0) return 1;
 
-            CORE.Input.Gamepad.axisState[0][GAMEPAD_AXIS_LEFT_X] = AMotionEvent_getAxisValue(
+            CORE.Input.Gamepad.axisState[gamepad][GAMEPAD_AXIS_LEFT_X] = AMotionEvent_getAxisValue(
                     event, AMOTION_EVENT_AXIS_X, 0);
-            CORE.Input.Gamepad.axisState[0][GAMEPAD_AXIS_LEFT_Y] = AMotionEvent_getAxisValue(
+            CORE.Input.Gamepad.axisState[gamepad][GAMEPAD_AXIS_LEFT_Y] = AMotionEvent_getAxisValue(
                     event, AMOTION_EVENT_AXIS_Y, 0);
-            CORE.Input.Gamepad.axisState[0][GAMEPAD_AXIS_RIGHT_X] = AMotionEvent_getAxisValue(
+            CORE.Input.Gamepad.axisState[gamepad][GAMEPAD_AXIS_RIGHT_X] = AMotionEvent_getAxisValue(
                     event, AMOTION_EVENT_AXIS_Z, 0);
-            CORE.Input.Gamepad.axisState[0][GAMEPAD_AXIS_RIGHT_Y] = AMotionEvent_getAxisValue(
+            CORE.Input.Gamepad.axisState[gamepad][GAMEPAD_AXIS_RIGHT_Y] = AMotionEvent_getAxisValue(
                     event, AMOTION_EVENT_AXIS_RZ, 0);
-            CORE.Input.Gamepad.axisState[0][GAMEPAD_AXIS_LEFT_TRIGGER] = AMotionEvent_getAxisValue(
+            CORE.Input.Gamepad.axisState[gamepad][GAMEPAD_AXIS_LEFT_TRIGGER] = AMotionEvent_getAxisValue(
                     event, AMOTION_EVENT_AXIS_BRAKE, 0)*2.0f - 1.0f;
-            CORE.Input.Gamepad.axisState[0][GAMEPAD_AXIS_RIGHT_TRIGGER] = AMotionEvent_getAxisValue(
+            CORE.Input.Gamepad.axisState[gamepad][GAMEPAD_AXIS_RIGHT_TRIGGER] = AMotionEvent_getAxisValue(
                     event, AMOTION_EVENT_AXIS_GAS, 0)*2.0f - 1.0f;
 
             // dpad is reported as an axis on android
@@ -1276,37 +1598,77 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
 
             if (dpadX == 1.0f)
             {
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_RIGHT] = 1;
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_LEFT] = 0;
+                CORE.Input.Gamepad.currentButtonState[gamepad][GAMEPAD_BUTTON_LEFT_FACE_RIGHT] = 1;
+                CORE.Input.Gamepad.currentButtonState[gamepad][GAMEPAD_BUTTON_LEFT_FACE_LEFT] = 0;
             }
             else if (dpadX == -1.0f)
             {
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_RIGHT] = 0;
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_LEFT] = 1;
+                CORE.Input.Gamepad.currentButtonState[gamepad][GAMEPAD_BUTTON_LEFT_FACE_RIGHT] = 0;
+                CORE.Input.Gamepad.currentButtonState[gamepad][GAMEPAD_BUTTON_LEFT_FACE_LEFT] = 1;
             }
             else
             {
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_RIGHT] = 0;
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_LEFT] = 0;
+                CORE.Input.Gamepad.currentButtonState[gamepad][GAMEPAD_BUTTON_LEFT_FACE_RIGHT] = 0;
+                CORE.Input.Gamepad.currentButtonState[gamepad][GAMEPAD_BUTTON_LEFT_FACE_LEFT] = 0;
             }
 
             if (dpadY == 1.0f)
             {
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_DOWN] = 1;
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_UP] = 0;
+                CORE.Input.Gamepad.currentButtonState[gamepad][GAMEPAD_BUTTON_LEFT_FACE_DOWN] = 1;
+                CORE.Input.Gamepad.currentButtonState[gamepad][GAMEPAD_BUTTON_LEFT_FACE_UP] = 0;
             }
             else if (dpadY == -1.0f)
             {
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_DOWN] = 0;
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_UP] = 1;
+                CORE.Input.Gamepad.currentButtonState[gamepad][GAMEPAD_BUTTON_LEFT_FACE_DOWN] = 0;
+                CORE.Input.Gamepad.currentButtonState[gamepad][GAMEPAD_BUTTON_LEFT_FACE_UP] = 1;
             }
             else
             {
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_DOWN] = 0;
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_UP] = 0;
+                CORE.Input.Gamepad.currentButtonState[gamepad][GAMEPAD_BUTTON_LEFT_FACE_DOWN] = 0;
+                CORE.Input.Gamepad.currentButtonState[gamepad][GAMEPAD_BUTTON_LEFT_FACE_UP] = 0;
             }
 
             return 1; // Handled gamepad axis motion
+        }
+
+        if (FLAG_IS_SET(source, AINPUT_SOURCE_MOUSE) && (AMotionEvent_getToolType(event, 0) == AMOTION_EVENT_TOOL_TYPE_MOUSE))
+        {
+            int32_t action = AMotionEvent_getAction(event) & AMOTION_EVENT_ACTION_MASK;
+
+            // Mouse position, buttons and wheel
+            CORE.Input.Mouse.currentPosition = GetScreenPosition(AMotionEvent_getX(event, 0), AMotionEvent_getY(event, 0));
+            CORE.Input.Touch.position[0] = CORE.Input.Mouse.currentPosition;
+
+            if (action == AMOTION_EVENT_ACTION_SCROLL)
+            {
+                // NOTE: Horizontal wheel movement is inverted to match the desktop platforms
+                CORE.Input.Mouse.currentWheelMove.x -= AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_HSCROLL, 0);
+                CORE.Input.Mouse.currentWheelMove.y += AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_VSCROLL, 0);
+            }
+
+            static const struct { int32_t state; int button; } buttons[] = {
+                { AMOTION_EVENT_BUTTON_PRIMARY, MOUSE_BUTTON_LEFT },
+                { AMOTION_EVENT_BUTTON_SECONDARY, MOUSE_BUTTON_RIGHT },
+                { AMOTION_EVENT_BUTTON_TERTIARY, MOUSE_BUTTON_MIDDLE },
+                { AMOTION_EVENT_BUTTON_BACK, MOUSE_BUTTON_BACK },
+                { AMOTION_EVENT_BUTTON_FORWARD, MOUSE_BUTTON_FORWARD }
+            };
+
+            // NOTE: Button state is not reported by some events, a primary button is down between down and up actions
+            int32_t buttonState = AMotionEvent_getButtonState(event);
+            if ((action == AMOTION_EVENT_ACTION_DOWN) && (buttonState == 0)) buttonState = AMOTION_EVENT_BUTTON_PRIMARY;
+            else if ((action == AMOTION_EVENT_ACTION_UP) || (action == AMOTION_EVENT_ACTION_CANCEL)) buttonState = 0;
+            else if ((action == AMOTION_EVENT_ACTION_MOVE) && (buttonState == 0)) buttonState = platform.mouseButtonState;
+
+            for (int i = 0; i < 5; i++)
+            {
+                bool down = FLAG_IS_SET(buttonState, buttons[i].state);
+                if (down != FLAG_IS_SET(platform.mouseButtonState, buttons[i].state)) HandleMouseButton(buttons[i].button, down);
+            }
+
+            platform.mouseButtonState = buttonState;
+
+            return 1; // Handled mouse event
         }
     }
     else if (type == AINPUT_EVENT_TYPE_KEY)
@@ -1321,17 +1683,16 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
             FLAG_IS_SET(source, AINPUT_SOURCE_GAMEPAD))
         {
             GamepadButton button = AndroidTranslateGamepadButton(keycode);
+            int gamepad = (button != GAMEPAD_BUTTON_UNKNOWN)? GetGamepadIndex(AInputEvent_getDeviceId(event), true) : -1;
 
-            if (button != GAMEPAD_BUTTON_UNKNOWN)
+            if (gamepad >= 0)
             {
-                // Assuming a single gamepad, "detected" on its input event
-                CORE.Input.Gamepad.ready[0] = true;
-
                 if (AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_DOWN)
                 {
-                    CORE.Input.Gamepad.currentButtonState[0][button] = 1;
+                    CORE.Input.Gamepad.currentButtonState[gamepad][button] = 1;
+                    CORE.Input.Gamepad.lastButtonPressed = button;
                 }
-                else CORE.Input.Gamepad.currentButtonState[0][button] = 0;  // Key up
+                else CORE.Input.Gamepad.currentButtonState[gamepad][button] = 0;  // Key up
 
                 return 1; // Handled gamepad button
             }
@@ -1339,19 +1700,33 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
         }
 
         KeyboardKey key = ((keycode > 0) && (keycode < KEYCODE_MAP_SIZE))? mapKeycode[keycode] : KEY_NULL;
+        int32_t action = AKeyEvent_getAction(event);
+
         if (key != KEY_NULL)
         {
             // Save current key and its state
-            // NOTE: Android key action is 0 for down and 1 for up
-            if (AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_DOWN)
+            // NOTE: Repeated key presses are reported as down actions with a repeat count
+            if (action == AKEY_EVENT_ACTION_DOWN)
             {
-                CORE.Input.Keyboard.currentKeyState[key] = 1;   // Key down
-
-                CORE.Input.Keyboard.keyPressedQueue[CORE.Input.Keyboard.keyPressedQueueCount] = key;
-                CORE.Input.Keyboard.keyPressedQueueCount++;
+                if (AKeyEvent_getRepeatCount(event) > 0) CORE.Input.Keyboard.keyRepeatInFrame[key] = 1;
+                else HandleKey(key, true);
             }
-            else if (AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_MULTIPLE) CORE.Input.Keyboard.keyRepeatInFrame[key] = 1;
-            else CORE.Input.Keyboard.currentKeyState[key] = 0;  // Key up
+            else if (action == AKEY_EVENT_ACTION_MULTIPLE) CORE.Input.Keyboard.keyRepeatInFrame[key] = 1;
+            else HandleKey(key, false);
+        }
+
+        // Register character input, also for repeated key presses
+        if ((action == AKEY_EVENT_ACTION_DOWN) && (keycode != AKEYCODE_BACK) && (keycode != AKEYCODE_MENU))
+        {
+            int codepoint = GetKeyCharacter(AInputEvent_getDeviceId(event), keycode, AKeyEvent_getMetaState(event));
+
+            // Check if there is space available in the queue, control characters are not registered
+            if ((codepoint >= 32) && (codepoint != 127) && (CORE.Input.Keyboard.charPressedQueueCount < MAX_CHAR_PRESSED_QUEUE))
+            {
+                // Add character to the queue
+                CORE.Input.Keyboard.charPressedQueue[CORE.Input.Keyboard.charPressedQueueCount] = codepoint;
+                CORE.Input.Keyboard.charPressedQueueCount++;
+            }
         }
 
         if (keycode == AKEYCODE_POWER)
@@ -1385,14 +1760,8 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
         // Register touch points id
         touchRaw.pointId[i] = AMotionEvent_getPointerId(event, i);
 
-        // Register touch points position
-        touchRaw.position[i] = (Vector2){ AMotionEvent_getX(event, i), AMotionEvent_getY(event, i) };
-
-        // Normalize CORE.Input.Touch.position[i] for CORE.Window.screen.width and CORE.Window.screen.height
-        float widthRatio = (float)(CORE.Window.screen.width + CORE.Window.renderOffset.x)/(float)CORE.Window.display.width;
-        float heightRatio = (float)(CORE.Window.screen.height + CORE.Window.renderOffset.y)/(float)CORE.Window.display.height;
-        touchRaw.position[i].x = touchRaw.position[i].x*widthRatio - (float)CORE.Window.renderOffset.x/2;
-        touchRaw.position[i].y = touchRaw.position[i].y*heightRatio - (float)CORE.Window.renderOffset.y/2;
+        // Register touch points position, normalized for CORE.Window.screen.width and CORE.Window.screen.height
+        touchRaw.position[i] = GetScreenPosition(AMotionEvent_getX(event, i), AMotionEvent_getY(event, i));
     }
 
     int32_t action = AMotionEvent_getAction(event);
@@ -1498,8 +1867,8 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
     // When all touchpoints are tapped and released really quickly, this event is generated
     if (flags == AMOTION_EVENT_ACTION_CANCEL) CORE.Input.Touch.pointCount = 0;
 
-    if (CORE.Input.Touch.pointCount > 0) CORE.Input.Touch.currentTouchState[MOUSE_BUTTON_LEFT] = 1;
-    else CORE.Input.Touch.currentTouchState[MOUSE_BUTTON_LEFT] = 0;
+    bool touchDown = (CORE.Input.Touch.pointCount > 0);
+    if (touchDown != (CORE.Input.Touch.currentTouchState[MOUSE_BUTTON_LEFT] == 1) || (!touchDown && platform.buttonReleasePending[MOUSE_BUTTON_LEFT])) HandleMouseButton(MOUSE_BUTTON_LEFT, touchDown);
 
     // Stores the previous position of touch[0] only while it's active to calculate the delta
     if (flags == AMOTION_EVENT_ACTION_MOVE) CORE.Input.Mouse.previousPosition = CORE.Input.Mouse.currentPosition;
@@ -1588,6 +1957,305 @@ static void SetupFramebuffer(int width, int height)
         CORE.Window.renderOffset.x = 0;
         CORE.Window.renderOffset.y = 0;
     }
+}
+
+// Update framebuffer and viewport if the display size changed (rotation)
+static void UpdateDisplaySize(void)
+{
+    if ((platform.app->window == NULL) || (platform.surface == EGL_NO_SURFACE)) return;
+
+    int width = ANativeWindow_getWidth(platform.app->window);
+    int height = ANativeWindow_getHeight(platform.app->window);
+    if ((width <= 0) || (height <= 0) || ((width == CORE.Window.display.width) && (height == CORE.Window.display.height))) return;
+
+    TRACELOG(LOG_INFO, "DISPLAY: Display size changed from %i x %i to %i x %i", CORE.Window.display.width, CORE.Window.display.height, width, height);
+
+    CORE.Window.display.width = width;
+    CORE.Window.display.height = height;
+
+    // Screen size requested by the application is kept, it is scaled to the new display size
+    CORE.Window.screen.width = platform.requestedWidth;
+    CORE.Window.screen.height = platform.requestedHeight;
+    SetupFramebuffer(width, height);
+
+    EGLint displayFormat = 0;
+    eglGetConfigAttrib(platform.device, platform.config, EGL_NATIVE_VISUAL_ID, &displayFormat);
+    ANativeWindow_setBuffersGeometry(platform.app->window, CORE.Window.render.width, CORE.Window.render.height, displayFormat);
+
+    CORE.Window.render.width = CORE.Window.screen.width;
+    CORE.Window.render.height = CORE.Window.screen.height;
+    CORE.Window.currentFbo.width = CORE.Window.render.width;
+    CORE.Window.currentFbo.height = CORE.Window.render.height;
+    SetupViewport(CORE.Window.currentFbo.width, CORE.Window.currentFbo.height);
+
+    CORE.Window.resizedLastFrame = true;
+}
+
+// Attach current thread to the Java VM, NULL on failure
+static JNIEnv *AttachJni(void)
+{
+    JNIEnv *env = NULL;
+    JavaVM *vm = platform.app->activity->vm;
+
+    if ((*vm)->AttachCurrentThread(vm, &env, NULL) != JNI_OK)
+    {
+        TRACELOG(LOG_WARNING, "ANDROID: Failed to attach thread to the Java VM");
+        return NULL;
+    }
+
+    return env;
+}
+
+// Detach current thread from the Java VM
+static void DetachJni(void)
+{
+    JavaVM *vm = platform.app->activity->vm;
+    (*vm)->DetachCurrentThread(vm);
+}
+
+// Check and clear a pending Java exception
+static bool JniFailed(JNIEnv *env)
+{
+    if (!(*env)->ExceptionCheck(env)) return false;
+
+    (*env)->ExceptionClear(env);
+    TRACELOG(LOG_WARNING, "ANDROID: Java exception in a platform call");
+
+    return true;
+}
+
+// Get default display object (android.view.Display)
+static jobject GetDefaultDisplay(JNIEnv *env)
+{
+    jobject activity = platform.app->activity->clazz;
+    jclass activityClass = (*env)->GetObjectClass(env, activity);
+    jobject windowManager = (*env)->CallObjectMethod(env, activity, (*env)->GetMethodID(env, activityClass, "getWindowManager", "()Landroid/view/WindowManager;"));
+    if (JniFailed(env) || (windowManager == NULL)) return NULL;
+
+    jclass windowManagerClass = (*env)->FindClass(env, "android/view/WindowManager");
+    jobject display = (*env)->CallObjectMethod(env, windowManager, (*env)->GetMethodID(env, windowManagerClass, "getDefaultDisplay", "()Landroid/view/Display;"));
+    if (JniFailed(env)) return NULL;
+
+    return display;
+}
+
+// Get character produced by a key, considering dead keys
+// NOTE: Returns 0 if the key does not produce a character or it is a dead key waiting for the next one
+static int GetKeyCharacter(int deviceId, int keycode, int metaState)
+{
+    int codepoint = 0;
+
+    JNIEnv *env = AttachJni();
+    if (env == NULL) return codepoint;
+
+    jclass mapClass = (*env)->FindClass(env, "android/view/KeyCharacterMap");
+    jobject map = (*env)->CallStaticObjectMethod(env, mapClass, (*env)->GetStaticMethodID(env, mapClass, "load", "(I)Landroid/view/KeyCharacterMap;"), deviceId);
+
+    if (!JniFailed(env) && (map != NULL))
+    {
+        int value = (*env)->CallIntMethod(env, map, (*env)->GetMethodID(env, mapClass, "get", "(II)I"), keycode, metaState);
+
+        if (!JniFailed(env))
+        {
+            const int combiningAccent = (int)0x80000000;    // KeyCharacterMap.COMBINING_ACCENT
+            const int combiningAccentMask = 0x7fffffff;     // KeyCharacterMap.COMBINING_ACCENT_MASK
+
+            if (value & combiningAccent) platform.deadChar = value & combiningAccentMask;
+            else if (value != 0)
+            {
+                codepoint = value;
+
+                if (platform.deadChar != 0)
+                {
+                    int combined = (*env)->CallStaticIntMethod(env, mapClass, (*env)->GetStaticMethodID(env, mapClass, "getDeadChar", "(II)I"), platform.deadChar, value);
+                    if (!JniFailed(env) && (combined != 0)) codepoint = combined;
+                    platform.deadChar = 0;
+                }
+            }
+        }
+    }
+
+    DetachJni();
+
+    return codepoint;
+}
+
+// Get gamepad index for an input device, connecting it if required
+static int GetGamepadIndex(int deviceId, bool connect)
+{
+    for (int i = 0; i < MAX_GAMEPADS; i++)
+    {
+        if (platform.gamepadDeviceId[i] == deviceId) return i;
+    }
+
+    if (!connect) return -1;
+
+    for (int i = 0; i < MAX_GAMEPADS; i++)
+    {
+        if (platform.gamepadDeviceId[i] == -1)
+        {
+            ConnectGamepad(i, deviceId);
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+// Register a connected gamepad
+static void ConnectGamepad(int gamepad, int deviceId)
+{
+    platform.gamepadDeviceId[gamepad] = deviceId;
+    CORE.Input.Gamepad.ready[gamepad] = true;
+    CORE.Input.Gamepad.axisCount[gamepad] = 6;
+    CORE.Input.Gamepad.axisState[gamepad][GAMEPAD_AXIS_LEFT_TRIGGER] = -1.0f;
+    CORE.Input.Gamepad.axisState[gamepad][GAMEPAD_AXIS_RIGHT_TRIGGER] = -1.0f;
+    snprintf(CORE.Input.Gamepad.name[gamepad], MAX_GAMEPAD_NAME_LENGTH, "Gamepad");
+
+    JNIEnv *env = AttachJni();
+    if (env == NULL) return;
+
+    jclass deviceClass = (*env)->FindClass(env, "android/view/InputDevice");
+    jobject device = (*env)->CallStaticObjectMethod(env, deviceClass, (*env)->GetStaticMethodID(env, deviceClass, "getDevice", "(I)Landroid/view/InputDevice;"), deviceId);
+
+    if (!JniFailed(env) && (device != NULL))
+    {
+        jstring name = (jstring)(*env)->CallObjectMethod(env, device, (*env)->GetMethodID(env, deviceClass, "getName", "()Ljava/lang/String;"));
+
+        if (!JniFailed(env) && (name != NULL))
+        {
+            const char *text = (*env)->GetStringUTFChars(env, name, NULL);
+            snprintf(CORE.Input.Gamepad.name[gamepad], MAX_GAMEPAD_NAME_LENGTH, "%s", text);
+            (*env)->ReleaseStringUTFChars(env, name, text);
+        }
+    }
+
+    DetachJni();
+
+    TRACELOG(LOG_INFO, "INPUT: Gamepad %i connected: %s", gamepad, CORE.Input.Gamepad.name[gamepad]);
+}
+
+// Unregister a disconnected gamepad
+static void DisconnectGamepad(int gamepad)
+{
+    TRACELOG(LOG_INFO, "INPUT: Gamepad %i disconnected: %s", gamepad, CORE.Input.Gamepad.name[gamepad]);
+
+    platform.gamepadDeviceId[gamepad] = -1;
+    CORE.Input.Gamepad.ready[gamepad] = false;
+    CORE.Input.Gamepad.axisCount[gamepad] = 0;
+    memset(CORE.Input.Gamepad.name[gamepad], 0, MAX_GAMEPAD_NAME_LENGTH);
+    memset(CORE.Input.Gamepad.currentButtonState[gamepad], 0, sizeof(CORE.Input.Gamepad.currentButtonState[gamepad]));
+    memset(CORE.Input.Gamepad.previousButtonState[gamepad], 0, sizeof(CORE.Input.Gamepad.previousButtonState[gamepad]));
+    memset(CORE.Input.Gamepad.axisState[gamepad], 0, sizeof(CORE.Input.Gamepad.axisState[gamepad]));
+}
+
+// Check connected and disconnected gamepads
+// NOTE: Input devices are checked once per second
+static void CheckGamepads(void)
+{
+    double time = GetTime();
+    if (time < platform.gamepadCheckTime) return;
+    platform.gamepadCheckTime = time + 1.0;
+
+    JNIEnv *env = AttachJni();
+    if (env == NULL) return;
+
+    bool connected[MAX_GAMEPADS] = { 0 };
+    int newDeviceIds[MAX_GAMEPADS] = { 0 };
+    int newCount = 0;
+
+    jclass deviceClass = (*env)->FindClass(env, "android/view/InputDevice");
+    jintArray ids = (jintArray)(*env)->CallStaticObjectMethod(env, deviceClass, (*env)->GetStaticMethodID(env, deviceClass, "getDeviceIds", "()[I"));
+
+    if (JniFailed(env) || (ids == NULL))
+    {
+        DetachJni();
+        return;
+    }
+
+    int count = (*env)->GetArrayLength(env, ids);
+    jint *values = (*env)->GetIntArrayElements(env, ids, NULL);
+    jmethodID getDevice = (*env)->GetStaticMethodID(env, deviceClass, "getDevice", "(I)Landroid/view/InputDevice;");
+    jmethodID getSources = (*env)->GetMethodID(env, deviceClass, "getSources", "()I");
+
+    for (int i = 0; i < count; i++)
+    {
+        int index = GetGamepadIndex(values[i], false);
+        if (index >= 0)
+        {
+            connected[index] = true;
+            continue;
+        }
+
+        jobject device = (*env)->CallStaticObjectMethod(env, deviceClass, getDevice, values[i]);
+        if (JniFailed(env) || (device == NULL)) continue;
+
+        int sources = (*env)->CallIntMethod(env, device, getSources);
+        (*env)->DeleteLocalRef(env, device);
+        if (JniFailed(env)) continue;
+
+        // NOTE: Gamepads report both sources, other devices can report only one of them (keyboards with a joystick source)
+        if (FLAG_IS_SET(sources, AINPUT_SOURCE_GAMEPAD) && FLAG_IS_SET(sources, AINPUT_SOURCE_JOYSTICK) && (newCount < MAX_GAMEPADS)) newDeviceIds[newCount++] = values[i];
+    }
+
+    (*env)->ReleaseIntArrayElements(env, ids, values, JNI_ABORT);
+    DetachJni();
+
+    for (int i = 0; i < MAX_GAMEPADS; i++)
+    {
+        if ((platform.gamepadDeviceId[i] != -1) && !connected[i]) DisconnectGamepad(i);
+    }
+
+    for (int i = 0; i < newCount; i++) GetGamepadIndex(newDeviceIds[i], true);
+}
+
+// Register key state change
+// NOTE: A key released in the frame it was pressed keeps the press for that frame
+static void HandleKey(KeyboardKey key, bool pressed)
+{
+    if (pressed)
+    {
+        CORE.Input.Keyboard.currentKeyState[key] = 1;
+        platform.keyPressedInFrame[key] = true;
+        platform.keyReleasePending[key] = false;
+
+        // Add key to the queue
+        if (CORE.Input.Keyboard.keyPressedQueueCount < MAX_KEY_PRESSED_QUEUE)
+        {
+            CORE.Input.Keyboard.keyPressedQueue[CORE.Input.Keyboard.keyPressedQueueCount] = key;
+            CORE.Input.Keyboard.keyPressedQueueCount++;
+        }
+    }
+    else if (platform.keyPressedInFrame[key]) platform.keyReleasePending[key] = true;
+    else CORE.Input.Keyboard.currentKeyState[key] = 0;
+}
+
+// Register mouse button or touch state change
+// NOTE: A button released in the frame it was pressed keeps the press for that frame
+static void HandleMouseButton(int button, bool pressed)
+{
+    if (pressed)
+    {
+        CORE.Input.Mouse.currentButtonState[button] = 1;
+        CORE.Input.Touch.currentTouchState[button] = 1;
+        platform.buttonPressedInFrame[button] = true;
+        platform.buttonReleasePending[button] = false;
+    }
+    else if (platform.buttonPressedInFrame[button]) platform.buttonReleasePending[button] = true;
+    else
+    {
+        CORE.Input.Mouse.currentButtonState[button] = 0;
+        CORE.Input.Touch.currentTouchState[button] = 0;
+    }
+}
+
+// Convert display position to screen position
+static Vector2 GetScreenPosition(float x, float y)
+{
+    float widthRatio = (float)(CORE.Window.screen.width + CORE.Window.renderOffset.x)/(float)CORE.Window.display.width;
+    float heightRatio = (float)(CORE.Window.screen.height + CORE.Window.renderOffset.y)/(float)CORE.Window.display.height;
+
+    return (Vector2){ x*widthRatio - (float)CORE.Window.renderOffset.x/2, y*heightRatio - (float)CORE.Window.renderOffset.y/2 };
 }
 
 // Replacement for fopen(), used as linker wrap entry point (-Wl,--wrap=fopen)
