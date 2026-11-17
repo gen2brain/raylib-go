@@ -6,6 +6,8 @@ package rl
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"runtime"
 	"unsafe"
 
@@ -54,6 +56,12 @@ func loadLibrary() ffi.Lib {
 			libname = "raylib.dll"
 		case "darwin":
 			libname = "libraylib.6.2.0.dylib"
+			if exe, err := os.Executable(); err == nil {
+				bundled := filepath.Join(filepath.Dir(exe), "..", "Frameworks", "libraylib.dylib")
+				if _, err := os.Stat(bundled); err == nil {
+					libname = bundled
+				}
+			}
 		}
 	}
 

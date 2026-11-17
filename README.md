@@ -131,6 +131,16 @@ func main() {
 
 Check more [examples](https://github.com/gen2brain/raylib-go/tree/master/examples) organized by raylib modules.
 
+### Packaging
+
+[rlpkg](https://github.com/gen2brain/raylib-go/tree/master/cmd/rlpkg) builds and signs packages: a Windows `.exe` with icon or an `.msix`, a macOS `.app`,
+a Linux tarball, `.deb` or `.rpm`, an Android `.apk` or `.aab`, an iOS `.ipa` and a WebAssembly site.
+
+```
+go install github.com/gen2brain/raylib-go/cmd/rlpkg@latest
+rlpkg package --os android --install ./game
+```
+
 ### Cross-compile (on Linux with cgo)
 
 To cross-compile for Windows, install [MinGW](https://www.mingw-w64.org/) toolchain.

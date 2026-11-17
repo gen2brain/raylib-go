@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+        package="com.example.raylib"
+        android:versionCode="1"
+        android:versionName="1.0">
+
+    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <application android:allowBackup="false" android:hasCode="false"
+            android:label="raylib"
+            android:icon="@mipmap/ic_launcher"
+            android:theme="@android:style/Theme.Holo.NoActionBar.Fullscreen">
+
+        <activity android:name="android.app.NativeActivity"
+                android:exported="true"
+                android:configChanges="orientation|keyboardHidden|screenSize"
+                android:screenOrientation="landscape"
+                android:clearTaskOnLaunch="true">
+
+            <meta-data android:name="android.app.lib_name" android:value="main" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>

@@ -3,24 +3,21 @@
 Requirements:
 
 * macOS with [Xcode](https://developer.apple.com/xcode/) and Go
-* Apple development certificate (`.p12`) and provisioning profile (`.mobileprovision`)
-* [zsign](https://github.com/zhlynn/zsign) and [go-ios](https://github.com/danielpaulus/go-ios)
+* Apple development certificate and provisioning profile
 
 The program registers its `main` function with `rl.SetMain(main)`, see `main.go`.
 
-Build the application, the output is `build/example.app` with the files from `assets` copied into it:
+Build, sign and install it on the connected device with [rlpkg](https://github.com/gen2brain/raylib-go/tree/master/cmd/rlpkg),
+the bundle identifier must match your provisioning profile:
 
-    ./build.sh
+    rlpkg package --os ios --id com.example.raylib --sign certificate.p12 --profile profile.mobileprovision --install \
+        --data assets/raylib_logo.png --data assets/coin.wav --data assets/ambient.ogg .
 
-Sign it, the bundle identifier (`com.example.raylib` in `Info.plist`) must match your provisioning profile:
+Or build the application with `./build.sh`, the output is `build/example.app` with the files from `assets` copied into it,
+then sign it and install it:
 
-    mkdir Payload && cp -R build/example.app Payload/
-    zsign -k certificate.p12 -p password -m profile.mobileprovision -b com.example.raylib Payload/example.app
-    zip -qry example.ipa Payload
+    rlpkg sign --sign certificate.p12 --profile profile.mobileprovision build/example.app
+    xcrun devicectl device install app --device <device> build/example.app
 
-Install it on the device:
-
-    go-ios install --path=example.ipa
-
-OpenGL ES 2.0 is used by default, build with `./build.sh -tags es3` for OpenGL ES 3.0 or `./build.sh -tags software`
+OpenGL ES 2.0 is used by default, build with `./build.sh -tags es3` (`--tags es3`) for OpenGL ES 3.0 or `-tags software`
 for the software renderer.

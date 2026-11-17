@@ -32,6 +32,11 @@ And build apk:
 
 If everything is successfully built apk can be found in the android/build/outputs.
 
+Or build, sign and install the apk with [rlpkg](https://github.com/gen2brain/raylib-go/tree/master/cmd/rlpkg), only the NDK is needed:
+
+    rlpkg package --os android --install --data android/assets/raylib_logo.png --data android/assets/coin.wav \
+        --data android/assets/ambient.ogg --data android/assets/alagard.rbmf .
+
 
 For 32-bit ARM use `CC="armv7a-linux-androideabi${ANDROID_API}-clang"`, set GOARCH to arm and put the library in `android/libs/armeabi-v7a`.
 
